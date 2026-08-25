@@ -6,7 +6,7 @@ class TiposProductos(models.Model):
     class Meta:
         verbose_name_plural = "Tipos de Productos" # <-- Nombre correcto en el Admin
 
-    def __str__(self):
+    def _str_(self):
         return self.nombre
 
 
@@ -16,7 +16,7 @@ class GruposQuimicos(models.Model):
     class Meta:
         verbose_name_plural = "Grupos Químicos"
 
-    def __str__(self):
+    def _str_(self):
         return self.nombre
 
 
@@ -28,7 +28,7 @@ class Proveedores(models.Model):
     class Meta:
         verbose_name_plural = "Proveedores"
 
-    def __str__(self):
+    def _str_(self):
         return self.razon_social
 
 
@@ -38,7 +38,7 @@ class TiposEmpleados(models.Model):
     class Meta:
         verbose_name_plural = "Tipos de Empleados"
 
-    def __str__(self):
+    def _str_(self):
         return self.puesto
 
 
@@ -48,7 +48,7 @@ class TiposMovimientos(models.Model):
     class Meta:
         verbose_name_plural = "Tipos de Movimientos"
 
-    def __str__(self):
+    def _str_(self):
         return self.descripcion
 
 
@@ -60,7 +60,7 @@ class Empleados(models.Model):
     class Meta:
         verbose_name_plural = "Empleados"
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.nombre} {self.apellido}"
 
 
@@ -74,7 +74,7 @@ class Productos(models.Model):
     class Meta:
         verbose_name_plural = "Productos"
 
-    def __str__(self):
+    def _str_(self):
         return self.nombre
 
 
@@ -101,7 +101,7 @@ class Stock(models.Model):
     class Meta:
         verbose_name_plural = "Stock"
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.producto.nombre} - Cantidad: {self.cantidad}"
 
 

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Proveedores - Agroquímica</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome para Íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm mb-4">
+        <div class="container-fluid ms-3 me-3">
+            <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-leaf me-2"></i>Agroquímica del Valle</a>
+            <span class="navbar-text text-white">Gestión de Inventario</span>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        
+        <!-- Mensajes de Alerta Django -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Encabezado y Botón Nuevo -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-secondary mb-0">Proveedores</h2>
+                <small class="text-muted">Administración y control de proveedores registrados</small>
+            </div>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCrearProveedor">
+                <i class="fa-solid fa-plus me-1"></i> Nuevo Proveedor
+            </button>
+        </div>
+
+        <!-- Tabla de Proveedores -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col" class="ps-3">ID</th>
+                                <th scope="col">Nombre / Razón Social</th>
+                                <th scope="col">Teléfono</th>
+                                <th scope="col">Dirección</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for proveedor in proveedores %}
+                            <tr>
+                                <td class="ps-3 fw-bold">{{ proveedor.ID_Proveedor }}</td>
+                                <td>{{ proveedor.Nombre_proveedor }}</td>
+                                <td>{{ proveedor.Telefono_proveedor }}</td>
+                                <td>{{ proveedor.Direccion_proveedor }}</td>
+                                <td>{{ proveedor.Email_proveedor }}</td>
+                                <td>
+                                    {% if proveedor.Estado_proveedor == 'Activo' %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ proveedor.Estado_proveedor }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i>
+                                    No hay proveedores registrados.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Nuevo Proveedor -->
+    <div class="modal fade" id="modalCrearProveedor" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" id="modalLabel"><i class="fa-solid fa-truck me-2"></i>Registrar Proveedor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="Nombre_proveedor" class="form-label font-weight-bold">Nombre / Razón Social</label>
+                            <input type="text" class="form-control" id="Nombre_proveedor" name="Nombre_proveedor" maxlength="50" required placeholder="Ej: Agroquímica Sur S.A.">
+                        </div>
+                        <div class="mb-3">
+                            <label for="Telefono_proveedor" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="Telefono_proveedor" name="Telefono_proveedor" maxlength="20" required placeholder="Ej: +54 261 123456">
+                        </div>
+                        <div class="mb-3">
+                            <label for="Direccion_proveedor" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="Direccion_proveedor" name="Direccion_proveedor" maxlength="30" required placeholder="Ej: Av. San Martín 450">
+                        </div>
+                        <div class="mb-3">
+                            <label for="Email_proveedor" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="Email_proveedor" name="Email_proveedor" maxlength="50" required placeholder="ejemplo@proveedor.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="Estado_proveedor" class="form-label">Estado</label>
+                            <select class="form-select" id="Estado_proveedor" name="Estado_proveedor" required>
+                                <option value="Activo" selected>Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Guardar Proveedor</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
