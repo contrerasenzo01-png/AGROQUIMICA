@@ -155,7 +155,6 @@
         <header class="header">
             <div>
                 <h2 class="title">Gestión de Proveedores</h2>
-                <p class="subtitle" id="subtitleCounter">{{ activos_count }} activos - {{ total_count }} total</p>
             </div>
             <button class="btn-nuevo" onclick="abrirModalCrear()">+ Nuevo proveedor</button>
         </header>
@@ -329,13 +328,7 @@
                         <div class="form-group">
                             <label>Teléfono</label>
                             <input type="text" id="edit_telefono" name="telefono_proveedor" class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Estado</label>
-                            <select id="edit_estado" name="estado_proveedor" class="form-input">
-                                <option value="True">Activo</option>
-                                <option value="False">Inactivo</option>
-                            </select>
+                            <input type="hidden" id="edit_estado" name="estado_proveedor">
                         </div>
                     </div>
                     <div class="form-group">
@@ -397,16 +390,17 @@
                     </div>
                     <div class="form-group">
                         <label>DIRECCION_PROVEEDOR</label>
-                        <input type="text" name="direccion_proveedor" class="form-input" value="{{ request.POST.direccion_proveedor|default:'' }}">
+                         <input type="text" name="direccion_proveedor" class="form-input" value="{{ request.POST.direccion_proveedor|default:'' }}">
                     </div>
                     <div class="form-group">
-                        <label>ESTADO_PROVEEDOR</label>
-                        <select name="estado_proveedor" class="form-input">
-                            <option value="True">Activo</option>
-                            <option value="False">Inactivo</option>
-                        </select>
-                    </div>
-                </div>
+                         <label>ESTADO_PROVEEDOR</label>
+                         <input type="hidden" name="estado_proveedor" value="True">
+    
+                             <!-- Texto estático visual con el estilo de un badge o etiqueta verde -->
+                         <div style="padding: 10px; background-color: #f0fdf4; border: 1px solid #dcfce7; color: #15803d; border-radius: 6px; font-size: 13px; font-weight: 600; display: inline-block;">
+                               Activo
+                         </div>
+                   </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" onclick="cerrarModal('modalCrearProveedor')">Cancelar</button>
                     <button type="submit" class="btn-save">Registrar</button>
@@ -487,7 +481,7 @@
             document.getElementById('edit_telefono').value = telefono;
             document.getElementById('edit_email').value = email;
             document.getElementById('edit_direccion').value = direccion;
-            document.getElementById('edit_estado').value = (estado === 'true') ? 'True' : 'False';
+            document.getElementById('edit_estado').value = estado; // Mantiene el estado que ya tenía el proveedor ('true' o 'false')
             document.getElementById('modalEditarProveedor').style.display = 'flex';
         }
 
