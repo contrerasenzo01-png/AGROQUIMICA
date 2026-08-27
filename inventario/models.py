@@ -21,15 +21,30 @@ class GruposQuimicos(models.Model):
 
 
 class Proveedores(models.Model):
-    razon_social = models.CharField(max_length=150)
-    cuit = models.CharField(max_length=20, blank=True, null=True)
-    telefono = models.CharField(max_length=50, blank=True, null=True)
+    ESTADO_CHOICES = [
+        (True, 'Activo'),
+        (False, 'Inactivo'),
+    ]
+
+    nombre_proveedor = models.CharField(max_length=150, unique=True, verbose_name="Nombre del Proveedor")
+    telefono_proveedor = models.CharField(max_length=50, blank=True, null=True, verbose_name="Teléfono")
+    email_proveedor = models.EmailField(blank=True, null=True, verbose_name="Email")
+    direccion_proveedor = models.CharField(max_length=255, blank=True, null=True, verbose_name="Dirección")
+    estado_proveedor = models.BooleanField(default=True, choices=ESTADO_CHOICES, verbose_name="Estado")
 
     class Meta:
+        db_table = 'proveedores'
         verbose_name_plural = "Proveedores"
 
     def __str__(self):
-        return self.razon_social
+        return self.nombre_proveedor
+
+    @property
+    def iniciales(self):
+        palabras = self.nombre_proveedor.split()
+        if len(palabras) >= 2:
+            return f"{palabras[0][0]}{palabras[1][0]}".upper()
+        return self.nombre_proveedor[:2].upper()
 
 
 class TiposEmpleados(models.Model):

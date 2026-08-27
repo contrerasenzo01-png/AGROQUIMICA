@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Proveedores - Agroquímicos del Valle</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f1f5f3; color: #1c2a23; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background-color: #0d3824; color: #ffffff; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 15px; }
+        .logo { font-size: 16px; font-weight: bold; margin-bottom: 30px; color: #ffffff; display: flex; align-items: center; gap: 8px; }
+        .nav-menu { list-style: none; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: #a3c2b2; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .nav-link.active, .nav-link:hover { background-color: #1b4d34; color: #ffffff; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .title { font-size: 20px; font-weight: bold; color: #0d3824; }
+        .subtitle { font-size: 13px; color: #5c7367; margin-top: 4px; }
+        .btn-nuevo { background-color: #1b5e3a; color: white; padding: 10px 18px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 13px; }
+
+        /* Search Bar */
+        .search-box { width: 100%; padding: 12px 16px; border: 1px solid #d1e0d7; border-radius: 8px; background-color: #f8faf9; font-size: 13px; margin-bottom: 20px; outline: none; }
+
+        /* Cards List */
+        .card { background: white; border: 1px solid #e2ece6; border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .card-left { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 42px; height: 42px; border-radius: 8px; background-color: #e2f0e8; color: #1b5e3a; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .card-info h4 { font-size: 14px; color: #1c2a23; }
+        .card-info p { font-size: 11px; color: #8a9e93; }
+
+        /* Badges & Actions */
+        .card-actions { display: flex; align-items: center; gap: 8px; }
+        .badge-prod { background-color: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
+        .badge-activo { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
+        .badge-inactivo { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
+        .btn-action { padding: 6px 12px; border-radius: 6px; border: 1px solid #d1d5db; background: white; font-size: 12px; cursor: pointer; text-decoration: none; color: #374151; }
+        .btn-baja { border-color: #fca5a5; color: #991b1b; background-color: #fef2f2; }
+
+        /* Modal Form */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
+        .modal-content { background: white; border-radius: 12px; width: 440px; padding: 24px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 10px; font-weight: bold; color: #2d4739; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .form-input { width: 100%; padding: 10px; border: 1px solid #d1e0d7; border-radius: 6px; background-color: #f8faf9; font-size: 13px; outline: none; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        
+        /* Modal Footer */
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn-cancel { background: #edf4f0; border: none; padding: 10px 18px; border-radius: 6px; color: #2d4739; font-weight: 600; cursor: pointer; }
+        .btn-save { background: #1b5e3a; border: none; padding: 10px 18px; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; }
+        
+        .error-msg { color: #dc2626; font-size: 11px; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div>
+            <div class="logo">🌿 Agroquímicos <br><span style="font-size:10px; font-weight:normal; color:#a3c2b2;">del Valle</span></div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="#" class="nav-link">🎛️ Panel Principal</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">👤 Empleados</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">📦 Productos</a></li>
+                <li class="nav-item"><a href="#" class="nav-link active">🚚 Proveedores</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">📊 Movimientos Stock</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">🔔 Alertas</a></li>
+            </ul>
+        </div>
+        <div style="font-size: 11px; color: #a3c2b2;">
+            <strong>Administrador</strong><br>jefe@agrovalle.com
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h2 class="title">Gestión de Proveedores</h2>
+                <p class="subtitle">{{ activos_count }} activos - {{ total_count }} total</p>
+            </div>
+            <button class="btn-nuevo" onclick="abrirModal()">+ Nuevo proveedor</button>
+        </div>
+
+        <!-- Buscador -->
+        <form method="GET">
+            <input type="text" name="q" value="{{ busqueda }}" class="search-box" placeholder="Buscar por nombre, email, dirección...">
+        </form>
+
+        <!-- Lista de Tarjetas -->
+        {% for p in proveedores %}
+        <div class="card">
+            <div class="card-left">
+                <div class="avatar">{{ p.iniciales }}</div>
+                <div class="card-info">
+                    <h4>{{ p.nombre_proveedor }}</h4>
+                    <p>S00{{ p.id }}</p>
+                </div>
+            </div>
+            <div class="card-actions">
+                <span class="badge-prod">{{ p.productosxproveedores_set.count }} productos</span>
+                {% if p.estado_proveedor %}
+                    <span class="badge-activo">Activo</span>
+                {% else %}
+                    <span class="badge-inactivo">Inactivo</span>
+                {% endif %}
+                <button class="btn-action" onclick="abrirModalEditar('{{ p.id }}')">Editar</button>
+                <a href="{% url 'cambiar_estado_proveedor' p.id %}" class="btn-action btn-baja">
+                    {% if p.estado_proveedor %}Dar de baja{% else %}Activar{% endif %}
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: #7f8c8d; margin-top: 40px;">No se encontraron proveedores.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Modal Form (Crear Proveedor) -->
+    <div class="modal" id="modalProveedor">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nuevo proveedor</h3>
+                <span style="cursor:pointer;" onclick="cerrarModal()">✕</span>
+            </div>
+            <form method="POST" action="{% url 'crear_proveedor' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label>NOMBRE_PROVEEDOR</label>
+                    {{ form.nombre_proveedor }}
+                    {{ form.nombre_proveedor.errors }}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>TELEFONO_PROVEEDOR</label>
+                        {{ form.telefono_proveedor }}
+                    </div>
+                    <div class="form-group">
+                        <label>EMAIL_PROVEEDOR</label>
+                        {{ form.email_proveedor }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>DIRECCION_PROVEEDOR</label>
+                    {{ form.direccion_proveedor }}
+                </div>
+
+                <div class="form-group">
+                    <label>ESTADO_PROVEEDOR</label>
+                    {{ form.estado_proveedor }}
+                </div>
+
+                <div class="form-group">
+                    <label>PRODUCTOS SUMINISTRADOS — PRODUCTOS_X_PROVEEDORES</label>
+                    <div style="max-height: 150px; overflow-y: auto; background:#f8faf9; padding:10px; border-radius:6px; border:1px solid #d1e0d7;">
+                        {{ form.productos }}
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModal() {
+            document.getElementById('modalProveedor').style.display = 'flex';
+        }
+        function cerrarModal() {
+            document.getElementById('modalProveedor').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
