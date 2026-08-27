@@ -26,6 +26,9 @@ class GruposQuimicos(models.Model):
 
 
 class Proveedores(models.Model):
+    # Agrega esta línea al inicio del modelo:
+    ID_Proveedor = models.AutoField(primary_key=True, db_column='ID_Proveedor')
+
     ESTADO_CHOICES = [
         (True, 'Activo'),
         (False, 'Inactivo'),
