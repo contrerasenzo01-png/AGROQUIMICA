@@ -39,9 +39,10 @@
         .badge-inactivo { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
         .btn-action { padding: 6px 12px; border-radius: 6px; border: 1px solid #d1d5db; background: white; font-size: 12px; cursor: pointer; text-decoration: none; color: #374151; }
         .btn-baja { border-color: #fca5a5; color: #991b1b; background-color: #fef2f2; }
+        .btn-activar { border-color: #bbf7d0; color: #15803d; background-color: #f0fdf4; }
 
-        /* Modal Form */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; border-radius: 12px; width: 440px; padding: 24px; max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .form-group { margin-bottom: 14px; }
@@ -50,12 +51,13 @@
         .form-row { display: flex; gap: 10px; }
         .form-row .form-group { flex: 1; }
         
-        /* Modal Footer */
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
         .btn-cancel { background: #edf4f0; border: none; padding: 10px 18px; border-radius: 6px; color: #2d4739; font-weight: 600; cursor: pointer; }
         .btn-save { background: #1b5e3a; border: none; padding: 10px 18px; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; }
+        .btn-confirm-baja { background: #b91c1c; border: none; padding: 10px 18px; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; }
         
-        .error-msg { color: #dc2626; font-size: 11px; margin-top: 2px; }
+        .warning-box { background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 15px; margin-bottom: 15px; text-align: center; }
+        .warning-icon { font-size: 32px; color: #faad14; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -85,7 +87,7 @@
                 <h2 class="title">Gestión de Proveedores</h2>
                 <p class="subtitle">{{ activos_count }} activos - {{ total_count }} total</p>
             </div>
-            <button class="btn-nuevo" onclick="abrirModal()">+ Nuevo proveedor</button>
+            <button class="btn-nuevo" onclick="abrirModalCrear()">+ Nuevo proveedor</button>
         </div>
 
         <!-- Buscador -->
@@ -110,10 +112,23 @@
                 {% else %}
                     <span class="badge-inactivo">Inactivo</span>
                 {% endif %}
-                <button class="btn-action" onclick="abrirModalEditar('{{ p.id }}')">Editar</button>
-                <a href="{% url 'cambiar_estado_proveedor' p.id %}" class="btn-action btn-baja">
-                    {% if p.estado_proveedor %}Dar de baja{% else %}Activar{% endif %}
-                </a>
+                
+                <!-- Botón Editar con carga de datos -->
+                <button type="button" class="btn-action" 
+                        onclick="abrirModalEditar('{{ p.id }}', '{{ p.nombre_proveedor|escapejs }}', '{{ p.telefono_proveedor|default:''|escapejs }}', '{{ p.email_proveedor|default:''|escapejs }}', '{{ p.direccion_proveedor|default:''|escapejs }}', '{{ p.estado_proveedor|lower }}')">
+                    Editar
+                </button>
+
+                <!-- Botón Dar de Baja / Activar que activa el Cartel de Precaución -->
+                {% if p.estado_proveedor %}
+                    <button type="button" class="btn-action btn-baja" onclick="confirmarCambioEstado('{{ p.id }}', '{{ p.nombre_proveedor|escapejs }}', true)">
+                        Dar de baja
+                    </button>
+                {% else %}
+                    <button type="button" class="btn-action btn-activar" onclick="confirmarCambioEstado('{{ p.id }}', '{{ p.nombre_proveedor|escapejs }}', false)">
+                        Activar
+                    </button>
+                {% endif %}
             </div>
         </div>
         {% empty %}
@@ -121,22 +136,19 @@
         {% endfor %}
     </div>
 
-    <!-- Modal Form (Crear Proveedor) -->
-    <div class="modal" id="modalProveedor">
+    <!-- Modal Crear Proveedor -->
+    <div class="modal" id="modalCrearProveedor">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Nuevo proveedor</h3>
-                <span style="cursor:pointer;" onclick="cerrarModal()">✕</span>
+                <span style="cursor:pointer;" onclick="cerrarModal('modalCrearProveedor')">✕</span>
             </div>
             <form method="POST" action="{% url 'crear_proveedor' %}">
                 {% csrf_token %}
-                
                 <div class="form-group">
                     <label>NOMBRE_PROVEEDOR</label>
                     {{ form.nombre_proveedor }}
-                    {{ form.nombre_proveedor.errors }}
                 </div>
-
                 <div class="form-row">
                     <div class="form-group">
                         <label>TELEFONO_PROVEEDOR</label>
@@ -147,38 +159,128 @@
                         {{ form.email_proveedor }}
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>DIRECCION_PROVEEDOR</label>
                     {{ form.direccion_proveedor }}
                 </div>
-
                 <div class="form-group">
                     <label>ESTADO_PROVEEDOR</label>
                     {{ form.estado_proveedor }}
                 </div>
-
                 <div class="form-group">
                     <label>PRODUCTOS SUMINISTRADOS — PRODUCTOS_X_PROVEEDORES</label>
-                    <div style="max-height: 150px; overflow-y: auto; background:#f8faf9; padding:10px; border-radius:6px; border:1px solid #d1e0d7;">
+                    <div style="max-height: 120px; overflow-y: auto; background:#f8faf9; padding:10px; border-radius:6px; border:1px solid #d1e0d7;">
                         {{ form.productos }}
                     </div>
                 </div>
-
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                    <button type="button" class="btn-cancel" onclick="cerrarModal('modalCrearProveedor')">Cancelar</button>
                     <button type="submit" class="btn-save">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Modal Editar Proveedor -->
+    <div class="modal" id="modalEditarProveedor">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar proveedor</h3>
+                <span style="cursor:pointer;" onclick="cerrarModal('modalEditarProveedor')">✕</span>
+            </div>
+            <form id="formEditarProveedor" method="POST" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>NOMBRE_PROVEEDOR</label>
+                    <input type="text" id="edit_nombre" name="nombre_proveedor" class="form-input" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>TELEFONO_PROVEEDOR</label>
+                        <input type="text" id="edit_telefono" name="telefono_proveedor" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>EMAIL_PROVEEDOR</label>
+                        <input type="email" id="edit_email" name="email_proveedor" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>DIRECCION_PROVEEDOR</label>
+                    <input type="text" id="edit_direccion" name="direccion_proveedor" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>ESTADO_PROVEEDOR</label>
+                    <select id="edit_estado" name="estado_proveedor" class="form-input">
+                        <option value="True">Activo</option>
+                        <option value="False">Inactivo</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="cerrarModal('modalEditarProveedor')">Cancelar</button>
+                    <button type="submit" class="btn-save">Actualizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Confirmación Estado (Dar de baja / Activar) -->
+    <div class="modal" id="modalEstadoProveedor">
+        <div class="modal-content" style="text-align: center; padding: 28px 24px;">
+            <p style="font-size: 15px; color: #1c2a23; margin-bottom: 24px;" id="textoEstadoConfirmacion">
+                <!-- El texto dinámico se inserta con JS -->
+            </p>
+            <form id="formEstadoProveedor" method="POST" action="">
+                {% csrf_token %}
+                <div class="modal-footer" style="justify-content: center; margin-top: 0;">
+                    <button type="button" class="btn-cancel" onclick="cerrarModal('modalEstadoProveedor')">Cancelar</button>
+                    <button type="submit" class="btn-confirm-baja" id="btnConfirmarAccion">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Integrado -->
     <script>
-        function abrirModal() {
-            document.getElementById('modalProveedor').style.display = 'flex';
+        function abrirModalCrear() {
+            document.getElementById('modalCrearProveedor').style.display = 'flex';
         }
-        function cerrarModal() {
-            document.getElementById('modalProveedor').style.display = 'none';
+
+        function abrirModalEditar(id, nombre, telefono, email, direccion, estado) {
+            // Asigna dinámicamente la URL de edición al action del formulario
+            document.getElementById('formEditarProveedor').action = '/proveedores/editar/' + id + '/';
+            
+            // Carga los datos del proveedor seleccionado dentro del formulario
+            document.getElementById('edit_nombre').value = nombre;
+            document.getElementById('edit_telefono').value = telefono;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_direccion').value = direccion;
+            document.getElementById('edit_estado').value = (estado === 'true') ? 'True' : 'False';
+            
+            // Muestra el modal de edición
+            document.getElementById('modalEditarProveedor').style.display = 'flex';
+        }
+
+        function confirmarCambioEstado(id, nombre, esActivo) {
+            document.getElementById('formEstadoProveedor').action = '/proveedores/estado/' + id + '/';
+    
+            const textoModal = document.getElementById('textoEstadoConfirmacion');
+            const btnConfirmar = document.getElementById('btnConfirmarAccion');
+
+            if (esActivo) {
+                textoModal.innerHTML = '¿Está seguro que desea <strong>DAR DE BAJA</strong> al proveedor <strong>' + nombre + '</strong>?';
+                btnConfirmar.innerText = 'Dar de baja';
+                btnConfirmar.style.backgroundColor = '#b91c1c';
+            } else {
+                textoModal.innerHTML = '¿Está seguro que desea <strong>ACTIVAR</strong> al proveedor <strong>' + nombre + '</strong>?';
+                btnConfirmar.innerText = 'Activar';
+                btnConfirmar.style.backgroundColor = '#1b5e3a';
+            }
+
+            document.getElementById('modalEstadoProveedor').style.display = 'flex';
+        }
+
+        function cerrarModal(idModal) {
+            document.getElementById(idModal).style.display = 'none';
         }
     </script>
 </body>

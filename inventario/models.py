@@ -38,7 +38,7 @@ class Proveedores(models.Model):
     estado_proveedor = models.BooleanField(default=True, choices=ESTADO_CHOICES, verbose_name="Estado")
 
     class Meta:
-        db_table = 'proveedores'
+        db_table = 'PROVEEDORES'
         verbose_name_plural = "Proveedores"
 
     def __str__(self):
