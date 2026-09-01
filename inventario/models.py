@@ -2,27 +2,27 @@ from django.db import models
 
 class TiposProductos(models.Model):
     ID_Tipo_producto = models.AutoField(primary_key=True)
-    Nombre_producto = models.CharField(max_length=50)
+    Nombre_tipo_producto = models.CharField(max_length=50)
 
     class Meta:
         db_table = 'TIPOS_PRODUCTOS'
         verbose_name_plural = "Tipos de Productos"
 
     def __str__(self):
-        return self.Nombre_producto
+        return self.Nombre_tipo_producto
 
 
-class GruposQuimicos(models.Model):
-    ID_Grupo_quimico = models.AutoField(primary_key=True)
-    Nombre_grupo_quimico = models.CharField(max_length=60)
-    Descripcion_grupo_quimico = models.CharField(max_length=200, blank=True, null=True)
+class Agroquimicos(models.Model):
+    ID_Agroquimico = models.AutoField(primary_key=True)
+    Nombre_agroquimico = models.CharField(max_length=60)
+    Descripcion_agroquimico = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
-        db_table = 'GRUPOS_QUIMICOS'
-        verbose_name_plural = "Grupos Químicos"
+        db_table = 'AGROQUIMICOS'
+        verbose_name_plural = "Agroquímicos"
 
     def __str__(self):
-        return self.Nombre_grupo_quimico
+        return self.Nombre_agroquimico
 
 
 class Proveedores(models.Model):
@@ -84,7 +84,7 @@ class Empleados(models.Model):
     Nombre_empleado = models.CharField(max_length=50)
     Apellido_empleado = models.CharField(max_length=50)
     Telefono_empleado = models.CharField(max_length=20, blank=True, null=True)
-    Email_empleado = models.CharField(max_length=50, blank=True, null=True)
+    Email_empleado = models.EmailField(max_length=100, blank=True, null=True)
     ID_Tipo_empleado = models.ForeignKey(TiposEmpleados, on_delete=models.CASCADE, db_column='ID_Tipo_empleado')
 
     class Meta:
@@ -102,7 +102,7 @@ class Productos(models.Model):
     Descripcion_producto = models.CharField(max_length=100, blank=True, null=True)
     Fecha_vencimiento = models.DateField(blank=True, null=True)
     Precio = models.DecimalField(max_digits=10, decimal_places=2)
-    grupos_quimicos = models.ManyToManyField(GruposQuimicos, through='ProductosXGruposQuimicos')
+    agroquimicos = models.ManyToManyField(Agroquimicos, through='ProductosXAgroquimicos')
     proveedores = models.ManyToManyField(Proveedores, through='ProductosXProveedores')
 
     class Meta:
@@ -113,19 +113,19 @@ class Productos(models.Model):
         return self.Nombre_producto
 
 
-class ProductosXGruposQuimicos(models.Model):
+class ProductosXAgroquimicos(models.Model):
     ID_Producto = models.ForeignKey(Productos, on_delete=models.CASCADE, db_column='ID_Producto')
-    ID_Grupo_quimico = models.ForeignKey(GruposQuimicos, on_delete=models.CASCADE, db_column='ID_Grupo_quimico')
+    ID_Agroquimico = models.ForeignKey(Agroquimicos, on_delete=models.CASCADE, db_column='ID_Agroquimico')
 
     class Meta:
-        db_table = 'PRODUCTOS_X_GRUPOS_QUIMICOS'
-        unique_together = (('ID_Producto', 'ID_Grupo_quimico'),)
-        verbose_name_plural = "Productos por Grupos Químicos"
+        db_table = 'PRODUCTOS_X_AGROQUIMICOS'
+        unique_together = (('ID_Producto', 'ID_Agroquimico'),)
+        verbose_name_plural = "Productos por Agroquímicos"
 
 
 class ProductosXProveedores(models.Model):
     ID_Producto = models.ForeignKey(Productos, on_delete=models.CASCADE, db_column='ID_Producto')
-    ID_Proveedor = models.ForeignKey(Proveedores, on_delete=models.CASCADE, db_column='ID_Proveedores')
+    ID_Proveedor = models.ForeignKey(Proveedores, on_delete=models.CASCADE, db_column='ID_Proveedor')
 
     class Meta:
         db_table = 'PRODUCTOS_X_PROVEEDORES'
@@ -135,7 +135,7 @@ class ProductosXProveedores(models.Model):
 
 class Stock(models.Model):
     ID_Stock = models.AutoField(primary_key=True)
-    ID_Producto = models.ForeignKey(Productos, on_delete=models.CASCADE, db_column='ID_Producto')
+    ID_Producto = models.OneToOneField(Productos, on_delete=models.CASCADE, db_column='ID_Producto')    
     Cantidad_stock = models.IntegerField()
     Stock_minimo = models.IntegerField()
 
