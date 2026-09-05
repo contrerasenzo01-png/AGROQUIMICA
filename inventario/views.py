@@ -26,6 +26,7 @@ from .forms import ProveedorForm
 
 def gestion_proveedores(request):
     busqueda = request.GET.get('q', '')
+
     proveedores_list = Proveedores.objects.all()
 
     if busqueda:
@@ -83,8 +84,18 @@ def crear_proveedor(request):
             ''
         ).strip()
 
+        telefono = request.POST.get(
+            'telefono_proveedor',
+            ''
+        ).strip()
+
         email = request.POST.get(
             'email_proveedor',
+            ''
+        ).strip()
+
+        direccion = request.POST.get(
+            'direccion_proveedor',
             ''
         ).strip()
 
@@ -95,14 +106,29 @@ def crear_proveedor(request):
                 nombre_proveedor__iexact=nombre
             )
 
+        if telefono:
+            query |= Q(
+                telefono_proveedor__iexact=telefono
+            )
+
         if email:
             query |= Q(
                 email_proveedor__iexact=email
             )
 
+        if direccion:
+            query |= Q(
+                direccion_proveedor__iexact=direccion
+            )
+
         conflicto = (
             Proveedores.objects.filter(query).first()
-            if (nombre or email)
+            if (
+                nombre or
+                telefono or
+                email or
+                direccion
+            )
             else None
         )
 
@@ -153,8 +179,18 @@ def editar_proveedor(request, pk):
             ''
         ).strip()
 
+        telefono = request.POST.get(
+            'telefono_proveedor',
+            ''
+        ).strip()
+
         email = request.POST.get(
             'email_proveedor',
+            ''
+        ).strip()
+
+        direccion = request.POST.get(
+            'direccion_proveedor',
             ''
         ).strip()
 
@@ -165,9 +201,19 @@ def editar_proveedor(request, pk):
                 nombre_proveedor__iexact=nombre
             )
 
+        if telefono:
+            query |= Q(
+                telefono_proveedor__iexact=telefono
+            )
+
         if email:
             query |= Q(
                 email_proveedor__iexact=email
+            )
+
+        if direccion:
+            query |= Q(
+                direccion_proveedor__iexact=direccion
             )
 
         conflicto = (
@@ -175,7 +221,12 @@ def editar_proveedor(request, pk):
             .filter(query)
             .exclude(pk=pk)
             .first()
-            if (nombre or email)
+            if (
+                nombre or
+                telefono or
+                email or
+                direccion
+            )
             else None
         )
 
@@ -240,9 +291,15 @@ def cambiar_estado_proveedor(request, pk):
             pk=pk
         )
 
-        proveedor.estado_proveedor = (
-            not proveedor.estado_proveedor
+        estado = request.POST.get(
+            'estado'
         )
+
+        if estado == 'inactivo':
+            proveedor.estado_proveedor = False
+
+        elif estado == 'activo':
+            proveedor.estado_proveedor = True
 
         proveedor.save(
             update_fields=[
@@ -679,7 +736,6 @@ def gestion_productos(request):
         )
 
     tipos_productos = TiposProductos.objects.all()
-
     agroquimicos = Agroquimicos.objects.all()
 
     proveedores = Proveedores.objects.filter(
@@ -957,7 +1013,9 @@ def gestion_movimientos_stock(request):
     )
 
     empleados = Empleados.objects.all()
+
     tipos_movimientos = TiposMovimientos.objects.all()
+
     stock = Stock.objects.select_related(
         'ID_Producto'
     ).all()
