@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agroquímicos del Valle - Login</title>
+  <link rel="stylesheet" href="{% static 'inventario/styles/login.css' %}">
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="logo-icon">A</div>
+    <h1>Agroquímicos del Valle</h1>
+    <div class="subtitle">Sistema de Gestión Interno</div>
+
+    <div class="card">
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label for="usuario">Usuario</label>
+          <input 
+            type="text" 
+            id="usuario" 
+            name="usuario" 
+            value="{{ request.POST.usuario|default:'jede' }}" 
+            required 
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            placeholder="********" 
+            required
+          >
+        </div>
+
+        {% if error %}
+          <div class="error-box">
+            {{ error }}
+          </div>
+        {% endif %}
+
+        <button type="submit" class="btn-submit">Ingresar al sistema</button>
+
+        <div class="footer-text">
+          Acceso restringido — solo personal autorizado
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

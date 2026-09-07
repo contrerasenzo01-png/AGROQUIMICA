@@ -1,0 +1,270 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  height: 100vh;
+  background-color: #f1f5f3;
+  color: #1c2a23;
+}
+
+.layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ==========================================
+   BARRA LATERAL (SIDEBAR)
+   ========================================== */
+.sidebar {
+  width: 220px;
+  background-color: #0b311e;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 16px;
+  height: 100vh;
+  flex-shrink: 0;
+}
+
+/* Logo */
+.logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+/* Menú de Navegación */
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 6px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: #a3c2b2;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 13.5px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link.active,
+.nav-link:hover {
+  background-color: #16472d;
+  color: #ffffff;
+}
+
+.nav-icon {
+  font-size: 14px;
+}
+
+/* Pie del Sidebar (Usuario y Login) */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 15px;
+}
+
+.user-role {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.user-email {
+  font-size: 11px;
+  color: #83a595;
+  margin-bottom: 12px;
+}
+
+.logout-link {
+  font-size: 11px;
+  color: #a3c2b2;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.logout-link:hover {
+  color: #ffffff;
+}
+
+/* ==========================================
+   ÁREA PRINCIPAL (MAIN CONTENT)
+   ========================================== */
+.main-content {
+  flex: 1;
+  padding: 25px 30px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 20px;
+  color: #0b311e;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: #5c7367;
+  margin-top: 2px;
+}
+
+/* Grid de Métricas superiores */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.metric-card {
+  background: white;
+  border: 1px solid #e2ece6;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.metric-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a9e93;
+}
+
+.metric-value {
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.metric-value.green { color: #1b5e3a; }
+.metric-value.blue { color: #2563eb; }
+.metric-value.red { color: #b91c1c; }
+.metric-value.orange { color: #f59f00; }
+
+/* Grid de Gráfico y Alertas */
+.panels-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.card-panel {
+  background: white;
+  border: 1px solid #e2ece6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.card-panel h2 {
+  font-size: 13px;
+  color: #0b311e;
+  margin-bottom: 12px;
+}
+
+.chart-container {
+  height: 180px;
+  position: relative;
+}
+
+/* Lista de Stock Bajo */
+.stock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stock-item {
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  padding: 10px 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stock-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1c2a23;
+}
+
+.stock-qty {
+  font-size: 11px;
+  font-weight: bold;
+  color: #b91c1c;
+}
+
+/* Tabla de Movimientos */
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.custom-table th {
+  border-bottom: 1px solid #e2ece6;
+  text-align: left;
+  color: #8a9e93;
+  padding-bottom: 10px;
+  font-weight: 600;
+}
+
+.custom-table td {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f4f2;
+}
+
+.id-mov { font-weight: bold; }
+.qty-negative { font-weight: bold; color: #b91c1c; }
+.qty-positive { font-weight: bold; color: #1b5e3a; }
+.obs-text { color: #5c7367; }
+
+.badge-tag {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.badge-tag.salida {
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #ef4444;
+}
+
+.badge-tag.entrada {
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+}
+
+.badge-tag.vencimiento {
+  background-color: #fffbe3;
+  border: 1px solid #fde047;
+  color: #b45309;
+}

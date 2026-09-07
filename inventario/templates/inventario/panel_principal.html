@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Principal - Agroquímicos del Valle</title>
+  <link rel="stylesheet" href="{% static 'inventario/styles/panel_principal.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="layout">
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    <aside class="sidebar">
+      <div>
+        <div class="logo">
+          🌿 Agroquímica del Valle
+        </div>
+
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="{% url 'panel_principal' %}" class="nav-link active">
+              <span class="nav-icon">🎛️</span> Panel Principal
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'gestion_empleados' %}" class="nav-link">
+              <span class="nav-icon">👤</span> Empleados
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'gestion_productos' %}" class="nav-link">
+              <span class="nav-icon">📦</span> Productos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+              <span class="nav-icon">🚚</span> Proveedores
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+              <span class="nav-icon">📊</span> Movimientos Stock
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- FOOTER DEL SIDEBAR (USUARIO Y LOGOUT) -->
+      <div class="user-info">
+        <div class="user-role">Administrador</div>
+        <div class="user-email">jefe@agrovalle.com</div>
+        <a href="{% url 'login' %}" class="logout-link">Cerrar sesión</a>
+      </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <header class="header">
+        <h1>Panel Principal</h1>
+        <div class="subtitle">Bienvenido — lunes, 7 de septiembre de 2026</div>
+      </header>
+
+      <!-- TARJETAS DE MÉTRICAS -->
+      <section class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-title">Empleados activos</div>
+          <div class="metric-value green">3</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Productos en stock</div>
+          <div class="metric-value blue">6</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Stock bajo / crítico</div>
+          <div class="metric-value red">3</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Alertas sin leer</div>
+          <div class="metric-value orange">1</div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN DE GRÁFICO Y ALERTAS -->
+      <section class="panels-grid">
+        <div class="card-panel">
+          <h2>Productos por grupo químico</h2>
+          <div class="chart-container">
+            <canvas id="barChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h2>Stock bajo y próximos a vencer</h2>
+          <div class="stock-list">
+            <div class="stock-item">
+              <span class="stock-name">Glifosato 48%</span>
+              <span class="stock-qty">12/20 Litro</span>
+            </div>
+            <div class="stock-item">
+              <span class="stock-name">Mancozeb 80%</span>
+              <span class="stock-qty">8/15 Kilogramo</span>
+            </div>
+            <div class="stock-item">
+              <span class="stock-name">Urea 46%</span>
+              <span class="stock-qty">3/50 Kilogramo</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TABLA DE MOVIMIENTOS DE STOCK -->
+      <section class="card-panel">
+        <h2>Últimos movimientos de stock</h2>
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>ID Movimiento</th>
+              <th>Fecha</th>
+              <th>Producto</th>
+              <th>Tipo</th>
+              <th>Cantidad</th>
+              <th>Observaciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="id-mov">MOV-0008</td>
+              <td>26/8/2026</td>
+              <td>Urea 46%</td>
+              <td><span class="badge-tag salida">Salida</span></td>
+              <td class="qty-negative">-97</td>
+              <td class="obs-text">Venta temporada siembra — factura B-0115</td>
+            </tr>
+            <tr>
+              <td class="id-mov">MOV-0006</td>
+              <td>21/8/2026</td>
+              <td>Mancozeb 80%</td>
+              <td><span class="badge-tag salida">Salida</span></td>
+              <td class="qty-negative">-22</td>
+              <td class="obs-text">Despacho pedido #445 — cliente agrícola</td>
+            </tr>
+            <tr>
+              <td class="id-mov">MOV-0004</td>
+              <td>16/8/2026</td>
+              <td>Clorpirifos 48%</td>
+              <td><span class="badge-tag salida">Salida</span></td>
+              <td class="qty-negative">-35</td>
+              <td class="obs-text">Venta cliente minorista — factura B-0101</td>
+            </tr>
+            <tr>
+              <td class="id-mov">MOV-0009</td>
+              <td>11/8/2026</td>
+              <td>Cipermetrina 25%</td>
+              <td><span class="badge-tag vencimiento">Salida por vencimiento</span></td>
+              <td class="qty-negative">-5</td>
+              <td class="obs-text">Baja por vencimiento de lote — producto retir</td>
+            </tr>
+            <tr>
+              <td class="id-mov">MOV-0002</td>
+              <td>1/8/2026</td>
+              <td>Glifosato 48%</td>
+              <td><span class="badge-tag salida">Salida</span></td>
+              <td class="qty-negative">-38</td>
+              <td class="obs-text">Venta cliente mayorista — factura B-0089</td>
+            </tr>
+            <tr>
+              <td class="id-mov">MOV-0010</td>
+              <td>27/7/2026</td>
+              <td>Azoxistrobina 25%</td>
+              <td><span class="badge-tag entrada">Entrada</span></td>
+              <td class="qty-positive">+40</td>
+              <td class="obs-text">Reposición stock mínimo — orden compra 88</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('barChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Herbicidas', 'Fungicidas', 'Insecticidas', 'Fertilizantes'],
+        datasets: [{
+          data: [1, 2, 2, 1],
+          backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
+          borderRadius: 4,
+          barThickness: 16
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, max: 2, ticks: { stepSize: 0.5 } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

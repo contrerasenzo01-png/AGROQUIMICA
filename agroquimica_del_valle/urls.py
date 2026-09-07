@@ -2,6 +2,13 @@ from django.urls import path
 from inventario import views
 
 urlpatterns = [
+    #Login
+    path('', views.login_view, name='login'),
+    path('login/', views.login_view, name='login'),
+
+    #Panel principal
+    path('panel-principal/', views.panel_principal, name='panel_principal'),
+
     # Proveedores
     path('proveedores/', views.gestion_proveedores, name='gestion_proveedores'),
     path('proveedores/crear/', views.crear_proveedor, name='crear_proveedor'),

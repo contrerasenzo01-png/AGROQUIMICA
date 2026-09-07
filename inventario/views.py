@@ -17,6 +17,25 @@ from .models import (
     MovimientosStock
 )
 
+def login_view(request):
+    error_message = None
+
+    if request.method == 'POST':
+        usuario_input = request.POST.get('usuario')
+        password_input = request.POST.get('password')
+
+        # Define aquí tu usuario y contraseña requeridos
+        if usuario_input == 'jefe' and password_input == '1234':
+            return redirect('panel_principal')
+        else:
+            error_message = 'Usuario o contraseña incorrectos'
+
+    return render(request, 'inventario/login.html', {'error': error_message})
+
+# Vista para renderizar el Panel Principal
+def panel_principal(request):
+    return render(request, 'inventario/panel_principal.html')
+
 from .forms import ProveedorForm
 
 

@@ -37,50 +37,45 @@
 
 <!-- Sidebar -->
 <aside class="sidebar">
-    <div>
-        <div class="logo">
-            🌿 Agroquímica del Valle
-        </div>
-
-        <nav>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        🎛️ Panel Principal
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        👤 Empleados
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        📦 Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="#" class="nav-link active">
-                        🚚 Proveedores
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        📊 Movimientos Stock
-                    </a>
-                </li>
-            </ul>
-        </nav>
+  <div>
+    <div class="logo">
+      🌿 Agroquímica del Valle
     </div>
 
-    <div class="user-info">
-        <strong>Administrador</strong><br>
-        jefe@agrovalle.com
-    </div>
+    <ul class="nav-menu">
+      <li class="nav-item">
+        <a href="{% url 'panel_principal' %}" class="nav-link">
+          <span class="nav-icon">🎛️</span> Panel Principal
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'gestion_empleados' %}" class="nav-link">
+          <span class="nav-icon">👤</span> Empleados
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'gestion_productos' %}" class="nav-link">
+          <span class="nav-icon">📦</span> Productos
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'gestion_proveedores' %}" class="nav-link active">
+          <span class="nav-icon">🚚</span> Proveedores
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+          <span class="nav-icon">📊</span> Movimientos Stock
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="user-info">
+    <div class="user-role">Administrador</div>
+    <div class="user-email">jefe@agrovalle.com</div>
+    <a href="{% url 'login' %}" class="logout-link">Cerrar sesión</a>
+  </div>
 </aside>
 
 <!-- Contenido Principal -->
