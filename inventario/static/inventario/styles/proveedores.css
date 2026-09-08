@@ -2,6 +2,7 @@
 
 body { display: flex; height: 100vh; background-color: #f1f5f3; color: #1c2a23; }
 
+
 /* Notificaciones Toasts */
 
 .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
@@ -24,21 +25,92 @@ body { display: flex; height: 100vh; background-color: #f1f5f3; color: #1c2a23; 
 
 /* Sidebar */
 
-.sidebar { width: 240px; background-color: #0d3824; color: #ffffff; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 15px; flex-shrink: 0; }
+.sidebar {
+  width: 220px;
+  background-color: #0b311e;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 16px;
+  height: 100vh;
+  flex-shrink: 0;
+}
 
-.logo { font-size: 16px; font-weight: bold; margin-bottom: 30px; color: #ffffff; display: flex; flex-direction: column; gap: 2px; }
+/* Logo */
+.logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
 
-.logo-subtitle { font-size: 10px; font-weight: normal; color: #a3c2b2; }
+/* Menú de Navegación */
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-.nav-menu { list-style: none; }
+.nav-item {
+  margin-bottom: 6px;
+}
 
-.nav-item { margin-bottom: 8px; }
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: #a3c2b2;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 13.5px;
+  transition: background-color 0.2s, color 0.2s;
+}
 
-.nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: #a3c2b2; text-decoration: none; border-radius: 6px; font-size: 14px; transition: background-color 0.2s, color 0.2s; }
+.nav-link.active,
+.nav-link:hover {
+  background-color: #16472d;
+  color: #ffffff;
+}
 
-.nav-link.active, .nav-link:hover { background-color: #1b4d34; color: #ffffff; }
+.nav-icon {
+  font-size: 14px;
+}
 
-.user-info { font-size: 11px; color: #a3c2b2; }
+/* Pie del Sidebar (Usuario y Login) */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 15px;
+}
+
+.user-role {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.user-email {
+  font-size: 11px;
+  color: #83a595;
+  margin-bottom: 12px;
+}
+
+.logout-link {
+  font-size: 11px;
+  color: #a3c2b2;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.logout-link:hover {
+  color: #ffffff;
+}
 
 /* Contenido Principal */
 
