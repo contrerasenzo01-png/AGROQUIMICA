@@ -36,7 +36,7 @@ def login_view(request):
 
         # Define aquí tu usuario y contraseña requeridos
 
-        if usuario_input == 'jefe' and password_input == '1234':
+        if usuario_input == 'jefe' and password_input == 'jefe2026':
 
             return redirect('panel_principal')
 
