@@ -29,6 +29,7 @@ urlpatterns = [
     path('usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
     path('usuarios/crear/', views.crear_usuario, name='crear_usuario'),
     path('usuarios/editar/<int:pk>/', views.editar_usuario, name='editar_usuario'),
+    path('usuarios/baja/<int:pk>/', views.dar_baja_usuario, name='dar_baja_usuario'),
 
     # Tipos de movimientos
     path('tipos-movimientos/', views.gestion_tipos_movimientos, name='gestion_tipos_movimientos'),

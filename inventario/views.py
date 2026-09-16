@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.contrib import messages
+from django.utils import timezone
 
 from .forms import ProveedorForm
 
@@ -738,6 +739,28 @@ def editar_usuario(request, pk):
         'gestion_usuarios'
     )
 
+def dar_baja_usuario(request, pk):
+
+    usuario = get_object_or_404(
+        Usuarios,
+        pk=pk
+    )
+
+    if request.method == 'POST':
+
+        usuario.Estado_usuario = False
+        usuario.Fecha_Baja = timezone.now().date()
+
+        usuario.save()
+
+        messages.success(
+            request,
+            'Usuario dado de baja correctamente.'
+        )
+
+    return redirect(
+        'gestion_usuarios'
+    )
 
 # ============================================================
 # TIPOS DE MOVIMIENTOS

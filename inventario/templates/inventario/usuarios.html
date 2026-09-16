@@ -160,6 +160,7 @@
         <div class="section-header">
 
             <div>
+
                 <h2>
                     Usuarios registrados
                 </h2>
@@ -167,6 +168,7 @@
                 <span class="records-count">
                     {{ usuarios|length }} registros
                 </span>
+
             </div>
 
         </div>
@@ -181,13 +183,14 @@
                     <tr>
                         <th>ID</th>
                         <th>Usuario</th>
-                        <th>Apellido y Nombre</th>
+                        <th>Apellido</th>
+                        <th>Nombre</th>
                         <th>DNI</th>
-                        <th>Correo</th>
+                        <th>Correo_usuario</th>
                         <th>Perfil</th>
-                        <th>Estado</th>
-                        <th>Últ. modificación</th>
-                        <th>Fecha de baja</th>
+                        <th>Estado_usuario</th>
+                        <th>Fecha_ultima_modificacion</th>
+                        <th>Fecha_baja</th>
                         <th>Acciones</th>
                     </tr>
 
@@ -209,6 +212,9 @@
 
                             <td>
                                 {{ usuario.Apellido_usuario }},
+                            </td>
+                            
+                            <td>
                                 {{ usuario.Nombre_usuario }}
                             </td>
 
@@ -221,9 +227,11 @@
                             </td>
 
                             <td>
+
                                 <span class="badge-role">
                                     {{ usuario.ID_Perfil.Nombre_perfil }}
                                 </span>
+
                             </td>
 
                             <td>
@@ -260,12 +268,37 @@
 
                             <td>
 
+                                <!-- MODIFICAR -->
                                 <a
                                     href="{% url 'editar_usuario' usuario.ID_Usuario %}"
                                     class="btn-action"
                                 >
                                     Editar
                                 </a>
+
+
+                                <!-- DAR DE BAJA -->
+                                {% if usuario.Estado_usuario %}
+
+                                    <form
+                                        method="POST"
+                                        action="{% url 'dar_baja_usuario' usuario.ID_Usuario %}"
+                                        style="display: inline;"
+                                        onsubmit="return confirmarBaja();"
+                                    >
+
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="btn-baja"
+                                        >
+                                            Dar de baja
+                                        </button>
+
+                                    </form>
+
+                                {% endif %}
 
                             </td>
 
@@ -294,7 +327,203 @@
 </main>
 
 
+<!-- ==========================================
+     MODAL REGISTRAR USUARIO
+     ========================================== -->
+
+<div class="modal" id="modalCrear">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2>
+                Registrar usuario
+            </h2>
+
+            <span
+                class="modal-close"
+                onclick="cerrarModalCrear()"
+            >
+                ✕
+            </span>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{% url 'crear_usuario' %}"
+            id="formCrearUsuario"
+        >
+
+            {% csrf_token %}
+
+
+            <div class="form-grid">
+
+
+                <!-- DNI -->
+                <div class="form-group">
+
+                    <label>
+                        DNI
+                    </label>
+
+                    <input
+                        type="number"
+                        name="DNI"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- APELLIDO -->
+                <div class="form-group">
+
+                    <label>
+                        Apellido
+                    </label>
+
+                    <input
+                        type="text"
+                        name="Apellido_usuario"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- NOMBRE -->
+                <div class="form-group">
+
+                    <label>
+                        Nombre
+                    </label>
+
+                    <input
+                        type="text"
+                        name="Nombre_usuario"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- USUARIO -->
+                <div class="form-group">
+
+                    <label>
+                        Usuario
+                    </label>
+
+                    <input
+                        type="text"
+                        name="Usuario"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- CONTRASEÑA -->
+                <div class="form-group">
+
+                    <label>
+                        Contraseña
+                    </label>
+
+                    <input
+                        type="password"
+                        name="Contrasena"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- CORREO -->
+                <div class="form-group">
+
+                    <label>
+                        Correo
+                    </label>
+
+                    <input
+                        type="email"
+                        name="Email_usuario"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- PERFIL -->
+                <div class="form-group">
+
+                    <label>
+                        Perfil
+                    </label>
+
+                    <select
+                        name="ID_Perfil"
+                        required
+                    >
+
+                        <option value="">
+                            Seleccionar perfil
+                        </option>
+
+                        {% for perfil in perfiles %}
+
+                            <option value="{{ perfil.ID_Perfil }}">
+                                {{ perfil.Nombre_perfil }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- BOTONES DENTRO DEL FORMULARIO -->
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="btn-cancelar"
+                    onclick="cerrarModalCrear()"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-guardar"
+                >
+                    Registrar usuario
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
 <script>
+
+/* ==========================================
+   MENSAJES
+   ========================================== */
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -322,9 +551,49 @@ function cerrarToast(id) {
 }
 
 
+/* ==========================================
+   MODAL NUEVO USUARIO
+   ========================================== */
+
 function abrirModalCrear() {
 
-    // Aquí se agregará el formulario para registrar usuario.
+    document.getElementById('modalCrear').style.display = 'flex';
+
+}
+
+
+function cerrarModalCrear() {
+
+    const modal = document.getElementById('modalCrear');
+    modal.style.display = 'none';
+    
+    // Limpia los datos ingresados al cerrar
+    const form = document.getElementById('formCrearUsuario');
+    if (form) {
+        form.reset();
+    }
+
+}
+
+
+// Cierra el modal al hacer clic en el fondo oscuro translúcido
+window.onclick = function(event) {
+    const modal = document.getElementById('modalCrear');
+    if (event.target === modal) {
+        cerrarModalCrear();
+    }
+};
+
+
+/* ==========================================
+   CONFIRMAR BAJA
+   ========================================== */
+
+function confirmarBaja() {
+
+    return confirm(
+        '¿Está seguro de que desea dar de baja este usuario?'
+    );
 
 }
 

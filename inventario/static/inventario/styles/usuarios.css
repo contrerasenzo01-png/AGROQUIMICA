@@ -14,7 +14,7 @@ body {
 
 
 /* ==========================================
-   BARRA LATERAL
+   BARRA LATERAL (SIDEBAR)
    ========================================== */
 
 .sidebar {
@@ -137,7 +137,7 @@ body {
 
 
 /* ==========================================
-   BOTÓN NUEVO
+   BOTONES Y ACCIONES
    ========================================== */
 
 .btn-nuevo {
@@ -149,10 +149,44 @@ body {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .btn-nuevo:hover {
     background-color: #16472d;
+}
+
+.btn-action {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 5px;
+    background-color: #f1f5f3;
+    color: #0b311e;
+    border: 1px solid #d7e3dc;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.btn-action:hover {
+    background-color: #e2ece6;
+}
+
+.btn-baja {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 5px;
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-baja:hover {
+    background-color: #fee2e2;
 }
 
 
@@ -182,7 +216,7 @@ body {
 
 
 /* ==========================================
-   PANEL
+   PANEL Y TABLA
    ========================================== */
 
 .card-panel {
@@ -210,11 +244,6 @@ body {
     font-size: 11px;
     color: #8a9e93;
 }
-
-
-/* ==========================================
-   TABLA
-   ========================================== */
 
 .table-container {
     width: 100%;
@@ -256,9 +285,15 @@ body {
     color: #0b311e;
 }
 
+.empty-message {
+    text-align: center;
+    color: #8a9e93;
+    padding: 30px !important;
+}
+
 
 /* ==========================================
-   PERFIL
+   BADGES (ESTADO Y PERFIL)
    ========================================== */
 
 .badge-role {
@@ -270,11 +305,6 @@ body {
     border: 1px solid #86efac;
     color: #15803d;
 }
-
-
-/* ==========================================
-   ESTADO
-   ========================================== */
 
 .badge-status {
     display: inline-block;
@@ -297,39 +327,146 @@ body {
 
 
 /* ==========================================
-   BOTÓN EDITAR
+   VENTANA MODAL (REGISTRAR USUARIO)
    ========================================== */
 
-.btn-action {
-    display: inline-block;
-    padding: 5px 9px;
-    border-radius: 5px;
-    background-color: #f1f5f3;
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo flotante oscuro */
+    display: none; /* Oculto por defecto (JS lo cambia a flex) */
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 540px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: fadeInModal 0.25s ease-out;
+}
+
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 22px;
+    border-bottom: 1px solid #e2ece6;
+}
+
+.modal-header h2 {
+    font-size: 15px;
     color: #0b311e;
+    margin: 0;
+}
+
+.modal-close {
+    font-size: 18px;
+    cursor: pointer;
+    color: #8a9e93;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #1c2a23;
+}
+
+.form-grid {
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Muestra los inputs a 2 columnas */
+    gap: 14px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #5c7367;
+}
+
+.form-group input,
+.form-group select {
+    padding: 9px 12px;
     border: 1px solid #d7e3dc;
-    text-decoration: none;
-    font-size: 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+    background-color: #ffffff;
+    color: #1c2a23;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #0b311e;
+}
+
+.modal-actions {
+    padding: 14px 22px;
+    background-color: #f8faf9;
+    border-top: 1px solid #e2ece6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-cancelar {
+    background-color: transparent;
+    border: 1px solid #d7e3dc;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #5c7367;
     font-weight: 600;
 }
 
-.btn-action:hover {
+.btn-cancelar:hover {
     background-color: #e2ece6;
 }
 
+.btn-guardar {
+    background-color: #0b311e;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
 
-/* ==========================================
-   SIN USUARIOS
-   ========================================== */
-
-.empty-message {
-    text-align: center;
-    color: #8a9e93;
-    padding: 30px !important;
+.btn-guardar:hover {
+    background-color: #16472d;
 }
 
 
 /* ==========================================
-   TOASTS
+   TOASTS / NOTIFICACIONES DE DJANGO
    ========================================== */
 
 .toast-container {
@@ -351,18 +488,19 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-left: 4px solid #0b311e;
 }
 
 .toast.success {
-    border-left: 4px solid #15803d;
+    border-left-color: #15803d;
 }
 
 .toast.warning {
-    border-left: 4px solid #f59f00;
+    border-left-color: #f59f00;
 }
 
 .toast.error {
-    border-left: 4px solid #b91c1c;
+    border-left-color: #b91c1c;
 }
 
 .toast-close {
@@ -391,7 +529,7 @@ body {
         width: calc(100% - 200px);
     }
 
-    .custom-table {
-        min-width: 900px;
+    .form-grid {
+        grid-template-columns: 1fr; /* Pasa el formulario a una sola columna */
     }
 }
