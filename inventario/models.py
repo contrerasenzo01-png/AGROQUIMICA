@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class TiposProductos(models.Model):
     ID_Tipo_producto = models.AutoField(primary_key=True)
     Nombre_tipo_producto = models.CharField(max_length=50)
@@ -15,7 +16,11 @@ class TiposProductos(models.Model):
 class Agroquimicos(models.Model):
     ID_Agroquimico = models.AutoField(primary_key=True)
     Nombre_agroquimico = models.CharField(max_length=60)
-    Descripcion_agroquimico = models.CharField(max_length=200, blank=True, null=True)
+    Descripcion_agroquimico = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True
+    )
 
     class Meta:
         db_table = 'AGROQUIMICOS'
@@ -26,19 +31,47 @@ class Agroquimicos(models.Model):
 
 
 class Proveedores(models.Model):
-    # Agrega esta línea al inicio del modelo:
-    ID_Proveedor = models.AutoField(primary_key=True, db_column='ID_Proveedor')
+    ID_Proveedor = models.AutoField(
+        primary_key=True,
+        db_column='ID_Proveedor'
+    )
 
     ESTADO_CHOICES = [
         (True, 'Activo'),
         (False, 'Inactivo'),
     ]
 
-    nombre_proveedor = models.CharField(max_length=150, unique=True, verbose_name="Nombre del Proveedor")
-    telefono_proveedor = models.CharField(max_length=50, blank=True, null=True, verbose_name="Teléfono")
-    email_proveedor = models.EmailField(blank=True, null=True, verbose_name="Email")
-    direccion_proveedor = models.CharField(max_length=255, blank=True, null=True, verbose_name="Dirección")
-    estado_proveedor = models.BooleanField(default=True, choices=ESTADO_CHOICES, verbose_name="Estado")
+    nombre_proveedor = models.CharField(
+        max_length=150,
+        unique=True,
+        verbose_name="Nombre del Proveedor"
+    )
+
+    telefono_proveedor = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="Teléfono"
+    )
+
+    email_proveedor = models.EmailField(
+        blank=True,
+        null=True,
+        verbose_name="Email"
+    )
+
+    direccion_proveedor = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Dirección"
+    )
+
+    estado_proveedor = models.BooleanField(
+        default=True,
+        choices=ESTADO_CHOICES,
+        verbose_name="Estado"
+    )
 
     class Meta:
         db_table = 'PROVEEDORES'
@@ -50,21 +83,11 @@ class Proveedores(models.Model):
     @property
     def iniciales(self):
         palabras = self.nombre_proveedor.split()
+
         if len(palabras) >= 2:
             return f"{palabras[0][0]}{palabras[1][0]}".upper()
+
         return self.nombre_proveedor[:2].upper()
-
-
-class TiposEmpleados(models.Model):
-    ID_Tipo_empleado = models.AutoField(primary_key=True)
-    Nombre_tipo_empleado = models.CharField(max_length=50)
-
-    class Meta:
-        db_table = 'TIPOS_EMPLEADOS'
-        verbose_name_plural = "Tipos de Empleados"
-
-    def __str__(self):
-        return self.Nombre_tipo_empleado
 
 
 class TiposMovimientos(models.Model):
@@ -79,31 +102,102 @@ class TiposMovimientos(models.Model):
         return self.Nombre_tipo_movimiento
 
 
-class Empleados(models.Model):
-    ID_Empleado = models.AutoField(primary_key=True)
-    Nombre_empleado = models.CharField(max_length=50)
-    Apellido_empleado = models.CharField(max_length=50)
-    Telefono_empleado = models.CharField(max_length=20, blank=True, null=True)
-    Email_empleado = models.EmailField(max_length=100, blank=True, null=True)
-    ID_Tipo_empleado = models.ForeignKey(TiposEmpleados, on_delete=models.CASCADE, db_column='ID_Tipo_empleado')
+class Perfiles(models.Model):
+    ID_Perfil = models.AutoField(primary_key=True)
+    Nombre_perfil = models.CharField(max_length=50)
 
     class Meta:
-        db_table = 'EMPLEADOS'
-        verbose_name_plural = "Empleados"
+        db_table = 'PERFILES'
+        verbose_name_plural = "Perfiles"
 
     def __str__(self):
-        return f"{self.Nombre_empleado} {self.Apellido_empleado}"
+        return self.Nombre_perfil
+
+
+class Usuarios(models.Model):
+    ID_Usuario = models.AutoField(primary_key=True)
+
+    ID_Perfil = models.ForeignKey(
+        Perfiles,
+        on_delete=models.PROTECT,
+        db_column='ID_Perfil'
+    )
+
+    DNI = models.IntegerField()
+
+    Apellido_usuario = models.CharField(max_length=50)
+
+    Nombre_usuario = models.CharField(max_length=50)
+
+    Usuario = models.CharField(max_length=50)
+
+    Contrasena = models.CharField(
+        max_length=255,
+        db_column='Contraseña'
+    )
+
+    Email_usuario = models.EmailField(max_length=100)
+
+    Estado_usuario = models.BooleanField(default=True)
+
+    Fecha_ultima_modificacion = models.DateField(
+        auto_now=True
+    )
+
+    Fecha_Baja = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    Cambiar_contrasena = models.BooleanField(
+        default=False,
+        db_column='Cambiar_contraseña'
+    )
+
+    class Meta:
+        db_table = 'USUARIOS'
+        verbose_name_plural = "Usuarios"
+
+    def __str__(self):
+        return f"{self.Nombre_usuario} {self.Apellido_usuario} ({self.Usuario})"
 
 
 class Productos(models.Model):
     ID_Producto = models.AutoField(primary_key=True)
-    ID_Tipo_producto = models.ForeignKey(TiposProductos, on_delete=models.CASCADE, db_column='ID_Tipo_producto')
+
+    ID_Tipo_producto = models.ForeignKey(
+        TiposProductos,
+        on_delete=models.CASCADE,
+        db_column='ID_Tipo_producto'
+    )
+
     Nombre_producto = models.CharField(max_length=50)
-    Descripcion_producto = models.CharField(max_length=100, blank=True, null=True)
-    Fecha_vencimiento = models.DateField(blank=True, null=True)
-    Precio = models.DecimalField(max_digits=10, decimal_places=2)
-    agroquimicos = models.ManyToManyField(Agroquimicos, through='ProductosXAgroquimicos')
-    proveedores = models.ManyToManyField(Proveedores, through='ProductosXProveedores')
+
+    Descripcion_producto = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    Fecha_vencimiento = models.DateField(
+        blank=True,
+        null=True
+    )
+
+    Precio = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    agroquimicos = models.ManyToManyField(
+        Agroquimicos,
+        through='ProductosXAgroquimicos'
+    )
+
+    proveedores = models.ManyToManyField(
+        Proveedores,
+        through='ProductosXProveedores'
+    )
 
     class Meta:
         db_table = 'PRODUCTOS'
@@ -114,29 +208,62 @@ class Productos(models.Model):
 
 
 class ProductosXAgroquimicos(models.Model):
-    ID_Producto = models.ForeignKey(Productos, on_delete=models.CASCADE, db_column='ID_Producto')
-    ID_Agroquimico = models.ForeignKey(Agroquimicos, on_delete=models.CASCADE, db_column='ID_Agroquimico')
+    ID_Producto = models.ForeignKey(
+        Productos,
+        on_delete=models.CASCADE,
+        db_column='ID_Producto'
+    )
+
+    ID_Agroquimico = models.ForeignKey(
+        Agroquimicos,
+        on_delete=models.CASCADE,
+        db_column='ID_Agroquimico'
+    )
 
     class Meta:
         db_table = 'PRODUCTOS_X_AGROQUIMICOS'
-        unique_together = (('ID_Producto', 'ID_Agroquimico'),)
+
+        unique_together = (
+            ('ID_Producto', 'ID_Agroquimico'),
+        )
+
         verbose_name_plural = "Productos por Agroquímicos"
 
 
 class ProductosXProveedores(models.Model):
-    ID_Producto = models.ForeignKey(Productos, on_delete=models.CASCADE, db_column='ID_Producto')
-    ID_Proveedor = models.ForeignKey(Proveedores, on_delete=models.CASCADE, db_column='ID_Proveedor')
+    ID_Producto = models.ForeignKey(
+        Productos,
+        on_delete=models.CASCADE,
+        db_column='ID_Producto'
+    )
+
+    ID_Proveedor = models.ForeignKey(
+        Proveedores,
+        on_delete=models.CASCADE,
+        db_column='ID_Proveedor'
+    )
 
     class Meta:
         db_table = 'PRODUCTOS_X_PROVEEDORES'
-        unique_together = (('ID_Producto', 'ID_Proveedor'),)
+
+        unique_together = (
+            ('ID_Producto', 'ID_Proveedor'),
+        )
+
         verbose_name_plural = "Productos por Proveedores"
 
 
 class Stock(models.Model):
     ID_Stock = models.AutoField(primary_key=True)
-    ID_Producto = models.OneToOneField(Productos, on_delete=models.CASCADE, db_column='ID_Producto')    
+
+    ID_Producto = models.OneToOneField(
+        Productos,
+        on_delete=models.CASCADE,
+        db_column='ID_Producto'
+    )
+
     Cantidad_stock = models.IntegerField()
+
     Stock_minimo = models.IntegerField()
 
     class Meta:
@@ -144,28 +271,68 @@ class Stock(models.Model):
         verbose_name_plural = "Stock"
 
     def __str__(self):
-        return f"{self.ID_Producto.Nombre_producto} - Stock: {self.Cantidad_stock}"
+        return (
+            f"{self.ID_Producto.Nombre_producto} - "
+            f"Stock: {self.Cantidad_stock}"
+        )
 
 
 class Alertas(models.Model):
     ID_Alerta = models.AutoField(primary_key=True)
-    ID_Stock = models.ForeignKey(Stock, on_delete=models.CASCADE, db_column='ID_Stock')
+
+    ID_Stock = models.ForeignKey(
+        Stock,
+        on_delete=models.CASCADE,
+        db_column='ID_Stock'
+    )
+
     Mensaje = models.CharField(max_length=255)
-    Fecha_hora_alerta = models.DateTimeField(auto_now_add=True)
+
+    Fecha_hora_alerta = models.DateTimeField(
+        auto_now_add=True
+    )
 
     class Meta:
         db_table = 'ALERTAS'
         verbose_name_plural = "Alertas"
 
+    def __str__(self):
+        return self.Mensaje
+
 
 class MovimientosStock(models.Model):
     ID_Movimiento_stock = models.AutoField(primary_key=True)
-    ID_Empleado = models.ForeignKey(Empleados, on_delete=models.CASCADE, db_column='ID_Empleado')
-    ID_Tipo_movimiento = models.ForeignKey(TiposMovimientos, on_delete=models.CASCADE, db_column='ID_Tipo_movimiento')
-    ID_Stock = models.ForeignKey(Stock, on_delete=models.CASCADE, db_column='ID_Stock')
-    Fecha_hora_movimiento = models.DateTimeField(auto_now_add=True)
+
+    ID_Usuario = models.ForeignKey(
+        Usuarios,
+        on_delete=models.CASCADE,
+        db_column='ID_Usuario'
+    )
+
+    ID_Tipo_movimiento = models.ForeignKey(
+        TiposMovimientos,
+        on_delete=models.CASCADE,
+        db_column='ID_Tipo_movimiento'
+    )
+
+    ID_Stock = models.ForeignKey(
+        Stock,
+        on_delete=models.CASCADE,
+        db_column='ID_Stock'
+    )
+
+    Fecha_hora_movimiento = models.DateTimeField(
+        auto_now_add=True
+    )
+
     Cantidad = models.IntegerField()
 
     class Meta:
         db_table = 'MOVIMIENTOS_STOCK'
         verbose_name_plural = "Movimientos de Stock"
+
+    def __str__(self):
+        return (
+            f"Movimiento {self.ID_Movimiento_stock} - "
+            f"{self.Cantidad} unidades"
+        )

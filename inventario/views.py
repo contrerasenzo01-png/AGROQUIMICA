@@ -2,13 +2,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.contrib import messages
 
+from .forms import ProveedorForm
+
 from .models import (
     TiposProductos,
     Agroquimicos,
     Proveedores,
-    TiposEmpleados,
     TiposMovimientos,
-    Empleados,
+    Perfiles,
+    Usuarios,
     Productos,
     ProductosXAgroquimicos,
     ProductosXProveedores,
@@ -17,26 +19,47 @@ from .models import (
     MovimientosStock
 )
 
+
+# ============================================================
+# LOGIN
+# ============================================================
+
 def login_view(request):
+
     error_message = None
 
     if request.method == 'POST':
+
         usuario_input = request.POST.get('usuario')
         password_input = request.POST.get('password')
 
         # Define aquí tu usuario y contraseña requeridos
+
         if usuario_input == 'jefe' and password_input == '1234':
+
             return redirect('panel_principal')
+
         else:
+
             error_message = 'Usuario o contraseña incorrectos'
 
-    return render(request, 'inventario/login.html', {'error': error_message})
+    return render(
+        request,
+        'inventario/login.html',
+        {'error': error_message}
+    )
 
-# Vista para renderizar el Panel Principal
+
+# ============================================================
+# PANEL PRINCIPAL
+# ============================================================
+
 def panel_principal(request):
-    return render(request, 'inventario/panel_principal.html')
 
-from .forms import ProveedorForm
+    return render(
+        request,
+        'inventario/panel_principal.html'
+    )
 
 
 # ============================================================
@@ -44,11 +67,13 @@ from .forms import ProveedorForm
 # ============================================================
 
 def gestion_proveedores(request):
-    busqueda = request.GET.get('q', '')
+
+    busqueda = request.GET.get('q', '').strip()
 
     proveedores_list = Proveedores.objects.all()
 
     if busqueda:
+
         proveedores_list = proveedores_list.filter(
             Q(nombre_proveedor__icontains=busqueda) |
             Q(email_proveedor__icontains=busqueda) |
@@ -75,6 +100,7 @@ def gestion_proveedores(request):
     proveedor_conflicto = None
 
     if error_duplicado_id:
+
         proveedor_conflicto = Proveedores.objects.filter(
             pk=error_duplicado_id
         ).first()
@@ -95,7 +121,9 @@ def gestion_proveedores(request):
 
 
 def crear_proveedor(request):
+
     if request.method == 'POST':
+
         form = ProveedorForm(request.POST)
 
         nombre = request.POST.get(
@@ -121,37 +149,45 @@ def crear_proveedor(request):
         query = Q()
 
         if nombre:
+
             query |= Q(
                 nombre_proveedor__iexact=nombre
             )
 
         if telefono:
+
             query |= Q(
                 telefono_proveedor__iexact=telefono
             )
 
         if email:
+
             query |= Q(
                 email_proveedor__iexact=email
             )
 
         if direccion:
+
             query |= Q(
                 direccion_proveedor__iexact=direccion
             )
 
         conflicto = (
+
             Proveedores.objects.filter(query).first()
+
             if (
                 nombre or
                 telefono or
                 email or
                 direccion
             )
+
             else None
         )
 
         if conflicto:
+
             request.session[
                 'error_duplicado_id'
             ] = conflicto.pk
@@ -161,6 +197,7 @@ def crear_proveedor(request):
             )
 
         if form.is_valid():
+
             proveedor = form.save()
 
             productos_seleccionados = (
@@ -168,7 +205,9 @@ def crear_proveedor(request):
             )
 
             if productos_seleccionados:
+
                 for prod in productos_seleccionados:
+
                     ProductosXProveedores.objects.create(
                         ID_Producto=prod,
                         ID_Proveedor=proveedor
@@ -183,16 +222,20 @@ def crear_proveedor(request):
                 'gestion_proveedores'
             )
 
-    return redirect('gestion_proveedores')
+    return redirect(
+        'gestion_proveedores'
+    )
 
 
 def editar_proveedor(request, pk):
+
     proveedor = get_object_or_404(
         Proveedores,
         pk=pk
     )
 
     if request.method == 'POST':
+
         nombre = request.POST.get(
             'nombre_proveedor',
             ''
@@ -216,40 +259,48 @@ def editar_proveedor(request, pk):
         query = Q()
 
         if nombre:
+
             query |= Q(
                 nombre_proveedor__iexact=nombre
             )
 
         if telefono:
+
             query |= Q(
                 telefono_proveedor__iexact=telefono
             )
 
         if email:
+
             query |= Q(
                 email_proveedor__iexact=email
             )
 
         if direccion:
+
             query |= Q(
                 direccion_proveedor__iexact=direccion
             )
 
         conflicto = (
+
             Proveedores.objects
             .filter(query)
             .exclude(pk=pk)
             .first()
+
             if (
                 nombre or
                 telefono or
                 email or
                 direccion
             )
+
             else None
         )
 
         if conflicto:
+
             request.session[
                 'error_duplicado_id'
             ] = conflicto.pk
@@ -300,11 +351,15 @@ def editar_proveedor(request, pk):
             'Proveedor actualizado correctamente.'
         )
 
-    return redirect('gestion_proveedores')
+    return redirect(
+        'gestion_proveedores'
+    )
 
 
 def cambiar_estado_proveedor(request, pk):
+
     if request.method == 'POST':
+
         proveedor = get_object_or_404(
             Proveedores,
             pk=pk
@@ -315,9 +370,11 @@ def cambiar_estado_proveedor(request, pk):
         )
 
         if estado == 'inactivo':
+
             proveedor.estado_proveedor = False
 
         elif estado == 'activo':
+
             proveedor.estado_proveedor = True
 
         proveedor.save(
@@ -327,19 +384,24 @@ def cambiar_estado_proveedor(request, pk):
         )
 
         if proveedor.estado_proveedor:
+
             messages.success(
                 request,
                 f'El proveedor {proveedor.nombre_proveedor} '
                 f'ha sido activado.'
             )
+
         else:
+
             messages.warning(
                 request,
                 f'El proveedor {proveedor.nombre_proveedor} '
                 f'ha sido dado de baja.'
             )
 
-    return redirect('gestion_proveedores')
+    return redirect(
+        'gestion_proveedores'
+    )
 
 
 # ============================================================
@@ -347,11 +409,16 @@ def cambiar_estado_proveedor(request, pk):
 # ============================================================
 
 def gestion_tipos_productos(request):
-    busqueda = request.GET.get('q', '')
+
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
 
     tipos = TiposProductos.objects.all()
 
     if busqueda:
+
         tipos = tipos.filter(
             Nombre_tipo_producto__icontains=busqueda
         )
@@ -367,13 +434,16 @@ def gestion_tipos_productos(request):
 
 
 def crear_tipo_producto(request):
+
     if request.method == 'POST':
+
         nombre = request.POST.get(
             'Nombre_tipo_producto',
             ''
         ).strip()
 
         if nombre:
+
             TiposProductos.objects.create(
                 Nombre_tipo_producto=nombre
             )
@@ -383,16 +453,20 @@ def crear_tipo_producto(request):
                 'Tipo de producto registrado correctamente.'
             )
 
-    return redirect('gestion_tipos_productos')
+    return redirect(
+        'gestion_tipos_productos'
+    )
 
 
 def editar_tipo_producto(request, pk):
+
     tipo = get_object_or_404(
         TiposProductos,
         pk=pk
     )
 
     if request.method == 'POST':
+
         tipo.Nombre_tipo_producto = request.POST.get(
             'Nombre_tipo_producto',
             ''
@@ -405,7 +479,9 @@ def editar_tipo_producto(request, pk):
             'Tipo de producto actualizado correctamente.'
         )
 
-    return redirect('gestion_tipos_productos')
+    return redirect(
+        'gestion_tipos_productos'
+    )
 
 
 # ============================================================
@@ -413,11 +489,16 @@ def editar_tipo_producto(request, pk):
 # ============================================================
 
 def gestion_agroquimicos(request):
-    busqueda = request.GET.get('q', '')
+
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
 
     agroquimicos = Agroquimicos.objects.all()
 
     if busqueda:
+
         agroquimicos = agroquimicos.filter(
             Q(Nombre_agroquimico__icontains=busqueda) |
             Q(Descripcion_agroquimico__icontains=busqueda)
@@ -434,7 +515,9 @@ def gestion_agroquimicos(request):
 
 
 def crear_agroquimico(request):
+
     if request.method == 'POST':
+
         nombre = request.POST.get(
             'Nombre_agroquimico',
             ''
@@ -446,6 +529,7 @@ def crear_agroquimico(request):
         ).strip()
 
         if nombre:
+
             Agroquimicos.objects.create(
                 Nombre_agroquimico=nombre,
                 Descripcion_agroquimico=descripcion
@@ -456,16 +540,20 @@ def crear_agroquimico(request):
                 'Agroquímico registrado correctamente.'
             )
 
-    return redirect('gestion_agroquimicos')
+    return redirect(
+        'gestion_agroquimicos'
+    )
 
 
 def editar_agroquimico(request, pk):
+
     agroquimico = get_object_or_404(
         Agroquimicos,
         pk=pk
     )
 
     if request.method == 'POST':
+
         agroquimico.Nombre_agroquimico = request.POST.get(
             'Nombre_agroquimico',
             ''
@@ -483,189 +571,172 @@ def editar_agroquimico(request, pk):
             'Agroquímico actualizado correctamente.'
         )
 
-    return redirect('gestion_agroquimicos')
-
-
-# ============================================================
-# TIPOS DE EMPLEADOS
-# ============================================================
-
-def gestion_tipos_empleados(request):
-    busqueda = request.GET.get('q', '')
-
-    tipos = TiposEmpleados.objects.all()
-
-    if busqueda:
-        tipos = tipos.filter(
-            Nombre_tipo_empleado__icontains=busqueda
-        )
-
-    return render(
-        request,
-        'inventario/tipos_empleados.html',
-        {
-            'tipos_empleados': tipos,
-            'busqueda': busqueda
-        }
+    return redirect(
+        'gestion_agroquimicos'
     )
 
 
-def crear_tipo_empleado(request):
-    if request.method == 'POST':
-        nombre = request.POST.get(
-            'Nombre_tipo_empleado',
-            ''
-        ).strip()
-
-        if nombre:
-            TiposEmpleados.objects.create(
-                Nombre_tipo_empleado=nombre
-            )
-
-            messages.success(
-                request,
-                'Tipo de empleado registrado correctamente.'
-            )
-
-    return redirect('gestion_tipos_empleados')
-
-
-def editar_tipo_empleado(request, pk):
-    tipo = get_object_or_404(
-        TiposEmpleados,
-        pk=pk
-    )
-
-    if request.method == 'POST':
-        tipo.Nombre_tipo_empleado = request.POST.get(
-            'Nombre_tipo_empleado',
-            ''
-        ).strip()
-
-        tipo.save()
-
-        messages.success(
-            request,
-            'Tipo de empleado actualizado correctamente.'
-        )
-
-    return redirect('gestion_tipos_empleados')
-
-
 # ============================================================
-# EMPLEADOS
+# USUARIOS
 # ============================================================
 
-def gestion_empleados(request):
-    busqueda = request.GET.get('q', '')
+def gestion_usuarios(request):
 
-    empleados = Empleados.objects.select_related(
-        'ID_Tipo_empleado'
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
+
+    usuarios = Usuarios.objects.select_related(
+        'ID_Perfil'
     ).all()
 
     if busqueda:
-        empleados = empleados.filter(
-            Q(Nombre_empleado__icontains=busqueda) |
-            Q(Apellido_empleado__icontains=busqueda) |
-            Q(Email_empleado__icontains=busqueda)
+
+        filtros = (
+            Q(Nombre_usuario__icontains=busqueda) |
+            Q(Apellido_usuario__icontains=busqueda) |
+            Q(Usuario__icontains=busqueda) |
+            Q(Email_usuario__icontains=busqueda)
         )
 
-    tipos_empleados = TiposEmpleados.objects.all()
+        if busqueda.isdigit():
+
+            filtros |= Q(
+                DNI=int(busqueda)
+            )
+
+        usuarios = usuarios.filter(
+            filtros
+        )
+
+    perfiles = Perfiles.objects.all()
 
     return render(
         request,
-        'inventario/empleados.html',
+        'inventario/usuarios.html',
         {
-            'empleados': empleados,
-            'tipos_empleados': tipos_empleados,
+            'usuarios': usuarios,
+            'perfiles': perfiles,
             'busqueda': busqueda
         }
     )
 
 
-def crear_empleado(request):
+def crear_usuario(request):
+
     if request.method == 'POST':
-        tipo_id = request.POST.get(
-            'ID_Tipo_empleado'
+
+        perfil_id = request.POST.get(
+            'ID_Perfil'
         )
 
-        tipo = get_object_or_404(
-            TiposEmpleados,
-            pk=tipo_id
+        perfil = get_object_or_404(
+            Perfiles,
+            pk=perfil_id
         )
 
-        Empleados.objects.create(
-            Nombre_empleado=request.POST.get(
-                'Nombre_empleado',
+        Usuarios.objects.create(
+            ID_Perfil=perfil,
+            DNI=request.POST.get(
+                'DNI'
+            ),
+            Nombre_usuario=request.POST.get(
+                'Nombre_usuario',
                 ''
             ).strip(),
-
-            Apellido_empleado=request.POST.get(
-                'Apellido_empleado',
+            Apellido_usuario=request.POST.get(
+                'Apellido_usuario',
                 ''
             ).strip(),
-
-            Telefono_empleado=request.POST.get(
-                'Telefono_empleado'
+            Usuario=request.POST.get(
+                'Usuario',
+                ''
+            ).strip(),
+            Contrasena=request.POST.get(
+                'Contrasena',
+                ''
             ),
-
-            Email_empleado=request.POST.get(
-                'Email_empleado'
-            ),
-
-            ID_Tipo_empleado=tipo
+            Email_usuario=request.POST.get(
+                'Email_usuario',
+                ''
+            ).strip(),
+            Estado_usuario=True,
+            Cambiar_contrasena=request.POST.get(
+                'Cambiar_contrasena'
+            ) == 'on'
         )
 
         messages.success(
             request,
-            'Empleado registrado correctamente.'
+            'Usuario registrado correctamente.'
         )
 
-    return redirect('gestion_empleados')
+    return redirect(
+        'gestion_usuarios'
+    )
 
 
-def editar_empleado(request, pk):
-    empleado = get_object_or_404(
-        Empleados,
+def editar_usuario(request, pk):
+
+    usuario = get_object_or_404(
+        Usuarios,
         pk=pk
     )
 
     if request.method == 'POST':
-        tipo_id = request.POST.get(
-            'ID_Tipo_empleado'
+
+        perfil_id = request.POST.get(
+            'ID_Perfil'
         )
 
-        empleado.Nombre_empleado = request.POST.get(
-            'Nombre_empleado',
+        usuario.ID_Perfil = get_object_or_404(
+            Perfiles,
+            pk=perfil_id
+        )
+
+        usuario.DNI = request.POST.get(
+            'DNI'
+        )
+
+        usuario.Nombre_usuario = request.POST.get(
+            'Nombre_usuario',
             ''
         ).strip()
 
-        empleado.Apellido_empleado = request.POST.get(
-            'Apellido_empleado',
+        usuario.Apellido_usuario = request.POST.get(
+            'Apellido_usuario',
             ''
         ).strip()
 
-        empleado.Telefono_empleado = request.POST.get(
-            'Telefono_empleado'
-        )
+        usuario.Usuario = request.POST.get(
+            'Usuario',
+            ''
+        ).strip()
 
-        empleado.Email_empleado = request.POST.get(
-            'Email_empleado'
-        )
+        usuario.Email_usuario = request.POST.get(
+            'Email_usuario',
+            ''
+        ).strip()
 
-        empleado.ID_Tipo_empleado = get_object_or_404(
-            TiposEmpleados,
-            pk=tipo_id
-        )
+        usuario.Estado_usuario = request.POST.get(
+            'Estado_usuario'
+        ) == 'on'
 
-        empleado.save()
+        usuario.Cambiar_contrasena = request.POST.get(
+            'Cambiar_contrasena'
+        ) == 'on'
+
+        usuario.save()
 
         messages.success(
             request,
-            'Empleado actualizado correctamente.'
+            'Usuario actualizado correctamente.'
         )
 
-    return redirect('gestion_empleados')
+    return redirect(
+        'gestion_usuarios'
+    )
 
 
 # ============================================================
@@ -673,11 +744,16 @@ def editar_empleado(request, pk):
 # ============================================================
 
 def gestion_tipos_movimientos(request):
-    busqueda = request.GET.get('q', '')
+
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
 
     tipos = TiposMovimientos.objects.all()
 
     if busqueda:
+
         tipos = tipos.filter(
             Nombre_tipo_movimiento__icontains=busqueda
         )
@@ -693,13 +769,16 @@ def gestion_tipos_movimientos(request):
 
 
 def crear_tipo_movimiento(request):
+
     if request.method == 'POST':
+
         nombre = request.POST.get(
             'Nombre_tipo_movimiento',
             ''
         ).strip()
 
         if nombre:
+
             TiposMovimientos.objects.create(
                 Nombre_tipo_movimiento=nombre
             )
@@ -709,16 +788,20 @@ def crear_tipo_movimiento(request):
                 'Tipo de movimiento registrado correctamente.'
             )
 
-    return redirect('gestion_tipos_movimientos')
+    return redirect(
+        'gestion_tipos_movimientos'
+    )
 
 
 def editar_tipo_movimiento(request, pk):
+
     tipo = get_object_or_404(
         TiposMovimientos,
         pk=pk
     )
 
     if request.method == 'POST':
+
         tipo.Nombre_tipo_movimiento = request.POST.get(
             'Nombre_tipo_movimiento',
             ''
@@ -731,7 +814,9 @@ def editar_tipo_movimiento(request, pk):
             'Tipo de movimiento actualizado correctamente.'
         )
 
-    return redirect('gestion_tipos_movimientos')
+    return redirect(
+        'gestion_tipos_movimientos'
+    )
 
 
 # ============================================================
@@ -739,7 +824,11 @@ def editar_tipo_movimiento(request, pk):
 # ============================================================
 
 def gestion_productos(request):
-    busqueda = request.GET.get('q', '')
+
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
 
     productos = Productos.objects.select_related(
         'ID_Tipo_producto'
@@ -749,12 +838,14 @@ def gestion_productos(request):
     ).all()
 
     if busqueda:
+
         productos = productos.filter(
             Q(Nombre_producto__icontains=busqueda) |
             Q(Descripcion_producto__icontains=busqueda)
         )
 
     tipos_productos = TiposProductos.objects.all()
+
     agroquimicos = Agroquimicos.objects.all()
 
     proveedores = Proveedores.objects.filter(
@@ -775,7 +866,9 @@ def gestion_productos(request):
 
 
 def crear_producto(request):
+
     if request.method == 'POST':
+
         tipo_id = request.POST.get(
             'ID_Tipo_producto'
         )
@@ -787,21 +880,17 @@ def crear_producto(request):
 
         producto = Productos.objects.create(
             ID_Tipo_producto=tipo,
-
             Nombre_producto=request.POST.get(
                 'Nombre_producto',
                 ''
             ).strip(),
-
             Descripcion_producto=request.POST.get(
                 'Descripcion_producto',
                 ''
             ).strip(),
-
             Fecha_vencimiento=request.POST.get(
                 'Fecha_vencimiento'
             ) or None,
-
             Precio=request.POST.get(
                 'Precio'
             )
@@ -812,6 +901,7 @@ def crear_producto(request):
         )
 
         for agro_id in agroquimicos_ids:
+
             agro = get_object_or_404(
                 Agroquimicos,
                 pk=agro_id
@@ -827,6 +917,7 @@ def crear_producto(request):
         )
 
         for proveedor_id in proveedores_ids:
+
             proveedor = get_object_or_404(
                 Proveedores,
                 pk=proveedor_id
@@ -842,16 +933,20 @@ def crear_producto(request):
             'Producto registrado correctamente.'
         )
 
-    return redirect('gestion_productos')
+    return redirect(
+        'gestion_productos'
+    )
 
 
 def editar_producto(request, pk):
+
     producto = get_object_or_404(
         Productos,
         pk=pk
     )
 
     if request.method == 'POST':
+
         tipo_id = request.POST.get(
             'ID_Tipo_producto'
         )
@@ -888,6 +983,7 @@ def editar_producto(request, pk):
         for agro_id in request.POST.getlist(
             'agroquimicos'
         ):
+
             ProductosXAgroquimicos.objects.create(
                 ID_Producto=producto,
                 ID_Agroquimico_id=agro_id
@@ -900,6 +996,7 @@ def editar_producto(request, pk):
         for proveedor_id in request.POST.getlist(
             'proveedores'
         ):
+
             ProductosXProveedores.objects.create(
                 ID_Producto=producto,
                 ID_Proveedor_id=proveedor_id
@@ -910,7 +1007,9 @@ def editar_producto(request, pk):
             'Producto actualizado correctamente.'
         )
 
-    return redirect('gestion_productos')
+    return redirect(
+        'gestion_productos'
+    )
 
 
 # ============================================================
@@ -918,6 +1017,7 @@ def editar_producto(request, pk):
 # ============================================================
 
 def gestion_productos_proveedores(request):
+
     relaciones = ProductosXProveedores.objects.select_related(
         'ID_Producto',
         'ID_Proveedor'
@@ -937,13 +1037,18 @@ def gestion_productos_proveedores(request):
 # ============================================================
 
 def gestion_stock(request):
-    busqueda = request.GET.get('q', '')
+
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
 
     stock = Stock.objects.select_related(
         'ID_Producto'
     ).all()
 
     if busqueda:
+
         stock = stock.filter(
             ID_Producto__Nombre_producto__icontains=busqueda
         )
@@ -962,7 +1067,9 @@ def gestion_stock(request):
 
 
 def crear_stock(request):
+
     if request.method == 'POST':
+
         producto_id = request.POST.get(
             'ID_Producto'
         )
@@ -974,11 +1081,9 @@ def crear_stock(request):
 
         Stock.objects.create(
             ID_Producto=producto,
-
             Cantidad_stock=request.POST.get(
                 'Cantidad_stock'
             ),
-
             Stock_minimo=request.POST.get(
                 'Stock_minimo'
             )
@@ -989,16 +1094,20 @@ def crear_stock(request):
             'Stock registrado correctamente.'
         )
 
-    return redirect('gestion_stock')
+    return redirect(
+        'gestion_stock'
+    )
 
 
 def editar_stock(request, pk):
+
     stock = get_object_or_404(
         Stock,
         pk=pk
     )
 
     if request.method == 'POST':
+
         stock.Cantidad_stock = request.POST.get(
             'Cantidad_stock'
         )
@@ -1014,7 +1123,9 @@ def editar_stock(request, pk):
             'Stock actualizado correctamente.'
         )
 
-    return redirect('gestion_stock')
+    return redirect(
+        'gestion_stock'
+    )
 
 
 # ============================================================
@@ -1022,8 +1133,9 @@ def editar_stock(request, pk):
 # ============================================================
 
 def gestion_movimientos_stock(request):
+
     movimientos = MovimientosStock.objects.select_related(
-        'ID_Empleado',
+        'ID_Usuario',
         'ID_Tipo_movimiento',
         'ID_Stock',
         'ID_Stock__ID_Producto'
@@ -1031,7 +1143,7 @@ def gestion_movimientos_stock(request):
         '-Fecha_hora_movimiento'
     )
 
-    empleados = Empleados.objects.all()
+    usuarios = Usuarios.objects.all()
 
     tipos_movimientos = TiposMovimientos.objects.all()
 
@@ -1044,7 +1156,7 @@ def gestion_movimientos_stock(request):
         'inventario/movimientos_stock.html',
         {
             'movimientos': movimientos,
-            'empleados': empleados,
+            'usuarios': usuarios,
             'tipos_movimientos': tipos_movimientos,
             'stock': stock
         }
@@ -1052,11 +1164,13 @@ def gestion_movimientos_stock(request):
 
 
 def crear_movimiento_stock(request):
+
     if request.method == 'POST':
-        empleado = get_object_or_404(
-            Empleados,
+
+        usuario = get_object_or_404(
+            Usuarios,
             pk=request.POST.get(
-                'ID_Empleado'
+                'ID_Usuario'
             )
         )
 
@@ -1082,7 +1196,7 @@ def crear_movimiento_stock(request):
         )
 
         MovimientosStock.objects.create(
-            ID_Empleado=empleado,
+            ID_Usuario=usuario,
             ID_Tipo_movimiento=tipo_movimiento,
             ID_Stock=stock,
             Cantidad=cantidad
@@ -1093,7 +1207,9 @@ def crear_movimiento_stock(request):
             'Movimiento de stock registrado correctamente.'
         )
 
-    return redirect('gestion_movimientos_stock')
+    return redirect(
+        'gestion_movimientos_stock'
+    )
 
 
 # ============================================================
@@ -1101,6 +1217,7 @@ def crear_movimiento_stock(request):
 # ============================================================
 
 def gestion_alertas(request):
+
     alertas = Alertas.objects.select_related(
         'ID_Stock',
         'ID_Stock__ID_Producto'

@@ -25,15 +25,10 @@ urlpatterns = [
     path('agroquimicos/crear/', views.crear_agroquimico, name='crear_agroquimico'),
     path('agroquimicos/editar/<int:pk>/', views.editar_agroquimico, name='editar_agroquimico'),
 
-    # Empleados
-    path('empleados/', views.gestion_empleados, name='gestion_empleados'),
-    path('empleados/crear/', views.crear_empleado, name='crear_empleado'),
-    path('empleados/editar/<int:pk>/', views.editar_empleado, name='editar_empleado'),
-
-    # Tipos de empleados
-    path('tipos-empleados/', views.gestion_tipos_empleados, name='gestion_tipos_empleados'),
-    path('tipos-empleados/crear/', views.crear_tipo_empleado, name='crear_tipo_empleado'),
-    path('tipos-empleados/editar/<int:pk>/', views.editar_tipo_empleado, name='editar_tipo_empleado'),
+    # Usuarios
+    path('usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
+    path('usuarios/crear/', views.crear_usuario, name='crear_usuario'),
+    path('usuarios/editar/<int:pk>/', views.editar_usuario, name='editar_usuario'),
 
     # Tipos de movimientos
     path('tipos-movimientos/', views.gestion_tipos_movimientos, name='gestion_tipos_movimientos'),

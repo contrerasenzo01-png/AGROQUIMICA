@@ -1,126 +1,335 @@
+{% load static %}
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de usuarios</title>
+
+    <title>Gestión de Usuarios - Agroquímica del Valle</title>
+
+    <link rel="stylesheet" href="{% static 'inventario/styles/usuarios.css' %}">
 </head>
+
 <body>
 
-    <h1>GESTIONAR USUARIOS</h1>
+<!-- Mensajes Django -->
+<div class="toast-container" id="toastContainer">
 
-    <form>
+    {% if messages %}
+        {% for message in messages %}
 
-        <label for="ID_usuario">ID_usuario:</label>
-        <input type="number" id="ID_usuario" name="ID_usuario" readonly>
-        <br><br>
+            <div
+                class="toast {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}"
+                id="toast-{{ forloop.counter }}"
+            >
+                <span>{{ message }}</span>
 
-        <label for="DNI">DNI:</label>
-        <input type="number" id="DNI" name="DNI" required>
-        <br><br>
+                <span
+                    class="toast-close"
+                    onclick="cerrarToast('toast-{{ forloop.counter }}')"
+                >
+                    ✕
+                </span>
+            </div>
 
-        <label for="Apellido_usuario">Apellido_usuario:</label>
-        <input type="text" id="Apellido_usuario"
-               name="Apellido_usuario" required>
-        <br><br>
+        {% endfor %}
+    {% endif %}
 
-        <label for="Nombre_usuario">Nombre_usuario:</label>
-        <input type="text" id="Nombre_usuario"
-               name="Nombre_usuario" required>
-        <br><br>
+</div>
 
-        <label for="Correo_usuario">Correo_usuario:</label>
-        <input type="email" id="Correo_usuario"
-               name="Correo_usuario" required>
-        <br><br>
 
-        <label for="Usuario">Usuario:</label>
-        <input type="text" id="Usuario" name="Usuario" readonly>
-        <br><br>
+<!-- Sidebar -->
+<aside class="sidebar">
 
-        <label for="Contraseña">Contraseña:</label>
-        <input type="password" id="Contraseña"
-               name="Contraseña" readonly>
-        <br><br>
+    <div>
 
-        <label for="Estado_usuario">Estado_usuario:</label>
-        <select id="Estado_usuario" name="Estado_usuario">
-            <option value="1">Activo</option>
-            <option value="0">Inactivo</option>
-        </select>
-        <br><br>
+        <div class="logo">
+            🌿 Agroquímica del Valle
+        </div>
 
-        <label for="Fecha_ultima_modificacion">
-            Fecha_ultima_modificacion:
-        </label>
-        <input type="datetime-local"
-               id="Fecha_ultima_modificacion"
-               name="Fecha_ultima_modificacion" readonly>
-        <br><br>
+        <ul class="nav-menu">
 
-        <label for="Fecha_baja">Fecha_baja:</label>
-        <input type="datetime-local"
-               id="Fecha_baja"
-               name="Fecha_baja" readonly>
-        <br><br>
+            <li class="nav-item">
+                <a href="{% url 'panel_principal' %}" class="nav-link">
+                    <span class="nav-icon">🎛️</span>
+                    Panel Principal
+                </a>
+            </li>
 
-        <label for="Cambiar_contraseña">
-            Cambiar_contraseña:
-        </label>
-        <input type="checkbox"
-               id="Cambiar_contraseña"
-               name="Cambiar_contraseña"
-               checked disabled>
-        <br><br>
+            <li class="nav-item">
+                <a href="{% url 'gestion_usuarios' %}" class="nav-link active">
+                    <span class="nav-icon">👤</span>
+                    Usuarios
+                </a>
+            </li>
 
-        <button type="submit">Dar de alta</button>
-        <button type="button">Modificar</button>
-        <button type="button">Dar de baja</button>
-        <button type="reset">Limpiar</button>
+            <li class="nav-item">
+                <a href="{% url 'gestion_productos' %}" class="nav-link">
+                    <span class="nav-icon">📦</span>
+                    Productos
+                </a>
+            </li>
 
-    </form>
+            <li class="nav-item">
+                <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                    <span class="nav-icon">🚚</span>
+                    Proveedores
+                </a>
+            </li>
 
-    <hr>
+            <li class="nav-item">
+                <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Movimientos Stock
+                </a>
+            </li>
 
-    <h1>RESTABLECER CONTRASEÑA</h1>
+        </ul>
 
-    <form>
+    </div>
 
-        <label for="ID_usuario_restablecer">ID_usuario:</label>
-        <input type="number"
-               id="ID_usuario_restablecer"
-               name="ID_usuario"
-               required>
-        <br><br>
 
-        <label for="Usuario_restablecer">Usuario:</label>
-        <input type="text"
-               id="Usuario_restablecer"
-               name="Usuario"
-               readonly>
-        <br><br>
+    <div class="user-info">
 
-        <label for="Contraseña_nueva">Contraseña:</label>
-        <input type="password"
-               id="Contraseña_nueva"
-               name="Contraseña"
-               readonly>
-        <br><br>
+        <div class="user-role">
+            Administrador
+        </div>
 
-        <label for="Confirmar_contraseña">
-            Confirmar_contraseña:
-        </label>
-        <input type="password"
-               id="Confirmar_contraseña"
-               name="Confirmar_contraseña"
-               required>
-        <br><br>
+        <div class="user-email">
+            jefe@agrovalle.com
+        </div>
 
-        <button type="submit">Restablecer contraseña</button>
-        <button type="reset">Limpiar</button>
+        <a href="{% url 'login' %}" class="logout-link">
+            Cerrar sesión
+        </a>
 
-    </form>
+    </div>
+
+</aside>
+
+
+<!-- Contenido Principal -->
+<main class="main-content">
+
+    <header class="header">
+
+        <div>
+            <h1>
+                Gestión de Usuarios
+            </h1>
+
+            <p class="subtitle">
+                Registrar · Modificar · Dar de baja · Restablecer contraseña
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="btn-nuevo"
+            onclick="abrirModalCrear()"
+        >
+            + Nuevo usuario
+        </button>
+
+    </header>
+
+
+    <!-- Buscador -->
+    <section class="search-section">
+
+        <form method="GET" action="{% url 'gestion_usuarios' %}">
+
+            <input
+                type="text"
+                name="q"
+                value="{{ busqueda }}"
+                class="search-box"
+                placeholder="Buscar por usuario, apellido, DNI o correo..."
+            >
+
+        </form>
+
+    </section>
+
+
+    <!-- Usuarios -->
+    <section class="card-panel">
+
+        <div class="section-header">
+
+            <div>
+                <h2>
+                    Usuarios registrados
+                </h2>
+
+                <span class="records-count">
+                    {{ usuarios|length }} registros
+                </span>
+            </div>
+
+        </div>
+
+
+        <div class="table-container">
+
+            <table class="custom-table">
+
+                <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Apellido y Nombre</th>
+                        <th>DNI</th>
+                        <th>Correo</th>
+                        <th>Perfil</th>
+                        <th>Estado</th>
+                        <th>Últ. modificación</th>
+                        <th>Fecha de baja</th>
+                        <th>Acciones</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for usuario in usuarios %}
+
+                        <tr>
+
+                            <td class="id-user">
+                                {{ usuario.ID_Usuario }}
+                            </td>
+
+                            <td class="username">
+                                {{ usuario.Usuario }}
+                            </td>
+
+                            <td>
+                                {{ usuario.Apellido_usuario }},
+                                {{ usuario.Nombre_usuario }}
+                            </td>
+
+                            <td>
+                                {{ usuario.DNI }}
+                            </td>
+
+                            <td>
+                                {{ usuario.Email_usuario }}
+                            </td>
+
+                            <td>
+                                <span class="badge-role">
+                                    {{ usuario.ID_Perfil.Nombre_perfil }}
+                                </span>
+                            </td>
+
+                            <td>
+
+                                {% if usuario.Estado_usuario %}
+
+                                    <span class="badge-status active">
+                                        Activo
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge-status inactive">
+                                        Inactivo
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ usuario.Fecha_ultima_modificacion }}
+                            </td>
+
+                            <td>
+
+                                {% if usuario.Fecha_Baja %}
+                                    {{ usuario.Fecha_Baja }}
+                                {% else %}
+                                    —
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <a
+                                    href="{% url 'editar_usuario' usuario.ID_Usuario %}"
+                                    class="btn-action"
+                                >
+                                    Editar
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="10" class="empty-message">
+                                No hay usuarios registrados.
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    const toasts = document.querySelectorAll('.toast');
+
+    toasts.forEach(toast => {
+
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
+
+    });
+
+});
+
+
+function cerrarToast(id) {
+
+    const toast = document.getElementById(id);
+
+    if (toast) {
+        toast.remove();
+    }
+
+}
+
+
+function abrirModalCrear() {
+
+    // Aquí se agregará el formulario para registrar usuario.
+
+}
+
+</script>
 
 </body>
+
 </html>

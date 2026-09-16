@@ -1,0 +1,397 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background-color: #f1f5f3;
+    color: #1c2a23;
+    display: flex;
+}
+
+
+/* ==========================================
+   BARRA LATERAL
+   ========================================== */
+
+.sidebar {
+    width: 220px;
+    background-color: #0b311e;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 16px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 6px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    color: #a3c2b2;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13.5px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link.active,
+.nav-link:hover {
+    background-color: #16472d;
+    color: #ffffff;
+}
+
+.nav-icon {
+    font-size: 14px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 15px;
+}
+
+.user-role {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.user-email {
+    font-size: 11px;
+    color: #83a595;
+    margin-bottom: 12px;
+}
+
+.logout-link {
+    font-size: 11px;
+    color: #a3c2b2;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.logout-link:hover {
+    color: #ffffff;
+}
+
+
+/* ==========================================
+   ÁREA PRINCIPAL
+   ========================================== */
+
+.main-content {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+    padding: 25px 30px;
+    min-height: 100vh;
+    background-color: #f1f5f3;
+}
+
+.header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 20px;
+    color: #0b311e;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: #5c7367;
+    margin-top: 2px;
+}
+
+
+/* ==========================================
+   BOTÓN NUEVO
+   ========================================== */
+
+.btn-nuevo {
+    background-color: #0b311e;
+    color: #ffffff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-nuevo:hover {
+    background-color: #16472d;
+}
+
+
+/* ==========================================
+   BUSCADOR
+   ========================================== */
+
+.search-section {
+    margin-bottom: 20px;
+}
+
+.search-box {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px 14px;
+    border: 1px solid #d7e3dc;
+    border-radius: 7px;
+    background-color: #ffffff;
+    color: #1c2a23;
+    font-size: 12px;
+    outline: none;
+}
+
+.search-box:focus {
+    border-color: #5c7367;
+}
+
+
+/* ==========================================
+   PANEL
+   ========================================== */
+
+.card-panel {
+    background-color: #ffffff;
+    border: 1px solid #e2ece6;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.card-panel h2 {
+    font-size: 13px;
+    color: #0b311e;
+}
+
+.records-count {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 11px;
+    color: #8a9e93;
+}
+
+
+/* ==========================================
+   TABLA
+   ========================================== */
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.custom-table th {
+    border-bottom: 1px solid #e2ece6;
+    text-align: left;
+    color: #8a9e93;
+    padding: 10px 8px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.custom-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #f0f4f2;
+    vertical-align: middle;
+}
+
+.custom-table tr:hover {
+    background-color: #f8faf9;
+}
+
+.id-user {
+    font-weight: bold;
+    color: #1c2a23;
+}
+
+.username {
+    font-weight: 600;
+    color: #0b311e;
+}
+
+
+/* ==========================================
+   PERFIL
+   ========================================== */
+
+.badge-role {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #15803d;
+}
+
+
+/* ==========================================
+   ESTADO
+   ========================================== */
+
+.badge-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.badge-status.active {
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #15803d;
+}
+
+.badge-status.inactive {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+}
+
+
+/* ==========================================
+   BOTÓN EDITAR
+   ========================================== */
+
+.btn-action {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 5px;
+    background-color: #f1f5f3;
+    color: #0b311e;
+    border: 1px solid #d7e3dc;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.btn-action:hover {
+    background-color: #e2ece6;
+}
+
+
+/* ==========================================
+   SIN USUARIOS
+   ========================================== */
+
+.empty-message {
+    text-align: center;
+    color: #8a9e93;
+    padding: 30px !important;
+}
+
+
+/* ==========================================
+   TOASTS
+   ========================================== */
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    min-width: 280px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+    border: 1px solid #e2ece6;
+    border-radius: 7px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toast.success {
+    border-left: 4px solid #15803d;
+}
+
+.toast.warning {
+    border-left: 4px solid #f59f00;
+}
+
+.toast.error {
+    border-left: 4px solid #b91c1c;
+}
+
+.toast-close {
+    margin-left: 15px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #8a9e93;
+}
+
+.toast-close:hover {
+    color: #1c2a23;
+}
+
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 900px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .main-content {
+        margin-left: 200px;
+        width: calc(100% - 200px);
+    }
+
+    .custom-table {
+        min-width: 900px;
+    }
+}
