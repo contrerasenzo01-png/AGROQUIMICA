@@ -164,13 +164,13 @@ class Usuarios(models.Model):
         db_column='ID_Perfil'
     )
 
-    DNI = models.IntegerField()
+    DNI = models.IntegerField(unique=True)
 
     Apellido_usuario = models.CharField(max_length=50)
 
     Nombre_usuario = models.CharField(max_length=50)
 
-    Usuario = models.CharField(max_length=50)
+    Usuario = models.CharField(max_length=50,unique=True)
 
     Contrasena = models.CharField(
         max_length=255,

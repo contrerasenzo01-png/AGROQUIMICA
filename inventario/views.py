@@ -1,8 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
+
 from django.db.models import Q
+
 from django.contrib import messages
+
 from django.utils import timezone
+
 from django.contrib.auth.hashers import make_password, check_password
+
 import unicodedata
 
 from .forms import ProveedorForm
@@ -47,14 +52,25 @@ def login_view(request):
 
         try:
 
-            usuario = Usuarios.objects.get(
+            usuario = Usuarios.objects.select_related(
+                'ID_Perfil'
+            ).get(
                 Usuario=usuario_input
             )
 
             # Verificar si el usuario está activo
             if not usuario.Estado_usuario:
 
-                error_message = 'El usuario se encuentra inactivo.'
+                error_message = (
+                    'El usuario se encuentra inactivo.'
+                )
+
+            # Verificar que tenga un perfil
+            elif not usuario.ID_Perfil:
+
+                error_message = (
+                    'El usuario no tiene un perfil asignado.'
+                )
 
             # Verificar contraseña
             elif check_password(
@@ -63,8 +79,21 @@ def login_view(request):
             ):
 
                 # Guardar datos del usuario en la sesión
-                request.session['usuario_id'] = usuario.ID_Usuario
-                request.session['usuario_nombre'] = usuario.Usuario
+                request.session['usuario_id'] = (
+                    usuario.ID_Usuario
+                )
+
+                request.session['usuario_nombre'] = (
+                    usuario.Usuario
+                )
+
+                request.session['perfil_id'] = (
+                    usuario.ID_Perfil.ID_Perfil
+                )
+
+                request.session['perfil_nombre'] = (
+                    usuario.ID_Perfil.Nombre_perfil
+                )
 
                 # Si debe cambiar la contraseña
                 if usuario.Cambiar_contrasena:
@@ -80,11 +109,15 @@ def login_view(request):
 
             else:
 
-                error_message = 'Usuario o contraseña incorrectos.'
+                error_message = (
+                    'Usuario o contraseña incorrectos.'
+                )
 
         except Usuarios.DoesNotExist:
 
-            error_message = 'Usuario o contraseña incorrectos.'
+            error_message = (
+                'Usuario o contraseña incorrectos.'
+            )
 
     return render(
         request,
@@ -133,7 +166,9 @@ def cambiar_contrasena(request):
         # Verificar que coincidan
         if nueva_contrasena != confirmar_contrasena:
 
-            error_message = 'Las contraseñas no coinciden.'
+            error_message = (
+                'Las contraseñas no coinciden.'
+            )
 
         # Verificar longitud
         elif len(nueva_contrasena) < 8:
@@ -177,13 +212,20 @@ def cambiar_contrasena(request):
 
 def panel_principal(request):
 
-    usuario_id = request.session.get('usuario_id')
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
 
     if not usuario_id:
-        return redirect('login')
+
+        return redirect(
+            'login'
+        )
 
     usuario = get_object_or_404(
-        Usuarios.objects.select_related('ID_Perfil'),
+        Usuarios.objects.select_related(
+            'ID_Perfil'
+        ),
         ID_Usuario=usuario_id
     )
 
@@ -814,6 +856,30 @@ def crear_usuario(request):
                 'gestion_usuarios'
             )
 
+        # Validar nombre
+        if not nombre:
+
+            messages.error(
+                request,
+                'Debe ingresar el nombre del usuario.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
+        # Validar apellido
+        if not apellido:
+
+            messages.error(
+                request,
+                'Debe ingresar el apellido del usuario.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
         # Generar usuario automáticamente
         apellido_sin_tildes = ''.join(
             caracter
@@ -944,7 +1010,7 @@ def dar_baja_usuario(request, pk):
 
     usuario = get_object_or_404(
         Usuarios,
-        pk=pk
+        ID_Usuario=pk
     )
 
     if request.method == 'POST':
@@ -973,7 +1039,7 @@ def restablecer_contrasena(request, pk):
 
     usuario = get_object_or_404(
         Usuarios,
-        pk=pk
+        ID_Usuario=pk
     )
 
     if request.method == 'POST':
@@ -1284,10 +1350,12 @@ def gestion_permisos(request):
         ).strip()
 
         if not nombre_permiso:
+
             messages.error(
                 request,
                 'Debe ingresar el nombre del permiso.'
             )
+
             return redirect(
                 'gestion_permisos'
             )
@@ -1297,10 +1365,12 @@ def gestion_permisos(request):
         ).exists()
 
         if permiso_existente:
+
             messages.error(
                 request,
                 'Ya existe un permiso con ese nombre.'
             )
+
             return redirect(
                 'gestion_permisos'
             )
@@ -1329,6 +1399,7 @@ def gestion_permisos(request):
     ).all()
 
     if busqueda:
+
         permisos = permisos.filter(
             Q(Nombre_permiso__icontains=busqueda) |
             Q(Descripcion_permiso__icontains=busqueda)
@@ -1349,7 +1420,9 @@ def gestion_permisos(request):
 # ============================================================
 
 def crear_permiso(request):
+
     if request.method == 'POST':
+
         nombre_permiso = request.POST.get(
             'Nombre_permiso',
             ''
@@ -1361,10 +1434,12 @@ def crear_permiso(request):
         ).strip()
 
         if not nombre_permiso:
+
             messages.error(
                 request,
                 'Debe ingresar el nombre del permiso.'
             )
+
             return redirect(
                 'gestion_permisos'
             )
@@ -1374,10 +1449,12 @@ def crear_permiso(request):
         ).exists()
 
         if permiso_existente:
+
             messages.error(
                 request,
                 'Ya existe un permiso con ese nombre.'
             )
+
             return redirect(
                 'gestion_permisos'
             )
@@ -1421,10 +1498,12 @@ def editar_permiso(request, pk):
         ).strip()
 
         if not nombre_permiso:
+
             messages.error(
                 request,
                 'Debe ingresar el nombre del permiso.'
             )
+
             return redirect(
                 'gestion_permisos'
             )
@@ -1436,15 +1515,18 @@ def editar_permiso(request, pk):
         ).exists()
 
         if permiso_existente:
+
             messages.error(
                 request,
                 'Ya existe otro permiso con ese nombre.'
             )
+
             return redirect(
                 'gestion_permisos'
             )
 
         permiso.Nombre_permiso = nombre_permiso
+
         permiso.Descripcion_permiso = descripcion_permiso
 
         permiso.save()

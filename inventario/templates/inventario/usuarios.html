@@ -150,7 +150,7 @@
             </div>
 
             <div class="user-email">
-                jefe@agrovalle.com
+                admin@agroquimico.com
             </div>
 
             <a href="{% url 'login' %}" class="logout-link">
@@ -254,48 +254,27 @@
 
                         <tr>
 
-                            <th>
-                                ID_usuario
-                            </th>
+                            <th>ID_usuario</th>
 
-                            <th>
-                                Usuario
-                            </th>
+                            <th>Usuario</th>
 
-                            <th>
-                                Apellido_usuario
-                            </th>
+                            <th>Apellido_usuario</th>
 
-                            <th>
-                                Nombre_usuario
-                            </th>
+                            <th>Nombre_usuario</th>
 
-                            <th>
-                                DNI
-                            </th>
+                            <th>DNI</th>
 
-                            <th>
-                                Email_usuario
-                            </th>
+                            <th>Email_usuario</th>
 
-                            <th>
-                                Perfil
-                            </th>
+                            <th>Perfil</th>
 
-                            <th>
-                                Estado_usuario
-                            </th>
+                            <th>Estado_usuario</th>
 
-                            <th>
-                                Fecha última modificación
-                            </th>
+                            <th>Fecha última modificación</th>
 
-                            <th>
-                                Fecha baja
-                            </th>
+                            <th>Fecha baja</th>
 
-                            <th>
-                            </th>
+                            <th></th>
 
                         </tr>
 
@@ -312,54 +291,42 @@
                                 <!-- ID -->
 
                                 <td class="id-user">
-
                                     {{ usuario.ID_Usuario }}
-
                                 </td>
 
 
                                 <!-- USUARIO -->
 
                                 <td class="username">
-
                                     {{ usuario.Usuario }}
-
                                 </td>
 
 
                                 <!-- APELLIDO -->
 
                                 <td>
-
                                     {{ usuario.Apellido_usuario }}
-
                                 </td>
 
 
                                 <!-- NOMBRE -->
 
                                 <td>
-
                                     {{ usuario.Nombre_usuario }}
-
                                 </td>
 
 
                                 <!-- DNI -->
 
                                 <td>
-
                                     {{ usuario.DNI }}
-
                                 </td>
 
 
                                 <!-- CORREO -->
 
                                 <td>
-
                                     {{ usuario.Email_usuario }}
-
                                 </td>
 
 
@@ -368,9 +335,7 @@
                                 <td>
 
                                     <span class="badge-role">
-
                                         {{ usuario.ID_Perfil.Nombre_perfil }}
-
                                     </span>
 
                                 </td>
@@ -400,9 +365,7 @@
                                 <!-- FECHA MODIFICACIÓN -->
 
                                 <td>
-
                                     {{ usuario.Fecha_ultima_modificacion }}
-
                                 </td>
 
 
@@ -470,22 +433,25 @@
 
                                     {% if usuario.Estado_usuario %}
 
-                                        <form
-                                            method="POST"
-                                            action="{% url 'dar_baja_usuario' usuario.ID_Usuario %}"
-                                            onsubmit="return confirmarBaja();"
+                                        <button
+                                            type="button"
+                                            class="btn-baja"
+                                            onclick="abrirModalBaja(
+                                                '{{ usuario.ID_Usuario }}',
+                                                '{{ usuario.ID_Perfil.ID_Perfil }}',
+                                                '{{ usuario.ID_Perfil.Nombre_perfil|escapejs }}',
+                                                '{{ usuario.DNI }}',
+                                                '{{ usuario.Usuario|escapejs }}',
+                                                '{{ usuario.Apellido_usuario|escapejs }}',
+                                                '{{ usuario.Nombre_usuario|escapejs }}',
+                                                '{{ usuario.Email_usuario|escapejs }}',
+                                                '{{ usuario.Fecha_ultima_modificacion }}',
+                                                '{% if usuario.Fecha_Baja %}{{ usuario.Fecha_Baja }}{% else %}—{% endif %}',
+                                                '{% url 'dar_baja_usuario' usuario.ID_Usuario %}'
+                                            )"
                                         >
-
-                                            {% csrf_token %}
-
-                                            <button
-                                                type="submit"
-                                                class="btn-baja"
-                                            >
-                                                Dar de baja
-                                            </button>
-
-                                        </form>
+                                            Dar de baja
+                                        </button>
 
                                     {% endif %}
 
@@ -530,9 +496,6 @@
 
             <div class="modal-content">
 
-
-                <!-- ENCABEZADO -->
-
                 <div class="modal-header">
 
                     <h2>
@@ -549,8 +512,6 @@
                 </div>
 
 
-                <!-- FORMULARIO -->
-
                 <form
                     method="POST"
                     action="{% url 'crear_usuario' %}"
@@ -562,8 +523,6 @@
 
                     <div class="form-grid">
 
-
-                        <!-- DNI -->
 
                         <div class="form-group">
 
@@ -580,8 +539,6 @@
                         </div>
 
 
-                        <!-- APELLIDO -->
-
                         <div class="form-group">
 
                             <label>
@@ -597,8 +554,6 @@
                         </div>
 
 
-                        <!-- NOMBRE -->
-
                         <div class="form-group">
 
                             <label>
@@ -613,8 +568,6 @@
 
                         </div>
 
-
-                        <!-- USUARIO -->
 
                         <div class="form-group">
 
@@ -632,8 +585,6 @@
                         </div>
 
 
-                        <!-- CONTRASEÑA -->
-
                         <div class="form-group">
 
                             <label>
@@ -648,8 +599,6 @@
 
                         </div>
 
-
-                        <!-- CORREO -->
 
                         <div class="form-group">
 
@@ -666,8 +615,6 @@
 
                         </div>
 
-
-                        <!-- PERFIL -->
 
                         <div class="form-group">
 
@@ -701,8 +648,6 @@
                     </div>
 
 
-                    <!-- INFORMACIÓN -->
-
                     <div class="password-info">
 
                         <strong>
@@ -716,8 +661,6 @@
 
                     </div>
 
-
-                    <!-- BOTONES -->
 
                     <div class="modal-actions">
 
@@ -756,9 +699,6 @@
 
             <div class="modal-content">
 
-
-                <!-- ENCABEZADO -->
-
                 <div class="modal-header">
 
                     <h2>
@@ -775,8 +715,6 @@
                 </div>
 
 
-                <!-- INFORMACIÓN -->
-
                 <div class="password-info">
 
                     Solo el campo
@@ -790,8 +728,6 @@
                 </div>
 
 
-                <!-- FORMULARIO -->
-
                 <form
                     method="POST"
                     id="formEditarUsuario"
@@ -802,8 +738,6 @@
 
                     <div class="form-grid">
 
-
-                        <!-- ID USUARIO -->
 
                         <div class="form-group">
 
@@ -820,8 +754,6 @@
                         </div>
 
 
-                        <!-- ID PERFIL -->
-
                         <div class="form-group">
 
                             <label>
@@ -836,8 +768,6 @@
 
                         </div>
 
-
-                        <!-- DNI -->
 
                         <div class="form-group">
 
@@ -854,8 +784,6 @@
                         </div>
 
 
-                        <!-- USUARIO -->
-
                         <div class="form-group">
 
                             <label>
@@ -870,8 +798,6 @@
 
                         </div>
 
-
-                        <!-- APELLIDO -->
 
                         <div class="form-group">
 
@@ -888,8 +814,6 @@
                         </div>
 
 
-                        <!-- NOMBRE -->
-
                         <div class="form-group">
 
                             <label>
@@ -904,8 +828,6 @@
 
                         </div>
 
-
-                        <!-- ESTADO -->
 
                         <div class="form-group">
 
@@ -922,8 +844,6 @@
                         </div>
 
 
-                        <!-- FECHA -->
-
                         <div class="form-group">
 
                             <label>
@@ -938,8 +858,6 @@
 
                         </div>
 
-
-                        <!-- CORREO -->
 
                         <div class="form-group">
 
@@ -959,8 +877,6 @@
                     </div>
 
 
-                    <!-- INFORMACIÓN -->
-
                     <div class="password-info">
 
                         La fecha de última modificación se actualizará
@@ -968,8 +884,6 @@
 
                     </div>
 
-
-                    <!-- BOTONES -->
 
                     <div class="modal-actions">
 
@@ -1008,9 +922,6 @@
 
             <div class="modal-content">
 
-
-                <!-- ENCABEZADO -->
-
                 <div class="modal-header">
 
                     <h2>
@@ -1027,8 +938,6 @@
                 </div>
 
 
-                <!-- USUARIO -->
-
                 <div class="password-info">
 
                     Usuario:
@@ -1036,8 +945,6 @@
 
                 </div>
 
-
-                <!-- FORMULARIO -->
 
                 <form
                     method="POST"
@@ -1049,8 +956,6 @@
 
                     <div class="form-grid">
 
-
-                        <!-- NUEVA CONTRASEÑA -->
 
                         <div class="form-group">
 
@@ -1066,8 +971,6 @@
 
                         </div>
 
-
-                        <!-- CONFIRMAR CONTRASEÑA -->
 
                         <div class="form-group">
 
@@ -1086,8 +989,6 @@
                     </div>
 
 
-                    <!-- BOTONES -->
-
                     <div class="modal-actions">
 
                         <button
@@ -1103,6 +1004,290 @@
                             class="btn-guardar"
                         >
                             Restablecer contraseña
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             MODAL DAR DE BAJA USUARIO
+             ========================================== -->
+
+        <div
+            class="modal"
+            id="modalBaja"
+        >
+
+            <div class="modal-content">
+
+
+                <!-- ENCABEZADO -->
+
+                <div class="modal-header">
+
+                    <h2>
+                        Dar de baja usuario
+                    </h2>
+
+                    <span
+                        class="modal-close"
+                        onclick="cerrarModalBaja()"
+                    >
+                        ✕
+                    </span>
+
+                </div>
+
+
+                <!-- INFORMACIÓN -->
+
+                <div class="password-info">
+
+                    Se registrará la baja del usuario y su estado
+                    pasará a estar inactivo.
+
+                </div>
+
+
+                <!-- FORMULARIO -->
+
+                <form
+                    method="POST"
+                    id="formBajaUsuario"
+                >
+
+                    {% csrf_token %}
+
+
+                    <div class="form-grid">
+
+
+                        <!-- ID USUARIO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                ID_Usuario
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_ID_Usuario"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- ID PERFIL -->
+
+                        <div class="form-group">
+
+                            <label>
+                                ID_Perfil
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_ID_Perfil"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- DNI -->
+
+                        <div class="form-group">
+
+                            <label>
+                                DNI
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_DNI"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- USUARIO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Usuario
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_Usuario"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- APELLIDO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Apellido_usuario
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_Apellido"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- NOMBRE -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Nombre_usuario
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_Nombre"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- CORREO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Email_usuario
+                            </label>
+
+                            <input
+                                type="email"
+                                id="baja_Email"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- ESTADO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Estado_usuario
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_Estado"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- FECHA ÚLTIMA MODIFICACIÓN -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Fecha_ultima_modificacion
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_Fecha_Modificacion"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- FECHA BAJA ACTUAL -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Fecha_Baja actual
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_Fecha_Actual"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- FECHA BAJA A REGISTRAR -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Fecha_Baja a registrar
+                            </label>
+
+                            <input
+                                type="text"
+                                id="baja_Fecha_Registrar"
+                                readonly
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- INFORMACIÓN -->
+
+                    <div class="password-info">
+
+                        <strong>
+                            Importante:
+                        </strong>
+
+                        el usuario quedará inactivo y no podrá
+                        ingresar al sistema.
+
+                    </div>
+
+
+                    <!-- BOTONES -->
+
+                    <div class="modal-actions">
+
+                        <button
+                            type="button"
+                            class="btn-cancelar"
+                            onclick="cerrarModalBaja()"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn-guardar"
+                        >
+                            Dar de baja
                         </button>
 
                     </div>
@@ -1232,14 +1417,10 @@ function abrirModalEditar(
 ) {
 
 
-    /* ID USUARIO */
-
     document.getElementById(
         'editar_ID_Usuario'
     ).value = idUsuario;
 
-
-    /* ID PERFIL */
 
     document.getElementById(
         'editar_ID_Perfil'
@@ -1247,42 +1428,30 @@ function abrirModalEditar(
         idPerfil + ' — ' + nombrePerfil;
 
 
-    /* DNI */
-
     document.getElementById(
         'editar_DNI'
     ).value = dni;
 
-
-    /* USUARIO */
 
     document.getElementById(
         'editar_Usuario'
     ).value = usuario;
 
 
-    /* APELLIDO */
-
     document.getElementById(
         'editar_Apellido'
     ).value = apellido;
 
-
-    /* NOMBRE */
 
     document.getElementById(
         'editar_Nombre'
     ).value = nombre;
 
 
-    /* CORREO */
-
     document.getElementById(
         'editar_Email'
     ).value = email;
 
-
-    /* ESTADO */
 
     document.getElementById(
         'editar_Estado'
@@ -1292,22 +1461,16 @@ function abrirModalEditar(
             : 'Inactivo';
 
 
-    /* FECHA */
-
     document.getElementById(
         'editar_Fecha'
     ).value = fecha;
 
-
-    /* URL DEL FORMULARIO */
 
     document.getElementById(
         'formEditarUsuario'
     ).action =
         '/usuarios/editar/' + idUsuario + '/';
 
-
-    /* MOSTRAR MODAL */
 
     document.getElementById(
         'modalEditar'
@@ -1335,22 +1498,16 @@ function abrirModalRestablecer(
 ) {
 
 
-    /* MOSTRAR USUARIO */
-
     document.getElementById(
         'restablecerUsuario'
     ).textContent = nombreUsuario;
 
-
-    /* URL DEL FORMULARIO */
 
     document.getElementById(
         'formRestablecer'
     ).action =
         '/usuarios/restablecer/' + idUsuario + '/';
 
-
-    /* MOSTRAR MODAL */
 
     document.getElementById(
         'modalRestablecer'
@@ -1382,6 +1539,148 @@ function cerrarModalRestablecer() {
 
 
 /* ==========================================
+   MODAL DAR DE BAJA
+   ========================================== */
+
+function abrirModalBaja(
+    idUsuario,
+    idPerfil,
+    nombrePerfil,
+    dni,
+    usuario,
+    apellido,
+    nombre,
+    email,
+    fechaModificacion,
+    fechaBaja,
+    urlBaja
+) {
+
+
+    /* ID USUARIO */
+
+    document.getElementById(
+        'baja_ID_Usuario'
+    ).value = idUsuario;
+
+
+    /* ID PERFIL */
+
+    document.getElementById(
+        'baja_ID_Perfil'
+    ).value =
+        idPerfil + ' — ' + nombrePerfil;
+
+
+    /* DNI */
+
+    document.getElementById(
+        'baja_DNI'
+    ).value = dni;
+
+
+    /* USUARIO */
+
+    document.getElementById(
+        'baja_Usuario'
+    ).value = usuario;
+
+
+    /* APELLIDO */
+
+    document.getElementById(
+        'baja_Apellido'
+    ).value = apellido;
+
+
+    /* NOMBRE */
+
+    document.getElementById(
+        'baja_Nombre'
+    ).value = nombre;
+
+
+    /* CORREO */
+
+    document.getElementById(
+        'baja_Email'
+    ).value = email;
+
+
+    /* ESTADO */
+
+    document.getElementById(
+        'baja_Estado'
+    ).value = 'Activo';
+
+
+    /* FECHA ÚLTIMA MODIFICACIÓN */
+
+    document.getElementById(
+        'baja_Fecha_Modificacion'
+    ).value = fechaModificacion;
+
+
+    /* FECHA BAJA ACTUAL */
+
+    document.getElementById(
+        'baja_Fecha_Actual'
+    ).value = fechaBaja;
+
+
+    /* FECHA BAJA A REGISTRAR */
+
+    const fechaHoy = new Date();
+
+    const dia = String(
+        fechaHoy.getDate()
+    ).padStart(
+        2,
+        '0'
+    );
+
+    const mes = String(
+        fechaHoy.getMonth() + 1
+    ).padStart(
+        2,
+        '0'
+    );
+
+    const anio = fechaHoy.getFullYear();
+
+
+    document.getElementById(
+        'baja_Fecha_Registrar'
+    ).value =
+        dia + '/' + mes + '/' + anio;
+
+
+    /* URL DEL FORMULARIO */
+
+    document.getElementById(
+        'formBajaUsuario'
+    ).action = urlBaja;
+
+
+    /* MOSTRAR MODAL */
+
+    document.getElementById(
+        'modalBaja'
+    ).style.display = 'flex';
+
+}
+
+
+function cerrarModalBaja() {
+
+    document.getElementById(
+        'modalBaja'
+    ).style.display = 'none';
+
+}
+
+
+/* ==========================================
    CERRAR MODALES AL HACER CLIC AFUERA
    ========================================== */
 
@@ -1398,6 +1697,10 @@ window.onclick = function(event) {
 
     const modalRestablecer = document.getElementById(
         'modalRestablecer'
+    );
+
+    const modalBaja = document.getElementById(
+        'modalBaja'
     );
 
 
@@ -1418,6 +1721,13 @@ window.onclick = function(event) {
     if (event.target === modalRestablecer) {
 
         cerrarModalRestablecer();
+
+    }
+
+
+    if (event.target === modalBaja) {
+
+        cerrarModalBaja();
 
     }
 
@@ -1511,22 +1821,9 @@ if (nombreInput) {
         generarUsuario
     );
 
-}
+    }
 
-
-/* ==========================================
-   CONFIRMAR BAJA
-   ========================================== */
-
-function confirmarBaja() {
-
-    return confirm(
-        '¿Está seguro de que desea dar de baja este usuario?'
-    );
-
-}
-
-</script>
+    </script>
 
 
 </body>
