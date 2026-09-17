@@ -6,10 +6,16 @@
 }
 
 body {
-    min-height: 100vh;
+    height: 100vh;
     background-color: #f1f5f3;
     color: #1c2a23;
+}
+
+.layout {
     display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
 
@@ -26,10 +32,7 @@ body {
     justify-content: space-between;
     padding: 24px 16px;
     height: 100vh;
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 100;
+    flex-shrink: 0;
 }
 
 .logo {
@@ -110,11 +113,12 @@ body {
    ========================================== */
 
 .main-content {
-    margin-left: 220px;
-    width: calc(100% - 220px);
+    flex: 1;
     padding: 25px 30px;
-    min-height: 100vh;
-    background-color: #f1f5f3;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 0;
+    min-width: 0;
 }
 
 .header {
@@ -167,6 +171,7 @@ body {
     font-size: 11px;
     font-weight: 600;
     margin-right: 4px;
+    cursor: pointer;
 }
 
 .btn-action:hover {
@@ -364,6 +369,17 @@ body {
     }
 }
 
+.password-info {
+    padding: 14px 22px;
+    font-size: 12px;
+    color: #5c7367;
+    line-height: 1.5;
+}
+
+.password-info strong {
+    color: #0b311e;
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -395,6 +411,12 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr; /* Muestra los inputs a 2 columnas */
     gap: 14px;
+}
+
+.form-grid .user-info-text {
+    grid-column: 1 / -1;
+    padding: 0 4px;
+    margin-bottom: 5px;
 }
 
 .form-group {
@@ -532,4 +554,26 @@ body {
     .form-grid {
         grid-template-columns: 1fr; /* Pasa el formulario a una sola columna */
     }
+}
+
+/* ==========================================
+   BOTONES DE USUARIOS
+   ========================================== */
+
+.user-actions {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.user-actions a,
+.user-actions form {
+    display: inline-block;
+    margin: 0;
+}
+
+.user-actions .btn-action,
+.user-actions .btn-baja {
+    display: inline-block;
+    margin-right: 5px;
+    text-align: center;
 }

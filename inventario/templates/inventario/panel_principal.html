@@ -10,50 +10,95 @@
 </head>
 <body>
 
-  <div class="layout">
+<div class="layout">
     <!-- BARRA LATERAL (SIDEBAR) -->
-    <aside class="sidebar">
-      <div>
+
+<aside class="sidebar">
+
+    <div>
+
         <div class="logo">
-          🌿 Agroquímica del Valle
+            🌿 Agroquímica del Valle
         </div>
 
         <ul class="nav-menu">
-          <li class="nav-item">
-            <a href="{% url 'panel_principal' %}" class="nav-link active">
-              <span class="nav-icon">🎛️</span> Panel Principal
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-              <span class="nav-icon">👤</span> Usuarios
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{% url 'gestion_productos' %}" class="nav-link">
-              <span class="nav-icon">📦</span> Productos
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-              <span class="nav-icon">🚚</span> Proveedores
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-              <span class="nav-icon">📊</span> Movimientos Stock
-            </a>
-          </li>
-        </ul>
-      </div>
 
-      <!-- FOOTER DEL SIDEBAR (USUARIO Y LOGOUT) -->
-      <div class="user-info">
-        <div class="user-role">Administrador</div>
-        <div class="user-email">jefe@agrovalle.com</div>
-        <a href="{% url 'login' %}" class="logout-link">Cerrar sesión</a>
-      </div>
-    </aside>
+            <li class="nav-item">
+                <a href="{% url 'panel_principal' %}" class="nav-link active">
+                    <span class="nav-icon">🎛️</span> Panel Principal
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+                    <span class="nav-icon">👤</span> Usuarios del sistema
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'gestion_productos' %}" class="nav-link">
+                    <span class="nav-icon">📦</span> Productos
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                    <span class="nav-icon">🗂️</span> Tipos de Productos
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                    <span class="nav-icon">🚚</span> Proveedores
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                    <span class="nav-icon">📊</span> Movimientos Stock
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'historial_alertas' %}" class="nav-link">
+                    <span class="nav-icon">🔔</span> Historial de Alertas
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+                    <span class="nav-icon">👥</span> Perfiles de acceso
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'gestion_permisos' %}" class="nav-link">
+                    <span class="nav-icon">🔐</span> Permisos del sistema
+                </a>
+            </li>
+
+        </ul>
+
+    </div>
+
+
+    <!-- FOOTER DEL SIDEBAR (USUARIO Y LOGOUT) -->
+
+    <div class="user-info">
+    <div class="user-role">
+        {{ usuario.ID_Perfil.Nombre_perfil }}
+    </div>
+
+    <div class="user-email">
+        {{ usuario.Email_usuario }}
+    </div>
+
+    <a href="{% url 'login' %}" class="logout-link">
+        Cerrar sesión
+    </a>
+</div>
+
+</aside>
 
     <!-- CONTENIDO PRINCIPAL -->
     <main class="main-content">

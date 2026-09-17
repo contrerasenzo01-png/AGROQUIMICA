@@ -14,17 +14,25 @@
 
 <body>
 
-<!-- Mensajes Django -->
+
+<!-- ==========================================
+     MENSAJES DJANGO
+     ========================================== -->
+
 <div class="toast-container" id="toastContainer">
 
     {% if messages %}
+
         {% for message in messages %}
 
             <div
                 class="toast {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}"
                 id="toast-{{ forloop.counter }}"
             >
-                <span>{{ message }}</span>
+
+                <span>
+                    {{ message }}
+                </span>
 
                 <span
                     class="toast-close"
@@ -32,512 +40,1119 @@
                 >
                     ✕
                 </span>
+
             </div>
 
         {% endfor %}
+
     {% endif %}
 
 </div>
 
 
-<!-- Sidebar -->
-<aside class="sidebar">
+<!-- ==========================================
+     ESTRUCTURA PRINCIPAL
+     ========================================== -->
 
-    <div>
-
-        <div class="logo">
-            🌿 Agroquímica del Valle
-        </div>
-
-        <ul class="nav-menu">
-
-            <li class="nav-item">
-                <a href="{% url 'panel_principal' %}" class="nav-link">
-                    <span class="nav-icon">🎛️</span>
-                    Panel Principal
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{% url 'gestion_usuarios' %}" class="nav-link active">
-                    <span class="nav-icon">👤</span>
-                    Usuarios
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{% url 'gestion_productos' %}" class="nav-link">
-                    <span class="nav-icon">📦</span>
-                    Productos
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                    <span class="nav-icon">🚚</span>
-                    Proveedores
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                    <span class="nav-icon">📊</span>
-                    Movimientos Stock
-                </a>
-            </li>
-
-        </ul>
-
-    </div>
+<div class="layout">
 
 
-    <div class="user-info">
+    <!-- ==========================================
+         BARRA LATERAL
+         ========================================== -->
 
-        <div class="user-role">
-            Administrador
-        </div>
-
-        <div class="user-email">
-            jefe@agrovalle.com
-        </div>
-
-        <a href="{% url 'login' %}" class="logout-link">
-            Cerrar sesión
-        </a>
-
-    </div>
-
-</aside>
-
-
-<!-- Contenido Principal -->
-<main class="main-content">
-
-    <header class="header">
+    <aside class="sidebar">
 
         <div>
-            <h1>
-                Gestión de Usuarios
-            </h1>
 
-            <p class="subtitle">
-                Registrar · Modificar · Dar de baja · Restablecer contraseña
-            </p>
+            <div class="logo">
+                🌿 Agroquímica del Valle
+            </div>
+
+            <ul class="nav-menu">
+
+                <li class="nav-item">
+                    <a href="{% url 'panel_principal' %}" class="nav-link">
+                        <span class="nav-icon">🎛️</span>
+                        Panel Principal
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_usuarios' %}" class="nav-link active">
+                        <span class="nav-icon">👤</span>
+                        Usuarios del sistema
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link">
+                        <span class="nav-icon">📦</span>
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                        <span class="nav-icon">🚚</span>
+                        Proveedores
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Movimientos Stock
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'historial_alertas' %}" class="nav-link">
+                        <span class="nav-icon">🔔</span>
+                        Historial de Alertas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        Perfiles de acceso
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_permisos' %}" class="nav-link">
+                        <span class="nav-icon">🔐</span>
+                        Permisos del sistema
+                    </a>
+                </li>
+
+            </ul>
+
         </div>
 
-        <button
-            type="button"
-            class="btn-nuevo"
-            onclick="abrirModalCrear()"
-        >
-            + Nuevo usuario
-        </button>
 
-    </header>
+        <!-- ==========================================
+             USUARIO Y CERRAR SESIÓN
+             ========================================== -->
 
+        <div class="user-info">
 
-    <!-- Buscador -->
-    <section class="search-section">
+            <div class="user-role">
+                Administrador
+            </div>
 
-        <form method="GET" action="{% url 'gestion_usuarios' %}">
+            <div class="user-email">
+                jefe@agrovalle.com
+            </div>
 
-            <input
-                type="text"
-                name="q"
-                value="{{ busqueda }}"
-                class="search-box"
-                placeholder="Buscar por usuario, apellido, DNI o correo..."
-            >
+            <a href="{% url 'login' %}" class="logout-link">
+                Cerrar sesión
+            </a>
 
-        </form>
+        </div>
 
-    </section>
+    </aside>
 
 
-    <!-- Usuarios -->
-    <section class="card-panel">
+    <!-- ==========================================
+         CONTENIDO PRINCIPAL
+         ========================================== -->
 
-        <div class="section-header">
+    <main class="main-content">
+
+
+        <!-- ==========================================
+             ENCABEZADO
+             ========================================== -->
+
+        <header class="header">
 
             <div>
 
-                <h2>
-                    Usuarios registrados
-                </h2>
+                <h1>
+                    Gestión de Usuarios
+                </h1>
 
-                <span class="records-count">
-                    {{ usuarios|length }} registros
-                </span>
+                <p class="subtitle">
+                    Registrar · Modificar · Dar de baja · Restablecer contraseña
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="btn-nuevo"
+                onclick="abrirModalCrear()"
+            >
+                + Nuevo usuario
+            </button>
+
+        </header>
+
+
+        <!-- ==========================================
+             BUSCADOR
+             ========================================== -->
+
+        <section class="search-section">
+
+            <form
+                method="GET"
+                action="{% url 'gestion_usuarios' %}"
+            >
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ busqueda }}"
+                    class="search-box"
+                    placeholder="Buscar por usuario, apellido, DNI o correo..."
+                >
+
+            </form>
+
+        </section>
+
+
+        <!-- ==========================================
+             TABLA DE USUARIOS
+             ========================================== -->
+
+        <section class="card-panel">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Usuarios registrados
+                    </h2>
+
+                    <span class="records-count">
+                        {{ usuarios|length }} registros
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table class="custom-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                ID_usuario
+                            </th>
+
+                            <th>
+                                Usuario
+                            </th>
+
+                            <th>
+                                Apellido_usuario
+                            </th>
+
+                            <th>
+                                Nombre_usuario
+                            </th>
+
+                            <th>
+                                DNI
+                            </th>
+
+                            <th>
+                                Email_usuario
+                            </th>
+
+                            <th>
+                                Perfil
+                            </th>
+
+                            <th>
+                                Estado_usuario
+                            </th>
+
+                            <th>
+                                Fecha última modificación
+                            </th>
+
+                            <th>
+                                Fecha baja
+                            </th>
+
+                            <th>
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for usuario in usuarios %}
+
+                            <tr>
+
+
+                                <!-- ID -->
+
+                                <td class="id-user">
+
+                                    {{ usuario.ID_Usuario }}
+
+                                </td>
+
+
+                                <!-- USUARIO -->
+
+                                <td class="username">
+
+                                    {{ usuario.Usuario }}
+
+                                </td>
+
+
+                                <!-- APELLIDO -->
+
+                                <td>
+
+                                    {{ usuario.Apellido_usuario }}
+
+                                </td>
+
+
+                                <!-- NOMBRE -->
+
+                                <td>
+
+                                    {{ usuario.Nombre_usuario }}
+
+                                </td>
+
+
+                                <!-- DNI -->
+
+                                <td>
+
+                                    {{ usuario.DNI }}
+
+                                </td>
+
+
+                                <!-- CORREO -->
+
+                                <td>
+
+                                    {{ usuario.Email_usuario }}
+
+                                </td>
+
+
+                                <!-- PERFIL -->
+
+                                <td>
+
+                                    <span class="badge-role">
+
+                                        {{ usuario.ID_Perfil.Nombre_perfil }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- ESTADO -->
+
+                                <td>
+
+                                    {% if usuario.Estado_usuario %}
+
+                                        <span class="badge-status active">
+                                            Activo
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge-status inactive">
+                                            Inactivo
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- FECHA MODIFICACIÓN -->
+
+                                <td>
+
+                                    {{ usuario.Fecha_ultima_modificacion }}
+
+                                </td>
+
+
+                                <!-- FECHA BAJA -->
+
+                                <td>
+
+                                    {% if usuario.Fecha_Baja %}
+
+                                        {{ usuario.Fecha_Baja }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- ==========================================
+                                     ACCIONES
+                                     ========================================== -->
+
+                                <td class="user-actions">
+
+
+                                    <!-- EDITAR -->
+
+                                    <button
+                                        type="button"
+                                        class="btn-action"
+                                        onclick="abrirModalEditar(
+                                            '{{ usuario.ID_Usuario }}',
+                                            '{{ usuario.ID_Perfil.ID_Perfil }}',
+                                            '{{ usuario.ID_Perfil.Nombre_perfil|escapejs }}',
+                                            '{{ usuario.DNI }}',
+                                            '{{ usuario.Usuario|escapejs }}',
+                                            '{{ usuario.Apellido_usuario|escapejs }}',
+                                            '{{ usuario.Nombre_usuario|escapejs }}',
+                                            '{{ usuario.Email_usuario|escapejs }}',
+                                            '{{ usuario.Estado_usuario }}',
+                                            '{{ usuario.Fecha_ultima_modificacion }}'
+                                        )"
+                                    >
+                                        Editar usuario
+                                    </button>
+
+
+                                    <!-- RESTABLECER CONTRASEÑA -->
+
+                                    <button
+                                        type="button"
+                                        class="btn-action"
+                                        onclick="abrirModalRestablecer(
+                                            '{{ usuario.ID_Usuario }}',
+                                            '{{ usuario.Usuario|escapejs }}'
+                                        )"
+                                    >
+                                        Restablecer contraseña
+                                    </button>
+
+
+                                    <!-- DAR DE BAJA -->
+
+                                    {% if usuario.Estado_usuario %}
+
+                                        <form
+                                            method="POST"
+                                            action="{% url 'dar_baja_usuario' usuario.ID_Usuario %}"
+                                            onsubmit="return confirmarBaja();"
+                                        >
+
+                                            {% csrf_token %}
+
+                                            <button
+                                                type="submit"
+                                                class="btn-baja"
+                                            >
+                                                Dar de baja
+                                            </button>
+
+                                        </form>
+
+                                    {% endif %}
+
+
+                                </td>
+
+                            </tr>
+
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="11"
+                                    class="empty-message"
+                                >
+                                    No hay usuarios registrados.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==========================================
+             MODAL REGISTRAR USUARIO
+             ========================================== -->
+
+        <div
+            class="modal"
+            id="modalCrear"
+        >
+
+            <div class="modal-content">
+
+
+                <!-- ENCABEZADO -->
+
+                <div class="modal-header">
+
+                    <h2>
+                        Registrar nuevo usuario
+                    </h2>
+
+                    <span
+                        class="modal-close"
+                        onclick="cerrarModalCrear()"
+                    >
+                        ✕
+                    </span>
+
+                </div>
+
+
+                <!-- FORMULARIO -->
+
+                <form
+                    method="POST"
+                    action="{% url 'crear_usuario' %}"
+                    id="formCrearUsuario"
+                >
+
+                    {% csrf_token %}
+
+
+                    <div class="form-grid">
+
+
+                        <!-- DNI -->
+
+                        <div class="form-group">
+
+                            <label>
+                                DNI
+                            </label>
+
+                            <input
+                                type="number"
+                                name="DNI"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- APELLIDO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Apellido
+                            </label>
+
+                            <input
+                                type="text"
+                                name="Apellido_usuario"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- NOMBRE -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Nombre
+                            </label>
+
+                            <input
+                                type="text"
+                                name="Nombre_usuario"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- USUARIO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Usuario — generado automáticamente
+                            </label>
+
+                            <input
+                                type="text"
+                                id="Usuario_preview"
+                                placeholder="Completar apellido y nombre"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- CONTRASEÑA -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Contraseña inicial
+                            </label>
+
+                            <input
+                                type="password"
+                                name="Contrasena"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- CORREO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Correo
+                            </label>
+
+                            <input
+                                type="email"
+                                name="Email_usuario"
+                                placeholder="usuario@agrovalle.com"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- PERFIL -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Perfil
+                            </label>
+
+                            <select
+                                name="ID_Perfil"
+                                required
+                            >
+
+                                <option value="">
+                                    Seleccionar perfil
+                                </option>
+
+                                {% for perfil in perfiles %}
+
+                                    <option
+                                        value="{{ perfil.ID_Perfil }}"
+                                    >
+                                        {{ perfil.Nombre_perfil }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- INFORMACIÓN -->
+
+                    <div class="password-info">
+
+                        <strong>
+                            Contraseña inicial:
+                        </strong>
+
+                        será ingresada por el administrador y se almacenará
+                        de forma segura mediante hash.
+
+                        El usuario deberá cambiarla en su próximo inicio de sesión.
+
+                    </div>
+
+
+                    <!-- BOTONES -->
+
+                    <div class="modal-actions">
+
+                        <button
+                            type="button"
+                            class="btn-cancelar"
+                            onclick="cerrarModalCrear()"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn-guardar"
+                        >
+                            Guardar usuario
+                        </button>
+
+                    </div>
+
+                </form>
 
             </div>
 
         </div>
 
 
-        <div class="table-container">
+        <!-- ==========================================
+             MODAL MODIFICAR USUARIO
+             ========================================== -->
 
-            <table class="custom-table">
-
-                <thead>
-
-                    <tr>
-                        <th>ID</th>
-                        <th>Usuario</th>
-                        <th>Apellido</th>
-                        <th>Nombre</th>
-                        <th>DNI</th>
-                        <th>Correo_usuario</th>
-                        <th>Perfil</th>
-                        <th>Estado_usuario</th>
-                        <th>Fecha_ultima_modificacion</th>
-                        <th>Fecha_baja</th>
-                        <th>Acciones</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for usuario in usuarios %}
-
-                        <tr>
-
-                            <td class="id-user">
-                                {{ usuario.ID_Usuario }}
-                            </td>
-
-                            <td class="username">
-                                {{ usuario.Usuario }}
-                            </td>
-
-                            <td>
-                                {{ usuario.Apellido_usuario }},
-                            </td>
-                            
-                            <td>
-                                {{ usuario.Nombre_usuario }}
-                            </td>
-
-                            <td>
-                                {{ usuario.DNI }}
-                            </td>
-
-                            <td>
-                                {{ usuario.Email_usuario }}
-                            </td>
-
-                            <td>
-
-                                <span class="badge-role">
-                                    {{ usuario.ID_Perfil.Nombre_perfil }}
-                                </span>
-
-                            </td>
-
-                            <td>
-
-                                {% if usuario.Estado_usuario %}
-
-                                    <span class="badge-status active">
-                                        Activo
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="badge-status inactive">
-                                        Inactivo
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-                            <td>
-                                {{ usuario.Fecha_ultima_modificacion }}
-                            </td>
-
-                            <td>
-
-                                {% if usuario.Fecha_Baja %}
-                                    {{ usuario.Fecha_Baja }}
-                                {% else %}
-                                    —
-                                {% endif %}
-
-                            </td>
-
-                            <td>
-
-                                <!-- MODIFICAR -->
-                                <a
-                                    href="{% url 'editar_usuario' usuario.ID_Usuario %}"
-                                    class="btn-action"
-                                >
-                                    Editar
-                                </a>
-
-
-                                <!-- DAR DE BAJA -->
-                                {% if usuario.Estado_usuario %}
-
-                                    <form
-                                        method="POST"
-                                        action="{% url 'dar_baja_usuario' usuario.ID_Usuario %}"
-                                        style="display: inline;"
-                                        onsubmit="return confirmarBaja();"
-                                    >
-
-                                        {% csrf_token %}
-
-                                        <button
-                                            type="submit"
-                                            class="btn-baja"
-                                        >
-                                            Dar de baja
-                                        </button>
-
-                                    </form>
-
-                                {% endif %}
-
-                            </td>
-
-                        </tr>
-
-                    {% empty %}
-
-                        <tr>
-
-                            <td colspan="10" class="empty-message">
-                                No hay usuarios registrados.
-                            </td>
-
-                        </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </section>
-
-</main>
-
-
-<!-- ==========================================
-     MODAL REGISTRAR USUARIO
-     ========================================== -->
-
-<div class="modal" id="modalCrear">
-
-    <div class="modal-content">
-
-        <div class="modal-header">
-
-            <h2>
-                Registrar usuario
-            </h2>
-
-            <span
-                class="modal-close"
-                onclick="cerrarModalCrear()"
-            >
-                ✕
-            </span>
-
-        </div>
-
-
-        <form
-            method="POST"
-            action="{% url 'crear_usuario' %}"
-            id="formCrearUsuario"
+        <div
+            class="modal"
+            id="modalEditar"
         >
 
-            {% csrf_token %}
+            <div class="modal-content">
 
 
-            <div class="form-grid">
+                <!-- ENCABEZADO -->
 
+                <div class="modal-header">
 
-                <!-- DNI -->
-                <div class="form-group">
+                    <h2>
+                        Modificar usuario
+                    </h2>
 
-                    <label>
-                        DNI
-                    </label>
-
-                    <input
-                        type="number"
-                        name="DNI"
-                        required
+                    <span
+                        class="modal-close"
+                        onclick="cerrarModalEditar()"
                     >
+                        ✕
+                    </span>
 
                 </div>
 
 
-                <!-- APELLIDO -->
-                <div class="form-group">
+                <!-- INFORMACIÓN -->
 
-                    <label>
-                        Apellido
-                    </label>
+                <div class="password-info">
 
-                    <input
-                        type="text"
-                        name="Apellido_usuario"
-                        required
-                    >
+                    Solo el campo
+                    <strong>
+                        Email_usuario
+                    </strong>
+                    puede ser modificado.
+
+                    El resto de los datos son de solo lectura.
 
                 </div>
 
 
-                <!-- NOMBRE -->
-                <div class="form-group">
+                <!-- FORMULARIO -->
 
-                    <label>
-                        Nombre
-                    </label>
+                <form
+                    method="POST"
+                    id="formEditarUsuario"
+                >
 
-                    <input
-                        type="text"
-                        name="Nombre_usuario"
-                        required
+                    {% csrf_token %}
+
+
+                    <div class="form-grid">
+
+
+                        <!-- ID USUARIO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                ID Usuario
+                            </label>
+
+                            <input
+                                type="text"
+                                id="editar_ID_Usuario"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- ID PERFIL -->
+
+                        <div class="form-group">
+
+                            <label>
+                                ID Perfil
+                            </label>
+
+                            <input
+                                type="text"
+                                id="editar_ID_Perfil"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- DNI -->
+
+                        <div class="form-group">
+
+                            <label>
+                                DNI
+                            </label>
+
+                            <input
+                                type="text"
+                                id="editar_DNI"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- USUARIO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Usuario
+                            </label>
+
+                            <input
+                                type="text"
+                                id="editar_Usuario"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- APELLIDO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Apellido
+                            </label>
+
+                            <input
+                                type="text"
+                                id="editar_Apellido"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- NOMBRE -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Nombre
+                            </label>
+
+                            <input
+                                type="text"
+                                id="editar_Nombre"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- ESTADO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Estado
+                            </label>
+
+                            <input
+                                type="text"
+                                id="editar_Estado"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- FECHA -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Fecha última modificación
+                            </label>
+
+                            <input
+                                type="text"
+                                id="editar_Fecha"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- CORREO -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Correo electrónico
+                            </label>
+
+                            <input
+                                type="email"
+                                name="Email_usuario"
+                                id="editar_Email"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- INFORMACIÓN -->
+
+                    <div class="password-info">
+
+                        La fecha de última modificación se actualizará
+                        automáticamente al guardar los cambios.
+
+                    </div>
+
+
+                    <!-- BOTONES -->
+
+                    <div class="modal-actions">
+
+                        <button
+                            type="button"
+                            class="btn-cancelar"
+                            onclick="cerrarModalEditar()"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn-guardar"
+                        >
+                            Actualizar email
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             MODAL RESTABLECER CONTRASEÑA
+             ========================================== -->
+
+        <div
+            class="modal"
+            id="modalRestablecer"
+        >
+
+            <div class="modal-content">
+
+
+                <!-- ENCABEZADO -->
+
+                <div class="modal-header">
+
+                    <h2>
+                        Restablecer contraseña
+                    </h2>
+
+                    <span
+                        class="modal-close"
+                        onclick="cerrarModalRestablecer()"
                     >
+                        ✕
+                    </span>
 
                 </div>
 
 
                 <!-- USUARIO -->
-                <div class="form-group">
 
-                    <label>
-                        Usuario
-                    </label>
+                <div class="password-info">
 
-                    <input
-                        type="text"
-                        name="Usuario"
-                        required
-                    >
+                    Usuario:
+                    <strong id="restablecerUsuario"></strong>
 
                 </div>
 
 
-                <!-- CONTRASEÑA -->
-                <div class="form-group">
+                <!-- FORMULARIO -->
 
-                    <label>
-                        Contraseña
-                    </label>
+                <form
+                    method="POST"
+                    id="formRestablecer"
+                >
 
-                    <input
-                        type="password"
-                        name="Contrasena"
-                        required
-                    >
-
-                </div>
+                    {% csrf_token %}
 
 
-                <!-- CORREO -->
-                <div class="form-group">
-
-                    <label>
-                        Correo
-                    </label>
-
-                    <input
-                        type="email"
-                        name="Email_usuario"
-                        required
-                    >
-
-                </div>
+                    <div class="form-grid">
 
 
-                <!-- PERFIL -->
-                <div class="form-group">
+                        <!-- NUEVA CONTRASEÑA -->
 
-                    <label>
-                        Perfil
-                    </label>
+                        <div class="form-group">
 
-                    <select
-                        name="ID_Perfil"
-                        required
-                    >
+                            <label>
+                                Nueva contraseña
+                            </label>
 
-                        <option value="">
-                            Seleccionar perfil
-                        </option>
+                            <input
+                                type="password"
+                                name="nueva_contrasena"
+                                required
+                            >
 
-                        {% for perfil in perfiles %}
+                        </div>
 
-                            <option value="{{ perfil.ID_Perfil }}">
-                                {{ perfil.Nombre_perfil }}
-                            </option>
 
-                        {% endfor %}
+                        <!-- CONFIRMAR CONTRASEÑA -->
 
-                    </select>
+                        <div class="form-group">
 
-                </div>
+                            <label>
+                                Confirmar contraseña
+                            </label>
 
+                            <input
+                                type="password"
+                                name="confirmar_contrasena"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BOTONES -->
+
+                    <div class="modal-actions">
+
+                        <button
+                            type="button"
+                            class="btn-cancelar"
+                            onclick="cerrarModalRestablecer()"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn-guardar"
+                        >
+                            Restablecer contraseña
+                        </button>
+
+                    </div>
+
+                </form>
 
             </div>
 
+        </div>
 
-            <!-- BOTONES DENTRO DEL FORMULARIO -->
 
-            <div class="modal-actions">
-
-                <button
-                    type="button"
-                    class="btn-cancelar"
-                    onclick="cerrarModalCrear()"
-                >
-                    Cancelar
-                </button>
-
-                <button
-                    type="submit"
-                    class="btn-guardar"
-                >
-                    Registrar usuario
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
+    </main>
 
 </div>
 
 
+<!-- ==========================================
+     JAVASCRIPT
+     ========================================== -->
+
 <script>
+
 
 /* ==========================================
    MENSAJES
    ========================================== */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener(
+    'DOMContentLoaded',
+    function() {
 
-    const toasts = document.querySelectorAll('.toast');
+        const toasts = document.querySelectorAll(
+            '.toast'
+        );
 
-    toasts.forEach(toast => {
+        toasts.forEach(
+            toast => {
 
-        setTimeout(() => {
-            toast.remove();
-        }, 4000);
+                setTimeout(
+                    () => {
+                        toast.remove();
+                    },
+                    4000
+                );
 
-    });
+            }
+        );
 
-});
+    }
+);
 
 
 function cerrarToast(id) {
@@ -545,7 +1160,9 @@ function cerrarToast(id) {
     const toast = document.getElementById(id);
 
     if (toast) {
+
         toast.remove();
+
     }
 
 }
@@ -557,32 +1174,344 @@ function cerrarToast(id) {
 
 function abrirModalCrear() {
 
-    document.getElementById('modalCrear').style.display = 'flex';
+    document.getElementById(
+        'modalCrear'
+    ).style.display = 'flex';
 
 }
 
 
 function cerrarModalCrear() {
 
-    const modal = document.getElementById('modalCrear');
+    const modal = document.getElementById(
+        'modalCrear'
+    );
+
     modal.style.display = 'none';
-    
-    // Limpia los datos ingresados al cerrar
-    const form = document.getElementById('formCrearUsuario');
+
+
+    const form = document.getElementById(
+        'formCrearUsuario'
+    );
+
     if (form) {
+
         form.reset();
+
+    }
+
+
+    const usuarioPreview = document.getElementById(
+        'Usuario_preview'
+    );
+
+    if (usuarioPreview) {
+
+        usuarioPreview.value = '';
+
     }
 
 }
 
 
-// Cierra el modal al hacer clic en el fondo oscuro translúcido
-window.onclick = function(event) {
-    const modal = document.getElementById('modalCrear');
-    if (event.target === modal) {
-        cerrarModalCrear();
+/* ==========================================
+   MODAL MODIFICAR USUARIO
+   ========================================== */
+
+function abrirModalEditar(
+    idUsuario,
+    idPerfil,
+    nombrePerfil,
+    dni,
+    usuario,
+    apellido,
+    nombre,
+    email,
+    estado,
+    fecha
+) {
+
+
+    /* ID USUARIO */
+
+    document.getElementById(
+        'editar_ID_Usuario'
+    ).value = idUsuario;
+
+
+    /* ID PERFIL */
+
+    document.getElementById(
+        'editar_ID_Perfil'
+    ).value =
+        idPerfil + ' — ' + nombrePerfil;
+
+
+    /* DNI */
+
+    document.getElementById(
+        'editar_DNI'
+    ).value = dni;
+
+
+    /* USUARIO */
+
+    document.getElementById(
+        'editar_Usuario'
+    ).value = usuario;
+
+
+    /* APELLIDO */
+
+    document.getElementById(
+        'editar_Apellido'
+    ).value = apellido;
+
+
+    /* NOMBRE */
+
+    document.getElementById(
+        'editar_Nombre'
+    ).value = nombre;
+
+
+    /* CORREO */
+
+    document.getElementById(
+        'editar_Email'
+    ).value = email;
+
+
+    /* ESTADO */
+
+    document.getElementById(
+        'editar_Estado'
+    ).value =
+        estado === 'True'
+            ? 'Activo'
+            : 'Inactivo';
+
+
+    /* FECHA */
+
+    document.getElementById(
+        'editar_Fecha'
+    ).value = fecha;
+
+
+    /* URL DEL FORMULARIO */
+
+    document.getElementById(
+        'formEditarUsuario'
+    ).action =
+        '/usuarios/editar/' + idUsuario + '/';
+
+
+    /* MOSTRAR MODAL */
+
+    document.getElementById(
+        'modalEditar'
+    ).style.display = 'flex';
+
+}
+
+
+function cerrarModalEditar() {
+
+    document.getElementById(
+        'modalEditar'
+    ).style.display = 'none';
+
+}
+
+
+/* ==========================================
+   MODAL RESTABLECER CONTRASEÑA
+   ========================================== */
+
+function abrirModalRestablecer(
+    idUsuario,
+    nombreUsuario
+) {
+
+
+    /* MOSTRAR USUARIO */
+
+    document.getElementById(
+        'restablecerUsuario'
+    ).textContent = nombreUsuario;
+
+
+    /* URL DEL FORMULARIO */
+
+    document.getElementById(
+        'formRestablecer'
+    ).action =
+        '/usuarios/restablecer/' + idUsuario + '/';
+
+
+    /* MOSTRAR MODAL */
+
+    document.getElementById(
+        'modalRestablecer'
+    ).style.display = 'flex';
+
+}
+
+
+function cerrarModalRestablecer() {
+
+    const modal = document.getElementById(
+        'modalRestablecer'
+    );
+
+    modal.style.display = 'none';
+
+
+    const form = document.getElementById(
+        'formRestablecer'
+    );
+
+    if (form) {
+
+        form.reset();
+
     }
+
+}
+
+
+/* ==========================================
+   CERRAR MODALES AL HACER CLIC AFUERA
+   ========================================== */
+
+window.onclick = function(event) {
+
+
+    const modalCrear = document.getElementById(
+        'modalCrear'
+    );
+
+    const modalEditar = document.getElementById(
+        'modalEditar'
+    );
+
+    const modalRestablecer = document.getElementById(
+        'modalRestablecer'
+    );
+
+
+    if (event.target === modalCrear) {
+
+        cerrarModalCrear();
+
+    }
+
+
+    if (event.target === modalEditar) {
+
+        cerrarModalEditar();
+
+    }
+
+
+    if (event.target === modalRestablecer) {
+
+        cerrarModalRestablecer();
+
+    }
+
 };
+
+
+/* ==========================================
+   GENERAR USUARIO AUTOMÁTICAMENTE
+   APELLIDO + PRIMERA LETRA DEL NOMBRE
+   ========================================== */
+
+const apellidoInput = document.querySelector(
+    'input[name="Apellido_usuario"]'
+);
+
+const nombreInput = document.querySelector(
+    'input[name="Nombre_usuario"]'
+);
+
+const usuarioPreview = document.getElementById(
+    'Usuario_preview'
+);
+
+
+function generarUsuario() {
+
+
+    if (
+        !apellidoInput ||
+        !nombreInput ||
+        !usuarioPreview
+    ) {
+
+        return;
+
+    }
+
+
+    const apellido = apellidoInput.value
+        .trim()
+        .normalize("NFD")
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        );
+
+
+    const nombre = nombreInput.value
+        .trim()
+        .normalize("NFD")
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        );
+
+
+    if (
+        apellido &&
+        nombre
+    ) {
+
+        usuarioPreview.value =
+            apellido.toLowerCase()
+            + nombre
+                .charAt(0)
+                .toLowerCase();
+
+    } else {
+
+        usuarioPreview.value = '';
+
+    }
+
+}
+
+
+if (apellidoInput) {
+
+    apellidoInput.addEventListener(
+        'input',
+        generarUsuario
+    );
+
+}
+
+
+if (nombreInput) {
+
+    nombreInput.addEventListener(
+        'input',
+        generarUsuario
+    );
+
+}
 
 
 /* ==========================================
@@ -598,6 +1527,7 @@ function confirmarBaja() {
 }
 
 </script>
+
 
 </body>
 

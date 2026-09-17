@@ -1,0 +1,98 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Restablecer contraseña</title>
+
+    <link rel="stylesheet" href="{% static 'inventario/styles/usuarios.css' %}">
+
+</head>
+
+<body>
+
+    <main>
+
+        <section class="formulario">
+
+            <h1>Restablecer contraseña</h1>
+
+            <p>
+                Usuario:
+                <strong>{{ usuario.Usuario }}</strong>
+            </p>
+
+            <form
+                method="POST"
+                action="{% url 'restablecer_contrasena' usuario.ID_Usuario %}"
+            >
+
+                {% csrf_token %}
+
+                <div class="form-group">
+
+                    <label for="nueva_contrasena">
+                        Nueva contraseña
+                    </label>
+
+                    <input
+                        type="password"
+                        id="nueva_contrasena"
+                        name="nueva_contrasena"
+                        required
+                        minlength="8"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="confirmar_contrasena">
+                        Confirmar contraseña
+                    </label>
+
+                    <input
+                        type="password"
+                        id="confirmar_contrasena"
+                        name="confirmar_contrasena"
+                        required
+                        minlength="8"
+                    >
+
+                </div>
+
+
+                <div class="modal-actions">
+
+                    <a
+                        href="{% url 'gestion_usuarios' %}"
+                        class="btn-cancelar"
+                    >
+                        Cancelar
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="btn-guardar"
+                    >
+                        Restablecer contraseña
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>
+

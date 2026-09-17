@@ -1,3 +1,4 @@
+
 {% load static %}
 
 <!DOCTYPE html>
@@ -7,7 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Agroquímicos del Valle - Login</title>
+    <title>Cambiar contraseña - Agroquímica del Valle</title>
 
     <link rel="stylesheet" href="{% static 'inventario/styles/login.css' %}">
 </head>
@@ -16,95 +17,82 @@
 
     <div class="login-container">
 
-        <!-- LOGO -->
         <div class="logo-icon">
-
             <img
                 src="{% static 'inventario/IMG/logo_agroquimica.png' %}"
                 alt="Logo Agroquímica del Valle"
                 class="logo-img"
             >
-
         </div>
 
-
-        <!-- TÍTULO -->
-        <h1>
-            Agroquímicos del Valle
-        </h1>
+        <h1>Agroquímica del Valle</h1>
 
         <div class="subtitle">
-            Sistema de Gestión Interno
+            Cambio de contraseña
         </div>
 
-
-        <!-- FORMULARIO -->
         <div class="card">
+
+            <h2>Debe cambiar su contraseña</h2>
+
+            <p>
+                Por seguridad, debe establecer una nueva contraseña
+                antes de ingresar al sistema.
+            </p>
 
             <form method="POST">
 
                 {% csrf_token %}
 
-
-                <!-- USUARIO -->
                 <div class="form-group">
 
-                    <label for="usuario">
-                        Usuario
-                    </label>
-
-                    <input
-                        type="text"
-                        id="usuario"
-                        name="usuario"
-                        value="{{ request.POST.usuario|default:'' }}"
-                        required
-                        autocomplete="off"
-                    >
-
-                </div>
-
-
-                <!-- CONTRASEÑA -->
-                <div class="form-group">
-
-                    <label for="password">
-                        Contraseña
+                    <label for="nueva_contrasena">
+                        Nueva contraseña
                     </label>
 
                     <input
                         type="password"
-                        id="password"
-                        name="password"
-                        placeholder="********"
+                        id="nueva_contrasena"
+                        name="nueva_contrasena"
+                        placeholder="Ingrese una nueva contraseña"
                         required
+                        minlength="8"
                     >
 
                 </div>
 
+                <div class="form-group">
 
-                <!-- MENSAJE DE ERROR -->
+                    <label for="confirmar_contrasena">
+                        Confirmar contraseña
+                    </label>
+
+                    <input
+                        type="password"
+                        id="confirmar_contrasena"
+                        name="confirmar_contrasena"
+                        placeholder="Repita la nueva contraseña"
+                        required
+                        minlength="8"
+                    >
+
+                </div>
+
                 {% if error %}
-
                     <div class="error-box">
                         {{ error }}
                     </div>
-
                 {% endif %}
 
-
-                <!-- BOTÓN INGRESAR -->
                 <button
                     type="submit"
                     class="btn-submit"
                 >
-                    Ingresar al sistema
+                    Cambiar contraseña
                 </button>
 
-
-                <!-- TEXTO INFORMATIVO -->
                 <div class="footer-text">
-                    Acceso restringido — solo personal autorizado
+                    La contraseña debe tener al menos 8 caracteres.
                 </div>
 
             </form>
@@ -116,3 +104,4 @@
 </body>
 
 </html>
+

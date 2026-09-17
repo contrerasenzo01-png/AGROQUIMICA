@@ -1,0 +1,1086 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Gestión de Perfiles</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'inventario/styles/perfiles.css' %}"
+    >
+
+</head>
+
+
+<body>
+
+    <div class="layout">
+
+    <!-- BARRA LATERAL -->
+    <aside class="sidebar">
+
+        <div>
+
+            <div class="logo">
+                🌿 Agroquímica del Valle
+            </div>
+
+            <ul class="nav-menu">
+
+                <li class="nav-item">
+                    <a href="{% url 'panel_principal' %}" class="nav-link">
+                        <span class="nav-icon">🎛️</span>
+                        Panel Principal
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        Usuarios del sistema
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link">
+                        <span class="nav-icon">📦</span>
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                        <span class="nav-icon">🚚</span>
+                        Proveedores
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Movimientos Stock
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'historial_alertas' %}" class="nav-link">
+                        <span class="nav-icon">🔔</span>
+                        Historial de Alertas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_perfiles' %}" class="nav-link active">
+                        <span class="nav-icon">👥</span>
+                        Perfiles de acceso
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_permisos' %}" class="nav-link">
+                        <span class="nav-icon">🔐</span>
+                        Permisos del sistema
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <!-- USUARIO Y CERRAR SESIÓN -->
+        <div class="user-info">
+
+            <div class="user-role">
+                Administrador
+            </div>
+
+            <div class="user-email">
+                jefe@agrovalle.com
+            </div>
+
+            <a href="{% url 'login' %}" class="logout-link">
+                Cerrar sesión
+            </a>
+
+        </div>
+
+    </aside>
+
+
+
+        <!-- ==========================================
+             CONTENIDO PRINCIPAL
+             ========================================== -->
+
+        <main class="main-content">
+
+
+            <!-- ENCABEZADO -->
+
+            <div class="header">
+
+                <h1>
+                    GESTIÓN DE PERFILES
+                </h1>
+
+                <p class="subtitle">
+                    Administración de perfiles y permisos
+                </p>
+
+            </div>
+
+
+
+            <!-- MENSAJES -->
+
+            {% if messages %}
+
+                <div class="messages">
+
+                    {% for message in messages %}
+
+                        <div class="message {{ message.tags }}">
+
+                            {{ message }}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+
+
+            <!-- BOTÓN NUEVO + BUSCADOR -->
+
+            <div class="top-actions">
+
+
+                <form
+                    method="GET"
+                    action="{% url 'gestion_perfiles' %}"
+                    class="search-form"
+                >
+
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ busqueda }}"
+                        placeholder="Buscar perfil..."
+                    >
+
+                    <button
+                        type="submit"
+                        class="btn-search"
+                    >
+                        Buscar
+                    </button>
+
+
+                    {% if busqueda %}
+
+                        <a
+                            href="{% url 'gestion_perfiles' %}"
+                            class="btn-clear"
+                        >
+                            Limpiar
+                        </a>
+
+                    {% endif %}
+
+                </form>
+
+
+                <button
+                    type="button"
+                    class="btn-primary"
+                    onclick="openCreateModal()"
+                >
+                    + Nuevo perfil
+                </button>
+
+
+            </div>
+
+
+
+            <!-- ==========================================
+                 LISTADO DE PERFILES
+                 ========================================== -->
+
+            <section class="profiles-container">
+
+
+                {% if perfiles %}
+
+
+                    {% for perfil in perfiles %}
+
+
+                        <div
+                            class="profile-card"
+                            data-id="{{ perfil.ID_Perfil }}"
+                            data-nombre="{{ perfil.Nombre_perfil }}"
+                            data-permisos="{% for permiso in perfil.permisos.all %}{{ permiso.ID_Permiso }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                        >
+
+
+                            <!-- ENCABEZADO DEL PERFIL -->
+
+                            <div class="profile-header">
+
+
+                                <div>
+
+                                    <h2>
+                                        {{ perfil.Nombre_perfil }}
+                                    </h2>
+
+                                    <span class="profile-id">
+                                        ID: {{ perfil.ID_Perfil }}
+                                    </span>
+
+                                </div>
+
+
+                                <div class="profile-actions">
+
+
+                                    <button
+                                        type="button"
+                                        class="btn-edit"
+                                        onclick='openEditModal(
+                                            "{{ perfil.ID_Perfil }}",
+                                            "{{ perfil.Nombre_perfil|escapejs }}"
+                                        )'
+                                    >
+                                        Editar
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        class="btn-delete"
+                                        onclick='openDeleteModal(
+                                            "{{ perfil.ID_Perfil }}",
+                                            "{{ perfil.Nombre_perfil|escapejs }}"
+                                        )'
+                                    >
+                                        Eliminar
+                                    </button>
+
+
+                                </div>
+
+
+                            </div>
+
+
+
+                            <!-- PERMISOS DEL PERFIL -->
+
+                            <div class="permissions-section">
+
+
+                                <h3>
+                                    Permisos asignados
+                                </h3>
+
+
+                                <div class="permissions-list">
+
+
+                                    {% for permiso in perfil.permisos.all %}
+
+
+                                        <div class="permission-item">
+
+                                            <strong>
+                                                {{ permiso.Nombre_permiso }}
+                                            </strong>
+
+                                            {% if permiso.Descripcion_permiso %}
+
+                                                <span>
+                                                    {{ permiso.Descripcion_permiso }}
+                                                </span>
+
+                                            {% endif %}
+
+                                        </div>
+
+
+                                    {% empty %}
+
+
+                                        <span class="no-permissions">
+                                            Sin permisos asignados
+                                        </span>
+
+
+                                    {% endfor %}
+
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    {% endfor %}
+
+
+                {% else %}
+
+
+                    <div class="empty-state">
+
+                        <h2>
+                            No hay perfiles registrados
+                        </h2>
+
+                        <p>
+
+                            {% if busqueda %}
+
+                                No se encontraron perfiles con esa búsqueda.
+
+                            {% else %}
+
+                                Todavía no existen perfiles registrados.
+
+                            {% endif %}
+
+                        </p>
+
+                    </div>
+
+
+                {% endif %}
+
+
+            </section>
+
+
+        </main>
+
+
+    </div>
+
+
+
+    <!-- ==========================================
+         MODAL NUEVO PERFIL
+         ========================================== -->
+
+    <div
+        id="createModal"
+        class="modal"
+    >
+
+        <div class="modal-content">
+
+
+            <div class="modal-header">
+
+                <h2>
+                    Nuevo perfil
+                </h2>
+
+                <button
+                    type="button"
+                    class="close-modal"
+                    onclick="closeCreateModal()"
+                >
+                    &times;
+                </button>
+
+            </div>
+
+
+
+            <form
+                method="POST"
+                action="{% url 'crear_perfil' %}"
+            >
+
+                {% csrf_token %}
+
+
+
+                <!-- NOMBRE -->
+
+                <div class="form-group">
+
+                    <label for="createNombre">
+                        Nombre
+                    </label>
+
+                    <input
+                        type="text"
+                        id="createNombre"
+                        name="Nombre_perfil"
+                        maxlength="50"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- PERMISOS -->
+
+                <div class="form-group">
+
+                    <label>
+                        Permisos asignados
+                    </label>
+
+
+                    <div class="permissions-checkboxes">
+
+
+                        {% for permiso in permisos %}
+
+
+                            <label class="permission-checkbox">
+
+
+                                <input
+                                    type="checkbox"
+                                    name="permisos"
+                                    value="{{ permiso.ID_Permiso }}"
+                                >
+
+
+                                <span class="permission-info">
+
+
+                                    <strong>
+                                        {{ permiso.Nombre_permiso }}
+                                    </strong>
+
+
+                                    {% if permiso.Descripcion_permiso %}
+
+                                        <small>
+                                            {{ permiso.Descripcion_permiso }}
+                                        </small>
+
+                                    {% endif %}
+
+
+                                </span>
+
+
+                            </label>
+
+
+                        {% empty %}
+
+
+                            <p class="no-permissions">
+
+                                No hay permisos registrados.
+
+                            </p>
+
+
+                        {% endfor %}
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- BOTONES -->
+
+                <div class="modal-actions">
+
+
+                    <button
+                        type="button"
+                        class="btn-cancel"
+                        onclick="closeCreateModal()"
+                    >
+                        Cancelar
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn-primary"
+                    >
+                        Crear perfil
+                    </button>
+
+
+                </div>
+
+
+            </form>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================
+         MODAL EDITAR PERFIL
+         ========================================== -->
+
+    <div
+        id="editModal"
+        class="modal"
+    >
+
+        <div class="modal-content">
+
+
+            <div class="modal-header">
+
+                <h2>
+                    Editar perfil
+                </h2>
+
+                <button
+                    type="button"
+                    class="close-modal"
+                    onclick="closeEditModal()"
+                >
+                    &times;
+                </button>
+
+            </div>
+
+
+
+            <form
+                method="POST"
+                id="editForm"
+            >
+
+                {% csrf_token %}
+
+
+
+                <!-- NOMBRE -->
+
+                <div class="form-group">
+
+                    <label for="editNombre">
+                        Nombre
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editNombre"
+                        name="Nombre_perfil"
+                        maxlength="50"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- PERMISOS -->
+
+                <div class="form-group">
+
+                    <label>
+                        Permisos asignados
+                    </label>
+
+
+                    <div class="permissions-checkboxes">
+
+
+                        {% for permiso in permisos %}
+
+
+                            <label class="permission-checkbox">
+
+
+                                <input
+                                    type="checkbox"
+                                    name="permisos"
+                                    value="{{ permiso.ID_Permiso }}"
+                                    class="edit-permission"
+                                >
+
+
+                                <span class="permission-info">
+
+
+                                    <strong>
+                                        {{ permiso.Nombre_permiso }}
+                                    </strong>
+
+
+                                    {% if permiso.Descripcion_permiso %}
+
+                                        <small>
+                                            {{ permiso.Descripcion_permiso }}
+                                        </small>
+
+                                    {% endif %}
+
+
+                                </span>
+
+
+                            </label>
+
+
+                        {% empty %}
+
+
+                            <p class="no-permissions">
+
+                                No hay permisos registrados.
+
+                            </p>
+
+
+                        {% endfor %}
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- BOTONES -->
+
+                <div class="modal-actions">
+
+
+                    <button
+                        type="button"
+                        class="btn-cancel"
+                        onclick="closeEditModal()"
+                    >
+                        Cancelar
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn-primary"
+                    >
+                        Guardar cambios
+                    </button>
+
+
+                </div>
+
+
+            </form>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================
+         MODAL ELIMINAR PERFIL
+         ========================================== -->
+
+    <div
+        id="deleteModal"
+        class="modal"
+    >
+
+        <div class="modal-content delete-content">
+
+
+            <div class="modal-header">
+
+                <h2>
+                    Eliminar perfil
+                </h2>
+
+                <button
+                    type="button"
+                    class="close-modal"
+                    onclick="closeDeleteModal()"
+                >
+                    &times;
+                </button>
+
+            </div>
+
+
+
+            <div class="delete-message">
+
+                <p>
+
+                    ¿Está seguro de que desea eliminar el perfil
+
+                    <strong id="deleteProfileName"></strong>?
+
+                </p>
+
+
+                <p class="warning-text">
+
+                    Esta acción no se puede deshacer.
+
+                </p>
+
+            </div>
+
+
+
+            <form
+                method="POST"
+                id="deleteForm"
+            >
+
+                {% csrf_token %}
+
+
+                <div class="modal-actions">
+
+
+                    <button
+                        type="button"
+                        class="btn-cancel"
+                        onclick="closeDeleteModal()"
+                    >
+                        Cancelar
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn-delete"
+                    >
+                        Eliminar
+                    </button>
+
+
+                </div>
+
+
+            </form>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================
+         JAVASCRIPT
+         ========================================== -->
+
+    <script>
+
+
+        /* ==========================================
+           NUEVO PERFIL
+           ========================================== */
+
+        function openCreateModal() {
+
+            document
+                .getElementById('createModal')
+                .classList.add('show');
+
+        }
+
+
+        function closeCreateModal() {
+
+            document
+                .getElementById('createModal')
+                .classList.remove('show');
+
+        }
+
+
+
+        /* ==========================================
+           EDITAR PERFIL
+           ========================================== */
+
+        function openEditModal(id, nombre) {
+
+
+            const modal =
+                document.getElementById('editModal');
+
+
+            const form =
+                document.getElementById('editForm');
+
+
+            const nombreInput =
+                document.getElementById('editNombre');
+
+
+            form.action =
+                "{% url 'editar_perfil' 0 %}"
+                .replace(
+                    '/0/',
+                    '/' + id + '/'
+                );
+
+
+            nombreInput.value = nombre;
+
+
+
+            /*
+             * Primero desmarcamos todos los permisos.
+             */
+
+            document
+                .querySelectorAll('.edit-permission')
+                .forEach(function(checkbox) {
+
+                    checkbox.checked = false;
+
+                });
+
+
+
+            /*
+             * Buscamos el perfil seleccionado.
+             */
+
+            const perfil =
+                document.querySelector(
+                    '.profile-card[data-id="' + id + '"]'
+                );
+
+
+
+            if (perfil) {
+
+
+                const permisosTexto =
+                    perfil.dataset.permisos || '';
+
+
+                const permisos =
+                    permisosTexto
+                        ? permisosTexto.split(',')
+                        : [];
+
+
+
+                /*
+                 * Marcamos los permisos
+                 * que ya tiene el perfil.
+                 */
+
+                document
+                    .querySelectorAll('.edit-permission')
+                    .forEach(function(checkbox) {
+
+
+                        if (
+                            permisos.includes(
+                                checkbox.value
+                            )
+                        ) {
+
+                            checkbox.checked = true;
+
+                        }
+
+                    });
+
+            }
+
+
+            modal.classList.add('show');
+
+        }
+
+
+
+        function closeEditModal() {
+
+            document
+                .getElementById('editModal')
+                .classList.remove('show');
+
+        }
+
+
+
+        /* ==========================================
+           ELIMINAR PERFIL
+           ========================================== */
+
+        function openDeleteModal(id, nombre) {
+
+
+            const modal =
+                document.getElementById('deleteModal');
+
+
+            const form =
+                document.getElementById('deleteForm');
+
+
+            const nombreElemento =
+                document.getElementById(
+                    'deleteProfileName'
+                );
+
+
+
+            form.action =
+                "{% url 'eliminar_perfil' 0 %}"
+                .replace(
+                    '/0/',
+                    '/' + id + '/'
+                );
+
+
+
+            nombreElemento.textContent =
+                nombre;
+
+
+
+            modal.classList.add('show');
+
+        }
+
+
+
+        function closeDeleteModal() {
+
+            document
+                .getElementById('deleteModal')
+                .classList.remove('show');
+
+        }
+
+
+
+        /* ==========================================
+           CERRAR MODALES AL HACER CLICK AFUERA
+           ========================================== */
+
+        window.addEventListener(
+            'click',
+            function(event) {
+
+
+                const createModal =
+                    document.getElementById(
+                        'createModal'
+                    );
+
+
+                const editModal =
+                    document.getElementById(
+                        'editModal'
+                    );
+
+
+                const deleteModal =
+                    document.getElementById(
+                        'deleteModal'
+                    );
+
+
+
+                if (
+                    event.target === createModal
+                ) {
+
+                    closeCreateModal();
+
+                }
+
+
+
+                if (
+                    event.target === editModal
+                ) {
+
+                    closeEditModal();
+
+                }
+
+
+
+                if (
+                    event.target === deleteModal
+                ) {
+
+                    closeDeleteModal();
+
+                }
+
+            }
+        );
+
+
+
+        /* ==========================================
+           CERRAR CON ESC
+           ========================================== */
+
+        document.addEventListener(
+            'keydown',
+            function(event) {
+
+
+                if (event.key === 'Escape') {
+
+                    closeCreateModal();
+
+                    closeEditModal();
+
+                    closeDeleteModal();
+
+                }
+
+            }
+        );
+
+
+    </script>
+
+
+</body>
+
+</html>

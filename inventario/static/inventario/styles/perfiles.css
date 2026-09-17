@@ -1,0 +1,718 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        Roboto, Helvetica, Arial, sans-serif;
+}
+
+
+body {
+    height: 100vh;
+    background-color: #f1f5f3;
+    color: #1c2a23;
+}
+
+
+/* ==========================================
+   LAYOUT
+   ========================================== */
+
+.layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+
+/* ==========================================
+   BARRA LATERAL
+   ========================================== */
+
+.sidebar {
+    width: 220px;
+    background-color: #0b311e;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 16px;
+    height: 100vh;
+    flex-shrink: 0;
+}
+
+
+/* Logo */
+
+.logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+}
+
+.logo img {
+    flex-shrink: 0;
+}
+
+
+/* ==========================================
+   MENÚ DE NAVEGACIÓN
+   ========================================== */
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 6px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    color: #a3c2b2;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13.5px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link.active,
+.nav-link:hover {
+    background-color: #16472d;
+    color: #ffffff;
+}
+
+.nav-icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+}
+
+
+/* ==========================================
+   PIE DEL SIDEBAR
+   ========================================== */
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 15px;
+}
+
+.user-role {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.user-email {
+    font-size: 11px;
+    color: #83a595;
+    margin-bottom: 12px;
+}
+
+.logout-link {
+    font-size: 11px;
+    color: #a3c2b2;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.logout-link:hover {
+    color: #ffffff;
+}
+
+
+/* ==========================================
+   ÁREA PRINCIPAL
+   ========================================== */
+
+.main-content {
+    flex: 1;
+    padding: 25px 30px;
+    overflow-y: auto;
+    width: 100%;
+}
+
+
+/* ==========================================
+   ENCABEZADO
+   ========================================== */
+
+.header {
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 20px;
+    color: #0b311e;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: #5c7367;
+    margin-top: 2px;
+}
+
+
+/* ==========================================
+   MENSAJES
+   ========================================== */
+
+.messages {
+    margin-bottom: 18px;
+}
+
+.message {
+    padding: 11px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.message.success {
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+}
+
+.message.error {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+}
+
+.message.warning {
+    background-color: #fffbe3;
+    border: 1px solid #fde047;
+    color: #92400e;
+}
+
+.message.info {
+    background-color: #eff6ff;
+    border: 1px solid #93c5fd;
+    color: #1d4ed8;
+}
+
+
+/* ==========================================
+   ACCIONES SUPERIORES
+   ========================================== */
+
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-form input {
+    width: 280px;
+    padding: 10px 12px;
+    border: 1px solid #d5e1da;
+    border-radius: 7px;
+    background-color: #ffffff;
+    color: #1c2a23;
+    font-size: 13px;
+    outline: none;
+}
+
+.search-form input:focus {
+    border-color: #1b5e3a;
+    box-shadow: 0 0 0 2px rgba(27, 94, 58, 0.08);
+}
+
+
+/* ==========================================
+   BOTONES
+   ========================================== */
+
+.btn-primary {
+    border: none;
+    background-color: #1b5e3a;
+    color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #16472d;
+}
+
+.btn-search {
+    border: none;
+    background-color: #0b311e;
+    color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-search:hover {
+    background-color: #16472d;
+}
+
+.btn-clear {
+    padding: 10px 13px;
+    border-radius: 7px;
+    background-color: #e8efeb;
+    color: #365346;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.btn-clear:hover {
+    background-color: #dce7e1;
+}
+
+
+/* ==========================================
+   CONTENEDOR DE PERFILES
+   ========================================== */
+
+.profiles-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+
+/* ==========================================
+   TARJETA DE PERFIL
+   ========================================== */
+
+.profile-card {
+    background-color: #ffffff;
+    border: 1px solid #e2ece6;
+    border-radius: 8px;
+    padding: 18px;
+}
+
+
+/* ==========================================
+   ENCABEZADO DEL PERFIL
+   ========================================== */
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e8efeb;
+}
+
+.profile-header h2 {
+    font-size: 16px;
+    color: #0b311e;
+    margin-bottom: 4px;
+}
+
+.profile-id {
+    font-size: 11px;
+    color: #8a9e93;
+}
+
+
+/* ==========================================
+   ACCIONES DEL PERFIL
+   ========================================== */
+
+.profile-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit {
+    border: 1px solid #cbd9d1;
+    background-color: #ffffff;
+    color: #1b5e3a;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.btn-edit:hover {
+    background-color: #f0fdf4;
+}
+
+.btn-delete {
+    border: 1px solid #fca5a5;
+    background-color: #ffffff;
+    color: #b91c1c;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.btn-delete:hover {
+    background-color: #fef2f2;
+}
+
+
+/* ==========================================
+   PERMISOS DEL PERFIL
+   ========================================== */
+
+.permissions-section {
+    padding-top: 14px;
+}
+
+.permissions-section h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5c7367;
+    margin-bottom: 10px;
+}
+
+.permissions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+
+/* Permiso mostrado dentro de una tarjeta */
+
+.permission-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background-color: #f5f8f6;
+    border: 1px solid #e2ece6;
+    border-radius: 6px;
+    padding: 9px 11px;
+}
+
+.permission-item strong {
+    font-size: 12px;
+    color: #1c2a23;
+}
+
+.permission-item span {
+    font-size: 11px;
+    color: #71867b;
+}
+
+
+/* ==========================================
+   SIN PERMISOS
+   ========================================== */
+
+.no-permissions {
+    font-size: 12px;
+    color: #8a9e93;
+    padding: 8px 0;
+}
+
+
+/* ==========================================
+   ESTADO VACÍO
+   ========================================== */
+
+.empty-state {
+    background-color: #ffffff;
+    border: 1px solid #e2ece6;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+}
+
+.empty-state h2 {
+    font-size: 16px;
+    color: #0b311e;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    font-size: 12px;
+    color: #8a9e93;
+}
+
+
+/* ==========================================
+   MODALES
+   ========================================== */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    background-color: rgba(11, 49, 30, 0.45);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal.show {
+    display: flex;
+}
+
+
+/* ==========================================
+   CONTENIDO DEL MODAL
+   ========================================== */
+
+.modal-content {
+    width: 100%;
+    max-width: 570px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+
+/* ==========================================
+   ENCABEZADO DEL MODAL
+   ========================================== */
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid #e2ece6;
+}
+
+.modal-header h2 {
+    font-size: 17px;
+    color: #0b311e;
+}
+
+.close-modal {
+    border: none;
+    background: transparent;
+    color: #5c7367;
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #0b311e;
+}
+
+
+/* ==========================================
+   FORMULARIO
+   ========================================== */
+
+.modal-content form {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group > label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #365346;
+    margin-bottom: 7px;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d5e1da;
+    border-radius: 7px;
+    background-color: #ffffff;
+    color: #1c2a23;
+    font-size: 13px;
+    outline: none;
+}
+
+.form-group input[type="text"]:focus {
+    border-color: #1b5e3a;
+    box-shadow: 0 0 0 2px rgba(27, 94, 58, 0.08);
+}
+
+
+/* ==========================================
+   CHECKBOXES DE PERMISOS
+   ========================================== */
+
+.permissions-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 330px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.permission-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 12px;
+    border: 1px solid #e2ece6;
+    border-radius: 7px;
+    background-color: #f8faf9;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.permission-checkbox:hover {
+    background-color: #f0f7f3;
+    border-color: #cbd9d1;
+}
+
+.permission-checkbox input[type="checkbox"] {
+    margin-top: 3px;
+    width: 15px;
+    height: 15px;
+    accent-color: #1b5e3a;
+    cursor: pointer;
+}
+
+.permission-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.permission-info strong {
+    font-size: 12px;
+    color: #1c2a23;
+}
+
+.permission-info small {
+    font-size: 11px;
+    line-height: 1.4;
+    color: #71867b;
+}
+
+
+/* ==========================================
+   BOTONES DEL MODAL
+   ========================================== */
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    padding-top: 5px;
+}
+
+.btn-cancel {
+    border: 1px solid #d5e1da;
+    background-color: #ffffff;
+    color: #5c7367;
+    padding: 10px 15px;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background-color: #f1f5f3;
+}
+
+
+/* ==========================================
+   MODAL DE ELIMINACIÓN
+   ========================================== */
+
+.delete-content {
+    max-width: 450px;
+}
+
+.delete-message {
+    padding: 20px;
+}
+
+.delete-message p {
+    font-size: 13px;
+    color: #1c2a23;
+    line-height: 1.5;
+}
+
+.warning-text {
+    margin-top: 8px;
+    color: #b91c1c !important;
+    font-size: 12px !important;
+}
+
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 900px) {
+
+    .sidebar {
+        width: 200px;
+    }
+
+    .top-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .search-form {
+        width: 100%;
+    }
+
+    .search-form input {
+        flex: 1;
+        width: auto;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .layout {
+        overflow: auto;
+    }
+
+    .sidebar {
+        width: 190px;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    .profile-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .profile-actions {
+        width: 100%;
+    }
+
+}

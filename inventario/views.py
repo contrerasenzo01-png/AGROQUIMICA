@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.contrib import messages
 from django.utils import timezone
+from django.contrib.auth.hashers import make_password, check_password
+import unicodedata
 
 from .forms import ProveedorForm
 
@@ -11,6 +13,8 @@ from .models import (
     Proveedores,
     TiposMovimientos,
     Perfiles,
+    Permisos,
+    PerfilesXPermisos,
     Usuarios,
     Productos,
     ProductosXAgroquimicos,
@@ -31,23 +35,139 @@ def login_view(request):
 
     if request.method == 'POST':
 
-        usuario_input = request.POST.get('usuario')
-        password_input = request.POST.get('password')
+        usuario_input = request.POST.get(
+            'usuario',
+            ''
+        ).strip()
 
-        # Define aquí tu usuario y contraseña requeridos
+        password_input = request.POST.get(
+            'password',
+            ''
+        )
 
-        if usuario_input == 'jefe' and password_input == 'jefe2026':
+        try:
 
-            return redirect('panel_principal')
+            usuario = Usuarios.objects.get(
+                Usuario=usuario_input
+            )
 
-        else:
+            # Verificar si el usuario está activo
+            if not usuario.Estado_usuario:
 
-            error_message = 'Usuario o contraseña incorrectos'
+                error_message = 'El usuario se encuentra inactivo.'
+
+            # Verificar contraseña
+            elif check_password(
+                password_input,
+                usuario.Contrasena
+            ):
+
+                # Guardar datos del usuario en la sesión
+                request.session['usuario_id'] = usuario.ID_Usuario
+                request.session['usuario_nombre'] = usuario.Usuario
+
+                # Si debe cambiar la contraseña
+                if usuario.Cambiar_contrasena:
+
+                    return redirect(
+                        'cambiar_contrasena'
+                    )
+
+                # Ingresar al panel
+                return redirect(
+                    'panel_principal'
+                )
+
+            else:
+
+                error_message = 'Usuario o contraseña incorrectos.'
+
+        except Usuarios.DoesNotExist:
+
+            error_message = 'Usuario o contraseña incorrectos.'
 
     return render(
         request,
         'inventario/login.html',
-        {'error': error_message}
+        {
+            'error': error_message
+        }
+    )
+
+
+# ============================================================
+# CAMBIAR CONTRASEÑA
+# ============================================================
+
+def cambiar_contrasena(request):
+
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+
+        return redirect(
+            'login'
+        )
+
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=usuario_id
+    )
+
+    error_message = None
+
+    if request.method == 'POST':
+
+        nueva_contrasena = request.POST.get(
+            'nueva_contrasena',
+            ''
+        )
+
+        confirmar_contrasena = request.POST.get(
+            'confirmar_contrasena',
+            ''
+        )
+
+        # Verificar que coincidan
+        if nueva_contrasena != confirmar_contrasena:
+
+            error_message = 'Las contraseñas no coinciden.'
+
+        # Verificar longitud
+        elif len(nueva_contrasena) < 8:
+
+            error_message = (
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
+
+        else:
+
+            usuario.Contrasena = make_password(
+                nueva_contrasena
+            )
+
+            usuario.Cambiar_contrasena = False
+
+            usuario.save()
+
+            messages.success(
+                request,
+                'Contraseña actualizada correctamente.'
+            )
+
+            return redirect(
+                'panel_principal'
+            )
+
+    return render(
+        request,
+        'inventario/cambiar_contrasena.html',
+        {
+            'error': error_message,
+            'usuario': usuario
+        }
     )
 
 
@@ -57,9 +177,22 @@ def login_view(request):
 
 def panel_principal(request):
 
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = get_object_or_404(
+        Usuarios.objects.select_related('ID_Perfil'),
+        ID_Usuario=usuario_id
+    )
+
     return render(
         request,
-        'inventario/panel_principal.html'
+        'inventario/panel_principal.html',
+        {
+            'usuario': usuario
+        }
     )
 
 
@@ -69,7 +202,10 @@ def panel_principal(request):
 
 def gestion_proveedores(request):
 
-    busqueda = request.GET.get('q', '').strip()
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
 
     proveedores_list = Proveedores.objects.all()
 
@@ -125,7 +261,9 @@ def crear_proveedor(request):
 
     if request.method == 'POST':
 
-        form = ProveedorForm(request.POST)
+        form = ProveedorForm(
+            request.POST
+        )
 
         nombre = request.POST.get(
             'nombre_proveedor',
@@ -174,16 +312,15 @@ def crear_proveedor(request):
             )
 
         conflicto = (
-
-            Proveedores.objects.filter(query).first()
-
+            Proveedores.objects.filter(
+                query
+            ).first()
             if (
                 nombre or
                 telefono or
                 email or
                 direccion
             )
-
             else None
         )
 
@@ -202,7 +339,9 @@ def crear_proveedor(request):
             proveedor = form.save()
 
             productos_seleccionados = (
-                form.cleaned_data.get('productos')
+                form.cleaned_data.get(
+                    'productos'
+                )
             )
 
             if productos_seleccionados:
@@ -284,19 +423,16 @@ def editar_proveedor(request, pk):
             )
 
         conflicto = (
-
             Proveedores.objects
             .filter(query)
             .exclude(pk=pk)
             .first()
-
             if (
                 nombre or
                 telefono or
                 email or
                 direccion
             )
-
             else None
         )
 
@@ -578,7 +714,7 @@ def editar_agroquimico(request, pk):
 
 
 # ============================================================
-# USUARIOS
+# GESTIONAR USUARIOS
 # ============================================================
 
 def gestion_usuarios(request):
@@ -624,6 +760,10 @@ def gestion_usuarios(request):
     )
 
 
+# ============================================================
+# CREAR USUARIO
+# ============================================================
+
 def crear_usuario(request):
 
     if request.method == 'POST':
@@ -637,107 +777,168 @@ def crear_usuario(request):
             pk=perfil_id
         )
 
-        Usuarios.objects.create(
+        dni = request.POST.get(
+            'DNI',
+            ''
+        ).strip()
+
+        apellido = request.POST.get(
+            'Apellido_usuario',
+            ''
+        ).strip()
+
+        nombre = request.POST.get(
+            'Nombre_usuario',
+            ''
+        ).strip()
+
+        email = request.POST.get(
+            'Email_usuario',
+            ''
+        ).strip()
+
+        contrasena = request.POST.get(
+            'Contrasena',
+            ''
+        ).strip()
+
+        # Validar contraseña
+        if len(contrasena) < 8:
+
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
+        # Generar usuario automáticamente
+        apellido_sin_tildes = ''.join(
+            caracter
+            for caracter in unicodedata.normalize(
+                'NFD',
+                apellido
+            )
+            if unicodedata.category(caracter) != 'Mn'
+        )
+
+        nombre_sin_tildes = ''.join(
+            caracter
+            for caracter in unicodedata.normalize(
+                'NFD',
+                nombre
+            )
+            if unicodedata.category(caracter) != 'Mn'
+        )
+
+        usuario_generado = (
+            apellido_sin_tildes
+            + nombre_sin_tildes[0]
+        ).lower()
+
+        # Verificar usuario existente
+        if Usuarios.objects.filter(
+            Usuario=usuario_generado
+        ).exists():
+
+            messages.error(
+                request,
+                f'El usuario {usuario_generado} ya existe.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
+        # Crear usuario
+        usuario = Usuarios.objects.create(
             ID_Perfil=perfil,
-            DNI=request.POST.get(
-                'DNI'
+            DNI=dni,
+            Apellido_usuario=apellido,
+            Nombre_usuario=nombre,
+            Usuario=usuario_generado,
+            Contrasena=make_password(
+                contrasena
             ),
-            Nombre_usuario=request.POST.get(
-                'Nombre_usuario',
-                ''
-            ).strip(),
-            Apellido_usuario=request.POST.get(
-                'Apellido_usuario',
-                ''
-            ).strip(),
-            Usuario=request.POST.get(
-                'Usuario',
-                ''
-            ).strip(),
-            Contrasena=request.POST.get(
-                'Contrasena',
-                ''
-            ),
-            Email_usuario=request.POST.get(
-                'Email_usuario',
-                ''
-            ).strip(),
+            Email_usuario=email,
             Estado_usuario=True,
-            Cambiar_contrasena=request.POST.get(
-                'Cambiar_contrasena'
-            ) == 'on'
+            Cambiar_contrasena=True
         )
 
         messages.success(
             request,
-            'Usuario registrado correctamente.'
+            f'El usuario {usuario.Usuario} '
+            f'ha sido registrado correctamente. '
+            f'Deberá cambiar su contraseña '
+            f'en el próximo inicio de sesión.'
         )
 
     return redirect(
         'gestion_usuarios'
     )
 
+
+# ============================================================
+# EDITAR USUARIO
+# ============================================================
 
 def editar_usuario(request, pk):
 
     usuario = get_object_or_404(
         Usuarios,
-        pk=pk
+        ID_Usuario=pk
     )
 
     if request.method == 'POST':
 
-        perfil_id = request.POST.get(
-            'ID_Perfil'
-        )
-
-        usuario.ID_Perfil = get_object_or_404(
-            Perfiles,
-            pk=perfil_id
-        )
-
-        usuario.DNI = request.POST.get(
-            'DNI'
-        )
-
-        usuario.Nombre_usuario = request.POST.get(
-            'Nombre_usuario',
-            ''
-        ).strip()
-
-        usuario.Apellido_usuario = request.POST.get(
-            'Apellido_usuario',
-            ''
-        ).strip()
-
-        usuario.Usuario = request.POST.get(
-            'Usuario',
-            ''
-        ).strip()
-
-        usuario.Email_usuario = request.POST.get(
+        nuevo_email = request.POST.get(
             'Email_usuario',
             ''
         ).strip()
 
-        usuario.Estado_usuario = request.POST.get(
-            'Estado_usuario'
-        ) == 'on'
+        if not nuevo_email:
 
-        usuario.Cambiar_contrasena = request.POST.get(
-            'Cambiar_contrasena'
-        ) == 'on'
+            messages.error(
+                request,
+                'El correo electrónico es obligatorio.'
+            )
+
+            return render(
+                request,
+                'inventario/editar_usuario.html',
+                {
+                    'usuario': usuario
+                }
+            )
+
+        usuario.Email_usuario = nuevo_email
 
         usuario.save()
 
         messages.success(
             request,
-            'Usuario actualizado correctamente.'
+            f'El usuario {usuario.Usuario} '
+            f'ha sido modificado correctamente.'
         )
 
-    return redirect(
-        'gestion_usuarios'
+        return redirect(
+            'gestion_usuarios'
+        )
+
+    return render(
+        request,
+        'inventario/editar_usuario.html',
+        {
+            'usuario': usuario
+        }
     )
+
+
+# ============================================================
+# DAR DE BAJA USUARIO
+# ============================================================
 
 def dar_baja_usuario(request, pk):
 
@@ -749,6 +950,7 @@ def dar_baja_usuario(request, pk):
     if request.method == 'POST':
 
         usuario.Estado_usuario = False
+
         usuario.Fecha_Baja = timezone.now().date()
 
         usuario.save()
@@ -761,6 +963,535 @@ def dar_baja_usuario(request, pk):
     return redirect(
         'gestion_usuarios'
     )
+
+
+# ============================================================
+# RESTABLECER CONTRASEÑA
+# ============================================================
+
+def restablecer_contrasena(request, pk):
+
+    usuario = get_object_or_404(
+        Usuarios,
+        pk=pk
+    )
+
+    if request.method == 'POST':
+
+        nueva_contrasena = request.POST.get(
+            'nueva_contrasena',
+            ''
+        )
+
+        confirmar_contrasena = request.POST.get(
+            'confirmar_contrasena',
+            ''
+        )
+
+        if nueva_contrasena != confirmar_contrasena:
+
+            messages.error(
+                request,
+                'Las contraseñas no coinciden.'
+            )
+
+            return render(
+                request,
+                'inventario/restablecer_contrasena.html',
+                {
+                    'usuario': usuario
+                }
+            )
+
+        if len(nueva_contrasena) < 8:
+
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
+
+            return render(
+                request,
+                'inventario/restablecer_contrasena.html',
+                {
+                    'usuario': usuario
+                }
+            )
+
+        usuario.Contrasena = make_password(
+            nueva_contrasena
+        )
+
+        usuario.Cambiar_contrasena = True
+
+        usuario.save()
+
+        messages.success(
+            request,
+            f'La contraseña del usuario {usuario.Usuario} '
+            'fue restablecida correctamente. '
+            'Deberá cambiarla en el próximo inicio de sesión.'
+        )
+
+        return redirect(
+            'gestion_usuarios'
+        )
+
+    return render(
+        request,
+        'inventario/restablecer_contrasena.html',
+        {
+            'usuario': usuario
+        }
+    )
+
+
+# ============================================================
+# GESTIÓN DE PERFILES
+# ============================================================
+
+def gestion_perfiles(request):
+
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
+
+    perfiles = Perfiles.objects.prefetch_related(
+        'permisos'
+    ).all()
+
+    if busqueda:
+
+        perfiles = perfiles.filter(
+            Nombre_perfil__icontains=busqueda
+        )
+
+    permisos = Permisos.objects.all()
+
+    return render(
+        request,
+        'inventario/perfiles.html',
+        {
+            'perfiles': perfiles,
+            'permisos': permisos,
+            'busqueda': busqueda
+        }
+    )
+
+
+def crear_perfil(request):
+
+    if request.method == 'POST':
+
+        nombre_perfil = request.POST.get(
+            'Nombre_perfil',
+            ''
+        ).strip()
+
+        if not nombre_perfil:
+
+            messages.error(
+                request,
+                'Debe ingresar el nombre del perfil.'
+            )
+
+            return redirect(
+                'gestion_perfiles'
+            )
+
+        perfil_existente = Perfiles.objects.filter(
+            Nombre_perfil__iexact=nombre_perfil
+        ).exists()
+
+        if perfil_existente:
+
+            messages.error(
+                request,
+                'Ya existe un perfil con ese nombre.'
+            )
+
+            return redirect(
+                'gestion_perfiles'
+            )
+
+        perfil = Perfiles.objects.create(
+            Nombre_perfil=nombre_perfil
+        )
+
+        permisos_ids = request.POST.getlist(
+            'permisos'
+        )
+
+        for permiso_id in permisos_ids:
+
+            permiso = get_object_or_404(
+                Permisos,
+                ID_Permiso=permiso_id
+            )
+
+            PerfilesXPermisos.objects.create(
+                ID_Perfil=perfil,
+                ID_Permiso=permiso
+            )
+
+        messages.success(
+            request,
+            'Perfil creado correctamente.'
+        )
+
+    return redirect(
+        'gestion_perfiles'
+    )
+
+
+def editar_perfil(request, pk):
+
+    perfil = get_object_or_404(
+        Perfiles,
+        ID_Perfil=pk
+    )
+
+    if request.method == 'POST':
+
+        nombre_perfil = request.POST.get(
+            'Nombre_perfil',
+            ''
+        ).strip()
+
+        if not nombre_perfil:
+
+            messages.error(
+                request,
+                'Debe ingresar el nombre del perfil.'
+            )
+
+            return redirect(
+                'gestion_perfiles'
+            )
+
+        perfil_existente = Perfiles.objects.filter(
+            Nombre_perfil__iexact=nombre_perfil
+        ).exclude(
+            ID_Perfil=pk
+        ).exists()
+
+        if perfil_existente:
+
+            messages.error(
+                request,
+                'Ya existe otro perfil con ese nombre.'
+            )
+
+            return redirect(
+                'gestion_perfiles'
+            )
+
+        perfil.Nombre_perfil = nombre_perfil
+
+        perfil.save()
+
+        # Eliminar permisos anteriores
+        PerfilesXPermisos.objects.filter(
+            ID_Perfil=perfil
+        ).delete()
+
+        # Obtener permisos nuevos
+        permisos_ids = request.POST.getlist(
+            'permisos'
+        )
+
+        # Guardar permisos
+        for permiso_id in permisos_ids:
+
+            permiso = get_object_or_404(
+                Permisos,
+                ID_Permiso=permiso_id
+            )
+
+            PerfilesXPermisos.objects.create(
+                ID_Perfil=perfil,
+                ID_Permiso=permiso
+            )
+
+        messages.success(
+            request,
+            'Perfil actualizado correctamente.'
+        )
+
+    return redirect(
+        'gestion_perfiles'
+    )
+
+
+def eliminar_perfil(request, pk):
+
+    perfil = get_object_or_404(
+        Perfiles,
+        ID_Perfil=pk
+    )
+
+    if request.method == 'POST':
+
+        # Verificar si está siendo utilizado
+        if Usuarios.objects.filter(
+            ID_Perfil=perfil
+        ).exists():
+
+            messages.error(
+                request,
+                'No se puede eliminar el perfil porque está siendo utilizado por un usuario.'
+            )
+
+            return redirect(
+                'gestion_perfiles'
+            )
+
+        # Eliminar relaciones
+        PerfilesXPermisos.objects.filter(
+            ID_Perfil=perfil
+        ).delete()
+
+        # Eliminar perfil
+        perfil.delete()
+
+        messages.success(
+            request,
+            'Perfil eliminado correctamente.'
+        )
+
+    return redirect(
+        'gestion_perfiles'
+    )
+
+
+# ============================================================
+# GESTIÓN DE PERMISOS
+# ============================================================
+
+def gestion_permisos(request):
+
+    if request.method == 'POST':
+
+        nombre_permiso = request.POST.get(
+            'Nombre_permiso',
+            ''
+        ).strip()
+
+        descripcion_permiso = request.POST.get(
+            'Descripcion_permiso',
+            ''
+        ).strip()
+
+        if not nombre_permiso:
+            messages.error(
+                request,
+                'Debe ingresar el nombre del permiso.'
+            )
+            return redirect(
+                'gestion_permisos'
+            )
+
+        permiso_existente = Permisos.objects.filter(
+            Nombre_permiso__iexact=nombre_permiso
+        ).exists()
+
+        if permiso_existente:
+            messages.error(
+                request,
+                'Ya existe un permiso con ese nombre.'
+            )
+            return redirect(
+                'gestion_permisos'
+            )
+
+        Permisos.objects.create(
+            Nombre_permiso=nombre_permiso,
+            Descripcion_permiso=descripcion_permiso
+        )
+
+        messages.success(
+            request,
+            'Permiso creado correctamente.'
+        )
+
+        return redirect(
+            'gestion_permisos'
+        )
+
+    busqueda = request.GET.get(
+        'q',
+        ''
+    ).strip()
+
+    permisos = Permisos.objects.prefetch_related(
+        'perfiles'
+    ).all()
+
+    if busqueda:
+        permisos = permisos.filter(
+            Q(Nombre_permiso__icontains=busqueda) |
+            Q(Descripcion_permiso__icontains=busqueda)
+        )
+
+    return render(
+        request,
+        'inventario/permisos.html',
+        {
+            'permisos': permisos,
+            'busqueda': busqueda
+        }
+    )
+
+
+# ============================================================
+# CREAR PERMISO
+# ============================================================
+
+def crear_permiso(request):
+    if request.method == 'POST':
+        nombre_permiso = request.POST.get(
+            'Nombre_permiso',
+            ''
+        ).strip()
+
+        descripcion_permiso = request.POST.get(
+            'Descripcion_permiso',
+            ''
+        ).strip()
+
+        if not nombre_permiso:
+            messages.error(
+                request,
+                'Debe ingresar el nombre del permiso.'
+            )
+            return redirect(
+                'gestion_permisos'
+            )
+
+        permiso_existente = Permisos.objects.filter(
+            Nombre_permiso__iexact=nombre_permiso
+        ).exists()
+
+        if permiso_existente:
+            messages.error(
+                request,
+                'Ya existe un permiso con ese nombre.'
+            )
+            return redirect(
+                'gestion_permisos'
+            )
+
+        Permisos.objects.create(
+            Nombre_permiso=nombre_permiso,
+            Descripcion_permiso=descripcion_permiso
+        )
+
+        messages.success(
+            request,
+            'Permiso creado correctamente.'
+        )
+
+    return redirect(
+        'gestion_permisos'
+    )
+
+
+# ============================================================
+# EDITAR PERMISO
+# ============================================================
+
+def editar_permiso(request, pk):
+
+    permiso = get_object_or_404(
+        Permisos,
+        ID_Permiso=pk
+    )
+
+    if request.method == 'POST':
+
+        nombre_permiso = request.POST.get(
+            'Nombre_permiso',
+            ''
+        ).strip()
+
+        descripcion_permiso = request.POST.get(
+            'Descripcion_permiso',
+            ''
+        ).strip()
+
+        if not nombre_permiso:
+            messages.error(
+                request,
+                'Debe ingresar el nombre del permiso.'
+            )
+            return redirect(
+                'gestion_permisos'
+            )
+
+        permiso_existente = Permisos.objects.filter(
+            Nombre_permiso__iexact=nombre_permiso
+        ).exclude(
+            ID_Permiso=pk
+        ).exists()
+
+        if permiso_existente:
+            messages.error(
+                request,
+                'Ya existe otro permiso con ese nombre.'
+            )
+            return redirect(
+                'gestion_permisos'
+            )
+
+        permiso.Nombre_permiso = nombre_permiso
+        permiso.Descripcion_permiso = descripcion_permiso
+
+        permiso.save()
+
+        messages.success(
+            request,
+            'Permiso modificado correctamente.'
+        )
+
+    return redirect(
+        'gestion_permisos'
+    )
+
+
+# ============================================================
+# ELIMINAR PERMISO
+# ============================================================
+
+def eliminar_permiso(request, pk):
+
+    permiso = get_object_or_404(
+        Permisos,
+        ID_Permiso=pk
+    )
+
+    if request.method == 'POST':
+
+        nombre_permiso = permiso.Nombre_permiso
+
+        # Quitar el permiso de todos los perfiles
+        PerfilesXPermisos.objects.filter(
+            ID_Permiso=permiso
+        ).delete()
+
+        # Eliminar permiso
+        permiso.delete()
+
+        messages.success(
+            request,
+            f'El permiso "{nombre_permiso}" '
+            f'fue eliminado correctamente.'
+        )
+
+    return redirect(
+        'gestion_permisos'
+    )
+
 
 # ============================================================
 # TIPOS DE MOVIMIENTOS

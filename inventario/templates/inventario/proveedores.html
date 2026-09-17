@@ -5,23 +5,33 @@
 <html lang="es">
 
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Gestión de Proveedores - Agroquímica del Valle</title>
+
     <link rel="stylesheet" href="{% static 'inventario/styles/proveedores.css' %}">
+
 </head>
 
 <body>
 
 
 <!-- Mensajes Django (Toasts) -->
+
 <div class="toast-container" id="toastContainer">
+
     {% if messages %}
+
         {% for message in messages %}
+
             <div
                 class="toast {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}"
                 id="toast-{{ forloop.counter }}"
             >
+
                 <span>{{ message }}</span>
 
                 <span
@@ -30,62 +40,182 @@
                 >
                     ✕
                 </span>
+
             </div>
+
         {% endfor %}
+
     {% endif %}
+
 </div>
 
+
 <!-- Sidebar -->
+
 <aside class="sidebar">
-  <div>
-    <div class="logo">
-      🌿 Agroquímica del Valle
+
+    <div>
+
+        <div class="logo">
+            🌿 Agroquímica del Valle
+        </div>
+
+        <ul class="nav-menu">
+
+            <li class="nav-item">
+
+                <a href="{% url 'panel_principal' %}" class="nav-link">
+
+                    <span class="nav-icon">🎛️</span>
+
+                    Panel Principal
+
+                </a>
+
+            </li>
+
+
+            <li class="nav-item">
+
+                <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+
+                    <span class="nav-icon">👤</span>
+
+                    Usuarios del sistema
+
+                </a>
+
+            </li>
+
+
+            <li class="nav-item">
+
+                <a href="{% url 'gestion_productos' %}" class="nav-link">
+
+                    <span class="nav-icon">📦</span>
+
+                    Productos
+
+                </a>
+
+            </li>
+
+
+            <li class="nav-item">
+
+                <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+
+                    <span class="nav-icon">🗂️</span>
+
+                    Tipos de Productos
+
+                </a>
+
+            </li>
+
+
+            <li class="nav-item">
+
+                <a href="{% url 'gestion_proveedores' %}" class="nav-link active">
+
+                    <span class="nav-icon">🚚</span>
+
+                    Proveedores
+
+                </a>
+
+            </li>
+
+
+            <li class="nav-item">
+
+                <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+
+                    <span class="nav-icon">📊</span>
+
+                    Movimientos Stock
+
+                </a>
+
+            </li>
+
+
+            <li class="nav-item">
+
+                <a href="{% url 'historial_alertas' %}" class="nav-link">
+
+                    <span class="nav-icon">🔔</span>
+
+                    Historial de Alertas
+
+                </a>
+
+            </li>
+
+
+            <li class="nav-item">
+
+                <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+
+                    <span class="nav-icon">👥</span>
+
+                    Perfiles de acceso
+
+                </a>
+
+            </li>
+
+
+            <li class="nav-item">
+
+                <a href="{% url 'gestion_permisos' %}" class="nav-link">
+
+                    <span class="nav-icon">🔐</span>
+
+                    Permisos del sistema
+
+                </a>
+
+            </li>
+
+        </ul>
+
     </div>
 
-    <ul class="nav-menu">
-      <li class="nav-item">
-        <a href="{% url 'panel_principal' %}" class="nav-link">
-          <span class="nav-icon">🎛️</span> Panel Principal
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-          <span class="nav-icon">👤</span> Usuarios
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'gestion_productos' %}" class="nav-link">
-          <span class="nav-icon">📦</span> Productos
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'gestion_proveedores' %}" class="nav-link active">
-          <span class="nav-icon">🚚</span> Proveedores
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-          <span class="nav-icon">📊</span> Movimientos Stock
-        </a>
-      </li>
-    </ul>
-  </div>
 
-  <div class="user-info">
-    <div class="user-role">Administrador</div>
-    <div class="user-email">jefe@agrovalle.com</div>
-    <a href="{% url 'login' %}" class="logout-link">Cerrar sesión</a>
-  </div>
+    <!-- FOOTER DEL SIDEBAR (USUARIO Y LOGOUT) -->
+
+    <div class="user-info">
+
+        <div class="user-role">
+            Administrador
+        </div>
+
+        <div class="user-email">
+            jefe@agrovalle.com
+        </div>
+
+        <a href="{% url 'login' %}" class="logout-link">
+            Cerrar sesión
+        </a>
+
+    </div>
+
 </aside>
 
+
 <!-- Contenido Principal -->
+
 <main class="main-content">
 
     <header class="header">
+
         <div>
+
             <h2 class="title">
                 Gestión de Proveedores
             </h2>
+
         </div>
 
         <button
@@ -94,21 +224,33 @@
         >
             + Nuevo proveedor
         </button>
+
     </header>
 
+
     {% if proveedor_conflicto %}
+
         <div class="alert-duplicado">
+
             <span>
+
                 ⚠️ Ya existe un proveedor registrado con similitudes:
+
                 <strong>
                     {{ proveedor_conflicto.nombre_proveedor }}
                 </strong>
+
             </span>
+
         </div>
+
     {% endif %}
 
+
     <!-- Buscador -->
+
     <form method="GET" onsubmit="return false;">
+
         <input
             type="text"
             id="searchInput"
@@ -118,9 +260,12 @@
             class="search-box"
             placeholder="Buscar por nombre, email, dirección, ID..."
         >
+
     </form>
 
+
     <!-- Lista de Tarjetas -->
+
     <section id="listaProveedores">
 
         {% for p in proveedores %}
@@ -145,11 +290,13 @@
                         <div class="card-info">
 
                             <h4 class="prov-nombre">
+
                                 {{ p.nombre_proveedor }}
 
                                 <span class="sup-code">
                                     (SUP-0{{ p.pk }})
                                 </span>
+
                             </h4>
 
                             <p class="prov-email">
@@ -157,7 +304,9 @@
                             </p>
 
                         </div>
+
                     </div>
+
 
                     <div
                         class="card-actions"
@@ -168,12 +317,15 @@
                             id="badge-estado-{{ p.pk }}"
                             class="{% if p.estado_proveedor %}badge-activo{% else %}badge-inactivo{% endif %}"
                         >
+
                             {% if p.estado_proveedor %}
                                 Activo
                             {% else %}
                                 Inactivo
                             {% endif %}
+
                         </span>
+
 
                         <button
                             type="button"
@@ -189,6 +341,7 @@
                         >
                             Editar
                         </button>
+
 
                         <form
                             id="form-estado-{{ p.pk }}"
@@ -220,35 +373,44 @@
                                 id="btn-estado-{{ p.pk }}"
                                 class="btn-action {% if p.estado_proveedor %}btn-baja{% else %}btn-activar{% endif %}"
                             >
+
                                 {% if p.estado_proveedor %}
                                     Baja
                                 {% else %}
                                     Activar
                                 {% endif %}
+
                             </button>
 
                         </form>
+
 
                         <button
                             type="button"
                             class="btn-arrow"
                             onclick="toggleDetails('details-{{ p.pk }}', 'arrow-{{ p.pk }}')"
                         >
+
                             <span id="arrow-{{ p.pk }}">
                                 ▲
                             </span>
+
                         </button>
 
                     </div>
+
                 </div>
 
+
                 <!-- Detalle Desplegable -->
+
                 <div
                     id="details-{{ p.pk }}"
                     class="card-details hidden"
                 >
 
                     <div class="detail-item">
+
                         <span class="label">
                             ID_PROVEEDOR
                         </span>
@@ -256,9 +418,12 @@
                         <span class="value">
                             SUP-0{{ p.pk }}
                         </span>
+
                     </div>
 
+
                     <div class="detail-item">
+
                         <span class="label">
                             NOMBRE_PROVEEDOR
                         </span>
@@ -266,9 +431,12 @@
                         <span class="value">
                             {{ p.nombre_proveedor }}
                         </span>
+
                     </div>
 
+
                     <div class="detail-item">
+
                         <span class="label">
                             TELEFONO_PROVEEDOR
                         </span>
@@ -276,9 +444,12 @@
                         <span class="value">
                             {{ p.telefono_proveedor|default:"--" }}
                         </span>
+
                     </div>
 
+
                     <div class="detail-item">
+
                         <span class="label">
                             EMAIL_PROVEEDOR
                         </span>
@@ -286,9 +457,12 @@
                         <span class="value">
                             {{ p.email_proveedor|default:"--" }}
                         </span>
+
                     </div>
 
+
                     <div class="detail-item">
+
                         <span class="label">
                             DIRECCION_PROVEEDOR
                         </span>
@@ -296,9 +470,12 @@
                         <span class="value">
                             {{ p.direccion_proveedor|default:"--" }}
                         </span>
+
                     </div>
 
+
                     <div class="detail-item">
+
                         <span class="label">
                             ESTADO_PROVEEDOR
                         </span>
@@ -307,17 +484,25 @@
                             class="value"
                             id="detail-estado-text-{{ p.pk }}"
                         >
+
                             {% if p.estado_proveedor %}
+
                                 <span style="color:#15803d;">
                                     Activo
                                 </span>
+
                             {% else %}
+
                                 <span style="color:#6b7280;">
                                     Inactivo
                                 </span>
+
                             {% endif %}
+
                         </span>
+
                     </div>
+
 
                     <div class="products-section">
 
@@ -326,8 +511,11 @@
                             {% for pxp in p.productosxproveedores_set.all %}
 
                                 <span class="product-tag">
+
                                     {{ pxp.ID_Producto.Nombre_producto }}
+
                                     (P00{{ pxp.ID_Producto.pk }})
+
                                 </span>
 
                             {% empty %}
@@ -335,9 +523,11 @@
                             {% endfor %}
 
                         </div>
+
                     </div>
 
                 </div>
+
             </div>
 
         {% empty %}
@@ -358,7 +548,9 @@
 
 </main>
 
+
 <!-- Modal Confirmar Baja -->
+
 <div
     class="modal"
     id="modalConfirmarBaja"
@@ -381,10 +573,15 @@
 
         </div>
 
+
         <div class="alert-baja-warning">
+
             <span>⚠️</span>
+
             Verificá que sea el proveedor correcto antes de confirmar la baja.
+
         </div>
+
 
         <div class="baja-card-wrapper">
 
@@ -408,11 +605,14 @@
                     </p>
 
                 </div>
+
             </div>
+
 
             <div class="baja-grid">
 
                 <div class="baja-item">
+
                     <span class="lbl">
                         ID_PROVEEDOR
                     </span>
@@ -423,9 +623,12 @@
                     >
                         SUP-00
                     </span>
+
                 </div>
 
+
                 <div class="baja-item">
+
                     <span class="lbl">
                         TELEFONO
                     </span>
@@ -436,9 +639,12 @@
                     >
                         --
                     </span>
+
                 </div>
 
+
                 <div class="baja-item">
+
                     <span class="lbl">
                         EMAIL
                     </span>
@@ -449,9 +655,12 @@
                     >
                         --
                     </span>
+
                 </div>
 
+
                 <div class="baja-item">
+
                     <span class="lbl">
                         DIRECCION
                     </span>
@@ -462,9 +671,12 @@
                     >
                         --
                     </span>
+
                 </div>
 
+
                 <div class="baja-item">
+
                     <span class="lbl">
                         PRODUCTOS
                     </span>
@@ -475,9 +687,12 @@
                     >
                         0 productos
                     </span>
+
                 </div>
 
+
                 <div class="baja-item">
+
                     <span class="lbl">
                         ESTADO
                     </span>
@@ -488,10 +703,13 @@
                     >
                         Activo
                     </span>
+
                 </div>
 
             </div>
+
         </div>
+
 
         <div class="baja-actions">
 
@@ -514,9 +732,12 @@
         </div>
 
     </div>
+
 </div>
 
+
 <!-- Modal Editar -->
+
 <div
     class="modal"
     id="modalEditarProveedor"
@@ -538,6 +759,7 @@
             </span>
 
         </div>
+
 
         <form
             id="formEditarProveedor"
@@ -565,6 +787,7 @@
 
                 </div>
 
+
                 <div class="form-row">
 
                     <div class="form-group">
@@ -590,6 +813,7 @@
 
                 </div>
 
+
                 <div class="form-group">
 
                     <label>
@@ -604,6 +828,7 @@
                     >
 
                 </div>
+
 
                 <div class="form-group">
 
@@ -621,6 +846,7 @@
                 </div>
 
             </div>
+
 
             <div class="modal-footer">
 
@@ -644,12 +870,16 @@
         </form>
 
     </div>
+
 </div>
 
+
 <!-- Modal Nuevo Proveedor -->
+
 <div
     class="modal"
     id="modalCrearProveedor"
+
     {% if proveedor_conflicto %}
         style="display: flex;"
     {% endif %}
@@ -671,6 +901,7 @@
             </span>
 
         </div>
+
 
         <form
             method="POST"
@@ -704,10 +935,13 @@
                                 gap: 6px;
                             "
                         >
+
                             <span>⚠️</span>
 
                             ERROR: El proveedor ya se encuentra registrado
+
                         </div>
+
 
                         <div
                             style="
@@ -718,6 +952,7 @@
                         >
                             Datos existentes en el sistema:
                         </div>
+
 
                         <div
                             style="
@@ -731,23 +966,38 @@
                         >
 
                             <div>
+
                                 <strong>ID:</strong>
+
                                 SUP-0{{ proveedor_conflicto.pk }}
+
                             </div>
 
+
                             <div>
+
                                 <strong>Nombre:</strong>
+
                                 {{ proveedor_conflicto.nombre_proveedor }}
+
                             </div>
 
+
                             <div>
+
                                 <strong>Teléfono:</strong>
+
                                 {{ proveedor_conflicto.telefono_proveedor|default:"--" }}
+
                             </div>
 
+
                             <div>
+
                                 <strong>Email:</strong>
+
                                 {{ proveedor_conflicto.email_proveedor|default:"--" }}
+
                             </div>
 
                         </div>
@@ -755,6 +1005,7 @@
                     </div>
 
                 {% endif %}
+
 
                 <div class="form-group">
 
@@ -771,6 +1022,7 @@
                     >
 
                 </div>
+
 
                 <div class="form-row">
 
@@ -789,6 +1041,7 @@
 
                     </div>
 
+
                     <div class="form-group">
 
                         <label>
@@ -806,6 +1059,7 @@
 
                 </div>
 
+
                 <div class="form-group">
 
                     <label>
@@ -820,6 +1074,7 @@
                     >
 
                 </div>
+
 
                 <div class="form-group">
 
@@ -852,6 +1107,7 @@
 
             </div>
 
+
             <div class="modal-footer">
 
                 <button
@@ -874,13 +1130,18 @@
         </form>
 
     </div>
+
 </div>
+
 
 <script>
 
     let formPendingState = null;
+
     let idPendingState = null;
+
     let namePendingState = null;
+
 
     document.addEventListener('DOMContentLoaded', function() {
 
@@ -889,6 +1150,7 @@
         toasts.forEach(toast => autocerrarToast(toast));
 
     });
+
 
     function autocerrarToast(toast) {
 
@@ -902,6 +1164,7 @@
         }, 4000);
 
     }
+
 
     function cerrarToast(id) {
 
@@ -917,6 +1180,7 @@
         }
 
     }
+
 
     function mostrarToast(mensaje, tipo = 'warning') {
 
@@ -935,6 +1199,7 @@
         toast.id = id;
 
         toast.innerHTML = `
+
             <span>${mensaje}</span>
 
             <span
@@ -943,6 +1208,7 @@
             >
                 ✕
             </span>
+
         `;
 
         container.appendChild(toast);
@@ -950,6 +1216,7 @@
         autocerrarToast(toast);
 
     }
+
 
     function toggleDetails(idDetails, idArrow) {
 
@@ -974,6 +1241,7 @@
         }
 
     }
+
 
     function filtrarProveedores() {
 
@@ -1001,6 +1269,7 @@
 
     }
 
+
     function abrirModalCrear() {
 
         document
@@ -1008,6 +1277,7 @@
             .style.display = 'flex';
 
     }
+
 
     function abrirModalEditar(
         id,
@@ -1048,6 +1318,7 @@
 
     }
 
+
     function cerrarModal(idModal) {
 
         document
@@ -1055,6 +1326,7 @@
             .style.display = 'none';
 
     }
+
 
     function procesarSolicitudEstado(
         event,
@@ -1077,40 +1349,51 @@
         const esActivo =
             btn.classList.contains('btn-baja');
 
+
         if (esActivo) {
 
             formPendingState = form;
+
             idPendingState = id;
+
             namePendingState = nombre;
+
 
             document
                 .getElementById('baja_avatar')
                 .innerText =
                 nombre.substring(0, 2).toUpperCase();
 
+
             document
                 .getElementById('baja_nombre')
                 .innerText = nombre;
+
 
             document
                 .getElementById('baja_id')
                 .innerText = code;
 
+
             document
                 .getElementById('baja_telefono')
                 .innerText = telefono;
+
 
             document
                 .getElementById('baja_email')
                 .innerText = email;
 
+
             document
                 .getElementById('baja_direccion')
                 .innerText = direccion;
 
+
             document
                 .getElementById('baja_productos')
                 .innerText = productos || '0 productos';
+
 
             document
                 .getElementById('modalConfirmarBaja')
@@ -1128,6 +1411,7 @@
         }
 
     }
+
 
     document
         .getElementById('btnConfirmarBajaEjecutar')
@@ -1148,81 +1432,131 @@
 
         });
 
+
     function ejecutarCambioEstado(
         form,
         id,
         nombreProveedor,
         esBaja
     ) {
-        const btn = document.getElementById(`btn-estado-${id}`);
-        const badge = document.getElementById(`badge-estado-${id}`);
-        const card = document.getElementById(`card-${id}`);
-        const detailText = document.getElementById(
-            `detail-estado-text-${id}`
-        );
-        const estado = document.getElementById(`estado-${id}`);
 
-        estado.value = esBaja ? 'inactivo' : 'activo';
+        const btn =
+            document.getElementById(`btn-estado-${id}`);
+
+        const badge =
+            document.getElementById(`badge-estado-${id}`);
+
+        const card =
+            document.getElementById(`card-${id}`);
+
+        const detailText =
+            document.getElementById(
+                `detail-estado-text-${id}`
+            );
+
+        const estado =
+            document.getElementById(`estado-${id}`);
+
+
+        estado.value =
+            esBaja ? 'inactivo' : 'activo';
+
 
         fetch(form.action, {
+
             method: 'POST',
+
             body: new FormData(form),
+
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
+
         })
+
             .then(response => {
+
                 if (!response.ok) {
+
                     throw new Error(
                         'Error al cambiar el estado'
                     );
+
                 }
 
+
                 if (esBaja) {
+
                     btn.classList.remove('btn-baja');
+
                     btn.classList.add('btn-activar');
+
                     btn.innerText = 'Activar';
 
+
                     badge.classList.remove('badge-activo');
+
                     badge.classList.add('badge-inactivo');
+
                     badge.innerText = 'Inactivo';
+
 
                     card.classList.add('inactivo');
 
+
                     detailText.innerHTML =
-                    '   <span style="color:#6b7280;">Inactivo</span>';
+                        '<span style="color:#6b7280;">Inactivo</span>';
+
 
                     mostrarToast(
                         `⚠️ El proveedor "${nombreProveedor}" ha sido dado de baja.`,
                         'warning'
                     );
+
                 } else {
+
                     btn.classList.remove('btn-activar');
+
                     btn.classList.add('btn-baja');
+
                     btn.innerText = 'Baja';
 
+
                     badge.classList.remove('badge-inactivo');
+
                     badge.classList.add('badge-activo');
+
                     badge.innerText = 'Activo';
+
 
                     card.classList.remove('inactivo');
 
+
                     detailText.innerHTML =
                         '<span style="color:#15803d;">Activo</span>';
+
 
                     mostrarToast(
                         `✅ El proveedor "${nombreProveedor}" ha sido activado.`,
                         'success'
                     );
+
                 }
+
             })
+
             .catch(error => {
+
                 console.error(error);
+
                 form.submit();
+
             });
+
     }
 
 </script>
 
 </body>
+
 </html>

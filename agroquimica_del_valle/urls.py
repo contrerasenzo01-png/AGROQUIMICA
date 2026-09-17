@@ -25,11 +25,19 @@ urlpatterns = [
     path('agroquimicos/crear/', views.crear_agroquimico, name='crear_agroquimico'),
     path('agroquimicos/editar/<int:pk>/', views.editar_agroquimico, name='editar_agroquimico'),
 
-    # Usuarios
+        # Usuarios
     path('usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
     path('usuarios/crear/', views.crear_usuario, name='crear_usuario'),
     path('usuarios/editar/<int:pk>/', views.editar_usuario, name='editar_usuario'),
     path('usuarios/baja/<int:pk>/', views.dar_baja_usuario, name='dar_baja_usuario'),
+    path('usuarios/restablecer/<int:pk>/', views.restablecer_contrasena, name='restablecer_contrasena'),
+    path('usuarios/cambiar-contrasena/', views.cambiar_contrasena, name='cambiar_contrasena'),
+
+    # Perfiles
+    path('perfiles/', views.gestion_perfiles, name='gestion_perfiles'),
+    path('perfiles/crear/', views.crear_perfil, name='crear_perfil'),
+    path('perfiles/editar/<int:pk>/', views.editar_perfil, name='editar_perfil'),
+    path('perfiles/eliminar/<int:pk>/', views.eliminar_perfil, name='eliminar_perfil'),
 
     # Tipos de movimientos
     path('tipos-movimientos/', views.gestion_tipos_movimientos, name='gestion_tipos_movimientos'),
@@ -53,6 +61,14 @@ urlpatterns = [
     path('movimientos-stock/', views.gestion_movimientos_stock, name='gestion_movimientos_stock'),
     path('movimientos-stock/crear/', views.crear_movimiento_stock, name='crear_movimiento_stock'),
 
-    # Alertas
+    # ALERTAS
     path('alertas/', views.gestion_alertas, name='gestion_alertas'),
+    path('historial-alertas/', views.gestion_alertas, name='historial_alertas'),
+
+    # PERMISOS
+    path('permisos/', views.gestion_permisos, name='gestion_permisos'),
+    path('permisos/crear/', views.crear_permiso, name='crear_permiso'),
+    path('permisos/editar/<int:pk>/', views.editar_permiso, name='editar_permiso'),
+    path('permisos/eliminar/<int:pk>/', views.eliminar_permiso, name='eliminar_permiso'),
+
 ]

@@ -106,12 +106,53 @@ class Perfiles(models.Model):
     ID_Perfil = models.AutoField(primary_key=True)
     Nombre_perfil = models.CharField(max_length=50)
 
+    permisos = models.ManyToManyField(
+        'Permisos',
+        through='PerfilesXPermisos',
+        related_name='perfiles'
+    )
+
     class Meta:
         db_table = 'PERFILES'
         verbose_name_plural = "Perfiles"
 
     def __str__(self):
         return self.Nombre_perfil
+    
+class Permisos(models.Model):
+    ID_Permiso = models.AutoField(primary_key=True)
+    Nombre_permiso = models.CharField(max_length=100)
+    Descripcion_permiso = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    class Meta:
+        db_table = 'PERMISOS'
+        verbose_name_plural = "Permisos"
+
+    def __str__(self):
+        return self.Nombre_permiso
+
+
+class PerfilesXPermisos(models.Model):
+    ID_Perfil = models.ForeignKey(
+        Perfiles,
+        on_delete=models.CASCADE,
+        db_column='ID_Perfil'
+    )
+
+    ID_Permiso = models.ForeignKey(
+        Permisos,
+        on_delete=models.CASCADE,
+        db_column='ID_Permiso'
+    )
+
+    class Meta:
+        db_table = 'PERFILES_X_PERMISOS'
+        unique_together = (('ID_Perfil', 'ID_Permiso'),)
+        verbose_name_plural = "Perfiles por Permisos"
 
 
 class Usuarios(models.Model):

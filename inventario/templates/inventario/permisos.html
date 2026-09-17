@@ -1,0 +1,758 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Gestión de Permisos</title>
+
+    <link rel="stylesheet" href="{% static 'inventario/styles/permisos.css' %}">
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- BARRA LATERAL -->
+    <aside class="sidebar">
+
+        <div>
+
+            <div class="logo">
+                🌿 Agroquímica del Valle
+            </div>
+
+            <ul class="nav-menu">
+
+                <li class="nav-item">
+                    <a href="{% url 'panel_principal' %}" class="nav-link">
+                        <span class="nav-icon">🎛️</span>
+                        Panel Principal
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        Usuarios del sistema
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link">
+                        <span class="nav-icon">📦</span>
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                        <span class="nav-icon">🚚</span>
+                        Proveedores
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Movimientos Stock
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'historial_alertas' %}" class="nav-link">
+                        <span class="nav-icon">🔔</span>
+                        Historial de Alertas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        Perfiles de acceso
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_permisos' %}" class="nav-link active">
+                        <span class="nav-icon">🔐</span>
+                        Permisos del sistema
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- USUARIO Y CERRAR SESIÓN -->
+        <div class="user-info">
+
+            <div class="user-role">
+                Administrador
+            </div>
+
+            <div class="user-email">
+                jefe@agrovalle.com
+            </div>
+
+            <a href="{% url 'login' %}" class="logout-link">
+                Cerrar sesión
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+
+        <!-- ENCABEZADO -->
+        <div class="page-header">
+
+            <div>
+
+                <div class="page-title">
+                    Gestión de Permisos
+                </div>
+
+                <div class="page-sub">
+                    {{ permisos|length }}
+                    permiso{{ permisos|length|pluralize }}
+                    registrado{{ permisos|length|pluralize }}
+                </div>
+
+            </div>
+
+
+            <div class="header-actions">
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    onclick="abrirModal()">
+                    + Nuevo permiso
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- MENSAJES -->
+        {% if messages %}
+
+            <div class="messages">
+
+                {% for message in messages %}
+
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- BÚSQUEDA -->
+        <form method="GET" class="toolbar">
+
+            <input
+                type="text"
+                name="q"
+                value="{{ busqueda }}"
+                class="search-box"
+                placeholder="Buscar permiso..."
+            >
+
+            <button
+                type="submit"
+                class="search-button">
+                Buscar
+            </button>
+
+        </form>
+
+
+        <!-- TABLA DE PERMISOS -->
+        <div class="card">
+
+            <table class="custom-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID_Permiso</th>
+
+                        <th>Nombre</th>
+
+                        <th>Descripción</th>
+
+                        <th>Perfiles asociados</th>
+
+                        <th></th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for permiso in permisos %}
+
+                        <tr>
+
+                            <!-- ID -->
+                            <td>
+
+                                <span class="perm-id">
+                                    PERM{{ permiso.ID_Permiso|stringformat:"02d" }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- NOMBRE -->
+                            <td>
+
+                                <span class="perm-name">
+                                    {{ permiso.Nombre_permiso }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- DESCRIPCIÓN -->
+                            <td>
+
+                                <span class="perm-desc">
+
+                                    {{ permiso.Descripcion_permiso|default:"Sin descripción" }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- PERFILES ASOCIADOS -->
+                            <td>
+
+                                {% for perfil in permiso.perfiles.all %}
+
+                                    {% if forloop.counter == 1 %}
+
+                                        <span class="chip chip-perfil-1">
+                                            {{ perfil.Nombre_perfil }}
+                                        </span>
+
+                                    {% elif forloop.counter == 2 %}
+
+                                        <span class="chip chip-perfil-2">
+                                            {{ perfil.Nombre_perfil }}
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="chip chip-perfil-3">
+                                            {{ perfil.Nombre_perfil }}
+                                        </span>
+
+                                    {% endif %}
+
+                                {% empty %}
+
+                                    <span class="perm-desc">
+                                        Sin perfiles asociados
+                                    </span>
+
+                                {% endfor %}
+
+                            </td>
+
+
+                            <!-- ACCIONES -->
+                            <td>
+
+                                <div class="actions">
+
+                                    <!-- EDITAR -->
+                                    <button
+                                        type="button"
+                                        class="action-btn action-edit"
+                                        onclick="abrirEditarPermiso(
+                                            '{{ permiso.ID_Permiso }}',
+                                            '{{ permiso.Nombre_permiso|escapejs }}',
+                                            '{{ permiso.Descripcion_permiso|default:""|escapejs }}'
+                                        )">
+                                        Editar
+                                    </button>
+
+
+                                    <!-- ELIMINAR -->
+                                    <button
+                                        type="button"
+                                        class="action-btn action-baja"
+                                        onclick="abrirEliminarPermiso(
+                                            '{{ permiso.ID_Permiso }}',
+                                            '{{ permiso.Nombre_permiso|escapejs }}'
+                                        )">
+                                        Eliminar
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                style="text-align:center; padding:30px;">
+
+                                <span class="perm-desc">
+                                    No se encontraron permisos registrados.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- MODAL NUEVO PERMISO -->
+<!-- ========================================================= -->
+
+<div id="modalPermiso" class="modal">
+
+    <div class="modal-contenido">
+
+        <!-- ENCABEZADO -->
+        <div class="modal-header">
+
+            <h2>
+                Nuevo permiso
+            </h2>
+
+            <button
+                type="button"
+                class="modal-cerrar"
+                onclick="cerrarModal()">
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- FORMULARIO -->
+        <form
+            method="POST"
+            action="{% url 'crear_permiso' %}">
+
+            {% csrf_token %}
+
+
+            <!-- NOMBRE -->
+            <div class="form-group">
+
+                <label for="Nombre_permiso">
+                    Nombre
+                </label>
+
+                <input
+                    type="text"
+                    id="Nombre_permiso"
+                    name="Nombre_permiso"
+                    placeholder="Ingrese el nombre del permiso"
+                    required
+                >
+
+            </div>
+
+
+            <!-- DESCRIPCIÓN -->
+            <div class="form-group">
+
+                <label for="Descripcion_permiso">
+                    Descripción
+                </label>
+
+                <textarea
+                    id="Descripcion_permiso"
+                    name="Descripcion_permiso"
+                    placeholder="Ingrese la descripción del permiso"
+                    rows="4"
+                ></textarea>
+
+            </div>
+
+
+            <!-- BOTONES -->
+            <div class="modal-acciones">
+
+                <button
+                    type="button"
+                    class="btn btn-cancelar"
+                    onclick="cerrarModal()">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+                    Guardar
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- MODAL EDITAR PERMISO -->
+<!-- ========================================================= -->
+
+<div id="modalEditarPermiso" class="modal">
+
+    <div class="modal-contenido">
+
+        <!-- ENCABEZADO -->
+        <div class="modal-header">
+
+            <h2>
+                Editar permiso
+            </h2>
+
+            <button
+                type="button"
+                class="modal-cerrar"
+                onclick="cerrarEditarPermiso()">
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- FORMULARIO -->
+        <form
+            id="formEditarPermiso"
+            method="POST">
+
+            {% csrf_token %}
+
+
+            <!-- ID -->
+            <div class="form-group">
+
+                <label for="ID_Permiso_editar">
+                    ID_Permiso
+                </label>
+
+                <input
+                    type="text"
+                    id="ID_Permiso_editar"
+                    readonly
+                >
+
+            </div>
+
+
+            <!-- NOMBRE -->
+            <div class="form-group">
+
+                <label for="Nombre_permiso_editar">
+                    Nombre
+                </label>
+
+                <input
+                    type="text"
+                    id="Nombre_permiso_editar"
+                    name="Nombre_permiso"
+                    placeholder="Ingrese el nombre del permiso"
+                    required
+                >
+
+            </div>
+
+
+            <!-- DESCRIPCIÓN -->
+            <div class="form-group">
+
+                <label for="Descripcion_permiso_editar">
+                    Descripción
+                </label>
+
+                <textarea
+                    id="Descripcion_permiso_editar"
+                    name="Descripcion_permiso"
+                    placeholder="Ingrese la descripción del permiso"
+                    rows="4"
+                ></textarea>
+
+            </div>
+
+
+            <!-- BOTONES -->
+            <div class="modal-acciones">
+
+                <button
+                    type="button"
+                    class="btn btn-cancelar"
+                    onclick="cerrarEditarPermiso()">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+                    Guardar
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- MODAL ELIMINAR PERMISO -->
+<!-- ========================================================= -->
+
+<div id="modalEliminarPermiso" class="modal">
+
+    <div class="modal-contenido modal-eliminar">
+
+        <!-- ENCABEZADO -->
+        <div class="modal-header">
+
+            <h2>
+                Eliminar permiso
+            </h2>
+
+            <button
+                type="button"
+                class="modal-cerrar"
+                onclick="cerrarEliminarPermiso()">
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- FORMULARIO -->
+        <form
+            id="formEliminarPermiso"
+            method="POST">
+
+            {% csrf_token %}
+
+
+            <div class="eliminar-contenido">
+
+                <p>
+
+                    ¿Está seguro que desea eliminar el permiso
+
+                    <strong id="nombrePermisoEliminar"></strong>?
+
+                </p>
+
+
+                <p class="advertencia-eliminar">
+
+                    Esta acción quitará el permiso de todos los perfiles
+                    que lo tengan asignado.
+
+                </p>
+
+            </div>
+
+
+            <!-- BOTONES -->
+            <div class="modal-acciones">
+
+                <button
+                    type="button"
+                    class="btn btn-cancelar"
+                    onclick="cerrarEliminarPermiso()">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-eliminar">
+                    Eliminar
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+function abrirModal() {
+
+    document.getElementById("modalPermiso").style.display = "flex";
+
+}
+
+
+function cerrarModal() {
+
+    document.getElementById("modalPermiso").style.display = "none";
+
+}
+
+
+function abrirEditarPermiso(
+    id_permiso,
+    nombre_permiso,
+    descripcion_permiso
+) {
+
+    document.getElementById("ID_Permiso_editar").value =
+        "PERM" + String(id_permiso).padStart(2, "0");
+
+
+    document.getElementById("Nombre_permiso_editar").value =
+        nombre_permiso;
+
+
+    document.getElementById("Descripcion_permiso_editar").value =
+        descripcion_permiso;
+
+
+    document.getElementById("formEditarPermiso").action =
+        "/permisos/editar/" + id_permiso + "/";
+
+
+    document.getElementById("modalEditarPermiso").style.display =
+        "flex";
+
+}
+
+
+function cerrarEditarPermiso() {
+
+    document.getElementById("modalEditarPermiso").style.display =
+        "none";
+
+}
+
+
+function abrirEliminarPermiso(
+    id_permiso,
+    nombre_permiso
+) {
+
+    document.getElementById("nombrePermisoEliminar").textContent =
+        nombre_permiso;
+
+
+    document.getElementById("formEliminarPermiso").action =
+        "/permisos/eliminar/" + id_permiso + "/";
+
+
+    document.getElementById("modalEliminarPermiso").style.display =
+        "flex";
+
+}
+
+
+function cerrarEliminarPermiso() {
+
+    document.getElementById("modalEliminarPermiso").style.display =
+        "none";
+
+}
+
+
+/* CERRAR MODALES AL HACER CLIC FUERA */
+
+window.addEventListener("click", function(event) {
+
+    const modalNuevo =
+        document.getElementById("modalPermiso");
+
+    const modalEditar =
+        document.getElementById("modalEditarPermiso");
+
+    const modalEliminar =
+        document.getElementById("modalEliminarPermiso");
+
+
+    if (event.target === modalNuevo) {
+
+        cerrarModal();
+
+    }
+
+
+    if (event.target === modalEditar) {
+
+        cerrarEditarPermiso();
+
+    }
+
+
+    if (event.target === modalEliminar) {
+
+        cerrarEliminarPermiso();
+
+    }
+
+});
+
+</script>
+
+</body>
+
+</html>
