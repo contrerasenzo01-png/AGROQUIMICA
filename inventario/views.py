@@ -1574,6 +1574,36 @@ def eliminar_permiso(request, pk):
         'gestion_permisos'
     )
 
+# ============================================================
+# MIS PERMISOS
+# ============================================================
+
+def mis_permisos(request):
+
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = get_object_or_404(
+        Usuarios.objects.select_related('ID_Perfil'),
+        ID_Usuario=usuario_id
+    )
+
+    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor':
+        return redirect('panel_principal')
+
+    permisos = usuario.ID_Perfil.permisos.all()
+
+    return render(
+        request,
+        'inventario/mis_permisos.html',
+        {
+            'usuario': usuario,
+            'permisos': permisos,
+        }
+    )
+
 
 # ============================================================
 # TIPOS DE MOVIMIENTOS

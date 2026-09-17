@@ -38,6 +38,7 @@ urlpatterns = [
     path('perfiles/crear/', views.crear_perfil, name='crear_perfil'),
     path('perfiles/editar/<int:pk>/', views.editar_perfil, name='editar_perfil'),
     path('perfiles/eliminar/<int:pk>/', views.eliminar_perfil, name='eliminar_perfil'),
+    path('mis-permisos/', views.mis_permisos, name='mis_permisos'),
 
     # Tipos de movimientos
     path('tipos-movimientos/', views.gestion_tipos_movimientos, name='gestion_tipos_movimientos'),

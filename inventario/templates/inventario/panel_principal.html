@@ -11,7 +11,7 @@
 <body>
 
 <div class="layout">
-    <!-- BARRA LATERAL (SIDEBAR) -->
+   <!-- BARRA LATERAL (SIDEBAR) -->
 
 <aside class="sidebar">
 
@@ -23,59 +23,94 @@
 
         <ul class="nav-menu">
 
+            <!-- PANEL PRINCIPAL -->
             <li class="nav-item">
                 <a href="{% url 'panel_principal' %}" class="nav-link active">
                     <span class="nav-icon">🎛️</span> Panel Principal
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-                    <span class="nav-icon">👤</span> Usuarios del sistema
-                </a>
-            </li>
 
-            <li class="nav-item">
-                <a href="{% url 'gestion_productos' %}" class="nav-link">
-                    <span class="nav-icon">📦</span> Productos
-                </a>
-            </li>
+            {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
 
-            <li class="nav-item">
-                <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                    <span class="nav-icon">🗂️</span> Tipos de Productos
-                </a>
-            </li>
+                <!-- ================================= -->
+                <!-- OPCIONES DEL VENDEDOR -->
+                <!-- ================================= -->
 
-            <li class="nav-item">
-                <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                    <span class="nav-icon">🚚</span> Proveedores
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link">
+                        <span class="nav-icon">📦</span> Productos
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                    <span class="nav-icon">📊</span> Movimientos Stock
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span> Tipos de Productos
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a href="{% url 'historial_alertas' %}" class="nav-link">
-                    <span class="nav-icon">🔔</span> Historial de Alertas
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a href="{% url 'mis_permisos' %}" class="nav-link">
+                        <span class="nav-icon">🔐</span> Mis permisos
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a href="{% url 'gestion_perfiles' %}" class="nav-link">
-                    <span class="nav-icon">👥</span> Perfiles de acceso
-                </a>
-            </li>
 
-            <li class="nav-item">
-                <a href="{% url 'gestion_permisos' %}" class="nav-link">
-                    <span class="nav-icon">🔐</span> Permisos del sistema
-                </a>
-            </li>
+            {% else %}
+
+                <!-- ================================= -->
+                <!-- OPCIONES DEL ADMINISTRADOR -->
+                <!-- ================================= -->
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+                        <span class="nav-icon">👤</span> Usuarios del sistema
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link">
+                        <span class="nav-icon">📦</span> Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span> Tipos de Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                        <span class="nav-icon">🚚</span> Proveedores
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                        <span class="nav-icon">📊</span> Movimientos Stock
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'historial_alertas' %}" class="nav-link">
+                        <span class="nav-icon">🔔</span> Historial de Alertas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+                        <span class="nav-icon">👥</span> Perfiles de acceso
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_permisos' %}" class="nav-link">
+                        <span class="nav-icon">🔐</span> Permisos del sistema
+                    </a>
+                </li>
+
+            {% endif %}
 
         </ul>
 

@@ -1,0 +1,104 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mis permisos - Agroquímica del Valle</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'inventario/styles/perfiles.css' %}"
+    >
+    <link
+        rel="stylesheet"
+        href="{% static 'inventario/styles/mis_permisos.css' %}"
+    >
+</head>
+
+<body>
+<div class="layout">
+
+    <aside class="sidebar">
+        <div>
+            <div class="logo">🌿 Agroquímica del Valle</div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{% url 'panel_principal' %}" class="nav-link">
+                        <span class="nav-icon">🎛️</span>
+                        Panel Principal
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'mis_permisos' %}" class="nav-link active">
+                        <span class="nav-icon">🔐</span>
+                        Mis permisos
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="user-info">
+            <div class="user-role">
+                {{ usuario.ID_Perfil.Nombre_perfil }}
+            </div>
+
+            <div class="user-email">
+                {{ usuario.Email_usuario }}
+            </div>
+
+            <a href="{% url 'login' %}" class="logout-link">
+                Cerrar sesión
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h1>MIS PERMISOS</h1>
+            <p class="subtitle">
+                Permisos asignados a tu perfil por el administrador.
+            </p>
+        </header>
+
+        <section class="profiles-container">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div>
+                        <h2>{{ usuario.ID_Perfil.Nombre_perfil }}</h2>
+                        <span class="profile-id">
+                            Permisos asignados a tu perfil
+                        </span>
+                    </div>
+                </div>
+
+                <div class="permissions-section">
+                    <h3>Permisos disponibles</h3>
+
+                    <div class="permissions-list">
+                        {% for permiso in permisos %}
+                            <div class="permission-item">
+                                <strong>{{ permiso.Nombre_permiso }}</strong>
+
+                                {% if permiso.Descripcion_permiso %}
+                                    <span>{{ permiso.Descripcion_permiso }}</span>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="no-permissions">
+                                Tu perfil todavía no tiene permisos asignados.
+                            </p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+</div>
+</body>
+</html>

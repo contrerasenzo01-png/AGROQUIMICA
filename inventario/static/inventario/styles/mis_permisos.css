@@ -1,0 +1,37 @@
+/* Ajustes propios de la pantalla Mis permisos */
+
+.main-content {
+    min-width: 0;
+}
+
+.profile-card {
+    max-width: 900px;
+}
+
+.permissions-section h3 {
+    font-size: 13px;
+}
+
+.permission-item {
+    padding: 12px 14px;
+}
+
+@media (max-width: 700px) {
+    .layout {
+        min-height: 100vh;
+        height: auto;
+        width: 100%;
+        overflow: visible;
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        gap: 20px;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+}
