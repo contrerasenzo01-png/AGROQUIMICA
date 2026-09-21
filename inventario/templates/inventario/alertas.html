@@ -1,0 +1,595 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Historial de Alertas</title>
+
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- BARRA LATERAL (SIDEBAR) -->
+
+    <aside class="sidebar">
+
+        <div>
+
+            <div class="logo">
+                🌿 Agroquímica del Valle
+            </div>
+
+            <ul class="nav-menu">
+
+                <!-- PANEL PRINCIPAL -->
+
+                <li class="nav-item">
+
+                    <a href="{% url 'panel_principal' %}" class="nav-link">
+
+                        <span class="nav-icon">🎛️</span>
+                        Panel Principal
+
+                    </a>
+
+                </li>
+
+
+                {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
+
+                    <!-- ================================= -->
+                    <!-- OPCIONES DEL VENDEDOR -->
+                    <!-- ================================= -->
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_productos' %}" class="nav-link">
+
+                            <span class="nav-icon">📦</span>
+                            Productos
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+
+                            <span class="nav-icon">🗂️</span>
+                            Tipos de Productos
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'mis_permisos' %}" class="nav-link">
+
+                            <span class="nav-icon">🔐</span>
+                            Mis permisos
+
+                        </a>
+
+                    </li>
+
+
+                {% else %}
+
+                    <!-- ================================= -->
+                    <!-- OPCIONES DEL ADMINISTRADOR -->
+                    <!-- ================================= -->
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+
+                            <span class="nav-icon">👤</span>
+                            Usuarios del sistema
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_productos' %}" class="nav-link">
+
+                            <span class="nav-icon">📦</span>
+                            Productos
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+
+                            <span class="nav-icon">🗂️</span>
+                            Tipos de Productos
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+
+                            <span class="nav-icon">🚚</span>
+                            Proveedores
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+
+                            <span class="nav-icon">📊</span>
+                            Movimientos Stock
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'historial_alertas' %}" class="nav-link active">
+
+                            <span class="nav-icon">🔔</span>
+                            Historial de Alertas
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+
+                            <span class="nav-icon">👥</span>
+                            Perfiles de acceso
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a href="{% url 'gestion_permisos' %}" class="nav-link">
+
+                            <span class="nav-icon">🔐</span>
+                            Permisos del sistema
+
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
+        </div>
+
+
+        <!-- FOOTER DEL SIDEBAR (USUARIO Y LOGOUT) -->
+
+        <div class="user-info">
+
+            <div class="user-role">
+                {{ usuario.ID_Perfil.Nombre_perfil }}
+            </div>
+
+            <div class="user-email">
+                {{ usuario.Email_usuario }}
+            </div>
+
+            <a href="{% url 'login' %}" class="logout-link">
+                Cerrar sesión
+            </a>
+
+        </div>
+
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+
+    <main class="main-content">
+
+
+        <!-- CABECERA -->
+
+        <div class="alertas-header">
+
+            <div>
+
+                <h1>
+                    Historial de Alertas
+                </h1>
+
+                <p>
+                    Consulta el historial de alertas registradas.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- CRITERIO DE BÚSQUEDA -->
+
+        <section class="filtros">
+
+            <h2>
+                CRITERIO DE BÚSQUEDA
+            </h2>
+
+
+            <form
+                method="GET"
+                action="{% url 'historial_alertas' %}"
+            >
+
+
+                <!-- USUARIO -->
+
+                <div class="campo">
+
+                    <label for="usuario">
+                        Usuario
+                    </label>
+
+                    <select
+                        id="usuario"
+                        name="usuario"
+                    >
+
+                        <option value="">
+                            Todos los usuarios
+                        </option>
+
+
+                        {% for usuario_item in usuarios %}
+
+                            <option
+                                value="{{ usuario_item.ID_Usuario }}"
+                                {% if usuario_id|stringformat:"s" == usuario_item.ID_Usuario|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+
+                                {{ usuario_item.Apellido_usuario }},
+                                {{ usuario_item.Nombre_usuario }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- TIPO DE ALERTA -->
+
+                <div class="campo">
+
+                    <label for="tipo">
+                        Tipo de alerta
+                    </label>
+
+                    <select
+                        id="tipo"
+                        name="tipo"
+                    >
+
+                        <option value="">
+                            Todos los tipos
+                        </option>
+
+
+                        <option
+                            value="Vencimiento"
+                            {% if tipo_alerta == 'Vencimiento' %}
+                                selected
+                            {% endif %}
+                        >
+
+                            Vencimiento
+
+                        </option>
+
+
+                        <option
+                            value="Stock mínimo"
+                            {% if tipo_alerta == 'Stock mínimo' %}
+                                selected
+                            {% endif %}
+                        >
+
+                            Stock mínimo
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- PRODUCTO -->
+
+                <div class="campo">
+
+                    <label for="producto">
+                        Producto
+                    </label>
+
+                    <select
+                        id="producto"
+                        name="producto"
+                    >
+
+                        <option value="">
+                            Todos los productos
+                        </option>
+
+
+                        {% for producto in productos %}
+
+                            <option
+                                value="{{ producto.ID_Producto }}"
+                                {% if producto_id|stringformat:"s" == producto.ID_Producto|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+
+                                {{ producto.Nombre_producto }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- ID STOCK -->
+
+                <div class="campo">
+
+                    <label for="stock">
+                        ID_Stock
+                    </label>
+
+                    <select
+                        id="stock"
+                        name="stock"
+                    >
+
+                        <option value="">
+                            Todos los registros
+                        </option>
+
+
+                        {% for item in stock %}
+
+                            <option
+                                value="{{ item.ID_Stock }}"
+                                {% if stock_id|stringformat:"s" == item.ID_Stock|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+
+                                {{ item.ID_Stock }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- BOTONES -->
+
+                <div class="acciones">
+
+                    <button type="submit">
+                        🔎 Consultar
+                    </button>
+
+
+                    <a href="{% url 'historial_alertas' %}">
+                        Limpiar
+                    </a>
+
+                </div>
+
+
+            </form>
+
+        </section>
+
+
+        <!-- RESULTADOS -->
+
+        <section class="resultados">
+
+
+            <div class="titulo-resultados">
+
+                <h2>
+                    Historial de Alertas
+                </h2>
+
+                <span>
+                    {{ alertas|length }} resultado(s)
+                </span>
+
+            </div>
+
+
+            {% if alertas %}
+
+
+                <!-- TABLA HISTORIAL_ALERTAS -->
+
+                <div class="tabla-contenedor">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    ID_Historial_alerta
+                                </th>
+
+                                <th>
+                                    ID_Stock
+                                </th>
+
+                                <th>
+                                    Tipo_alerta
+                                </th>
+
+                                <th>
+                                    Mensaje
+                                </th>
+
+                                <th>
+                                    Fecha_hora_historial_alerta
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+
+                            {% for alerta in alertas %}
+
+                                <tr>
+
+
+                                    <!-- ID_HISTORIAL_ALERTA -->
+
+                                    <td class="id-alerta">
+
+                                        {{ alerta.ID_Historial_alerta }}
+
+                                    </td>
+
+
+                                    <!-- ID_STOCK -->
+
+                                    <td>
+
+                                        {{ alerta.ID_Stock.ID_Stock }}
+
+                                    </td>
+
+
+                                    <!-- TIPO_ALERTA -->
+
+                                    <td>
+
+                                        {% if alerta.Tipo_alerta == 'Vencimiento' %}
+
+                                            <span class="badge-alerta vencimiento">
+
+                                                Vencimiento
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge-alerta stock-minimo">
+
+                                                Stock mínimo
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- MENSAJE -->
+
+                                    <td class="mensaje-alerta">
+
+                                        {{ alerta.Mensaje }}
+
+                                    </td>
+
+
+                                    <!-- FECHA_HORA_HISTORIAL_ALERTA -->
+
+                                    <td class="fecha-alerta">
+
+                                        {{ alerta.Fecha_hora_historial_alerta|date:"d/m/Y H:i:s" }}
+
+                                    </td>
+
+
+                                </tr>
+
+                            {% endfor %}
+
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            {% else %}
+
+
+                <!-- SIN RESULTADOS -->
+
+                <div class="sin-resultados">
+
+                    <p>
+                        No se encontraron alertas
+                        con los criterios seleccionados.
+                    </p>
+
+                </div>
+
+
+            {% endif %}
+
+
+        </section>
+
+
+    </main>

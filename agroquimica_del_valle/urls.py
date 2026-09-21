@@ -2,11 +2,11 @@ from django.urls import path
 from inventario import views
 
 urlpatterns = [
-    #Login
+    # Login
     path('', views.login_view, name='login'),
     path('login/', views.login_view, name='login'),
 
-    #Panel principal
+    # Panel principal
     path('panel-principal/', views.panel_principal, name='panel_principal'),
 
     # Proveedores
@@ -19,13 +19,14 @@ urlpatterns = [
     path('tipos-productos/', views.gestion_tipos_productos, name='gestion_tipos_productos'),
     path('tipos-productos/crear/', views.crear_tipo_producto, name='crear_tipo_producto'),
     path('tipos-productos/editar/<int:pk>/', views.editar_tipo_producto, name='editar_tipo_producto'),
+    path('tipos-productos/baja/<int:pk>/', views.dar_baja_tipo_producto, name='dar_baja_tipo_producto'),
 
     # Agroquímicos
     path('agroquimicos/', views.gestion_agroquimicos, name='gestion_agroquimicos'),
     path('agroquimicos/crear/', views.crear_agroquimico, name='crear_agroquimico'),
     path('agroquimicos/editar/<int:pk>/', views.editar_agroquimico, name='editar_agroquimico'),
 
-        # Usuarios
+    # Usuarios
     path('usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
     path('usuarios/crear/', views.crear_usuario, name='crear_usuario'),
     path('usuarios/editar/<int:pk>/', views.editar_usuario, name='editar_usuario'),
@@ -49,6 +50,7 @@ urlpatterns = [
     path('productos/', views.gestion_productos, name='gestion_productos'),
     path('productos/crear/', views.crear_producto, name='crear_producto'),
     path('productos/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
+    path('productos/baja/<int:pk>/', views.dar_baja_producto, name='dar_baja_producto'),
 
     # Productos por proveedor
     path('productos-proveedores/', views.gestion_productos_proveedores, name='gestion_productos_proveedores'),
@@ -62,14 +64,13 @@ urlpatterns = [
     path('movimientos-stock/', views.gestion_movimientos_stock, name='gestion_movimientos_stock'),
     path('movimientos-stock/crear/', views.crear_movimiento_stock, name='crear_movimiento_stock'),
 
-    # ALERTAS
-    path('alertas/', views.gestion_alertas, name='gestion_alertas'),
+    # Alertas
     path('historial-alertas/', views.gestion_alertas, name='historial_alertas'),
 
-    # PERMISOS
+    # Permisos
     path('permisos/', views.gestion_permisos, name='gestion_permisos'),
     path('permisos/crear/', views.crear_permiso, name='crear_permiso'),
     path('permisos/editar/<int:pk>/', views.editar_permiso, name='editar_permiso'),
     path('permisos/eliminar/<int:pk>/', views.eliminar_permiso, name='eliminar_permiso'),
-
+    
 ]

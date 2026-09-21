@@ -1,0 +1,361 @@
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    height: 100vh;
+    background-color: #f1f5f3;
+    color: #1c2a23;
+}
+
+.layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+
+/* ==========================================
+   BARRA LATERAL
+   ========================================== */
+
+.sidebar {
+    width: 220px;
+    background-color: #0b311e;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 16px;
+    height: 100vh;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 28px;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 6px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    color: #a3c2b2;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13.5px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background-color: #16472d;
+    color: #ffffff;
+}
+
+.nav-icon {
+    font-size: 14px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 15px;
+}
+
+.user-role {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.user-email {
+    font-size: 11px;
+    color: #83a595;
+    margin-bottom: 12px;
+}
+
+.logout-link {
+    font-size: 11px;
+    color: #a3c2b2;
+    text-decoration: none;
+}
+
+.logout-link:hover {
+    color: #ffffff;
+}
+
+
+/* ==========================================
+   CONTENIDO PRINCIPAL
+   ========================================== */
+
+.main-content {
+    flex: 1;
+    padding: 25px 30px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 0;
+    min-width: 0;
+}
+
+
+/* ==========================================
+   CABECERA
+   ========================================== */
+
+.alertas-header {
+    margin-bottom: 20px;
+}
+
+.alertas-header h1 {
+    font-size: 20px;
+    color: #0b311e;
+}
+
+.alertas-header p {
+    font-size: 12px;
+    color: #5c7367;
+    margin-top: 2px;
+}
+
+
+/* ==========================================
+   FILTROS
+   ========================================== */
+
+.filtros {
+    background-color: #ffffff;
+    border: 1px solid #e2ece6;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.filtros h2 {
+    font-size: 13px;
+    color: #0b311e;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.filtros form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    align-items: end;
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.campo label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #5c7367;
+}
+
+.campo input,
+.campo select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #d7e3dc;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+    background-color: #ffffff;
+    color: #1c2a23;
+}
+
+.campo input:focus,
+.campo select:focus {
+    border-color: #0b311e;
+}
+
+
+/* ==========================================
+   BOTONES
+   ========================================== */
+
+.acciones {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.acciones button {
+    background-color: #0b311e;
+    color: #ffffff;
+    border: none;
+    padding: 9px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.acciones button:hover {
+    background-color: #16472d;
+}
+
+.acciones a {
+    display: inline-block;
+    padding: 8px 13px;
+    border-radius: 6px;
+    background-color: #f1f5f3;
+    color: #0b311e;
+    border: 1px solid #d7e3dc;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.acciones a:hover {
+    background-color: #e2ece6;
+}
+
+
+/* ==========================================
+   RESULTADOS
+   ========================================== */
+
+.resultados {
+    background-color: #ffffff;
+    border: 1px solid #e2ece6;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.titulo-resultados {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.titulo-resultados h2 {
+    font-size: 13px;
+    color: #0b311e;
+}
+
+.titulo-resultados span {
+    font-size: 11px;
+    color: #8a9e93;
+}
+
+
+/* ==========================================
+   TABLA
+   ========================================== */
+
+.tabla-contenedor {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tabla-contenedor table {
+    width: 100%;
+    min-width: 950px;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.tabla-contenedor th {
+    border-bottom: 1px solid #e2ece6;
+    text-align: left;
+    color: #8a9e93;
+    padding: 10px 8px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tabla-contenedor td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #f0f4f2;
+    vertical-align: middle;
+}
+
+.tabla-contenedor tr:hover {
+    background-color: #f8faf9;
+}
+
+
+/* ==========================================
+   ID DE ALERTA
+   ========================================== */
+
+.id-alerta {
+    font-weight: 700;
+    color: #1c2a23;
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   FECHA Y HORA
+   ========================================== */
+
+.fecha-alerta {
+    color: #5c7367;
+    white-space: nowrap;
+}
+
+.fecha-alerta span {
+    font-size: 11px;
+    color: #8a9e93;
+}
+
+
+/* ==========================================
+   TIPO DE ALERTA
+   ========================================== */
+
+.badge-alerta {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-alerta.vencimiento {
+    background-color: #fffbe3;
+    border: 1px solid #fde047;
+    color: #b45309;
+}
+
+.badge-alerta.stock-minimo {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+}
+
+
+/* ==========================================
+   PRODUCTO Y STOCK
+   ==========================================
+

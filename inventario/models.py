@@ -5,6 +5,16 @@ class TiposProductos(models.Model):
     ID_Tipo_producto = models.AutoField(primary_key=True)
     Nombre_tipo_producto = models.CharField(max_length=50)
 
+    ESTADO_CHOICES = [
+        (True, 'Activo'),
+        (False, 'Inactivo'),
+    ]
+
+    Estado_tipo_producto = models.BooleanField(
+        default=True,
+        choices=ESTADO_CHOICES
+    )
+
     class Meta:
         db_table = 'TIPOS_PRODUCTOS'
         verbose_name_plural = "Tipos de Productos"
@@ -230,6 +240,17 @@ class Productos(models.Model):
         decimal_places=2
     )
 
+    ESTADO_CHOICES = [
+        ('Disponible', 'Disponible'),
+        ('No disponible', 'No disponible'),
+    ]
+
+    Estado_producto = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='Disponible'
+    )
+
     agroquimicos = models.ManyToManyField(
         Agroquimicos,
         through='ProductosXAgroquimicos'
@@ -319,7 +340,7 @@ class Stock(models.Model):
 
 
 class Alertas(models.Model):
-    ID_Alerta = models.AutoField(primary_key=True)
+    ID_Historial_alerta = models.AutoField(primary_key=True)
 
     ID_Stock = models.ForeignKey(
         Stock,
@@ -327,15 +348,21 @@ class Alertas(models.Model):
         db_column='ID_Stock'
     )
 
-    Mensaje = models.CharField(max_length=255)
+    Tipo_alerta = models.CharField(
+        max_length=50
+    )
 
-    Fecha_hora_alerta = models.DateTimeField(
+    Mensaje = models.CharField(
+        max_length=255
+    )
+
+    Fecha_hora_historial_alerta = models.DateTimeField(
         auto_now_add=True
     )
 
     class Meta:
-        db_table = 'ALERTAS'
-        verbose_name_plural = "Alertas"
+        db_table = 'HISTORIAL_ALERTAS'
+        verbose_name_plural = "Historial de Alertas"
 
     def __str__(self):
         return self.Mensaje
