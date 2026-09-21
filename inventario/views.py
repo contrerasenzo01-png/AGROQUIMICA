@@ -157,7 +157,61 @@ def login_view(request):
 
     )
 
+# ============================================================
+# RESTABLECER CONTRASEÑA DESDE EL LOGIN
+# ============================================================
+def restablecer_contrasena_login(request):
 
+    mensaje = None
+    error = None
+
+    if request.method == 'POST':
+
+        email = request.POST.get(
+            'email',
+            ''
+        ).strip()
+
+        if not email:
+            error = 'Debe ingresar su correo electrónico.'
+
+        else:
+            try:
+                usuario = Usuarios.objects.get(
+                    Email_usuario=email,
+                    Estado_usuario=True
+                )
+
+                # Generar una contraseña temporal
+                contrasena_temporal = 'Nueva2026'
+
+                usuario.Contrasena = make_password(
+                    contrasena_temporal
+                )
+
+                usuario.Cambiar_contrasena = True
+
+                usuario.save()
+
+                mensaje = (
+                    'Se generó una contraseña temporal. '
+                    'Al iniciar sesión deberá cambiarla.'
+                )
+
+            except Usuarios.DoesNotExist:
+
+                error = (
+                    'No existe un usuario activo con ese correo electrónico.'
+                )
+
+    return render(
+        request,
+        'inventario/restablecer_contrasena_login.html',
+        {
+            'mensaje': mensaje,
+            'error': error
+        }
+    )
 
 # ============================================================
 # CAMBIAR CONTRASEÑA

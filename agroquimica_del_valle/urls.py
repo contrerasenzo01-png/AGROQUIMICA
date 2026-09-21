@@ -5,6 +5,7 @@ urlpatterns = [
     # Login
     path('', views.login_view, name='login'),
     path('login/', views.login_view, name='login'),
+    path('restablecer-contrasena/', views.restablecer_contrasena_login, name='restablecer_contrasena_login'),
 
     # Panel principal
     path('panel-principal/', views.panel_principal, name='panel_principal'),
