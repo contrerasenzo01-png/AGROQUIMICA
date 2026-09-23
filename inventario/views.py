@@ -157,168 +157,6 @@ def login_view(request):
 
     )
 
-# ============================================================
-# RESTABLECER CONTRASEÑA DESDE EL LOGIN
-# ============================================================
-def restablecer_contrasena_login(request):
-
-    mensaje = None
-    error = None
-
-    if request.method == 'POST':
-
-        email = request.POST.get(
-            'email',
-            ''
-        ).strip()
-
-        if not email:
-            error = 'Debe ingresar su correo electrónico.'
-
-        else:
-            try:
-                usuario = Usuarios.objects.get(
-                    Email_usuario=email,
-                    Estado_usuario=True
-                )
-
-                # Generar una contraseña temporal
-                contrasena_temporal = 'Nueva2026'
-
-                usuario.Contrasena = make_password(
-                    contrasena_temporal
-                )
-
-                usuario.Cambiar_contrasena = True
-
-                usuario.save()
-
-                mensaje = (
-                    'Se generó una contraseña temporal. '
-                    'Al iniciar sesión deberá cambiarla.'
-                )
-
-            except Usuarios.DoesNotExist:
-
-                error = (
-                    'No existe un usuario activo con ese correo electrónico.'
-                )
-
-    return render(
-        request,
-        'inventario/restablecer_contrasena_login.html',
-        {
-            'mensaje': mensaje,
-            'error': error
-        }
-    )
-
-# ============================================================
-# CAMBIAR CONTRASEÑA
-# ============================================================
-
-def cambiar_contrasena(request):
-
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
-
-    if not usuario_id:
-
-        return redirect(
-            'login'
-        )
-
-    usuario = get_object_or_404(
-
-        Usuarios,
-
-        ID_Usuario=usuario_id
-
-    )
-
-    error_message = None
-
-    if request.method == 'POST':
-
-        nueva_contrasena = request.POST.get(
-
-            'nueva_contrasena',
-
-            ''
-
-        )
-
-        confirmar_contrasena = request.POST.get(
-
-            'confirmar_contrasena',
-
-            ''
-
-        )
-
-        # Verificar que coincidan
-
-        if nueva_contrasena != confirmar_contrasena:
-
-            error_message = (
-
-                'Las contraseñas no coinciden.'
-
-            )
-
-        # Verificar longitud
-
-        elif len(nueva_contrasena) < 8:
-
-            error_message = (
-
-                'La contraseña debe tener al menos 8 caracteres.'
-
-            )
-
-        else:
-
-            usuario.Contrasena = make_password(
-
-                nueva_contrasena
-
-            )
-
-            usuario.Cambiar_contrasena = False
-
-            usuario.save()
-
-            messages.success(
-
-                request,
-
-                'Contraseña actualizada correctamente.'
-
-            )
-
-            return redirect(
-
-                'panel_principal'
-
-            )
-
-    return render(
-
-        request,
-
-        'inventario/cambiar_contrasena.html',
-
-        {
-
-            'error': error_message,
-
-            'usuario': usuario
-
-        }
-
-    )
-
 
 
 # ============================================================
@@ -1717,6 +1555,73 @@ def restablecer_contrasena(request, pk):
     )
 
 
+# ============================================================
+# CAMBIAR CONTRASEÑA
+# ============================================================
+
+def cambiar_contrasena(request):
+
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=usuario_id
+    )
+
+    if request.method == 'POST':
+
+        nueva_contrasena = request.POST.get(
+            'nueva_contrasena',
+            ''
+        )
+
+        confirmar_contrasena = request.POST.get(
+            'confirmar_contrasena',
+            ''
+        )
+
+        if nueva_contrasena != confirmar_contrasena:
+            messages.error(
+                request,
+                'Las contraseñas no coinciden.'
+            )
+            return render(
+                request,
+                'inventario/cambiar_contrasena.html'
+            )
+
+        if len(nueva_contrasena) < 8:
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
+            return render(
+                request,
+                'inventario/cambiar_contrasena.html'
+            )
+
+        usuario.Contrasena = make_password(
+            nueva_contrasena
+        )
+
+        usuario.Cambiar_contrasena = False
+
+        usuario.save()
+
+        messages.success(
+            request,
+            'Contraseña cambiada correctamente.'
+        )
+
+        return redirect('panel_principal')
+
+    return render(
+        request,
+        'inventario/cambiar_contrasena.html'
+    )
 
 # ============================================================
 # GESTIÓN DE PERFILES
@@ -2582,52 +2487,49 @@ def editar_tipo_movimiento(request, pk):
 
 def gestion_productos(request):
 
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+        return redirect(
+            'login'
+        )
+
+    usuario = get_object_or_404(
+        Usuarios.objects.select_related(
+            'ID_Perfil'
+        ),
+        ID_Usuario=usuario_id
+    )
+
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
     tipo_id = request.GET.get(
-
         'tipo',
-
         ''
-
     ).strip()
 
     productos = Productos.objects.select_related(
-
         'ID_Tipo_producto',
-
         'stock'
-
     ).prefetch_related(
-
         'agroquimicos',
-
         'proveedores'
-
     ).all()
 
     if busqueda:
-
         productos = productos.filter(
-
             Q(Nombre_producto__icontains=busqueda) |
-
             Q(Descripcion_producto__icontains=busqueda)
-
         )
 
     if tipo_id:
-
         productos = productos.filter(
-
             ID_Tipo_producto_id=tipo_id
-
         )
 
     tipos_productos = TiposProductos.objects.all()
@@ -2635,31 +2537,20 @@ def gestion_productos(request):
     agroquimicos = Agroquimicos.objects.all()
 
     proveedores = Proveedores.objects.filter(
-
         estado_proveedor=True
-
     )
 
     return render(
-
         request,
-
         'inventario/productos.html',
-
         {
-
             'productos': productos,
-
             'tipos_productos': tipos_productos,
-
             'agroquimicos': agroquimicos,
-
             'proveedores': proveedores,
-
-            'busqueda': busqueda
-
+            'busqueda': busqueda,
+            'usuario': usuario
         }
-
     )
 
 

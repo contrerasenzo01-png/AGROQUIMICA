@@ -12,103 +12,137 @@
 
     <div class="layout-principal">
 
-        <!-- Sidebar -->
-        <aside class="sidebar">
+<!-- Sidebar -->
+<aside class="sidebar">
 
-            <div>
+    <div>
 
-                <div class="logo">
-                    🌿 Agroquímica del Valle
-                </div>
+        <div class="logo">
+            🌿 Agroquímica del Valle
+        </div>
 
-                <ul class="nav-menu">
+        <ul class="nav-menu">
 
-                    <li class="nav-item">
-                        <a href="{% url 'panel_principal' %}" class="nav-link">
-                            <span class="nav-icon">🎛️</span>
-                            Panel Principal
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-                            <span class="nav-icon">👤</span>
-                            Usuarios del sistema
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'gestion_productos' %}" class="nav-link active">
-                            <span class="nav-icon">📦</span>
-                            Productos
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                            <span class="nav-icon">🗂️</span>
-                            Tipos de Productos
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                            <span class="nav-icon">🚚</span>
-                            Proveedores
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                            <span class="nav-icon">📊</span>
-                            Movimientos Stock
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'historial_alertas' %}" class="nav-link">
-                            <span class="nav-icon">🔔</span>
-                            Historial de Alertas
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'gestion_perfiles' %}" class="nav-link">
-                            <span class="nav-icon">👥</span>
-                            Perfiles de acceso
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'gestion_permisos' %}" class="nav-link">
-                            <span class="nav-icon">🔐</span>
-                            Permisos del sistema
-                        </a>
-                    </li>
-
-                </ul>
-
-            </div>
-
-
-            <!-- Footer del Sidebar -->
-            <div class="user-info">
-
-                <div class="user-role">
-                    Administrador
-                </div>
-
-                <div class="user-email">
-                    marjuan@gmail.com
-                </div>
-
-                <a href="{% url 'login' %}" class="logout-link">
-                    Cerrar sesión
+            <!-- PANEL PRINCIPAL -->
+            <li class="nav-item">
+                <a href="{% url 'panel_principal' %}" class="nav-link">
+                    <span class="nav-icon">🎛️</span>
+                    Panel Principal
                 </a>
+            </li>
 
-            </div>
 
-        </aside>
+            {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
+
+                <!-- OPCIONES DEL VENDEDOR -->
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link active">
+                        <span class="nav-icon">📦</span>
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'mis_permisos' %}" class="nav-link">
+                        <span class="nav-icon">🔐</span>
+                        Mis permisos
+                    </a>
+                </li>
+
+
+            {% else %}
+
+                <!-- OPCIONES DEL ADMINISTRADOR -->
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        Usuarios del sistema
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link active">
+                        <span class="nav-icon">📦</span>
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                        <span class="nav-icon">🚚</span>
+                        Proveedores
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Movimientos Stock
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'historial_alertas' %}" class="nav-link">
+                        <span class="nav-icon">🔔</span>
+                        Historial de Alertas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        Perfiles de acceso
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_permisos' %}" class="nav-link">
+                        <span class="nav-icon">🔐</span>
+                        Permisos del sistema
+                    </a>
+                </li>
+
+            {% endif %}
+
+        </ul>
+
+    </div>
+
+
+    <!-- Footer del Sidebar -->
+    <div class="user-info">
+
+        <div class="user-role">
+            {{ usuario.ID_Perfil.Nombre_perfil }}
+        </div>
+
+        <div class="user-email">
+            {{ usuario.Email_usuario }}
+        </div>
+
+        <a href="{% url 'login' %}" class="logout-link">
+            Cerrar sesión
+        </a>
+
+    </div>
+
+</aside>
 
 
         <!-- Contenido Principal -->
