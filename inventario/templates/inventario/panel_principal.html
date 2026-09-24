@@ -13,6 +13,7 @@
 <div class="layout">
    <!-- BARRA LATERAL (SIDEBAR) -->
 
+<!-- Sidebar -->
 <aside class="sidebar">
 
     <div>
@@ -26,87 +27,95 @@
             <!-- PANEL PRINCIPAL -->
             <li class="nav-item">
                 <a href="{% url 'panel_principal' %}" class="nav-link active">
-                    <span class="nav-icon">🎛️</span> Panel Principal
+                    <span class="nav-icon">🎛️</span>
+                    Panel Principal
                 </a>
             </li>
 
 
             {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
 
-                <!-- ================================= -->
                 <!-- OPCIONES DEL VENDEDOR -->
-                <!-- ================================= -->
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_productos' %}" class="nav-link">
-                        <span class="nav-icon">📦</span> Productos
+                        <span class="nav-icon">📦</span>
+                        Productos
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                        <span class="nav-icon">🗂️</span> Tipos de Productos
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'mis_permisos' %}" class="nav-link">
-                        <span class="nav-icon">🔐</span> Mis permisos
+                        <span class="nav-icon">🔐</span>
+                        Mis permisos
                     </a>
                 </li>
 
 
             {% else %}
 
-                <!-- ================================= -->
                 <!-- OPCIONES DEL ADMINISTRADOR -->
-                <!-- ================================= -->
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-                        <span class="nav-icon">👤</span> Usuarios del sistema
+                        <span class="nav-icon">👤</span>
+                        Usuarios del sistema
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_productos' %}" class="nav-link">
-                        <span class="nav-icon">📦</span> Productos
+                        <span class="nav-icon">📦</span>
+                        Productos
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                        <span class="nav-icon">🗂️</span> Tipos de Productos
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                        <span class="nav-icon">🚚</span> Proveedores
+                        <span class="nav-icon">🚚</span>
+                        Proveedores
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                        <span class="nav-icon">📊</span> Movimientos Stock
+                        <span class="nav-icon">📊</span>
+                        Movimientos Stock
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'historial_alertas' %}" class="nav-link">
-                        <span class="nav-icon">🔔</span> Historial de Alertas
+                        <span class="nav-icon">🔔</span>
+                        Historial de Alertas
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_perfiles' %}" class="nav-link">
-                        <span class="nav-icon">👥</span> Perfiles de acceso
+                        <span class="nav-icon">👥</span>
+                        Perfiles de acceso
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{% url 'gestion_permisos' %}" class="nav-link">
-                        <span class="nav-icon">🔐</span> Permisos del sistema
+                        <span class="nav-icon">🔐</span>
+                        Permisos del sistema
                     </a>
                 </li>
 
@@ -117,21 +126,22 @@
     </div>
 
 
-    <!-- FOOTER DEL SIDEBAR (USUARIO Y LOGOUT) -->
-
+    <!-- Footer del Sidebar -->
     <div class="user-info">
-    <div class="user-role">
-        {{ usuario.ID_Perfil.Nombre_perfil }}
-    </div>
 
-    <div class="user-email">
-        {{ usuario.Email_usuario }}
-    </div>
+        <div class="user-role">
+            {{ usuario.ID_Perfil.Nombre_perfil }}
+        </div>
 
-    <a href="{% url 'login' %}" class="logout-link">
-        Cerrar sesión
-    </a>
-</div>
+        <div class="user-email">
+            {{ usuario.Email_usuario }}
+        </div>
+
+        <a href="{% url 'cerrar_sesion' %}" class="logout-link">
+            Cerrar sesión
+        </a>
+
+    </div>
 
 </aside>
 

@@ -6,11 +6,17 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Restablecer contraseña</title>
 
-    <link rel="stylesheet" href="{% static 'inventario/styles/usuarios.css' %}">
+    <link
+        rel="stylesheet"
+        href="{% static 'inventario/styles/usuarios.css' %}"
+    >
 
 </head>
 
@@ -20,12 +26,42 @@
 
         <section class="formulario">
 
-            <h1>Restablecer contraseña</h1>
+            <h1>
+                Restablecer contraseña
+            </h1>
 
-            <p>
-                Usuario:
-                <strong>{{ usuario.Usuario }}</strong>
-            </p>
+
+            <!-- ID del usuario -->
+            <div class="form-group">
+
+                <label>
+                    ID_Usuario
+                </label>
+
+                <input
+                    type="text"
+                    value="{{ usuario.ID_Usuario }}"
+                    readonly
+                >
+
+            </div>
+
+
+            <!-- Usuario -->
+            <div class="form-group">
+
+                <label>
+                    Usuario
+                </label>
+
+                <input
+                    type="text"
+                    value="{{ usuario.Usuario }}"
+                    readonly
+                >
+
+            </div>
+
 
             <form
                 method="POST"
@@ -34,6 +70,8 @@
 
                 {% csrf_token %}
 
+
+                <!-- Nueva contraseña -->
                 <div class="form-group">
 
                     <label for="nueva_contrasena">
@@ -51,6 +89,7 @@
                 </div>
 
 
+                <!-- Confirmar contraseña -->
                 <div class="form-group">
 
                     <label for="confirmar_contrasena">
@@ -68,6 +107,7 @@
                 </div>
 
 
+                <!-- Botones -->
                 <div class="modal-actions">
 
                     <a
@@ -81,7 +121,7 @@
                         type="submit"
                         class="btn-guardar"
                     >
-                        Restablecer contraseña
+                        Guardar nueva contraseña
                     </button>
 
                 </div>

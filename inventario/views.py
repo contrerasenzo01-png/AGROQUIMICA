@@ -157,6 +157,9 @@ def login_view(request):
 
     )
 
+def cerrar_sesion(request):
+    request.session.flush()
+    return redirect('login')
 
 
 # ============================================================
@@ -1430,7 +1433,22 @@ def dar_baja_usuario(request, pk):
 
     )
 
+def activar_usuario(request, id):
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=id
+    )
 
+    usuario.Estado_usuario = True
+    usuario.Fecha_Baja = None
+    usuario.save()
+
+    messages.success(
+        request,
+        f'El usuario {usuario.Usuario} fue activado correctamente.'
+    )
+
+    return redirect('gestion_usuarios')
 
 # ============================================================
 # RESTABLECER CONTRASEÑA

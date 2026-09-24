@@ -5,6 +5,7 @@ urlpatterns = [
     # Login
     path('', views.login_view, name='login'),
     path('login/', views.login_view, name='login'),
+    path('cerrar-sesion/', views.cerrar_sesion, name='cerrar_sesion'),
 
     # Panel principal
     path('panel-principal/', views.panel_principal, name='panel_principal'),
@@ -33,6 +34,7 @@ urlpatterns = [
     path('usuarios/baja/<int:pk>/', views.dar_baja_usuario, name='dar_baja_usuario'),
     path('usuarios/restablecer/<int:pk>/', views.restablecer_contrasena, name='restablecer_contrasena'),
     path('usuarios/cambiar-contrasena/', views.cambiar_contrasena, name='cambiar_contrasena'),
+    path('usuarios/activar/<int:id>/', views.activar_usuario, name='activar_usuario'),
 
     # Perfiles
     path('perfiles/', views.gestion_perfiles, name='gestion_perfiles'),

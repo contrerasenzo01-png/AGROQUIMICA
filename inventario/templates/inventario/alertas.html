@@ -193,23 +193,21 @@
         </div>
 
 
-        <!-- FOOTER DEL SIDEBAR (USUARIO Y LOGOUT) -->
+    <div class="user-info">
 
-        <div class="user-info">
-
-            <div class="user-role">
-                {{ usuario.ID_Perfil.Nombre_perfil }}
-            </div>
-
-            <div class="user-email">
-                {{ usuario.Email_usuario }}
-            </div>
-
-            <a href="{% url 'login' %}" class="logout-link">
-                Cerrar sesión
-            </a>
-
+        <div class="user-role">
+            Administrador
         </div>
+
+        <div class="user-email">
+            admin159@gmail.com
+        </div>
+
+        <a href="{% url 'login' %}" class="logout-link">
+            Cerrar sesión
+        </a>
+
+    </div>
 
     </aside>
 

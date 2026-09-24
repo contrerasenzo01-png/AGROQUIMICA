@@ -150,7 +150,7 @@
             </div>
 
             <div class="user-email">
-                marjuan@gmail.com
+                admin159@gmail.com
             </div>
 
             <a href="{% url 'login' %}" class="logout-link">
@@ -270,9 +270,9 @@
 
                             <th>Estado_usuario</th>
 
-                            <th>Fecha última modificación</th>
+                            <th>Fecha_última_modificación</th>
 
-                            <th>Fecha baja</th>
+                            <th>Fecha_baja</th>
 
                             <th></th>
 
@@ -453,7 +453,16 @@
                                             Dar de baja
                                         </button>
 
-                                    {% endif %}
+                                    {% else %}
+
+                                    <a
+                                      href="{% url 'activar_usuario' usuario.ID_Usuario %}"
+                                      class="btn-action"
+                                    >
+                                      Activar usuario
+                                    </a>
+
+                                {% endif %}
 
 
                                 </td>
@@ -542,7 +551,7 @@
                         <div class="form-group">
 
                             <label>
-                                Apellido
+                                Apellido_usuario
                             </label>
 
                             <input
@@ -557,7 +566,7 @@
                         <div class="form-group">
 
                             <label>
-                                Nombre
+                                Nombre_usuario
                             </label>
 
                             <input
@@ -603,7 +612,7 @@
                         <div class="form-group">
 
                             <label>
-                                Correo
+                                Email
                             </label>
 
                             <input
@@ -715,19 +724,6 @@
                 </div>
 
 
-                <div class="password-info">
-
-                    Solo el campo
-                    <strong>
-                        Email_usuario
-                    </strong>
-                    puede ser modificado.
-
-                    El resto de los datos son de solo lectura.
-
-                </div>
-
-
                 <form
                     method="POST"
                     id="formEditarUsuario"
@@ -742,7 +738,7 @@
                         <div class="form-group">
 
                             <label>
-                                ID Usuario
+                                ID_Usuario
                             </label>
 
                             <input
@@ -757,7 +753,7 @@
                         <div class="form-group">
 
                             <label>
-                                ID Perfil
+                                ID_Perfil
                             </label>
 
                             <input
@@ -802,7 +798,7 @@
                         <div class="form-group">
 
                             <label>
-                                Apellido
+                                Apellido_usuario
                             </label>
 
                             <input
@@ -817,7 +813,7 @@
                         <div class="form-group">
 
                             <label>
-                                Nombre
+                                Nombre_usuario
                             </label>
 
                             <input
@@ -832,7 +828,7 @@
                         <div class="form-group">
 
                             <label>
-                                Estado
+                                Estado_usuario
                             </label>
 
                             <input
@@ -847,7 +843,7 @@
                         <div class="form-group">
 
                             <label>
-                                Fecha última modificación
+                                Fecha_última_modificación
                             </label>
 
                             <input
@@ -862,7 +858,7 @@
                         <div class="form-group">
 
                             <label>
-                                Correo electrónico
+                                Email_usuario
                             </label>
 
                             <input
