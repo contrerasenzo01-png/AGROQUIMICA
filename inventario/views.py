@@ -43,9 +43,35 @@ from .models import (
     Alertas,
 
     MovimientosStock
-
 )
 
+
+# ============================================================
+# CONTROL DE ACCESO
+# ============================================================
+
+def usuario_es_administrador(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return None
+
+    try:
+        usuario = Usuarios.objects.select_related(
+            'ID_Perfil'
+        ).get(
+            ID_Usuario=usuario_id
+        )
+    except Usuarios.DoesNotExist:
+        return None
+
+    if not usuario.ID_Perfil:
+        return None
+
+    if usuario.ID_Perfil.Nombre_perfil != 'Administrador':
+        return None
+
+    return usuario
 
 
 # ============================================================
@@ -76,15 +102,11 @@ def login_view(request):
                 Usuario=usuario_input
             )
 
-            # Verificar si el usuario está activo
-
             if not usuario.Estado_usuario:
 
                 error_message = (
                     'El usuario se encuentra inactivo.'
                 )
-
-            # Verificar que tenga un perfil
 
             elif not usuario.ID_Perfil:
 
@@ -92,14 +114,16 @@ def login_view(request):
                     'El usuario no tiene un perfil asignado.'
                 )
 
-            # Verificar contraseña
+            elif not usuario.ID_Perfil.Estado_perfil:
+
+                error_message = (
+                    'El perfil del usuario se encuentra inactivo.'
+                )
 
             elif check_password(
                 password_input,
                 usuario.Contrasena
             ):
-
-                # Guardar datos del usuario en la sesión
 
                 request.session['usuario_id'] = (
                     usuario.ID_Usuario
@@ -117,15 +141,11 @@ def login_view(request):
                     usuario.ID_Perfil.Nombre_perfil
                 )
 
-                # Si debe cambiar la contraseña
-
                 if usuario.Cambiar_contrasena:
 
                     return redirect(
                         'cambiar_contrasena'
                     )
-
-                # Ingresar al panel
 
                 return redirect(
                     'panel_principal'
@@ -144,22 +164,21 @@ def login_view(request):
             )
 
     return render(
-
         request,
-
         'inventario/login.html',
-
         {
-
             'error': error_message
-
         }
-
     )
 
+
 def cerrar_sesion(request):
+
     request.session.flush()
-    return redirect('login')
+
+    return redirect(
+        'login'
+    )
 
 
 # ============================================================
@@ -168,50 +187,32 @@ def cerrar_sesion(request):
 
 def panel_principal(request):
 
-    # Generar automáticamente las alertas de vencimiento
-
-    generar_alertas_vencimiento()
-
     usuario_id = request.session.get(
-
         'usuario_id'
-
     )
 
     if not usuario_id:
 
         return redirect(
-
             'login'
-
         )
 
+    generar_alertas_vencimiento()
+
     usuario = get_object_or_404(
-
         Usuarios.objects.select_related(
-
             'ID_Perfil'
-
         ),
-
         ID_Usuario=usuario_id
-
     )
 
     return render(
-
         request,
-
         'inventario/panel_principal.html',
-
         {
-
             'usuario': usuario
-
         }
-
     )
-
 
 
 # ============================================================
@@ -220,512 +221,249 @@ def panel_principal(request):
 
 def gestion_proveedores(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
-    proveedores_list = Proveedores.objects.all()
+    proveedores = Proveedores.objects.all()
 
     if busqueda:
 
-        proveedores_list = proveedores_list.filter(
-
+        proveedores = proveedores.filter(
             Q(nombre_proveedor__icontains=busqueda) |
-
             Q(email_proveedor__icontains=busqueda) |
-
             Q(direccion_proveedor__icontains=busqueda)
-
         )
 
-    activos_count = Proveedores.objects.filter(
+    total_proveedores = Proveedores.objects.count()
 
+    proveedores_activos = Proveedores.objects.filter(
         estado_proveedor=True
-
     ).count()
-
-    total_count = Proveedores.objects.count()
 
     form = ProveedorForm()
 
-    productos_list = Productos.objects.select_related(
-
-        'ID_Tipo_producto'
-
-    ).all()
-
     error_duplicado_id = request.session.pop(
-
         'error_duplicado_id',
-
         None
-
     )
 
-    proveedor_conflicto = None
-
-    if error_duplicado_id:
-
-        proveedor_conflicto = Proveedores.objects.filter(
-
-            pk=error_duplicado_id
-
-        ).first()
+    proveedor_conflicto = request.session.pop(
+        'proveedor_conflicto',
+        None
+    )
 
     return render(
-
         request,
-
         'inventario/proveedores.html',
-
         {
-
-            'proveedores': proveedores_list,
-
-            'activos_count': activos_count,
-
-            'total_count': total_count,
-
+            'usuario': usuario,
+            'proveedores': proveedores,
+            'total_proveedores': total_proveedores,
+            'proveedores_activos': proveedores_activos,
             'form': form,
-
-            'productos_list': productos_list,
-
-            'busqueda': busqueda,
-
-            'proveedor_conflicto': proveedor_conflicto
-
+            'error_duplicado_id': error_duplicado_id,
+            'proveedor_conflicto': proveedor_conflicto,
         }
-
     )
-
 
 
 def crear_proveedor(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
-        form = ProveedorForm(
-
-            request.POST
-
-        )
-
-        nombre = request.POST.get(
-
-            'nombre_proveedor',
-
-            ''
-
-        ).strip()
-
-        telefono = request.POST.get(
-
-            'telefono_proveedor',
-
-            ''
-
-        ).strip()
-
-        email = request.POST.get(
-
-            'email_proveedor',
-
-            ''
-
-        ).strip()
-
-        direccion = request.POST.get(
-
-            'direccion_proveedor',
-
-            ''
-
-        ).strip()
-
-        query = Q()
-
-        if nombre:
-
-            query |= Q(
-
-                nombre_proveedor__iexact=nombre
-
-            )
-
-        if telefono:
-
-            query |= Q(
-
-                telefono_proveedor__iexact=telefono
-
-            )
-
-        if email:
-
-            query |= Q(
-
-                email_proveedor__iexact=email
-
-            )
-
-        if direccion:
-
-            query |= Q(
-
-                direccion_proveedor__iexact=direccion
-
-            )
-
-        conflicto = (
-
-            Proveedores.objects.filter(
-
-                query
-
-            ).first()
-
-            if (
-
-                nombre or
-
-                telefono or
-
-                email or
-
-                direccion
-
-            )
-
-            else None
-
-        )
-
-        if conflicto:
-
-            request.session[
-
-                'error_duplicado_id'
-
-            ] = conflicto.pk
-
-            return redirect(
-
-                'gestion_proveedores'
-
-            )
+        form = ProveedorForm(request.POST)
 
         if form.is_valid():
 
-            proveedor = form.save()
+            nombre = form.cleaned_data[
+                'nombre_proveedor'
+            ].strip()
 
-            productos_seleccionados = (
+            telefono = form.cleaned_data[
+                'telefono_proveedor'
+            ].strip()
 
-                form.cleaned_data.get(
+            email = form.cleaned_data[
+                'email_proveedor'
+            ].strip()
 
-                    'productos'
+            direccion = form.cleaned_data[
+                'direccion_proveedor'
+            ].strip()
 
+            proveedor_existente = Proveedores.objects.filter(
+
+                Q(nombre_proveedor__iexact=nombre) |
+
+                Q(telefono_proveedor=telefono) |
+
+                Q(email_proveedor__iexact=email) |
+
+                Q(direccion_proveedor__iexact=direccion)
+
+            ).first()
+
+            if proveedor_existente:
+
+                request.session[
+                    'error_duplicado_id'
+                ] = proveedor_existente.ID_Proveedor
+
+                request.session[
+                    'proveedor_conflicto'
+                ] = (
+                    'Ya existe un proveedor con alguno de los datos ingresados.'
                 )
 
-            )
+                return redirect(
+                    'gestion_proveedores'
+                )
 
-            if productos_seleccionados:
-
-                for prod in productos_seleccionados:
-
-                    ProductosXProveedores.objects.create(
-
-                        ID_Producto=prod,
-
-                        ID_Proveedor=proveedor
-
-                    )
-
-            messages.success(
-
-                request,
-
-                'Proveedor registrado con éxito.'
-
-            )
+            form.save()
 
             return redirect(
-
                 'gestion_proveedores'
-
             )
 
-    return redirect(
+    else:
 
-        'gestion_proveedores'
+        form = ProveedorForm()
 
+    return render(
+        request,
+        'inventario/crear_proveedor.html',
+        {
+            'usuario': usuario,
+            'form': form
+        }
     )
-
 
 
 def editar_proveedor(request, pk):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     proveedor = get_object_or_404(
-
         Proveedores,
-
-        pk=pk
-
+        ID_Proveedor=pk
     )
 
     if request.method == 'POST':
 
-        nombre = request.POST.get(
-
-            'nombre_proveedor',
-
-            ''
-
-        ).strip()
-
-        telefono = request.POST.get(
-
-            'telefono_proveedor',
-
-            ''
-
-        ).strip()
-
-        email = request.POST.get(
-
-            'email_proveedor',
-
-            ''
-
-        ).strip()
-
-        direccion = request.POST.get(
-
-            'direccion_proveedor',
-
-            ''
-
-        ).strip()
-
-        query = Q()
-
-        if nombre:
-
-            query |= Q(
-
-                nombre_proveedor__iexact=nombre
-
-            )
-
-        if telefono:
-
-            query |= Q(
-
-                telefono_proveedor__iexact=telefono
-
-            )
-
-        if email:
-
-            query |= Q(
-
-                email_proveedor__iexact=email
-
-            )
-
-        if direccion:
-
-            query |= Q(
-
-                direccion_proveedor__iexact=direccion
-
-            )
-
-        conflicto = (
-
-            Proveedores.objects
-
-            .filter(query)
-
-            .exclude(pk=pk)
-
-            .first()
-
-            if (
-
-                nombre or
-
-                telefono or
-
-                email or
-
-                direccion
-
-            )
-
-            else None
-
+        form = ProveedorForm(
+            request.POST,
+            instance=proveedor
         )
 
-        if conflicto:
+        if form.is_valid():
 
-            request.session[
+            nombre = form.cleaned_data[
+                'nombre_proveedor'
+            ].strip()
 
-                'error_duplicado_id'
+            telefono = form.cleaned_data[
+                'telefono_proveedor'
+            ].strip()
 
-            ] = conflicto.pk
+            email = form.cleaned_data[
+                'email_proveedor'
+            ].strip()
+
+            direccion = form.cleaned_data[
+                'direccion_proveedor'
+            ].strip()
+
+            proveedor_existente = Proveedores.objects.filter(
+
+                Q(nombre_proveedor__iexact=nombre) |
+
+                Q(telefono_proveedor=telefono) |
+
+                Q(email_proveedor__iexact=email) |
+
+                Q(direccion_proveedor__iexact=direccion)
+
+            ).exclude(
+                ID_Proveedor=pk
+            ).first()
+
+            if proveedor_existente:
+
+                request.session[
+                    'error_duplicado_id'
+                ] = proveedor_existente.ID_Proveedor
+
+                request.session[
+                    'proveedor_conflicto'
+                ] = (
+                    'Ya existe otro proveedor con alguno de los datos ingresados.'
+                )
+
+                return redirect(
+                    'gestion_proveedores'
+                )
+
+            form.save()
 
             return redirect(
-
                 'gestion_proveedores'
-
             )
 
-        proveedor.nombre_proveedor = nombre
+    else:
 
-        proveedor.telefono_proveedor = request.POST.get(
-
-            'telefono_proveedor'
-
+        form = ProveedorForm(
+            instance=proveedor
         )
 
-        proveedor.email_proveedor = email
-
-        proveedor.direccion_proveedor = request.POST.get(
-
-            'direccion_proveedor'
-
-        )
-
-        estado_val = request.POST.get(
-
-            'estado_proveedor'
-
-        )
-
-        proveedor.estado_proveedor = (
-
-            True
-
-            if estado_val in [
-
-                'True',
-
-                'true',
-
-                '1',
-
-                True
-
-            ]
-
-            else False
-
-        )
-
-        proveedor.save(
-
-            update_fields=[
-
-                'nombre_proveedor',
-
-                'telefono_proveedor',
-
-                'email_proveedor',
-
-                'direccion_proveedor',
-
-                'estado_proveedor'
-
-            ]
-
-        )
-
-        messages.success(
-
-            request,
-
-            'Proveedor actualizado correctamente.'
-
-        )
-
-    return redirect(
-
-        'gestion_proveedores'
-
+    return render(
+        request,
+        'inventario/editar_proveedor.html',
+        {
+            'usuario': usuario,
+            'form': form,
+            'proveedor': proveedor
+        }
     )
-
 
 
 def cambiar_estado_proveedor(request, pk):
 
-    if request.method == 'POST':
+    usuario = usuario_es_administrador(request)
 
-        proveedor = get_object_or_404(
+    if not usuario:
+        return redirect('panel_principal')
 
-            Proveedores,
-
-            pk=pk
-
-        )
-
-        estado = request.POST.get(
-
-            'estado'
-
-        )
-
-        if estado == 'inactivo':
-
-            proveedor.estado_proveedor = False
-
-        elif estado == 'activo':
-
-            proveedor.estado_proveedor = True
-
-        proveedor.save(
-
-            update_fields=[
-
-                'estado_proveedor'
-
-            ]
-
-        )
-
-        if proveedor.estado_proveedor:
-
-            messages.success(
-
-                request,
-
-                f'El proveedor {proveedor.nombre_proveedor} '
-
-                f'ha sido activado.'
-
-            )
-
-        else:
-
-            messages.warning(
-
-                request,
-
-                f'El proveedor {proveedor.nombre_proveedor} '
-
-                f'ha sido dado de baja.'
-
-            )
-
-    return redirect(
-
-        'gestion_proveedores'
-
+    proveedor = get_object_or_404(
+        Proveedores,
+        ID_Proveedor=pk
     )
 
+    if request.method == 'POST':
+
+        proveedor.estado_proveedor = (
+            not proveedor.estado_proveedor
+        )
+
+        proveedor.save()
+
+    return redirect(
+        'gestion_proveedores'
+    )
 
 
 # ============================================================
@@ -734,12 +472,23 @@ def cambiar_estado_proveedor(request, pk):
 
 def gestion_tipos_productos(request):
 
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = get_object_or_404(
+        Usuarios.objects.select_related(
+            'ID_Perfil'
+        ),
+        ID_Usuario=usuario_id
+    )
+
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
     tipos = TiposProductos.objects.all()
@@ -747,82 +496,71 @@ def gestion_tipos_productos(request):
     if busqueda:
 
         tipos = tipos.filter(
-
             Nombre_tipo_producto__icontains=busqueda
-
         )
 
     return render(
-
         request,
-
         'inventario/tipos_productos.html',
-
         {
-
             'tipos_productos': tipos,
-
-            'busqueda': busqueda
-
+            'busqueda': busqueda,
+            'usuario': usuario
         }
-
     )
-
 
 
 def crear_tipo_producto(request):
 
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+        return redirect('login')
+
     if request.method == 'POST':
 
         nombre = request.POST.get(
-
             'Nombre_tipo_producto',
-
             ''
-
         ).strip()
 
         if nombre:
 
             TiposProductos.objects.create(
-
                 Nombre_tipo_producto=nombre
-
             )
 
             messages.success(
-
                 request,
-
                 'Tipo de producto registrado correctamente.'
-
             )
 
     return redirect(
-
         'gestion_tipos_productos'
-
     )
 
 
 def editar_tipo_producto(request, pk):
 
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+        return redirect('login')
+
     tipo = get_object_or_404(
-
         TiposProductos,
-
         pk=pk
-
     )
 
     if request.method == 'POST':
 
         nombre = request.POST.get(
-
             'Nombre_tipo_producto',
-
             ''
-
         ).strip()
 
         if nombre:
@@ -832,28 +570,27 @@ def editar_tipo_producto(request, pk):
             tipo.save()
 
             messages.success(
-
                 request,
-
                 'Tipo de producto actualizado correctamente.'
-
             )
 
     return redirect(
-
         'gestion_tipos_productos'
-
     )
 
 
 def dar_baja_tipo_producto(request, pk):
 
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+        return redirect('login')
+
     tipo = get_object_or_404(
-
         TiposProductos,
-
         pk=pk
-
     )
 
     if request.method == 'POST':
@@ -863,17 +600,12 @@ def dar_baja_tipo_producto(request, pk):
         tipo.save()
 
         messages.success(
-
             request,
-
             'Tipo de producto dado de baja correctamente.'
-
         )
 
     return redirect(
-
         'gestion_tipos_productos'
-
     )
 
 
@@ -883,12 +615,14 @@ def dar_baja_tipo_producto(request, pk):
 
 def gestion_agroquimicos(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
     agroquimicos = Agroquimicos.objects.all()
@@ -904,113 +638,86 @@ def gestion_agroquimicos(request):
         )
 
     return render(
-
         request,
-
         'inventario/agroquimicos.html',
-
         {
-
             'agroquimicos': agroquimicos,
-
-            'busqueda': busqueda
-
+            'busqueda': busqueda,
+            'usuario': usuario
         }
-
     )
-
 
 
 def crear_agroquimico(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
         nombre = request.POST.get(
-
             'Nombre_agroquimico',
-
             ''
-
         ).strip()
 
         descripcion = request.POST.get(
-
             'Descripcion_agroquimico',
-
             ''
-
         ).strip()
 
         if nombre:
 
             Agroquimicos.objects.create(
-
                 Nombre_agroquimico=nombre,
-
                 Descripcion_agroquimico=descripcion
-
             )
 
             messages.success(
-
                 request,
-
                 'Agroquímico registrado correctamente.'
-
             )
 
     return redirect(
-
         'gestion_agroquimicos'
-
     )
-
 
 
 def editar_agroquimico(request, pk):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     agroquimico = get_object_or_404(
-
         Agroquimicos,
-
         pk=pk
-
     )
 
     if request.method == 'POST':
 
         agroquimico.Nombre_agroquimico = request.POST.get(
-
             'Nombre_agroquimico',
-
             ''
-
         ).strip()
 
         agroquimico.Descripcion_agroquimico = request.POST.get(
-
             'Descripcion_agroquimico',
-
             ''
-
         ).strip()
 
         agroquimico.save()
 
         messages.success(
-
             request,
-
             'Agroquímico actualizado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_agroquimicos'
-
     )
-
 
 
 # ============================================================
@@ -1019,18 +726,18 @@ def editar_agroquimico(request, pk):
 
 def gestion_usuarios(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
     usuarios = Usuarios.objects.select_related(
-
         'ID_Perfil'
-
     ).all()
 
     if busqueda:
@@ -1050,37 +757,25 @@ def gestion_usuarios(request):
         if busqueda.isdigit():
 
             filtros |= Q(
-
                 DNI=int(busqueda)
-
             )
 
         usuarios = usuarios.filter(
-
             filtros
-
         )
 
     perfiles = Perfiles.objects.all()
 
     return render(
-
         request,
-
         'inventario/usuarios.html',
-
         {
-
             'usuarios': usuarios,
-
             'perfiles': perfiles,
-
-            'busqueda': busqueda
-
+            'busqueda': busqueda,
+            'usuario': usuario
         }
-
     )
-
 
 
 # ============================================================
@@ -1089,132 +784,92 @@ def gestion_usuarios(request):
 
 def crear_usuario(request):
 
+    usuario_admin = usuario_es_administrador(request)
+
+    if not usuario_admin:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
         perfil_id = request.POST.get(
-
             'ID_Perfil'
-
         )
 
         perfil = get_object_or_404(
-
             Perfiles,
-
             pk=perfil_id
-
         )
 
         dni = request.POST.get(
-
             'DNI',
-
             ''
-
         ).strip()
 
         apellido = request.POST.get(
-
             'Apellido_usuario',
-
             ''
-
         ).strip()
 
         nombre = request.POST.get(
-
             'Nombre_usuario',
-
             ''
-
         ).strip()
 
         email = request.POST.get(
-
             'Email_usuario',
-
             ''
-
         ).strip()
 
         contrasena = request.POST.get(
-
             'Contrasena',
-
             ''
-
         ).strip()
-
-        # Validar contraseña
 
         if len(contrasena) < 8:
 
             messages.error(
-
                 request,
-
                 'La contraseña debe tener al menos 8 caracteres.'
-
             )
 
             return redirect(
-
                 'gestion_usuarios'
-
             )
-
-        # Validar nombre
 
         if not nombre:
 
             messages.error(
-
                 request,
-
                 'Debe ingresar el nombre del usuario.'
-
             )
 
             return redirect(
-
                 'gestion_usuarios'
-
             )
-
-        # Validar apellido
 
         if not apellido:
 
             messages.error(
-
                 request,
-
                 'Debe ingresar el apellido del usuario.'
-
             )
 
             return redirect(
-
                 'gestion_usuarios'
-
             )
-
-        # Generar usuario automáticamente
 
         apellido_sin_tildes = ''.join(
 
             caracter
 
             for caracter in unicodedata.normalize(
-
                 'NFD',
-
                 apellido
-
             )
 
-            if unicodedata.category(caracter) != 'Mn'
-
+            if unicodedata.category(
+                caracter
+            ) != 'Mn'
         )
 
         nombre_sin_tildes = ''.join(
@@ -1222,15 +877,13 @@ def crear_usuario(request):
             caracter
 
             for caracter in unicodedata.normalize(
-
                 'NFD',
-
                 nombre
-
             )
 
-            if unicodedata.category(caracter) != 'Mn'
-
+            if unicodedata.category(
+                caracter
+            ) != 'Mn'
         )
 
         usuario_generado = (
@@ -1241,29 +894,18 @@ def crear_usuario(request):
 
         ).lower()
 
-        # Verificar usuario existente
-
         if Usuarios.objects.filter(
-
             Usuario=usuario_generado
-
         ).exists():
 
             messages.error(
-
                 request,
-
                 f'El usuario {usuario_generado} ya existe.'
-
             )
 
             return redirect(
-
                 'gestion_usuarios'
-
             )
-
-        # Crear usuario
 
         usuario = Usuarios.objects.create(
 
@@ -1278,9 +920,7 @@ def crear_usuario(request):
             Usuario=usuario_generado,
 
             Contrasena=make_password(
-
                 contrasena
-
             ),
 
             Email_usuario=email,
@@ -1306,11 +946,8 @@ def crear_usuario(request):
         )
 
     return redirect(
-
         'gestion_usuarios'
-
     )
-
 
 
 # ============================================================
@@ -1319,46 +956,36 @@ def crear_usuario(request):
 
 def editar_usuario(request, pk):
 
+    usuario_admin = usuario_es_administrador(request)
+
+    if not usuario_admin:
+        return redirect('panel_principal')
+
     usuario = get_object_or_404(
-
         Usuarios,
-
         ID_Usuario=pk
-
     )
 
     if request.method == 'POST':
 
         nuevo_email = request.POST.get(
-
             'Email_usuario',
-
             ''
-
         ).strip()
 
         if not nuevo_email:
 
             messages.error(
-
                 request,
-
                 'El correo electrónico es obligatorio.'
-
             )
 
             return render(
-
                 request,
-
                 'inventario/editar_usuario.html',
-
                 {
-
                     'usuario': usuario
-
                 }
-
             )
 
         usuario.Email_usuario = nuevo_email
@@ -1366,35 +993,22 @@ def editar_usuario(request, pk):
         usuario.save()
 
         messages.success(
-
             request,
-
             f'El usuario {usuario.Usuario} '
-
             f'ha sido modificado correctamente.'
-
         )
 
         return redirect(
-
             'gestion_usuarios'
-
         )
 
     return render(
-
         request,
-
         'inventario/editar_usuario.html',
-
         {
-
             'usuario': usuario
-
         }
-
     )
-
 
 
 # ============================================================
@@ -1403,12 +1017,14 @@ def editar_usuario(request, pk):
 
 def dar_baja_usuario(request, pk):
 
+    usuario_admin = usuario_es_administrador(request)
+
+    if not usuario_admin:
+        return redirect('panel_principal')
+
     usuario = get_object_or_404(
-
         Usuarios,
-
         ID_Usuario=pk
-
     )
 
     if request.method == 'POST':
@@ -1420,27 +1036,31 @@ def dar_baja_usuario(request, pk):
         usuario.save()
 
         messages.success(
-
             request,
-
             'Usuario dado de baja correctamente.'
-
         )
 
     return redirect(
-
         'gestion_usuarios'
-
     )
 
+
 def activar_usuario(request, id):
+
+    usuario_admin = usuario_es_administrador(request)
+
+    if not usuario_admin:
+        return redirect('panel_principal')
+
     usuario = get_object_or_404(
         Usuarios,
         ID_Usuario=id
     )
 
     usuario.Estado_usuario = True
+
     usuario.Fecha_Baja = None
+
     usuario.save()
 
     messages.success(
@@ -1448,7 +1068,10 @@ def activar_usuario(request, id):
         f'El usuario {usuario.Usuario} fue activado correctamente.'
     )
 
-    return redirect('gestion_usuarios')
+    return redirect(
+        'gestion_usuarios'
+    )
+
 
 # ============================================================
 # RESTABLECER CONTRASEÑA
@@ -1456,84 +1079,60 @@ def activar_usuario(request, id):
 
 def restablecer_contrasena(request, pk):
 
+    usuario_admin = usuario_es_administrador(request)
+
+    if not usuario_admin:
+        return redirect('panel_principal')
+
     usuario = get_object_or_404(
-
         Usuarios,
-
         ID_Usuario=pk
-
     )
 
     if request.method == 'POST':
 
         nueva_contrasena = request.POST.get(
-
             'nueva_contrasena',
-
             ''
-
         )
 
         confirmar_contrasena = request.POST.get(
-
             'confirmar_contrasena',
-
             ''
-
         )
 
         if nueva_contrasena != confirmar_contrasena:
 
             messages.error(
-
                 request,
-
                 'Las contraseñas no coinciden.'
-
             )
 
             return render(
-
                 request,
-
                 'inventario/restablecer_contrasena.html',
-
                 {
-
                     'usuario': usuario
-
                 }
-
             )
 
         if len(nueva_contrasena) < 8:
 
             messages.error(
-
                 request,
-
                 'La contraseña debe tener al menos 8 caracteres.'
-
             )
 
             return render(
-
                 request,
-
                 'inventario/restablecer_contrasena.html',
-
                 {
-
                     'usuario': usuario
-
                 }
-
             )
 
         usuario.Contrasena = make_password(
-
             nueva_contrasena
-
         )
 
         usuario.Cambiar_contrasena = True
@@ -1541,35 +1140,22 @@ def restablecer_contrasena(request, pk):
         usuario.save()
 
         messages.success(
-
             request,
-
             f'La contraseña del usuario {usuario.Usuario} '
-
             'fue restablecida correctamente. '
-
             'Deberá cambiarla en el próximo inicio de sesión.'
-
         )
 
         return redirect(
-
             'gestion_usuarios'
-
         )
 
     return render(
-
         request,
-
         'inventario/restablecer_contrasena.html',
-
         {
-
             'usuario': usuario
-
         }
-
     )
 
 
@@ -1579,10 +1165,15 @@ def restablecer_contrasena(request, pk):
 
 def cambiar_contrasena(request):
 
-    usuario_id = request.session.get('usuario_id')
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
 
     if not usuario_id:
-        return redirect('login')
+
+        return redirect(
+            'login'
+        )
 
     usuario = get_object_or_404(
         Usuarios,
@@ -1602,20 +1193,24 @@ def cambiar_contrasena(request):
         )
 
         if nueva_contrasena != confirmar_contrasena:
+
             messages.error(
                 request,
                 'Las contraseñas no coinciden.'
             )
+
             return render(
                 request,
                 'inventario/cambiar_contrasena.html'
             )
 
         if len(nueva_contrasena) < 8:
+
             messages.error(
                 request,
                 'La contraseña debe tener al menos 8 caracteres.'
             )
+
             return render(
                 request,
                 'inventario/cambiar_contrasena.html'
@@ -1634,12 +1229,15 @@ def cambiar_contrasena(request):
             'Contraseña cambiada correctamente.'
         )
 
-        return redirect('panel_principal')
+        return redirect(
+            'panel_principal'
+        )
 
     return render(
         request,
         'inventario/cambiar_contrasena.html'
     )
+
 
 # ============================================================
 # GESTIÓN DE PERFILES
@@ -1647,324 +1245,232 @@ def cambiar_contrasena(request):
 
 def gestion_perfiles(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
     perfiles = Perfiles.objects.prefetch_related(
-
         'permisos'
-
     ).all()
 
     if busqueda:
 
         perfiles = perfiles.filter(
-
             Nombre_perfil__icontains=busqueda
-
         )
 
     permisos = Permisos.objects.all()
 
     return render(
-
         request,
-
         'inventario/perfiles.html',
-
         {
-
             'perfiles': perfiles,
-
             'permisos': permisos,
-
-            'busqueda': busqueda
-
+            'busqueda': busqueda,
+            'usuario': usuario
         }
-
     )
-
 
 
 def crear_perfil(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
         nombre_perfil = request.POST.get(
-
             'Nombre_perfil',
-
             ''
-
         ).strip()
 
         if not nombre_perfil:
 
             messages.error(
-
                 request,
-
                 'Debe ingresar el nombre del perfil.'
-
             )
 
             return redirect(
-
                 'gestion_perfiles'
-
             )
 
         perfil_existente = Perfiles.objects.filter(
-
             Nombre_perfil__iexact=nombre_perfil
-
         ).exists()
 
         if perfil_existente:
 
             messages.error(
-
                 request,
-
                 'Ya existe un perfil con ese nombre.'
-
             )
 
             return redirect(
-
                 'gestion_perfiles'
-
             )
 
         perfil = Perfiles.objects.create(
-
             Nombre_perfil=nombre_perfil
-
         )
 
         permisos_ids = request.POST.getlist(
-
             'permisos'
-
         )
 
         for permiso_id in permisos_ids:
 
             permiso = get_object_or_404(
-
                 Permisos,
-
                 ID_Permiso=permiso_id
-
             )
 
             PerfilesXPermisos.objects.create(
-
                 ID_Perfil=perfil,
-
                 ID_Permiso=permiso
-
             )
 
         messages.success(
-
             request,
-
             'Perfil creado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_perfiles'
-
     )
-
 
 
 def editar_perfil(request, pk):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     perfil = get_object_or_404(
-
         Perfiles,
-
         ID_Perfil=pk
-
     )
 
     if request.method == 'POST':
 
         nombre_perfil = request.POST.get(
-
             'Nombre_perfil',
-
             ''
-
         ).strip()
 
         if not nombre_perfil:
 
             messages.error(
-
                 request,
-
                 'Debe ingresar el nombre del perfil.'
-
             )
 
             return redirect(
-
                 'gestion_perfiles'
-
             )
 
         perfil_existente = Perfiles.objects.filter(
-
             Nombre_perfil__iexact=nombre_perfil
-
         ).exclude(
-
             ID_Perfil=pk
-
         ).exists()
 
         if perfil_existente:
 
             messages.error(
-
                 request,
-
                 'Ya existe otro perfil con ese nombre.'
-
             )
 
             return redirect(
-
                 'gestion_perfiles'
-
             )
 
         perfil.Nombre_perfil = nombre_perfil
 
         perfil.save()
 
-        # Eliminar permisos anteriores
-
         PerfilesXPermisos.objects.filter(
-
             ID_Perfil=perfil
-
         ).delete()
 
-        # Obtener permisos nuevos
-
         permisos_ids = request.POST.getlist(
-
             'permisos'
-
         )
-
-        # Guardar permisos
 
         for permiso_id in permisos_ids:
 
             permiso = get_object_or_404(
-
                 Permisos,
-
                 ID_Permiso=permiso_id
-
             )
 
             PerfilesXPermisos.objects.create(
-
                 ID_Perfil=perfil,
-
                 ID_Permiso=permiso
-
             )
 
         messages.success(
-
             request,
-
             'Perfil actualizado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_perfiles'
-
     )
 
 
+def cambiar_estado_perfil(request, id):
 
-def eliminar_perfil(request, pk):
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
 
     perfil = get_object_or_404(
-
         Perfiles,
-
-        ID_Perfil=pk
-
+        ID_Perfil=id
     )
 
     if request.method == 'POST':
 
-        # Verificar si está siendo utilizado
-
-        if Usuarios.objects.filter(
-
-            ID_Perfil=perfil
-
-        ).exists():
-
-            messages.error(
-
-                request,
-
-                'No se puede eliminar el perfil porque está siendo utilizado por un usuario.'
-
-            )
-
-            return redirect(
-
-                'gestion_perfiles'
-
-            )
-
-        # Eliminar relaciones
-
-        PerfilesXPermisos.objects.filter(
-
-            ID_Perfil=perfil
-
-        ).delete()
-
-        # Eliminar perfil
-
-        perfil.delete()
-
-        messages.success(
-
-            request,
-
-            'Perfil eliminado correctamente.'
-
+        perfil.Estado_perfil = (
+            not perfil.Estado_perfil
         )
 
+        perfil.save(
+            update_fields=[
+                'Estado_perfil'
+            ]
+        )
+
+        if perfil.Estado_perfil:
+
+            messages.success(
+                request,
+                f'El perfil "{perfil.Nombre_perfil}" fue activado correctamente.'
+            )
+
+        else:
+
+            messages.success(
+                request,
+                f'El perfil "{perfil.Nombre_perfil}" fue dado de baja correctamente.'
+            )
+
     return redirect(
-
         'gestion_perfiles'
-
     )
-
 
 
 # ============================================================
@@ -1973,96 +1479,70 @@ def eliminar_perfil(request, pk):
 
 def gestion_permisos(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
         nombre_permiso = request.POST.get(
-
             'Nombre_permiso',
-
             ''
-
         ).strip()
 
         descripcion_permiso = request.POST.get(
-
             'Descripcion_permiso',
-
             ''
-
         ).strip()
 
         if not nombre_permiso:
 
             messages.error(
-
                 request,
-
                 'Debe ingresar el nombre del permiso.'
-
             )
 
             return redirect(
-
                 'gestion_permisos'
-
             )
 
         permiso_existente = Permisos.objects.filter(
-
             Nombre_permiso__iexact=nombre_permiso
-
         ).exists()
 
         if permiso_existente:
 
             messages.error(
-
                 request,
-
                 'Ya existe un permiso con ese nombre.'
-
             )
 
             return redirect(
-
                 'gestion_permisos'
-
             )
 
         Permisos.objects.create(
-
             Nombre_permiso=nombre_permiso,
-
             Descripcion_permiso=descripcion_permiso
-
         )
 
         messages.success(
-
             request,
-
             'Permiso creado correctamente.'
-
         )
 
         return redirect(
-
             'gestion_permisos'
-
         )
 
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
     permisos = Permisos.objects.prefetch_related(
-
         'perfiles'
-
     ).all()
 
     if busqueda:
@@ -2076,181 +1556,126 @@ def gestion_permisos(request):
         )
 
     return render(
-
         request,
-
         'inventario/permisos.html',
-
         {
-
             'permisos': permisos,
-
-            'busqueda': busqueda
-
+            'busqueda': busqueda,
+            'usuario': usuario
         }
-
     )
 
-
-
-# ============================================================
-# CREAR PERMISO
-# ============================================================
 
 def crear_permiso(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
         nombre_permiso = request.POST.get(
-
             'Nombre_permiso',
-
             ''
-
         ).strip()
 
         descripcion_permiso = request.POST.get(
-
             'Descripcion_permiso',
-
             ''
-
         ).strip()
 
         if not nombre_permiso:
 
             messages.error(
-
                 request,
-
                 'Debe ingresar el nombre del permiso.'
-
             )
 
             return redirect(
-
                 'gestion_permisos'
-
             )
 
         permiso_existente = Permisos.objects.filter(
-
             Nombre_permiso__iexact=nombre_permiso
-
         ).exists()
 
         if permiso_existente:
 
             messages.error(
-
                 request,
-
                 'Ya existe un permiso con ese nombre.'
-
             )
 
             return redirect(
-
                 'gestion_permisos'
-
             )
 
         Permisos.objects.create(
-
             Nombre_permiso=nombre_permiso,
-
             Descripcion_permiso=descripcion_permiso
-
         )
 
         messages.success(
-
             request,
-
             'Permiso creado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_permisos'
-
     )
 
 
-
-# ============================================================
-# EDITAR PERMISO
-# ============================================================
-
 def editar_permiso(request, pk):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     permiso = get_object_or_404(
-
         Permisos,
-
         ID_Permiso=pk
-
     )
 
     if request.method == 'POST':
 
         nombre_permiso = request.POST.get(
-
             'Nombre_permiso',
-
             ''
-
         ).strip()
 
         descripcion_permiso = request.POST.get(
-
             'Descripcion_permiso',
-
             ''
-
         ).strip()
 
         if not nombre_permiso:
 
             messages.error(
-
                 request,
-
                 'Debe ingresar el nombre del permiso.'
-
             )
 
             return redirect(
-
                 'gestion_permisos'
-
             )
 
         permiso_existente = Permisos.objects.filter(
-
             Nombre_permiso__iexact=nombre_permiso
-
         ).exclude(
-
             ID_Permiso=pk
-
         ).exists()
 
         if permiso_existente:
 
             messages.error(
-
                 request,
-
                 'Ya existe otro permiso con ese nombre.'
-
             )
 
             return redirect(
-
                 'gestion_permisos'
-
             )
 
         permiso.Nombre_permiso = nombre_permiso
@@ -2260,67 +1685,46 @@ def editar_permiso(request, pk):
         permiso.save()
 
         messages.success(
-
             request,
-
             'Permiso modificado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_permisos'
-
     )
 
 
-
-# ============================================================
-# ELIMINAR PERMISO
-# ============================================================
-
 def eliminar_permiso(request, pk):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     permiso = get_object_or_404(
-
         Permisos,
-
         ID_Permiso=pk
-
     )
 
     if request.method == 'POST':
 
         nombre_permiso = permiso.Nombre_permiso
 
-        # Quitar el permiso de todos los perfiles
-
         PerfilesXPermisos.objects.filter(
-
             ID_Permiso=permiso
-
         ).delete()
-
-        # Eliminar permiso
 
         permiso.delete()
 
         messages.success(
-
             request,
-
             f'El permiso "{nombre_permiso}" '
-
             f'fue eliminado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_permisos'
-
     )
-
 
 
 # ============================================================
@@ -2330,57 +1734,41 @@ def eliminar_permiso(request, pk):
 def mis_permisos(request):
 
     usuario_id = request.session.get(
-
         'usuario_id'
-
     )
 
     if not usuario_id:
 
         return redirect(
-
             'login'
-
         )
 
     usuario = get_object_or_404(
-
         Usuarios.objects.select_related(
-
             'ID_Perfil'
-
         ),
-
         ID_Usuario=usuario_id
-
     )
+
+    if not usuario.ID_Perfil:
+        return redirect('panel_principal')
 
     if usuario.ID_Perfil.Nombre_perfil != 'Vendedor':
 
         return redirect(
-
             'panel_principal'
-
         )
 
     permisos = usuario.ID_Perfil.permisos.all()
 
     return render(
-
         request,
-
         'inventario/mis_permisos.html',
-
         {
-
             'usuario': usuario,
-
             'permisos': permisos,
-
         }
-
     )
-
 
 
 # ============================================================
@@ -2389,12 +1777,14 @@ def mis_permisos(request):
 
 def gestion_tipos_movimientos(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
     tipos = TiposMovimientos.objects.all()
@@ -2402,101 +1792,79 @@ def gestion_tipos_movimientos(request):
     if busqueda:
 
         tipos = tipos.filter(
-
             Nombre_tipo_movimiento__icontains=busqueda
-
         )
 
     return render(
-
         request,
-
         'inventario/tipos_movimientos.html',
-
         {
-
             'tipos_movimientos': tipos,
-
-            'busqueda': busqueda
-
+            'busqueda': busqueda,
+            'usuario': usuario
         }
-
     )
-
 
 
 def crear_tipo_movimiento(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
         nombre = request.POST.get(
-
             'Nombre_tipo_movimiento',
-
             ''
-
         ).strip()
 
         if nombre:
 
             TiposMovimientos.objects.create(
-
                 Nombre_tipo_movimiento=nombre
-
             )
 
             messages.success(
-
                 request,
-
                 'Tipo de movimiento registrado correctamente.'
-
             )
 
     return redirect(
-
         'gestion_tipos_movimientos'
-
     )
-
 
 
 def editar_tipo_movimiento(request, pk):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     tipo = get_object_or_404(
-
         TiposMovimientos,
-
         pk=pk
-
     )
 
     if request.method == 'POST':
 
         tipo.Nombre_tipo_movimiento = request.POST.get(
-
             'Nombre_tipo_movimiento',
-
             ''
-
         ).strip()
 
         tipo.save()
 
         messages.success(
-
             request,
-
             'Tipo de movimiento actualizado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_tipos_movimientos'
-
     )
-
 
 
 # ============================================================
@@ -2510,6 +1878,7 @@ def gestion_productos(request):
     )
 
     if not usuario_id:
+
         return redirect(
             'login'
         )
@@ -2540,12 +1909,17 @@ def gestion_productos(request):
     ).all()
 
     if busqueda:
+
         productos = productos.filter(
+
             Q(Nombre_producto__icontains=busqueda) |
+
             Q(Descripcion_producto__icontains=busqueda)
+
         )
 
     if tipo_id:
+
         productos = productos.filter(
             ID_Tipo_producto_id=tipo_id
         )
@@ -2572,23 +1946,25 @@ def gestion_productos(request):
     )
 
 
-
 def crear_producto(request):
+
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+
+        return redirect('login')
 
     if request.method == 'POST':
 
         tipo_id = request.POST.get(
-
             'ID_Tipo_producto'
-
         )
 
         tipo = get_object_or_404(
-
             TiposProductos,
-
             pk=tipo_id
-
         )
 
         producto = Productos.objects.create(
@@ -2596,53 +1972,32 @@ def crear_producto(request):
             ID_Tipo_producto=tipo,
 
             Nombre_producto=request.POST.get(
-
                 'Nombre_producto',
-
                 ''
-
             ).strip(),
 
             Descripcion_producto=request.POST.get(
-
                 'Descripcion_producto',
-
                 ''
-
             ).strip(),
 
             Fecha_vencimiento=request.POST.get(
-
                 'Fecha_vencimiento'
-
             ) or None,
 
             Precio=request.POST.get(
-
                 'Precio'
-
             ),
 
             Estado_producto=request.POST.get(
-
                 'Estado_producto',
-
                 'Disponible'
-
             )
 
         )
 
-        # ==========================================
-
-        # AGROQUÍMICOS
-
-        # ==========================================
-
         agroquimicos_ids = request.POST.getlist(
-
             'agroquimicos'
-
         )
 
         for agro_id in agroquimicos_ids:
@@ -2650,31 +2005,17 @@ def crear_producto(request):
             if agro_id:
 
                 agro = get_object_or_404(
-
                     Agroquimicos,
-
                     pk=agro_id
-
                 )
 
                 ProductosXAgroquimicos.objects.get_or_create(
-
                     ID_Producto=producto,
-
                     ID_Agroquimico=agro
-
                 )
 
-        # ==========================================
-
-        # PROVEEDORES
-
-        # ==========================================
-
         proveedores_ids = request.POST.getlist(
-
             'proveedores'
-
         )
 
         for proveedor_id in proveedores_ids:
@@ -2682,123 +2023,82 @@ def crear_producto(request):
             if proveedor_id:
 
                 proveedor = get_object_or_404(
-
                     Proveedores,
-
                     pk=proveedor_id
-
                 )
 
                 ProductosXProveedores.objects.get_or_create(
-
                     ID_Producto=producto,
-
                     ID_Proveedor=proveedor
-
                 )
 
         messages.success(
-
             request,
-
             'Producto registrado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_productos'
-
     )
-
 
 
 def editar_producto(request, pk):
 
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+
+        return redirect('login')
+
     producto = get_object_or_404(
-
         Productos,
-
         pk=pk
-
     )
 
     if request.method == 'POST':
 
-        # ==========================================
-
-        # DATOS DEL PRODUCTO
-
-        # ==========================================
-
         tipo_id = request.POST.get(
-
             'ID_Tipo_producto'
-
         )
 
         producto.ID_Tipo_producto = get_object_or_404(
-
             TiposProductos,
-
             pk=tipo_id
-
         )
 
         producto.Nombre_producto = request.POST.get(
-
             'Nombre_producto',
-
             ''
-
         ).strip()
 
         producto.Descripcion_producto = request.POST.get(
-
             'Descripcion_producto',
-
             ''
-
         ).strip()
 
         producto.Fecha_vencimiento = request.POST.get(
-
             'Fecha_vencimiento'
-
         ) or None
 
         producto.Precio = request.POST.get(
-
             'Precio'
-
         )
 
         producto.Estado_producto = request.POST.get(
-
             'Estado_producto',
-
             'Disponible'
-
         )
 
         producto.save()
 
-        # ==========================================
-
-        # ACTUALIZAR AGROQUÍMICOS
-
-        # ==========================================
-
         ProductosXAgroquimicos.objects.filter(
-
             ID_Producto=producto
-
         ).delete()
 
         agroquimicos_ids = request.POST.getlist(
-
             'agroquimicos'
-
         )
 
         for agro_id in agroquimicos_ids:
@@ -2806,29 +2106,16 @@ def editar_producto(request, pk):
             if agro_id:
 
                 ProductosXAgroquimicos.objects.create(
-
                     ID_Producto=producto,
-
                     ID_Agroquimico_id=agro_id
-
                 )
 
-        # ==========================================
-
-        # ACTUALIZAR PROVEEDORES
-
-        # ==========================================
-
         ProductosXProveedores.objects.filter(
-
             ID_Producto=producto
-
         ).delete()
 
         proveedores_ids = request.POST.getlist(
-
             'proveedores'
-
         )
 
         for proveedor_id in proveedores_ids:
@@ -2836,37 +2123,33 @@ def editar_producto(request, pk):
             if proveedor_id:
 
                 ProductosXProveedores.objects.create(
-
                     ID_Producto=producto,
-
                     ID_Proveedor_id=proveedor_id
-
                 )
 
         messages.success(
-
             request,
-
             'Producto actualizado correctamente.'
-
         )
 
     return redirect(
-
         'gestion_productos'
-
     )
-
 
 
 def dar_baja_producto(request, pk):
 
+    usuario_id = request.session.get(
+        'usuario_id'
+    )
+
+    if not usuario_id:
+
+        return redirect('login')
+
     producto = get_object_or_404(
-
         Productos,
-
         pk=pk
-
     )
 
     if request.method == 'POST':
@@ -2876,19 +2159,13 @@ def dar_baja_producto(request, pk):
         producto.save()
 
         messages.success(
-
             request,
-
             'Producto dado de baja correctamente.'
-
         )
 
     return redirect(
-
         'gestion_productos'
-
     )
-
 
 
 # ============================================================
@@ -2897,28 +2174,24 @@ def dar_baja_producto(request, pk):
 
 def gestion_productos_proveedores(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     relaciones = ProductosXProveedores.objects.select_related(
-
         'ID_Producto',
-
         'ID_Proveedor'
-
     ).all()
 
     return render(
-
         request,
-
         'inventario/productos_proveedores.html',
-
         {
-
-            'relaciones': relaciones
-
+            'relaciones': relaciones,
+            'usuario': usuario
         }
-
     )
-
 
 
 # ============================================================
@@ -2927,90 +2200,70 @@ def gestion_productos_proveedores(request):
 
 def gestion_stock(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     busqueda = request.GET.get(
-
         'q',
-
         ''
-
     ).strip()
 
     stock = Stock.objects.select_related(
-
         'ID_Producto'
-
     ).all()
 
     if busqueda:
 
         stock = stock.filter(
-
             ID_Producto__Nombre_producto__icontains=busqueda
-
         )
 
     productos = Productos.objects.all()
 
     return render(
-
         request,
-
         'inventario/stock.html',
-
         {
-
             'stock': stock,
-
             'productos': productos,
-
-            'busqueda': busqueda
-
+            'busqueda': busqueda,
+            'usuario': usuario
         }
-
     )
-
 
 
 def crear_stock(request):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
         producto_id = request.POST.get(
-
             'ID_Producto'
-
         )
 
         producto = get_object_or_404(
-
             Productos,
-
             pk=producto_id
-
         )
 
         cantidad_stock = int(
-
             request.POST.get(
-
                 'Cantidad_stock',
-
                 0
-
             )
-
         )
 
         stock_minimo = int(
-
             request.POST.get(
-
                 'Stock_minimo',
-
                 0
-
             )
-
         )
 
         stock = Stock.objects.create(
@@ -3050,21 +2303,20 @@ def crear_stock(request):
         )
 
     return redirect(
-
         'gestion_stock'
-
     )
-
 
 
 def editar_stock(request, pk):
 
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
     stock = get_object_or_404(
-
         Stock,
-
         pk=pk
-
     )
 
     if request.method == 'POST':
@@ -3072,34 +2324,26 @@ def editar_stock(request, pk):
         cantidad_anterior = stock.Cantidad_stock
 
         stock.Cantidad_stock = int(
-
             request.POST.get(
-
                 'Cantidad_stock',
-
                 0
-
             )
-
         )
 
         stock.Stock_minimo = int(
-
             request.POST.get(
-
                 'Stock_minimo',
-
                 0
-
             )
-
         )
 
         stock.save()
 
         if (
 
-            cantidad_anterior > stock.Stock_minimo and
+            cantidad_anterior > stock.Stock_minimo
+
+            and
 
             stock.Cantidad_stock <= stock.Stock_minimo
 
@@ -3132,11 +2376,8 @@ def editar_stock(request, pk):
         )
 
     return redirect(
-
         'gestion_stock'
-
     )
-
 
 
 # ============================================================
@@ -3144,6 +2385,11 @@ def editar_stock(request, pk):
 # ============================================================
 
 def gestion_movimientos_stock(request):
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
 
     movimientos = MovimientosStock.objects.select_related(
 
@@ -3166,149 +2412,102 @@ def gestion_movimientos_stock(request):
     tipos_movimientos = TiposMovimientos.objects.all()
 
     stock = Stock.objects.select_related(
-
         'ID_Producto'
-
     ).all()
 
     return render(
-
         request,
-
         'inventario/movimientos_stock.html',
-
         {
-
             'movimientos': movimientos,
-
             'usuarios': usuarios,
-
             'tipos_movimientos': tipos_movimientos,
-
-            'stock': stock
-
+            'stock': stock,
+            'usuario': usuario
         }
-
     )
-
 
 
 def crear_movimiento_stock(request):
 
+    usuario_admin = usuario_es_administrador(request)
+
+    if not usuario_admin:
+        return redirect('panel_principal')
+
     if request.method == 'POST':
 
         usuario = get_object_or_404(
-
             Usuarios,
-
             pk=request.POST.get(
-
                 'ID_Usuario'
-
             )
-
         )
 
         tipo_movimiento = get_object_or_404(
-
             TiposMovimientos,
-
             pk=request.POST.get(
-
                 'ID_Tipo_movimiento'
-
             )
-
         )
 
         stock = get_object_or_404(
-
             Stock,
-
             pk=request.POST.get(
-
                 'ID_Stock'
-
             )
-
         )
 
         cantidad = int(
-
             request.POST.get(
-
                 'Cantidad',
-
                 0
-
             )
-
         )
 
         if cantidad <= 0:
 
             messages.error(
-
                 request,
-
                 'La cantidad debe ser mayor a cero.'
-
             )
 
             return redirect(
-
                 'gestion_movimientos_stock'
-
             )
 
         cantidad_anterior = stock.Cantidad_stock
 
         nombre_movimiento = (
-
             tipo_movimiento.Nombre_tipo_movimiento.lower()
-
         )
-
-        # SALIDA POR VENTA
 
         if nombre_movimiento == 'salida por venta':
 
             if cantidad > stock.Cantidad_stock:
 
                 messages.error(
-
                     request,
-
                     'No hay suficiente stock disponible.'
-
                 )
 
                 return redirect(
-
                     'gestion_movimientos_stock'
-
                 )
 
             stock.Cantidad_stock -= cantidad
-
-        # SALIDA POR VENCIMIENTO
 
         elif nombre_movimiento == 'salida por vencimiento':
 
             if cantidad > stock.Cantidad_stock:
 
                 messages.error(
-
                     request,
-
                     'No hay suficiente stock disponible.'
-
                 )
 
                 return redirect(
-
                     'gestion_movimientos_stock'
-
                 )
 
             stock.Cantidad_stock -= cantidad
@@ -3316,17 +2515,12 @@ def crear_movimiento_stock(request):
         else:
 
             messages.error(
-
                 request,
-
                 'El tipo de movimiento no es válido.'
-
             )
 
             return redirect(
-
                 'gestion_movimientos_stock'
-
             )
 
         stock.save()
@@ -3343,11 +2537,11 @@ def crear_movimiento_stock(request):
 
         )
 
-        # GENERAR ALERTA DE STOCK MÍNIMO
-
         if (
 
-            cantidad_anterior > stock.Stock_minimo and
+            cantidad_anterior > stock.Stock_minimo
+
+            and
 
             stock.Cantidad_stock <= stock.Stock_minimo
 
@@ -3380,11 +2574,8 @@ def crear_movimiento_stock(request):
         )
 
     return redirect(
-
         'gestion_movimientos_stock'
-
     )
-
 
 
 # ============================================================
@@ -3396,9 +2587,7 @@ def generar_alertas_vencimiento():
     fecha_actual = timezone.localdate()
 
     fecha_limite = fecha_actual + timedelta(
-
         days=30
-
     )
 
     productos = Productos.objects.filter(
@@ -3416,9 +2605,7 @@ def generar_alertas_vencimiento():
         try:
 
             stock = Stock.objects.get(
-
                 ID_Producto=producto
-
             )
 
         except Stock.DoesNotExist:
@@ -3439,7 +2626,9 @@ def generar_alertas_vencimiento():
 
             dias_restantes = (
 
-                producto.Fecha_vencimiento - fecha_actual
+                producto.Fecha_vencimiento
+
+                - fecha_actual
 
             ).days
 
@@ -3462,67 +2651,48 @@ def generar_alertas_vencimiento():
             )
 
 
-
 def gestion_alertas(request):
 
-    # Generar automáticamente las alertas de vencimiento
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
 
     generar_alertas_vencimiento()
 
     fecha = request.GET.get(
-
         'fecha',
-
         ''
-
     ).strip()
 
     fecha_desde = request.GET.get(
-
         'fecha_desde',
-
         ''
-
     ).strip()
 
     fecha_hasta = request.GET.get(
-
         'fecha_hasta',
-
         ''
-
     ).strip()
 
     usuario_id = request.GET.get(
-
         'usuario',
-
         ''
-
     ).strip()
 
     tipo_alerta = request.GET.get(
-
         'tipo',
-
         ''
-
     ).strip()
 
     producto_id = request.GET.get(
-
         'producto',
-
         ''
-
     ).strip()
 
     stock_id = request.GET.get(
-
         'stock',
-
         ''
-
     ).strip()
 
     alertas = Alertas.objects.select_related(
@@ -3537,8 +2707,6 @@ def gestion_alertas(request):
 
     )
 
-    # CONSULTA POR FECHA ESPECÍFICA
-
     if fecha:
 
         alertas = alertas.filter(
@@ -3546,8 +2714,6 @@ def gestion_alertas(request):
             Fecha_hora_historial_alerta__date=fecha
 
         )
-
-    # CONSULTA POR INTERVALO DE FECHAS
 
     if fecha_desde:
 
@@ -3565,8 +2731,6 @@ def gestion_alertas(request):
 
         )
 
-    # CONSULTA POR USUARIO
-
     if usuario_id:
 
         stock_ids = MovimientosStock.objects.filter(
@@ -3574,48 +2738,30 @@ def gestion_alertas(request):
             ID_Usuario_id=usuario_id
 
         ).values(
-
             'ID_Stock'
-
         )
 
         alertas = alertas.filter(
-
             ID_Stock__in=stock_ids
-
         )
-
-    # CONSULTA POR TIPO DE ALERTA
 
     if tipo_alerta:
 
         alertas = alertas.filter(
-
             Tipo_alerta=tipo_alerta
-
         )
-
-    # CONSULTA POR PRODUCTO
 
     if producto_id:
 
         alertas = alertas.filter(
-
             ID_Stock__ID_Producto_id=producto_id
-
         )
-
-    # CONSULTA POR STOCK
 
     if stock_id:
 
         alertas = alertas.filter(
-
             ID_Stock_id=stock_id
-
         )
-
-    # USUARIOS PARA EL FILTRO
 
     usuarios = Usuarios.objects.filter(
 
@@ -3629,27 +2775,15 @@ def gestion_alertas(request):
 
     )
 
-    # PRODUCTOS PARA EL FILTRO
-
     productos = Productos.objects.all().order_by(
-
         'Nombre_producto'
-
     )
-
-    # STOCK PARA EL FILTRO
 
     stock = Stock.objects.select_related(
-
         'ID_Producto'
-
     ).all().order_by(
-
         'ID_Producto__Nombre_producto'
-
     )
-
-    # USUARIOS RELACIONADOS CON CADA ALERTA
 
     for alerta in alertas:
 
@@ -3660,9 +2794,7 @@ def gestion_alertas(request):
                 ID_Stock=alerta.ID_Stock
 
             ).values(
-
                 'ID_Usuario'
-
             )
 
         ).distinct()
@@ -3670,9 +2802,8 @@ def gestion_alertas(request):
     return render(
 
         request,
-
+        
         'inventario/alertas.html',
-
         {
 
             'alertas': alertas,
@@ -3695,8 +2826,9 @@ def gestion_alertas(request):
 
             'producto_id': producto_id,
 
-            'stock_id': stock_id
-
+            'stock_id': stock_id,
+            
+            'usuario': usuario
         }
 
     )

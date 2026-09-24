@@ -316,22 +316,29 @@ body {
    ENCABEZADO DEL PERFIL
    ========================================== */
 
-.profile-header {
+.perfil-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid #e8efeb;
+    align-items: flex-start;
+    gap: 20px;
 }
 
-.profile-header h2 {
+
+/* Información del perfil */
+
+.perfil-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.perfil-info h3 {
     font-size: 16px;
     color: #0b311e;
     margin-bottom: 4px;
 }
 
-.profile-id {
+.perfil-id {
+    display: block;
     font-size: 11px;
     color: #8a9e93;
 }
@@ -341,10 +348,43 @@ body {
    ACCIONES DEL PERFIL
    ========================================== */
 
-.profile-actions {
+.perfil-acciones {
     display: flex;
+    align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 }
+
+
+/* ==========================================
+   ESTADO DEL PERFIL
+   ========================================== */
+
+.estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.estado.activo {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.estado.inactivo {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+
+/* ==========================================
+   BOTÓN EDITAR
+   ========================================== */
 
 .btn-edit {
     border: 1px solid #cbd9d1;
@@ -354,11 +394,17 @@ body {
     border-radius: 6px;
     font-size: 12px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .btn-edit:hover {
     background-color: #f0fdf4;
 }
+
+
+/* ==========================================
+   BOTÓN DAR DE BAJA
+   ========================================== */
 
 .btn-delete {
     border: 1px solid #fca5a5;
@@ -368,6 +414,7 @@ body {
     border-radius: 6px;
     font-size: 12px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .btn-delete:hover {
@@ -380,7 +427,7 @@ body {
    ========================================== */
 
 .permissions-section {
-    padding-top: 14px;
+    margin-top: 14px;
 }
 
 .permissions-section h3 {
@@ -692,6 +739,10 @@ body {
 }
 
 
+/* ==========================================
+   RESPONSIVE - PERFILES
+   ========================================== */
+
 @media (max-width: 700px) {
 
     .layout {
@@ -706,13 +757,14 @@ body {
         padding: 20px;
     }
 
-    .profile-header {
-        align-items: flex-start;
+    .perfil-header {
         flex-direction: column;
+        align-items: stretch;
     }
 
-    .profile-actions {
+    .perfil-acciones {
         width: 100%;
+        flex-wrap: wrap;
     }
 
 }

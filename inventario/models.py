@@ -116,6 +116,16 @@ class Perfiles(models.Model):
     ID_Perfil = models.AutoField(primary_key=True)
     Nombre_perfil = models.CharField(max_length=50)
 
+    ESTADO_CHOICES = [
+        (True, 'Activo'),
+        (False, 'Inactivo'),
+    ]
+
+    Estado_perfil = models.BooleanField(
+        default=True,
+        choices=ESTADO_CHOICES
+    )
+
     permisos = models.ManyToManyField(
         'Permisos',
         through='PerfilesXPermisos',

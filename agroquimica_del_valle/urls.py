@@ -40,7 +40,7 @@ urlpatterns = [
     path('perfiles/', views.gestion_perfiles, name='gestion_perfiles'),
     path('perfiles/crear/', views.crear_perfil, name='crear_perfil'),
     path('perfiles/editar/<int:pk>/', views.editar_perfil, name='editar_perfil'),
-    path('perfiles/eliminar/<int:pk>/', views.eliminar_perfil, name='eliminar_perfil'),
+    path('perfiles/cambiar-estado/<int:id>/', views.cambiar_estado_perfil, name='cambiar_estado_perfil'),
     path('mis-permisos/', views.mis_permisos, name='mis_permisos'),
 
     # Tipos de movimientos

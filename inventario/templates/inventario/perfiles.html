@@ -242,107 +242,106 @@
 
                             <!-- ENCABEZADO DEL PERFIL -->
 
-                            <div class="profile-header">
+<div class="perfil-header">
 
+    <div class="perfil-info">
 
-                                <div>
+        <h3>
+            {{ perfil.Nombre_perfil }}
+        </h3>
 
-                                    <h2>
-                                        {{ perfil.Nombre_perfil }}
-                                    </h2>
+        <span class="perfil-id">
+            ID: {{ perfil.ID_Perfil }}
+        </span>
 
-                                    <span class="profile-id">
-                                        ID: {{ perfil.ID_Perfil }}
-                                    </span>
+        <div class="permissions-section">
 
-                                </div>
+            <h3>
+                Permisos asignados
+            </h3>
 
+            <div class="permissions-list">
 
-                                <div class="profile-actions">
+                {% for permiso in perfil.permisos.all %}
 
+                    <div class="permission-item">
 
-                                    <button
-                                        type="button"
-                                        class="btn-edit"
-                                        onclick='openEditModal(
-                                            "{{ perfil.ID_Perfil }}",
-                                            "{{ perfil.Nombre_perfil|escapejs }}"
-                                        )'
-                                    >
-                                        Editar
-                                    </button>
+                        <strong>
+                            {{ permiso.Nombre_permiso }}
+                        </strong>
 
+                        {% if permiso.Descripcion_permiso %}
+                            <span>
+                                {{ permiso.Descripcion_permiso }}
+                            </span>
+                        {% endif %}
 
-                                    <button
-                                        type="button"
-                                        class="btn-delete"
-                                        onclick='openDeleteModal(
-                                            "{{ perfil.ID_Perfil }}",
-                                            "{{ perfil.Nombre_perfil|escapejs }}"
-                                        )'
-                                    >
-                                        Eliminar
-                                    </button>
+                    </div>
 
+                {% empty %}
 
-                                </div>
+                    <span class="no-permissions">
+                        Sin permisos asignados
+                    </span>
 
+                {% endfor %}
 
-                            </div>
+            </div>
 
+        </div>
 
+    </div>
 
-                            <!-- PERMISOS DEL PERFIL -->
+    <div class="perfil-acciones">
 
-                            <div class="permissions-section">
+                {% if perfil.Estado_perfil %}
+                            <span class="estado activo">
+                                Activo
+                            </span>
+                {% else %}
+                            <span class="estado inactivo">
+                                Inactivo
+                            </span>
+                {% endif %}
 
+                <button
+                    type="button"
+                    class="btn-edit"
+                    onclick="openEditModal(
+                    '{{ perfil.ID_Perfil }}',
+                    '{{ perfil.Nombre_perfil }}'
+                    )"
+                    >
+                    Editar
+                </button>
 
-                                <h3>
-                                    Permisos asignados
-                                </h3>
+        <form
+            method="POST"
+            action="{% url 'cambiar_estado_perfil' perfil.ID_Perfil %}"
+            style="display: inline;"
+        >
+            {% csrf_token %}
 
+            {% if perfil.Estado_perfil %}
+                <button
+                    type="submit"
+                    class="btn-delete"
+                >
+                    Dar de baja
+                </button>
+            {% else %}
+                <button
+                    type="submit"
+                    class="btn-primary"
+                >
+                    Activar
+                </button>
+            {% endif %}
+        </form>
 
-                                <div class="permissions-list">
+    </div>
+</div>
 
-
-                                    {% for permiso in perfil.permisos.all %}
-
-
-                                        <div class="permission-item">
-
-                                            <strong>
-                                                {{ permiso.Nombre_permiso }}
-                                            </strong>
-
-                                            {% if permiso.Descripcion_permiso %}
-
-                                                <span>
-                                                    {{ permiso.Descripcion_permiso }}
-                                                </span>
-
-                                            {% endif %}
-
-                                        </div>
-
-
-                                    {% empty %}
-
-
-                                        <span class="no-permissions">
-                                            Sin permisos asignados
-                                        </span>
-
-
-                                    {% endfor %}
-
-
-                                </div>
-
-
-                            </div>
-
-
-                        </div>
 
 
                     {% endfor %}
@@ -710,96 +709,6 @@
 
 
 
-    <!-- ==========================================
-         MODAL ELIMINAR PERFIL
-         ========================================== -->
-
-    <div
-        id="deleteModal"
-        class="modal"
-    >
-
-        <div class="modal-content delete-content">
-
-
-            <div class="modal-header">
-
-                <h2>
-                    Eliminar perfil
-                </h2>
-
-                <button
-                    type="button"
-                    class="close-modal"
-                    onclick="closeDeleteModal()"
-                >
-                    &times;
-                </button>
-
-            </div>
-
-
-
-            <div class="delete-message">
-
-                <p>
-
-                    ¿Está seguro de que desea eliminar el perfil
-
-                    <strong id="deleteProfileName"></strong>?
-
-                </p>
-
-
-                <p class="warning-text">
-
-                    Esta acción no se puede deshacer.
-
-                </p>
-
-            </div>
-
-
-
-            <form
-                method="POST"
-                id="deleteForm"
-            >
-
-                {% csrf_token %}
-
-
-                <div class="modal-actions">
-
-
-                    <button
-                        type="button"
-                        class="btn-cancel"
-                        onclick="closeDeleteModal()"
-                    >
-                        Cancelar
-                    </button>
-
-
-                    <button
-                        type="submit"
-                        class="btn-delete"
-                    >
-                        Eliminar
-                    </button>
-
-
-                </div>
-
-
-            </form>
-
-
-        </div>
-
-    </div>
-
-
 
     <!-- ==========================================
          JAVASCRIPT
@@ -942,57 +851,6 @@
 
 
 
-        /* ==========================================
-           ELIMINAR PERFIL
-           ========================================== */
-
-        function openDeleteModal(id, nombre) {
-
-
-            const modal =
-                document.getElementById('deleteModal');
-
-
-            const form =
-                document.getElementById('deleteForm');
-
-
-            const nombreElemento =
-                document.getElementById(
-                    'deleteProfileName'
-                );
-
-
-
-            form.action =
-                "{% url 'eliminar_perfil' 0 %}"
-                .replace(
-                    '/0/',
-                    '/' + id + '/'
-                );
-
-
-
-            nombreElemento.textContent =
-                nombre;
-
-
-
-            modal.classList.add('show');
-
-        }
-
-
-
-        function closeDeleteModal() {
-
-            document
-                .getElementById('deleteModal')
-                .classList.remove('show');
-
-        }
-
-
 
         /* ==========================================
            CERRAR MODALES AL HACER CLICK AFUERA
@@ -1015,12 +873,6 @@
                     );
 
 
-                const deleteModal =
-                    document.getElementById(
-                        'deleteModal'
-                    );
-
-
 
                 if (
                     event.target === createModal
@@ -1037,16 +889,6 @@
                 ) {
 
                     closeEditModal();
-
-                }
-
-
-
-                if (
-                    event.target === deleteModal
-                ) {
-
-                    closeDeleteModal();
 
                 }
 
@@ -1069,8 +911,6 @@
                     closeCreateModal();
 
                     closeEditModal();
-
-                    closeDeleteModal();
 
                 }
 
