@@ -181,9 +181,6 @@
                     Gestión de Usuarios
                 </h1>
 
-                <p class="subtitle">
-                    Registrar · Modificar · Dar de baja · Restablecer contraseña
-                </p>
 
             </div>
 
@@ -432,6 +429,7 @@
                                     <!-- DAR DE BAJA -->
 
                                     {% if usuario.Estado_usuario %}
+                                        {% if usuario.ID_Usuario != usuario_actual.ID_Usuario %}
 
                                         <button
                                             type="button"
@@ -452,6 +450,7 @@
                                         >
                                             Dar de baja
                                         </button>
+                                    {% endif %}
 
                                     {% else %}
 
@@ -581,7 +580,7 @@
                         <div class="form-group">
 
                             <label>
-                                Usuario — generado automáticamente
+                                Usuario 
                             </label>
 
                             <input
@@ -597,7 +596,7 @@
                         <div class="form-group">
 
                             <label>
-                                Contraseña inicial
+                                Contraseña 
                             </label>
 
                             <input
@@ -657,18 +656,6 @@
                     </div>
 
 
-                    <div class="password-info">
-
-                        <strong>
-                            Contraseña inicial:
-                        </strong>
-
-                        será ingresada por el administrador y se almacenará
-                        de forma segura mediante hash.
-
-                        El usuario deberá cambiarla en su próximo inicio de sesión.
-
-                    </div>
 
 
                     <div class="modal-actions">
@@ -873,12 +860,7 @@
                     </div>
 
 
-                    <div class="password-info">
 
-                        La fecha de última modificación se actualizará
-                        automáticamente al guardar los cambios.
-
-                    </div>
 
 
                     <div class="modal-actions">
@@ -895,7 +877,7 @@
                             type="submit"
                             class="btn-guardar"
                         >
-                            Actualizar email
+                            Actualizar 
                         </button>
 
                     </div>
@@ -1041,14 +1023,7 @@
                 </div>
 
 
-                <!-- INFORMACIÓN -->
 
-                <div class="password-info">
-
-                    Se registrará la baja del usuario y su estado
-                    pasará a estar inactivo.
-
-                </div>
 
 
                 <!-- FORMULARIO -->

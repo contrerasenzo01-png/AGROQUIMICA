@@ -773,7 +773,7 @@ def gestion_usuarios(request):
             'usuarios': usuarios,
             'perfiles': perfiles,
             'busqueda': busqueda,
-            'usuario': usuario
+            'usuario_actual': usuario
         }
     )
 
@@ -995,7 +995,7 @@ def editar_usuario(request, pk):
         messages.success(
             request,
             f'El usuario {usuario.Usuario} '
-            f'ha sido modificado correctamente.'
+            f'ha sido modificado correctamente'
         )
 
         return redirect(
@@ -1020,12 +1020,22 @@ def dar_baja_usuario(request, pk):
     usuario_admin = usuario_es_administrador(request)
 
     if not usuario_admin:
+
         return redirect('panel_principal')
 
     usuario = get_object_or_404(
         Usuarios,
         ID_Usuario=pk
     )
+
+    if usuario.ID_Usuario == usuario_admin.ID_Usuario:
+        messages.error(
+            request,
+            'No puede darse de baja a sí mismo.'
+        )
+        return redirect(
+            'gestion_usuarios'
+        )
 
     if request.method == 'POST':
 
@@ -1035,15 +1045,19 @@ def dar_baja_usuario(request, pk):
 
         usuario.save()
 
+
         messages.success(
             request,
-            'Usuario dado de baja correctamente.'
+            'Usuario dado de baja correctamente'
         )
 
     return redirect(
         'gestion_usuarios'
     )
 
+# ============================================================
+# ACTIVAR USUARIO
+# ============================================================
 
 def activar_usuario(request, id):
 
@@ -1065,7 +1079,7 @@ def activar_usuario(request, id):
 
     messages.success(
         request,
-        f'El usuario {usuario.Usuario} fue activado correctamente.'
+        f'El usuario {usuario.Usuario} fue activado correctamente'
     )
 
     return redirect(
