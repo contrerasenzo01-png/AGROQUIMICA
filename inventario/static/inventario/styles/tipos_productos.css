@@ -1,28 +1,116 @@
+/* =========================
+   RESET GENERAL
+========================= */
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont,
-        'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
+    display: flex;
     height: 100vh;
     background-color: #f1f5f3;
     color: #1c2a23;
 }
 
-.layout-principal {
+
+/* =========================
+   LAYOUT
+========================= */
+
+.layout {
     display: flex;
+    width: 100%;
     height: 100vh;
-    width: 100vw;
-    overflow: hidden;
 }
 
 
-/* ==========================================
-   BARRA LATERAL
-   ========================================== */
+/* =========================
+   NOTIFICACIONES TOAST
+========================= */
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    padding: 14px 20px;
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out forwards;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 280px;
+}
+
+.toast.success {
+    background-color: #1b5e3a;
+    border-left: 5px solid #0d3824;
+}
+
+.toast.error {
+    background-color: #b91c1c;
+    border-left: 5px solid #7f1d1d;
+}
+
+.toast.warning {
+    background-color: #f59f00;
+    border-left: 5px solid #b37400;
+}
+
+.toast-close {
+    cursor: pointer;
+    margin-left: 15px;
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+}
+
+
+/* =========================
+   SIDEBAR
+========================= */
 
 .sidebar {
     width: 220px;
@@ -109,21 +197,15 @@ body {
 }
 
 
-/* ==========================================
-   ÁREA PRINCIPAL
-   ========================================== */
+/* =========================
+   CONTENIDO PRINCIPAL
+========================= */
 
 .main-content {
     flex: 1;
-    padding: 25px 30px;
+    padding: 30px;
     overflow-y: auto;
-    width: 100%;
 }
-
-
-/* ==========================================
-   ENCABEZADO
-   ========================================== */
 
 .header {
     display: flex;
@@ -134,113 +216,137 @@ body {
 
 .title {
     font-size: 20px;
-    color: #0b311e;
+    font-weight: bold;
+    color: #0d3824;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #5c7367;
+    margin-top: 4px;
 }
 
 .btn-nuevo {
+    background-color: #1b5e3a;
+    color: white;
+    padding: 10px 18px;
     border: none;
     border-radius: 6px;
-    padding: 9px 14px;
-    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-    font-family: inherit;
-    background-color: #0b311e;
-    color: #ffffff;
+    text-decoration: none;
+    font-size: 13px;
     transition: background-color 0.2s;
 }
 
 .btn-nuevo:hover {
-    background-color: #16472d;
+    background-color: #14472c;
 }
 
 
-/* ==========================================
+/* =========================
+   ALERTA DUPLICADO
+========================= */
+
+.alert-duplicado {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+/* =========================
    BUSCADOR
-   ========================================== */
+========================= */
 
 .search-box {
-    width: 380px;
-    max-width: 100%;
-    background-color: #ffffff;
-    border: 1px solid #dce7e1;
-    border-radius: 6px;
-    padding: 9px 12px;
-    font-size: 12px;
-    color: #1c2a23;
-    outline: none;
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1e0d7;
+    border-radius: 8px;
+    background-color: #f8faf9;
+    font-size: 13px;
     margin-bottom: 20px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .search-box:focus {
-    border-color: #5c7367;
+    border-color: #1b5e3a;
+    box-shadow: 0 0 0 3px rgba(27, 94, 58, 0.1);
 }
 
 
-/* ==========================================
-   TARJETAS DE TIPOS
-   ========================================== */
-
-#listaTipos {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+/* =========================
+   CARDS DE TIPOS
+========================= */
 
 .card-container {
-    background-color: #ffffff;
+    background: white;
     border: 1px solid #e2ece6;
-    border-radius: 8px;
+    border-radius: 10px;
+    margin-bottom: 12px;
     overflow: hidden;
 }
 
 .card-container.inactivo {
-    opacity: 0.75;
+    border-color: #e5e7eb;
+    background-color: #ffffff;
 }
 
 .card-header {
+    padding: 16px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 14px 16px;
+    justify-content: space-between;
     cursor: pointer;
+    user-select: none;
 }
 
 .card-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
 }
 
 .avatar {
-    width: 38px;
-    height: 38px;
+    width: 42px;
+    height: 42px;
     border-radius: 8px;
-    background-color: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #15803d;
+    background-color: #e2f0e8;
+    color: #1b5e3a;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 14px;
 }
 
 .card-info h4 {
-    font-size: 13px;
+    font-size: 14px;
     color: #1c2a23;
-    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-info h4 .sup-code {
+    font-size: 12px;
+    font-weight: normal;
+    color: #8a9e93;
 }
 
 .card-info p {
     font-size: 11px;
     color: #8a9e93;
-}
-
-.sup-code {
-    color: #8a9e93;
-    font-size: 10px;
-    font-weight: 500;
-    margin-left: 4px;
+    margin-top: 2px;
 }
 
 .card-actions {
@@ -250,65 +356,72 @@ body {
 }
 
 
-/* ==========================================
-   ESTADOS
-   ========================================== */
+/* =========================
+   BADGES
+========================= */
 
+.badge-productos,
 .badge-activo,
 .badge-inactivo {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 5px 10px;
+    border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
 }
 
+.badge-productos {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #dcfce7;
+}
+
 .badge-activo {
     background-color: #f0fdf4;
-    border: 1px solid #86efac;
     color: #15803d;
+    border: 1px solid #dcfce7;
 }
 
 .badge-inactivo {
     background-color: #f3f4f6;
+    color: #4b5563;
     border: 1px solid #d1d5db;
-    color: #6b7280;
 }
 
 
-/* ==========================================
+/* =========================
    BOTONES DE ACCIÓN
-   ========================================== */
+========================= */
 
 .btn-action {
-    border: 1px solid #dce7e1;
-    background-color: #ffffff;
-    color: #1c2a23;
+    padding: 6px 14px;
     border-radius: 6px;
-    padding: 7px 11px;
-    font-size: 11px;
+    border: 1px solid #d1d5db;
+    background: white;
+    font-size: 12px;
     cursor: pointer;
-    font-family: inherit;
-    transition: background-color 0.2s, border-color 0.2s;
+    text-decoration: none;
+    color: #374151;
+    font-weight: 500;
+    transition: background-color 0.2s;
 }
 
 .btn-action:hover {
-    background-color: #f1f5f3;
+    background-color: #f3f4f6;
 }
 
 .btn-baja {
-    color: #b91c1c;
-    border-color: #fecaca;
-    background-color: #fff5f5;
-}
-
-.btn-baja:hover {
+    border-color: #fca5a5;
+    color: #ef4444;
     background-color: #fef2f2;
 }
 
+.btn-baja:hover {
+    background-color: #fee2e2;
+}
+
 .btn-activar {
+    border-color: #86efac;
     color: #15803d;
-    border-color: #bbf7d0;
     background-color: #f0fdf4;
 }
 
@@ -317,82 +430,75 @@ body {
 }
 
 .btn-arrow {
+    background: none;
     border: none;
-    background: transparent;
-    color: #5c7367;
+    font-size: 11px;
+    color: #9ca3af;
     cursor: pointer;
-    font-size: 12px;
-    padding: 5px;
+    padding: 4px 6px;
 }
 
 
-/* ==========================================
-   DETALLE DESPLEGABLE
-   ========================================== */
+/* =========================
+   DETALLES
+========================= */
 
 .card-details {
-    border-top: 1px solid #e2ece6;
-    background-color: #f8faf9;
-    padding: 14px 16px;
+    border-top: 1px solid #f0f4f2;
+    padding: 16px;
+    background-color: #fafcfb;
+    font-size: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
 }
 
 .card-details.hidden {
     display: none;
 }
 
-.detail-item {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 7px 0;
-    border-bottom: 1px solid #e8efeb;
-}
-
-.detail-item:last-child {
-    border-bottom: none;
-}
-
-.detail-item .label {
+.detail-item span.label {
+    font-size: 10px;
+    font-weight: bold;
     color: #8a9e93;
-    font-size: 11px;
+    display: block;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.detail-item span.value {
     font-weight: 600;
+    color: #2d4739;
 }
-
-.detail-item .value {
-    color: #1c2a23;
-    font-size: 11px;
-    text-align: right;
-}
-
-
-/* ==========================================
-   PRODUCTOS ASOCIADOS
-   ========================================== */
 
 .products-section {
-    margin-top: 10px;
+    grid-column: span 3;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed #e2ece6;
 }
 
 .products-list {
     display: flex;
+    gap: 8px;
+    margin-top: 6px;
     flex-wrap: wrap;
-    gap: 6px;
 }
 
 .product-tag {
-    display: inline-block;
-    background-color: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #15803d;
-    padding: 4px 8px;
+    background-color: #e2f0e8;
+    color: #1b5e3a;
+    border: 1px solid #b8dac8;
+    padding: 3px 8px;
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 600;
 }
 
 
-/* ==========================================
+/* =========================
    MODALES
-   ========================================== */
+========================= */
 
 .modal {
     display: none;
@@ -401,170 +507,187 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(11, 49, 30, 0.45);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    padding: 20px;
 }
 
 .modal-content {
-    background-color: #ffffff;
-    width: 100%;
-    max-width: 500px;
+    background: white;
+    border-radius: 12px;
+    width: 480px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     max-height: 90vh;
     overflow-y: auto;
-    border-radius: 8px;
-    padding: 24px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-}
-
-.modal-content h3 {
-    font-size: 18px;
-    color: #0b311e;
-    margin-bottom: 20px;
 }
 
 .modal-header {
+    padding: 20px 24px 15px;
+    border-bottom: 1px solid #eef3f0;
+    margin-bottom: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.close-btn {
-    color: #8a9e93;
-    font-size: 20px;
+.modal-header h3 {
+    font-size: 16px;
+    color: #0d3824;
+    margin: 0;
+}
+
+.modal-header .close-btn {
+    color: #5c7367;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
 }
 
-.close-btn:hover {
-    color: #1c2a23;
-}
-
-
-/* ==========================================
-   FORMULARIOS
-   ========================================== */
-
 .modal-body {
-    margin-top: 5px;
+    padding: 0 24px;
 }
+
+.modal-footer {
+    padding: 15px 24px 24px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+
+/* =========================
+   FORMULARIOS
+========================= */
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 14px;
 }
 
 .form-group label {
     display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1c2a23;
-    margin-bottom: 6px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #2d4739;
+    margin-bottom: 4px;
 }
 
 .form-input {
     width: 100%;
-    background-color: #ffffff;
-    border: 1px solid #dce7e1;
+    padding: 10px;
+    border: 1px solid #d1e0d7;
     border-radius: 6px;
-    padding: 9px 10px;
-    font-size: 12px;
-    color: #1c2a23;
-    font-family: inherit;
+    background-color: #f8faf9;
+    font-size: 13px;
     outline: none;
 }
 
 .form-input:focus {
-    border-color: #5c7367;
+    border-color: #1b5e3a;
 }
 
-.form-input:read-only {
-    background-color: #f1f5f3;
-    color: #8a9e93;
-}
-
-
-/* ==========================================
-   ACCIONES DEL MODAL
-   ========================================== */
-
-.modal-footer {
+.form-row {
     display: flex;
-    justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
 }
+
+.form-row .form-group {
+    flex: 1;
+}
+
+
+/* =========================
+   BOTONES MODALES
+========================= */
 
 .btn-cancel {
-    border: 1px solid #dce7e1;
-    background-color: #ffffff;
-    color: #1c2a23;
+    background-color: #f1f5f3;
+    border: 1px solid #d1e0d7;
+    padding: 10px 18px;
     border-radius: 6px;
-    padding: 9px 14px;
-    font-size: 12px;
+    color: #1b5e3a;
+    font-weight: 600;
     cursor: pointer;
 }
 
-.btn-cancel:hover {
-    background-color: #f1f5f3;
-}
-
 .btn-save {
+    background: #1b5e3a;
     border: none;
-    background-color: #0b311e;
-    color: #ffffff;
+    padding: 10px 18px;
     border-radius: 6px;
-    padding: 9px 14px;
-    font-size: 12px;
+    color: white;
+    font-weight: 600;
     cursor: pointer;
 }
 
 .btn-save:hover {
-    background-color: #16472d;
+    background-color: #14472c;
 }
 
 
-/* ==========================================
+/* =========================
    MODAL DE BAJA
-   ========================================== */
+========================= */
 
 .modal-baja-container {
-    background-color: #ffffff;
-    width: 100%;
-    max-width: 500px;
-    border-radius: 8px;
-    padding: 24px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    background: white;
+    border-radius: 12px;
+    width: 460px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .modal-baja-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 15px;
 }
 
 .modal-baja-header h3 {
-    font-size: 18px;
-    color: #0b311e;
+    font-size: 16px;
+    font-weight: bold;
+    color: #0d3824;
 }
 
+.modal-baja-header .close-btn {
+    color: #8a9e93;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+
+/* =========================
+   ADVERTENCIA DE BAJA
+========================= */
+
 .alert-baja-warning {
-    background-color: #fffbe3;
-    border: 1px solid #fde047;
-    color: #b45309;
-    padding: 10px 12px;
-    border-radius: 6px;
+    background-color: #fdf2f2;
+    border: 1px solid #fde8e8;
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: #e02424;
     font-size: 12px;
     font-weight: 600;
-    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
 }
+
+
+/* =========================
+   TARJETA DENTRO DEL MODAL
+========================= */
 
 .baja-card-wrapper {
     background-color: #f8faf9;
-    border: 1px solid #e2ece6;
-    border-radius: 6px;
-    padding: 14px;
+    border: 1px solid #e5edef;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
 }
 
 .baja-profile-header {
@@ -575,23 +698,22 @@ body {
 }
 
 .avatar-baja {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 8px;
-    background-color: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #15803d;
+    background-color: #fde8e8;
+    color: #e02424;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 13px;
 }
 
 .baja-profile-info h4 {
     font-size: 14px;
+    font-weight: bold;
     color: #1c2a23;
-    margin-bottom: 3px;
 }
 
 .baja-profile-info p {
@@ -599,123 +721,140 @@ body {
     color: #8a9e93;
 }
 
+
+/* =========================
+   INFORMACIÓN DE BAJA
+========================= */
+
 .baja-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 10px;
 }
 
 .baja-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    background: white;
+    border: 1px solid #eef3f0;
+    border-radius: 6px;
+    padding: 8px 10px;
 }
 
 .baja-item .lbl {
-    font-size: 10px;
+    display: block;
+    font-size: 9px;
+    font-weight: bold;
     color: #8a9e93;
-    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 2px;
 }
 
 .baja-item .val {
     font-size: 12px;
-    color: #1c2a23;
+    font-weight: 600;
+    color: #2d4739;
+    word-break: break-word;
 }
+
+
+/* =========================
+   ACCIONES DE BAJA
+========================= */
 
 .baja-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
 }
 
 .btn-baja-cancel {
-    border: 1px solid #dce7e1;
-    background-color: #ffffff;
-    color: #1c2a23;
-    border-radius: 6px;
-    padding: 9px 14px;
-    font-size: 12px;
-    cursor: pointer;
-}
-
-.btn-baja-cancel:hover {
     background-color: #f1f5f3;
+    border: 1px solid #d1e0d7;
+    color: #1b5e3a;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .btn-baja-confirm {
-    border: none;
-    background-color: #b91c1c;
-    color: #ffffff;
+    background-color: #fdf2f2;
+    border: 1px solid #fca5a5;
+    color: #e02424;
+    padding: 8px 18px;
     border-radius: 6px;
-    padding: 9px 14px;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .btn-baja-confirm:hover {
-    background-color: #991b1b;
+    background-color: #fde8e8;
 }
 
 
-/* ==========================================
-   TOASTS
-   ========================================== */
+/* =========================
+   ELEMENTOS OCULTOS
+========================= */
 
-.toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 2000;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.toast {
-    min-width: 280px;
-    max-width: 400px;
-    background-color: #ffffff;
-    border: 1px solid #dce7e1;
-    border-radius: 6px;
-    padding: 12px 14px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    font-size: 12px;
-}
-
-.toast.success {
-    border-left: 4px solid #15803d;
-}
-
-.toast.warning {
-    border-left: 4px solid #b45309;
-}
-
-.toast.error {
-    border-left: 4px solid #b91c1c;
-}
-
-.toast-close {
-    cursor: pointer;
-    color: #8a9e93;
-    font-size: 14px;
-}
-
-.toast-close:hover {
-    color: #1c2a23;
+.hidden {
+    display: none !important;
 }
 
 
-@keyframes fadeOut {
-    from {
-        opacity: 1;
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+    .sidebar {
+        width: 200px;
     }
 
-    to {
-        opacity: 0;
+    .main-content {
+        padding: 25px;
+    }
+
+    .card-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .products-section {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .sidebar {
+        width: 180px;
+        padding: 20px 12px;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    .card-header {
+        padding: 14px;
+    }
+
+    .card-actions {
+        gap: 5px;
+    }
+
+    .card-details {
+        grid-template-columns: 1fr;
+    }
+
+    .products-section {
+        grid-column: span 1;
+    }
+
+    .modal-content,
+    .modal-baja-container {
+        width: calc(100% - 30px);
     }
 }

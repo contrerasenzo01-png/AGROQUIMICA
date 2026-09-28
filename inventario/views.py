@@ -580,7 +580,7 @@ def editar_tipo_producto(request, pk):
 
 
 def dar_baja_tipo_producto(request, pk):
-
+    
     usuario_id = request.session.get(
         'usuario_id'
     )
@@ -595,14 +595,27 @@ def dar_baja_tipo_producto(request, pk):
 
     if request.method == 'POST':
 
-        tipo.Estado_tipo_producto = False
+        estado = request.POST.get(
+            'estado'
+        )
+
+        if estado == 'activo':
+            tipo.Estado_tipo_producto = True
+
+            messages.success(
+                request,
+                'Tipo de producto activado correctamente.'
+            )
+
+        elif estado == 'inactivo':
+            tipo.Estado_tipo_producto = False
+
+            messages.success(
+                request,
+                'Tipo de producto dado de baja correctamente.'
+            )
 
         tipo.save()
-
-        messages.success(
-            request,
-            'Tipo de producto dado de baja correctamente.'
-        )
 
     return redirect(
         'gestion_tipos_productos'

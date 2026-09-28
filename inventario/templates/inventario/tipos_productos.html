@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Principal - Agroquímicos del Valle</title>
+  <title>Tipos de productos - Agroquímicos del Valle</title>
   <link rel="stylesheet" href="{% static 'inventario/styles/tipos_productos.css' %}">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 <body>
 
@@ -26,7 +26,7 @@
 
             <!-- PANEL PRINCIPAL -->
             <li class="nav-item">
-                <a href="{% url 'panel_principal' %}" class="nav-link active">
+                <a href="{% url 'panel_principal' %}" class="nav-link">
                     <span class="nav-icon">🎛️</span>
                     Panel Principal
                 </a>
@@ -45,7 +45,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link active">
                         <span class="nav-icon">🗂️</span>
                         Tipos de Productos
                     </a>
@@ -78,7 +78,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link active">
                         <span class="nav-icon">🗂️</span>
                         Tipos de Productos
                     </a>
@@ -380,7 +380,7 @@
                     <div class="detail-item">
 
                         <span class="label">
-                            ID_TIPO_PRODUCTO
+                            ID_Tipo_producto
                         </span>
 
                         <span class="value">
@@ -393,7 +393,7 @@
                     <div class="detail-item">
 
                         <span class="label">
-                            NOMBRE_TIPO_PRODUCTO
+                            nombre_tipo_producto
                         </span>
 
                         <span class="value">
@@ -406,7 +406,7 @@
                     <div class="detail-item">
 
                         <span class="label">
-                            ESTADO_TIPO_PRODUCTO
+                            estado_tipo_producto
                         </span>
 
                         <span
@@ -552,7 +552,7 @@
                 <div class="baja-item">
 
                     <span class="lbl">
-                        ID_TIPO_PRODUCTO
+                        ID_Tipo_producto
                     </span>
 
                     <span
@@ -568,7 +568,7 @@
                 <div class="baja-item">
 
                     <span class="lbl">
-                        NOMBRE
+                        nombre_tipo_producto
                     </span>
 
                     <span
@@ -584,7 +584,7 @@
                 <div class="baja-item">
 
                     <span class="lbl">
-                        PRODUCTOS ASOCIADOS
+                        Productos asociados
                     </span>
 
                     <span
@@ -600,7 +600,7 @@
                 <div class="baja-item">
 
                     <span class="lbl">
-                        ESTADO
+                        estado_tipo_producto
                     </span>
 
                     <span
@@ -684,7 +684,7 @@
                 <div class="form-group">
 
                     <label>
-                        ID_TIPO_PRODUCTO
+                        ID_Tipo_producto
                     </label>
 
                     <input
@@ -700,7 +700,7 @@
                 <div class="form-group">
 
                     <label>
-                        NOMBRE_TIPO_PRODUCTO
+                        nombre_tipo_producto
                     </label>
 
                     <input
@@ -790,7 +790,7 @@
                 <div class="form-group">
 
                     <label>
-                        NOMBRE_TIPO_PRODUCTO
+                        nombre_tipo_producto
                     </label>
 
                     <input
@@ -808,7 +808,7 @@
                 <div class="form-group">
 
                     <label>
-                        ESTADO_TIPO_PRODUCTO
+                        estado_tipo_producto
                     </label>
 
                     <input
