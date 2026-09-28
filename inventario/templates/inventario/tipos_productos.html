@@ -1,0 +1,1391 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Principal - Agroquímicos del Valle</title>
+  <link rel="stylesheet" href="{% static 'inventario/styles/tipos_productos.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="layout">
+   <!-- BARRA LATERAL (SIDEBAR) -->
+
+<!-- Sidebar -->
+<aside class="sidebar">
+
+    <div>
+
+        <div class="logo">
+            🌿 Agroquímica del Valle
+        </div>
+
+        <ul class="nav-menu">
+
+            <!-- PANEL PRINCIPAL -->
+            <li class="nav-item">
+                <a href="{% url 'panel_principal' %}" class="nav-link active">
+                    <span class="nav-icon">🎛️</span>
+                    Panel Principal
+                </a>
+            </li>
+
+
+            {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
+
+                <!-- OPCIONES DEL VENDEDOR -->
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link">
+                        <span class="nav-icon">📦</span>
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'mis_permisos' %}" class="nav-link">
+                        <span class="nav-icon">🔐</span>
+                        Mis permisos
+                    </a>
+                </li>
+
+
+            {% else %}
+
+                <!-- OPCIONES DEL ADMINISTRADOR -->
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        Usuarios del sistema
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_productos' %}" class="nav-link">
+                        <span class="nav-icon">📦</span>
+                        Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                        <span class="nav-icon">🗂️</span>
+                        Tipos de Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                        <span class="nav-icon">🚚</span>
+                        Proveedores
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Movimientos Stock
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'historial_alertas' %}" class="nav-link">
+                        <span class="nav-icon">🔔</span>
+                        Historial de Alertas
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        Perfiles de acceso
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'gestion_permisos' %}" class="nav-link">
+                        <span class="nav-icon">🔐</span>
+                        Permisos del sistema
+                    </a>
+                </li>
+
+            {% endif %}
+
+        </ul>
+
+    </div>
+
+
+    <!-- Footer del Sidebar -->
+    <div class="user-info">
+
+        <div class="user-role">
+            {{ usuario.ID_Perfil.Nombre_perfil }}
+        </div>
+
+        <div class="user-email">
+            {{ usuario.Email_usuario }}
+        </div>
+
+        <a href="{% url 'cerrar_sesion' %}" class="logout-link">
+            Cerrar sesión
+        </a>
+
+    </div>
+
+</aside>
+
+
+<!-- ===================================================== -->
+<!-- CONTENIDO PRINCIPAL -->
+<!-- ===================================================== -->
+
+<main class="main-content">
+
+    <header class="header">
+
+        <div>
+
+            <h2 class="title">
+                Gestión de Tipos de Producto
+            </h2>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="btn-nuevo"
+            onclick="abrirModalCrear()"
+        >
+            + Nuevo tipo
+        </button>
+
+    </header>
+
+
+    <!-- ================================================= -->
+    <!-- BUSCADOR -->
+    <!-- ================================================= -->
+
+    <form method="GET" onsubmit="return false;">
+
+        <input
+            type="text"
+            id="searchInput"
+            name="q"
+            value="{{ busqueda }}"
+            onkeyup="filtrarTipos()"
+            class="search-box"
+            placeholder="Buscar por ID o nombre..."
+        >
+
+    </form>
+
+
+    <!-- ================================================= -->
+    <!-- LISTA DE TIPOS -->
+    <!-- ================================================= -->
+
+    <section id="listaTipos">
+
+        {% for tipo in tipos_productos %}
+
+            <div
+                id="card-{{ tipo.ID_Tipo_producto }}"
+                class="card-container tipo-card
+                {% if not tipo.Estado_tipo_producto %}inactivo{% endif %}"
+
+                data-search="
+                    {{ tipo.ID_Tipo_producto }}
+                    {{ tipo.Nombre_tipo_producto|lower }}
+                "
+            >
+
+                <!-- ENCABEZADO DE TARJETA -->
+
+                <div
+                    class="card-header"
+                    onclick="toggleDetails(
+                        'details-{{ tipo.ID_Tipo_producto }}',
+                        'arrow-{{ tipo.ID_Tipo_producto }}'
+                    )"
+                >
+
+                    <div class="card-left">
+
+                        <div class="avatar">
+                            TP
+                        </div>
+
+
+                        <div class="card-info">
+
+                            <h4 class="prov-nombre">
+
+                                {{ tipo.Nombre_tipo_producto }}
+
+                                <span class="sup-code">
+                                    (TP{{ tipo.ID_Tipo_producto }})
+                                </span>
+
+                            </h4>
+
+                            <p class="prov-email">
+                                Tipo de producto
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACCIONES -->
+
+                    <div
+                        class="card-actions"
+                        onclick="event.stopPropagation();"
+                    >
+
+                        <!-- ESTADO -->
+
+                        <span
+                            id="badge-estado-{{ tipo.ID_Tipo_producto }}"
+                            class="
+                                {% if tipo.Estado_tipo_producto %}
+                                    badge-activo
+                                {% else %}
+                                    badge-inactivo
+                                {% endif %}
+                            "
+                        >
+
+                            {% if tipo.Estado_tipo_producto %}
+                                Activo
+                            {% else %}
+                                Inactivo
+                            {% endif %}
+
+                        </span>
+
+
+                        <!-- EDITAR -->
+
+                        <button
+                            type="button"
+                            class="btn-action"
+
+                            onclick="abrirModalEditar(
+                                '{{ tipo.ID_Tipo_producto }}',
+                                '{{ tipo.Nombre_tipo_producto|escapejs }}',
+                                '{{ tipo.Estado_tipo_producto|lower }}'
+                            )"
+                        >
+                            Editar
+                        </button>
+
+
+                        <!-- CAMBIAR ESTADO -->
+
+                        <form
+                            id="form-estado-{{ tipo.ID_Tipo_producto }}"
+                            method="POST"
+                            action="{% url 'dar_baja_tipo_producto' tipo.ID_Tipo_producto %}"
+                            style="display:inline;"
+                            onsubmit="procesarSolicitudEstado(
+                                event,
+                                '{{ tipo.ID_Tipo_producto }}',
+                                '{{ tipo.Nombre_tipo_producto|escapejs }}'
+                            )"
+                        >
+
+                            {% csrf_token %}
+
+                            <input
+                                type="hidden"
+                                name="estado"
+                                id="estado-{{ tipo.ID_Tipo_producto }}"
+
+                                value="{% if tipo.Estado_tipo_producto %}inactivo{% else %}activo{% endif %}"
+                            >
+
+
+                            <button
+                                type="submit"
+                                id="btn-estado-{{ tipo.ID_Tipo_producto }}"
+
+                                class="
+                                    btn-action
+                                    {% if tipo.Estado_tipo_producto %}
+                                        btn-baja
+                                    {% else %}
+                                        btn-activar
+                                    {% endif %}
+                                "
+                            >
+
+                                {% if tipo.Estado_tipo_producto %}
+                                    Baja
+                                {% else %}
+                                    Activar
+                                {% endif %}
+
+                            </button>
+
+                        </form>
+
+
+                        <!-- FLECHA -->
+
+                        <button
+                            type="button"
+                            class="btn-arrow"
+
+                            onclick="toggleDetails(
+                                'details-{{ tipo.ID_Tipo_producto }}',
+                                'arrow-{{ tipo.ID_Tipo_producto }}'
+                            )"
+                        >
+
+                            <span id="arrow-{{ tipo.ID_Tipo_producto }}">
+                                ▲
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- DETALLE -->
+                <!-- ================================================= -->
+
+                <div
+                    id="details-{{ tipo.ID_Tipo_producto }}"
+                    class="card-details hidden"
+                >
+
+                    <div class="detail-item">
+
+                        <span class="label">
+                            ID_TIPO_PRODUCTO
+                        </span>
+
+                        <span class="value">
+                            TP{{ tipo.ID_Tipo_producto }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="detail-item">
+
+                        <span class="label">
+                            NOMBRE_TIPO_PRODUCTO
+                        </span>
+
+                        <span class="value">
+                            {{ tipo.Nombre_tipo_producto }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="detail-item">
+
+                        <span class="label">
+                            ESTADO_TIPO_PRODUCTO
+                        </span>
+
+                        <span
+                            class="value"
+                            id="detail-estado-text-{{ tipo.ID_Tipo_producto }}"
+                        >
+
+                            {% if tipo.Estado_tipo_producto %}
+
+                                <span style="color:#15803d;">
+                                    Activo
+                                </span>
+
+                            {% else %}
+
+                                <span style="color:#6b7280;">
+                                    Inactivo
+                                </span>
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- PRODUCTOS ASOCIADOS -->
+
+                    <div class="products-section">
+
+                        <div class="products-list">
+
+                            {% for producto in tipo.productos_set.all %}
+
+                                <span class="product-tag">
+
+                                    {{ producto.Nombre_producto }}
+
+                                </span>
+
+                            {% empty %}
+
+                                <span class="product-tag">
+                                    Sin productos asociados
+                                </span>
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        {% empty %}
+
+            <p
+                style="
+                    text-align: center;
+                    color: #7f8c8d;
+                    margin-top: 40px;
+                "
+            >
+                No se encontraron tipos de producto.
+            </p>
+
+        {% endfor %}
+
+    </section>
+
+</main>
+
+
+<!-- ===================================================== -->
+<!-- MODAL CONFIRMAR BAJA -->
+<!-- ===================================================== -->
+
+<div
+    class="modal"
+    id="modalConfirmarBaja"
+>
+
+    <div class="modal-baja-container">
+
+        <div class="modal-baja-header">
+
+            <h3>
+                Confirmar baja
+            </h3>
+
+            <span
+                class="close-btn"
+                onclick="cerrarModal('modalConfirmarBaja')"
+            >
+                ✕
+            </span>
+
+        </div>
+
+
+        <div class="alert-baja-warning">
+
+            <span>⚠️</span>
+
+            Verificá que sea el tipo de producto correcto
+            antes de confirmar la baja.
+
+        </div>
+
+
+        <div class="baja-card-wrapper">
+
+            <div class="baja-profile-header">
+
+                <div
+                    class="avatar-baja"
+                    id="baja_avatar"
+                >
+                    TP
+                </div>
+
+
+                <div class="baja-profile-info">
+
+                    <h4 id="baja_nombre">
+                        Tipo de producto
+                    </h4>
+
+                    <p>
+                        Tipo de producto registrado
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="baja-grid">
+
+                <div class="baja-item">
+
+                    <span class="lbl">
+                        ID_TIPO_PRODUCTO
+                    </span>
+
+                    <span
+                        class="val"
+                        id="baja_id"
+                    >
+                        TP00
+                    </span>
+
+                </div>
+
+
+                <div class="baja-item">
+
+                    <span class="lbl">
+                        NOMBRE
+                    </span>
+
+                    <span
+                        class="val"
+                        id="baja_nombre_detalle"
+                    >
+                        --
+                    </span>
+
+                </div>
+
+
+                <div class="baja-item">
+
+                    <span class="lbl">
+                        PRODUCTOS ASOCIADOS
+                    </span>
+
+                    <span
+                        class="val"
+                        id="baja_productos"
+                    >
+                        --
+                    </span>
+
+                </div>
+
+
+                <div class="baja-item">
+
+                    <span class="lbl">
+                        ESTADO
+                    </span>
+
+                    <span
+                        class="val"
+                        style="color:#15803d;"
+                    >
+                        Activo
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="baja-actions">
+
+            <button
+                type="button"
+                class="btn-baja-cancel"
+                onclick="cerrarModal('modalConfirmarBaja')"
+            >
+                Cancelar
+            </button>
+
+
+            <button
+                type="button"
+                class="btn-baja-confirm"
+                id="btnConfirmarBajaEjecutar"
+            >
+                Confirmar baja
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- MODAL EDITAR -->
+<!-- ===================================================== -->
+
+<div
+    class="modal"
+    id="modalEditarTipo"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3>
+                Editar Tipo de Producto
+            </h3>
+
+            <span
+                class="close-btn"
+                onclick="cerrarModal('modalEditarTipo')"
+            >
+                ✕
+            </span>
+
+        </div>
+
+
+        <form
+            id="formEditarTipo"
+            method="POST"
+            action=""
+        >
+
+            {% csrf_token %}
+
+
+            <div class="modal-body">
+
+                <div class="form-group">
+
+                    <label>
+                        ID_TIPO_PRODUCTO
+                    </label>
+
+                    <input
+                        type="text"
+                        id="edit_id"
+                        class="form-input"
+                        readonly
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        NOMBRE_TIPO_PRODUCTO
+                    </label>
+
+                    <input
+                        type="text"
+                        id="edit_nombre"
+                        name="Nombre_tipo_producto"
+                        class="form-input"
+                        required
+                    >
+
+                </div>
+
+
+                <input
+                    type="hidden"
+                    id="edit_estado"
+                    name="Estado_tipo_producto"
+                >
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn-cancel"
+                    onclick="cerrarModal('modalEditarTipo')"
+                >
+                    Cancelar
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn-save"
+                >
+                    Guardar Cambios
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- MODAL NUEVO TIPO -->
+<!-- ===================================================== -->
+
+<div
+    class="modal"
+    id="modalCrearTipo"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3>
+                Nuevo tipo de producto
+            </h3>
+
+            <span
+                class="close-btn"
+                onclick="cerrarModal('modalCrearTipo')"
+            >
+                ✕
+            </span>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{% url 'crear_tipo_producto' %}"
+        >
+
+            {% csrf_token %}
+
+
+            <div class="modal-body">
+
+                <div class="form-group">
+
+                    <label>
+                        NOMBRE_TIPO_PRODUCTO
+                    </label>
+
+                    <input
+                        type="text"
+                        name="Nombre_tipo_producto"
+                        class="form-input"
+                        value="{{ request.POST.Nombre_tipo_producto|default:'' }}"
+                        placeholder="Ingrese el tipo de producto"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        ESTADO_TIPO_PRODUCTO
+                    </label>
+
+                    <input
+                        type="hidden"
+                        name="Estado_tipo_producto"
+                        value="True"
+                    >
+
+                    <div
+                        style="
+                            padding: 10px;
+                            background-color: #f0fdf4;
+                            border: 1px solid #dcfce7;
+                            color: #15803d;
+                            border-radius: 6px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            display: inline-block;
+                        "
+                    >
+                        Activo
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn-cancel"
+                    onclick="cerrarModal('modalCrearTipo')"
+                >
+                    Cancelar
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn-save"
+                >
+                    Registrar
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- JAVASCRIPT -->
+<!-- ===================================================== -->
+
+<script>
+
+    let formPendingState = null;
+    let idPendingState = null;
+    let namePendingState = null;
+
+
+    /* =====================================================
+       TOASTS
+    ===================================================== */
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function() {
+
+            const toasts =
+                document.querySelectorAll('.toast');
+
+            toasts.forEach(
+                toast => autocerrarToast(toast)
+            );
+
+        }
+    );
+
+
+    function autocerrarToast(toast) {
+
+        setTimeout(
+            () => {
+
+                toast.style.animation =
+                    'fadeOut 0.5s ease-out forwards';
+
+                setTimeout(
+                    () => toast.remove(),
+                    500
+                );
+
+            },
+            4000
+        );
+
+    }
+
+
+    function cerrarToast(id) {
+
+        const toast =
+            document.getElementById(id);
+
+        if (toast) {
+
+            toast.style.animation =
+                'fadeOut 0.3s ease-out forwards';
+
+            setTimeout(
+                () => toast.remove(),
+                300
+            );
+
+        }
+
+    }
+
+
+    function mostrarToast(
+        mensaje,
+        tipo = 'warning'
+    ) {
+
+        const container =
+            document.getElementById('toastContainer');
+
+        const toast =
+            document.createElement('div');
+
+        const id =
+            'toast-' + Date.now();
+
+        toast.className =
+            `toast ${tipo}`;
+
+        toast.id = id;
+
+        toast.innerHTML = `
+            <span>${mensaje}</span>
+
+            <span
+                class="toast-close"
+                onclick="cerrarToast('${id}')"
+            >
+                ✕
+            </span>
+        `;
+
+        container.appendChild(toast);
+
+        autocerrarToast(toast);
+
+    }
+
+
+    /* =====================================================
+       DETALLES
+    ===================================================== */
+
+    function toggleDetails(
+        idDetails,
+        idArrow
+    ) {
+
+        const details =
+            document.getElementById(idDetails);
+
+        const arrow =
+            document.getElementById(idArrow);
+
+        if (
+            details.classList.contains('hidden')
+        ) {
+
+            details.classList.remove('hidden');
+
+            arrow.innerText = '▼';
+
+        } else {
+
+            details.classList.add('hidden');
+
+            arrow.innerText = '▲';
+
+        }
+
+    }
+
+
+    /* =====================================================
+       BUSCAR
+    ===================================================== */
+
+    function filtrarTipos() {
+
+        const query =
+            document
+                .getElementById('searchInput')
+                .value
+                .toLowerCase()
+                .trim();
+
+
+        const cards =
+            document.querySelectorAll('.tipo-card');
+
+
+        cards.forEach(
+            card => {
+
+                const text =
+                    card.getAttribute('data-search')
+                    .toLowerCase();
+
+
+                card.style.display =
+                    text.includes(query)
+                        ? 'block'
+                        : 'none';
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       NUEVO
+    ===================================================== */
+
+    function abrirModalCrear() {
+
+        document
+            .getElementById('modalCrearTipo')
+            .style.display = 'flex';
+
+    }
+
+
+    /* =====================================================
+       EDITAR
+    ===================================================== */
+
+    function abrirModalEditar(
+        id,
+        nombre,
+        estado
+    ) {
+
+        document
+            .getElementById('formEditarTipo')
+            .action =
+            `/tipos-productos/editar/${id}/`;
+
+
+        document
+            .getElementById('edit_id')
+            .value = 'TP' + id;
+
+
+        document
+            .getElementById('edit_nombre')
+            .value = nombre;
+
+
+        document
+            .getElementById('edit_estado')
+            .value = estado;
+
+
+        document
+            .getElementById('modalEditarTipo')
+            .style.display = 'flex';
+
+    }
+
+
+    /* =====================================================
+       CERRAR MODALES
+    ===================================================== */
+
+    function cerrarModal(idModal) {
+
+        document
+            .getElementById(idModal)
+            .style.display = 'none';
+
+    }
+
+
+    /* =====================================================
+       SOLICITUD DE BAJA
+    ===================================================== */
+
+    function procesarSolicitudEstado(
+        event,
+        id,
+        nombre
+    ) {
+
+        event.preventDefault();
+
+        const form = event.target;
+
+        const btn =
+            document.getElementById(
+                `btn-estado-${id}`
+            );
+
+
+        const esActivo =
+            btn.classList.contains('btn-baja');
+
+
+        if (esActivo) {
+
+            formPendingState = form;
+
+            idPendingState = id;
+
+            namePendingState = nombre;
+
+
+            document
+                .getElementById('baja_avatar')
+                .innerText =
+                'TP';
+
+
+            document
+                .getElementById('baja_nombre')
+                .innerText =
+                nombre;
+
+
+            document
+                .getElementById('baja_id')
+                .innerText =
+                'TP' + id;
+
+
+            document
+                .getElementById('baja_nombre_detalle')
+                .innerText =
+                nombre;
+
+
+            document
+                .getElementById('modalConfirmarBaja')
+                .style.display =
+                'flex';
+
+        } else {
+
+            ejecutarCambioEstado(
+                form,
+                id,
+                nombre,
+                false
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       CONFIRMAR BAJA
+    ===================================================== */
+
+    document
+        .getElementById(
+            'btnConfirmarBajaEjecutar'
+        )
+        .addEventListener(
+            'click',
+            function() {
+
+                if (formPendingState) {
+
+                    cerrarModal(
+                        'modalConfirmarBaja'
+                    );
+
+
+                    ejecutarCambioEstado(
+                        formPendingState,
+                        idPendingState,
+                        namePendingState,
+                        true
+                    );
+
+                }
+
+            }
+        );
+
+
+    /* =====================================================
+       CAMBIAR ESTADO
+    ===================================================== */
+
+    function ejecutarCambioEstado(
+        form,
+        id,
+        nombre,
+        esBaja
+    ) {
+
+        const btn =
+            document.getElementById(
+                `btn-estado-${id}`
+            );
+
+
+        const badge =
+            document.getElementById(
+                `badge-estado-${id}`
+            );
+
+
+        const card =
+            document.getElementById(
+                `card-${id}`
+            );
+
+
+        const detailText =
+            document.getElementById(
+                `detail-estado-text-${id}`
+            );
+
+
+        const estado =
+            document.getElementById(
+                `estado-${id}`
+            );
+
+
+        estado.value =
+            esBaja
+                ? 'inactivo'
+                : 'activo';
+
+
+        fetch(
+            form.action,
+            {
+                method: 'POST',
+
+                body: new FormData(form),
+
+                headers: {
+                    'X-Requested-With':
+                        'XMLHttpRequest'
+                }
+            }
+        )
+
+        .then(
+            response => {
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        'Error al cambiar el estado'
+                    );
+
+                }
+
+
+                if (esBaja) {
+
+                    btn.classList.remove(
+                        'btn-baja'
+                    );
+
+                    btn.classList.add(
+                        'btn-activar'
+                    );
+
+                    btn.innerText =
+                        'Activar';
+
+
+                    badge.classList.remove(
+                        'badge-activo'
+                    );
+
+                    badge.classList.add(
+                        'badge-inactivo'
+                    );
+
+                    badge.innerText =
+                        'Inactivo';
+
+
+                    card.classList.add(
+                        'inactivo'
+                    );
+
+
+                    detailText.innerHTML =
+                        '<span style="color:#6b7280;">Inactivo</span>';
+
+
+                    mostrarToast(
+                        `⚠️ El tipo "${nombre}" ha sido dado de baja.`,
+                        'warning'
+                    );
+
+                } else {
+
+                    btn.classList.remove(
+                        'btn-activar'
+                    );
+
+                    btn.classList.add(
+                        'btn-baja'
+                    );
+
+                    btn.innerText =
+                        'Baja';
+
+
+                    badge.classList.remove(
+                        'badge-inactivo'
+                    );
+
+                    badge.classList.add(
+                        'badge-activo'
+                    );
+
+                    badge.innerText =
+                        'Activo';
+
+
+                    card.classList.remove(
+                        'inactivo'
+                    );
+
+
+                    detailText.innerHTML =
+                        '<span style="color:#15803d;">Activo</span>';
+
+
+                    mostrarToast(
+                        `✅ El tipo "${nombre}" ha sido activado.`,
+                        'success'
+                    );
+
+                }
+
+            }
+        )
+
+        .catch(
+            error => {
+
+                console.error(error);
+
+                form.submit();
+
+            }
+        );
+
+    }
+
+</script>
+
+</body>
+
+</html>
