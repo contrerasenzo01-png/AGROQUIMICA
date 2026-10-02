@@ -1,13 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-
 from django.db.models import Q
-
 from django.contrib import messages
-
 from django.utils import timezone
-
 from django.contrib.auth.hashers import make_password, check_password
-
+from decimal import Decimal, InvalidOperation
 import unicodedata
 
 from datetime import timedelta
@@ -15,33 +11,18 @@ from datetime import timedelta
 from .forms import ProveedorForm
 
 from .models import (
-
     TiposProductos,
-
-    Agroquimicos,
-
+    Subtipos,
     Proveedores,
-
     TiposMovimientos,
-
     Perfiles,
-
     Permisos,
-
     PerfilesXPermisos,
-
     Usuarios,
-
     Productos,
-
-    ProductosXAgroquimicos,
-
-    ProductosXProveedores,
-
+    Lotes,
     Stock,
-
     Alertas,
-
     MovimientosStock
 )
 
@@ -51,6 +32,7 @@ from .models import (
 # ============================================================
 
 def usuario_es_administrador(request):
+
     usuario_id = request.session.get('usuario_id')
 
     if not usuario_id:
@@ -69,6 +51,34 @@ def usuario_es_administrador(request):
         return None
 
     if usuario.ID_Perfil.Nombre_perfil != 'Administrador':
+        return None
+
+    return usuario
+
+
+def usuario_autenticado(request):
+
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return None
+
+    try:
+        usuario = Usuarios.objects.select_related(
+            'ID_Perfil'
+        ).get(
+            ID_Usuario=usuario_id
+        )
+    except Usuarios.DoesNotExist:
+        return None
+
+    if not usuario.Estado_usuario:
+        return None
+
+    if not usuario.ID_Perfil:
+        return None
+
+    if not usuario.ID_Perfil.Estado_perfil:
         return None
 
     return usuario
@@ -187,24 +197,12 @@ def cerrar_sesion(request):
 
 def panel_principal(request):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
-
-        return redirect(
-            'login'
-        )
+    if not usuario:
+        return redirect('login')
 
     generar_alertas_vencimiento()
-
-    usuario = get_object_or_404(
-        Usuarios.objects.select_related(
-            'ID_Perfil'
-        ),
-        ID_Usuario=usuario_id
-    )
 
     return render(
         request,
@@ -238,7 +236,8 @@ def gestion_proveedores(request):
         proveedores = proveedores.filter(
             Q(nombre_proveedor__icontains=busqueda) |
             Q(email_proveedor__icontains=busqueda) |
-            Q(direccion_proveedor__icontains=busqueda)
+            Q(direccion_proveedor__icontains=busqueda) |
+            Q(telefono_proveedor__icontains=busqueda)
         )
 
     total_proveedores = Proveedores.objects.count()
@@ -291,28 +290,45 @@ def crear_proveedor(request):
                 'nombre_proveedor'
             ].strip()
 
-            telefono = form.cleaned_data[
-                'telefono_proveedor'
-            ].strip()
+            telefono = (
+                form.cleaned_data.get(
+                    'telefono_proveedor'
+                ) or ''
+            ).strip()
 
-            email = form.cleaned_data[
-                'email_proveedor'
-            ].strip()
+            email = (
+                form.cleaned_data.get(
+                    'email_proveedor'
+                ) or ''
+            ).strip()
 
-            direccion = form.cleaned_data[
-                'direccion_proveedor'
-            ].strip()
+            direccion = (
+                form.cleaned_data.get(
+                    'direccion_proveedor'
+                ) or ''
+            ).strip()
+
+            filtros = Q(
+                nombre_proveedor__iexact=nombre
+            )
+
+            if telefono:
+                filtros |= Q(
+                    telefono_proveedor=telefono
+                )
+
+            if email:
+                filtros |= Q(
+                    email_proveedor__iexact=email
+                )
+
+            if direccion:
+                filtros |= Q(
+                    direccion_proveedor__iexact=direccion
+                )
 
             proveedor_existente = Proveedores.objects.filter(
-
-                Q(nombre_proveedor__iexact=nombre) |
-
-                Q(telefono_proveedor=telefono) |
-
-                Q(email_proveedor__iexact=email) |
-
-                Q(direccion_proveedor__iexact=direccion)
-
+                filtros
             ).first()
 
             if proveedor_existente:
@@ -324,7 +340,8 @@ def crear_proveedor(request):
                 request.session[
                     'proveedor_conflicto'
                 ] = (
-                    'Ya existe un proveedor con alguno de los datos ingresados.'
+                    'Ya existe un proveedor con alguno '
+                    'de los datos ingresados.'
                 )
 
                 return redirect(
@@ -376,28 +393,45 @@ def editar_proveedor(request, pk):
                 'nombre_proveedor'
             ].strip()
 
-            telefono = form.cleaned_data[
-                'telefono_proveedor'
-            ].strip()
+            telefono = (
+                form.cleaned_data.get(
+                    'telefono_proveedor'
+                ) or ''
+            ).strip()
 
-            email = form.cleaned_data[
-                'email_proveedor'
-            ].strip()
+            email = (
+                form.cleaned_data.get(
+                    'email_proveedor'
+                ) or ''
+            ).strip()
 
-            direccion = form.cleaned_data[
-                'direccion_proveedor'
-            ].strip()
+            direccion = (
+                form.cleaned_data.get(
+                    'direccion_proveedor'
+                ) or ''
+            ).strip()
+
+            filtros = Q(
+                nombre_proveedor__iexact=nombre
+            )
+
+            if telefono:
+                filtros |= Q(
+                    telefono_proveedor=telefono
+                )
+
+            if email:
+                filtros |= Q(
+                    email_proveedor__iexact=email
+                )
+
+            if direccion:
+                filtros |= Q(
+                    direccion_proveedor__iexact=direccion
+                )
 
             proveedor_existente = Proveedores.objects.filter(
-
-                Q(nombre_proveedor__iexact=nombre) |
-
-                Q(telefono_proveedor=telefono) |
-
-                Q(email_proveedor__iexact=email) |
-
-                Q(direccion_proveedor__iexact=direccion)
-
+                filtros
             ).exclude(
                 ID_Proveedor=pk
             ).first()
@@ -411,7 +445,8 @@ def editar_proveedor(request, pk):
                 request.session[
                     'proveedor_conflicto'
                 ] = (
-                    'Ya existe otro proveedor con alguno de los datos ingresados.'
+                    'Ya existe otro proveedor con alguno '
+                    'de los datos ingresados.'
                 )
 
                 return redirect(
@@ -472,19 +507,10 @@ def cambiar_estado_proveedor(request, pk):
 
 def gestion_tipos_productos(request):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
+    if not usuario:
         return redirect('login')
-
-    usuario = get_object_or_404(
-        Usuarios.objects.select_related(
-            'ID_Perfil'
-        ),
-        ID_Usuario=usuario_id
-    )
 
     busqueda = request.GET.get(
         'q',
@@ -512,11 +538,9 @@ def gestion_tipos_productos(request):
 
 def crear_tipo_producto(request):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
+    if not usuario:
         return redirect('login')
 
     if request.method == 'POST':
@@ -526,16 +550,40 @@ def crear_tipo_producto(request):
             ''
         ).strip()
 
-        if nombre:
+        if not nombre:
 
-            TiposProductos.objects.create(
-                Nombre_tipo_producto=nombre
-            )
-
-            messages.success(
+            messages.error(
                 request,
-                'Tipo de producto registrado correctamente.'
+                'Debe ingresar el nombre del tipo de producto.'
             )
+
+            return redirect(
+                'gestion_tipos_productos'
+            )
+
+        existe = TiposProductos.objects.filter(
+            Nombre_tipo_producto__iexact=nombre
+        ).exists()
+
+        if existe:
+
+            messages.error(
+                request,
+                'Ya existe un tipo de producto con ese nombre.'
+            )
+
+            return redirect(
+                'gestion_tipos_productos'
+            )
+
+        TiposProductos.objects.create(
+            Nombre_tipo_producto=nombre
+        )
+
+        messages.success(
+            request,
+            'Tipo de producto registrado correctamente.'
+        )
 
     return redirect(
         'gestion_tipos_productos'
@@ -544,16 +592,14 @@ def crear_tipo_producto(request):
 
 def editar_tipo_producto(request, pk):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
+    if not usuario:
         return redirect('login')
 
     tipo = get_object_or_404(
         TiposProductos,
-        pk=pk
+        ID_Tipo_producto=pk
     )
 
     if request.method == 'POST':
@@ -563,16 +609,41 @@ def editar_tipo_producto(request, pk):
             ''
         ).strip()
 
-        if nombre:
+        if not nombre:
 
-            tipo.Nombre_tipo_producto = nombre
-
-            tipo.save()
-
-            messages.success(
+            messages.error(
                 request,
-                'Tipo de producto actualizado correctamente.'
+                'Debe ingresar el nombre del tipo de producto.'
             )
+
+            return redirect(
+                'gestion_tipos_productos'
+            )
+
+        existe = TiposProductos.objects.filter(
+            Nombre_tipo_producto__iexact=nombre
+        ).exclude(
+            ID_Tipo_producto=pk
+        ).exists()
+
+        if existe:
+
+            messages.error(
+                request,
+                'Ya existe otro tipo de producto con ese nombre.'
+            )
+
+            return redirect(
+                'gestion_tipos_productos'
+            )
+
+        tipo.Nombre_tipo_producto = nombre
+        tipo.save()
+
+        messages.success(
+            request,
+            'Tipo de producto actualizado correctamente.'
+        )
 
     return redirect(
         'gestion_tipos_productos'
@@ -580,17 +651,15 @@ def editar_tipo_producto(request, pk):
 
 
 def dar_baja_tipo_producto(request, pk):
-    
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
 
-    if not usuario_id:
+    usuario = usuario_autenticado(request)
+
+    if not usuario:
         return redirect('login')
 
     tipo = get_object_or_404(
         TiposProductos,
-        pk=pk
+        ID_Tipo_producto=pk
     )
 
     if request.method == 'POST':
@@ -600,6 +669,7 @@ def dar_baja_tipo_producto(request, pk):
         )
 
         if estado == 'activo':
+
             tipo.Estado_tipo_producto = True
 
             messages.success(
@@ -608,6 +678,7 @@ def dar_baja_tipo_producto(request, pk):
             )
 
         elif estado == 'inactivo':
+
             tipo.Estado_tipo_producto = False
 
             messages.success(
@@ -622,46 +693,52 @@ def dar_baja_tipo_producto(request, pk):
     )
 
 
+
 # ============================================================
-# AGROQUÍMICOS
+# SUBTIPOS
 # ============================================================
 
-def gestion_agroquimicos(request):
+def gestion_subtipos(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_autenticado(request)
 
     if not usuario:
-        return redirect('panel_principal')
+        return redirect('login')
 
     busqueda = request.GET.get(
         'q',
         ''
     ).strip()
 
-    agroquimicos = Agroquimicos.objects.all()
+    subtipos = Subtipos.objects.select_related(
+        'ID_Tipo_producto'
+    ).all()
 
     if busqueda:
 
-        agroquimicos = agroquimicos.filter(
-
-            Q(Nombre_agroquimico__icontains=busqueda) |
-
-            Q(Descripcion_agroquimico__icontains=busqueda)
-
+        subtipos = subtipos.filter(
+            Nombre_subtipo__icontains=busqueda
         )
+
+    tipos_productos = TiposProductos.objects.filter(
+        Estado_tipo_producto=True
+    ).order_by(
+        'Nombre_tipo_producto'
+    )
 
     return render(
         request,
-        'inventario/agroquimicos.html',
+        'inventario/subtipos.html',
         {
-            'agroquimicos': agroquimicos,
+            'subtipos': subtipos,
+            'tipos_productos': tipos_productos,
             'busqueda': busqueda,
             'usuario': usuario
         }
     )
 
 
-def crear_agroquimico(request):
+def crear_subtipo(request):
 
     usuario = usuario_es_administrador(request)
 
@@ -671,65 +748,193 @@ def crear_agroquimico(request):
     if request.method == 'POST':
 
         nombre = request.POST.get(
-            'Nombre_agroquimico',
+            'Nombre_subtipo',
             ''
         ).strip()
 
-        descripcion = request.POST.get(
-            'Descripcion_agroquimico',
-            ''
-        ).strip()
+        tipo_id = request.POST.get(
+            'ID_Tipo_producto'
+        )
 
-        if nombre:
+        if not nombre:
 
-            Agroquimicos.objects.create(
-                Nombre_agroquimico=nombre,
-                Descripcion_agroquimico=descripcion
-            )
-
-            messages.success(
+            messages.error(
                 request,
-                'Agroquímico registrado correctamente.'
+                'Debe ingresar el nombre del subtipo.'
             )
+
+            return redirect(
+                'gestion_subtipos'
+            )
+
+        if not tipo_id:
+
+            messages.error(
+                request,
+                'Debe seleccionar un tipo de producto.'
+            )
+
+            return redirect(
+                'gestion_subtipos'
+            )
+
+        tipo = get_object_or_404(
+            TiposProductos,
+            ID_Tipo_producto=tipo_id,
+            Estado_tipo_producto=True
+        )
+
+        existe = Subtipos.objects.filter(
+            ID_Tipo_producto=tipo,
+            Nombre_subtipo__iexact=nombre
+        ).exists()
+
+        if existe:
+
+            messages.error(
+                request,
+                'Ya existe un subtipo con ese nombre para el tipo seleccionado.'
+            )
+
+            return redirect(
+                'gestion_subtipos'
+            )
+
+        Subtipos.objects.create(
+            ID_Tipo_producto=tipo,
+            Nombre_subtipo=nombre,
+            Estado_subtipo=True
+        )
+
+        messages.success(
+            request,
+            'Subtipo creado correctamente.'
+        )
 
     return redirect(
-        'gestion_agroquimicos'
+        'gestion_subtipos'
     )
 
 
-def editar_agroquimico(request, pk):
+def editar_subtipo(request, pk):
 
     usuario = usuario_es_administrador(request)
 
     if not usuario:
         return redirect('panel_principal')
 
-    agroquimico = get_object_or_404(
-        Agroquimicos,
-        pk=pk
+    subtipo = get_object_or_404(
+        Subtipos,
+        ID_Subtipo=pk
     )
 
     if request.method == 'POST':
 
-        agroquimico.Nombre_agroquimico = request.POST.get(
-            'Nombre_agroquimico',
+        nombre = request.POST.get(
+            'Nombre_subtipo',
             ''
         ).strip()
 
-        agroquimico.Descripcion_agroquimico = request.POST.get(
-            'Descripcion_agroquimico',
-            ''
-        ).strip()
+        tipo_id = request.POST.get(
+            'ID_Tipo_producto'
+        )
 
-        agroquimico.save()
+        if not nombre:
+
+            messages.error(
+                request,
+                'Debe ingresar el nombre del subtipo.'
+            )
+
+            return redirect(
+                'gestion_subtipos'
+            )
+
+        if not tipo_id:
+
+            messages.error(
+                request,
+                'Debe seleccionar un tipo de producto.'
+            )
+
+            return redirect(
+                'gestion_subtipos'
+            )
+
+        tipo = get_object_or_404(
+            TiposProductos,
+            ID_Tipo_producto=tipo_id,
+            Estado_tipo_producto=True
+        )
+
+        existe = Subtipos.objects.filter(
+            ID_Tipo_producto=tipo,
+            Nombre_subtipo__iexact=nombre
+        ).exclude(
+            ID_Subtipo=pk
+        ).exists()
+
+        if existe:
+
+            messages.error(
+                request,
+                'Ya existe un subtipo con ese nombre para el tipo seleccionado.'
+            )
+
+            return redirect(
+                'gestion_subtipos'
+            )
+
+        subtipo.ID_Tipo_producto = tipo
+        subtipo.Nombre_subtipo = nombre
+        subtipo.save()
 
         messages.success(
             request,
-            'Agroquímico actualizado correctamente.'
+            'Subtipo modificado correctamente.'
         )
 
     return redirect(
-        'gestion_agroquimicos'
+        'gestion_subtipos'
+    )
+
+
+def cambiar_estado_subtipo(request, pk):
+
+    usuario = usuario_autenticado(request)
+
+    if not usuario:
+        return redirect('login')
+
+    subtipo = get_object_or_404(
+        Subtipos,
+        ID_Subtipo=pk
+    )
+
+    if request.method == 'POST':
+
+        subtipo.Estado_subtipo = (
+            not subtipo.Estado_subtipo
+        )
+
+        subtipo.save()
+
+        if subtipo.Estado_subtipo:
+
+            messages.success(
+                request,
+                'Subtipo activado correctamente.'
+            )
+
+        else:
+
+            messages.success(
+                request,
+                'Subtipo dado de baja correctamente.'
+            )
+
+    return redirect(
+        'gestion_subtipos'
     )
 
 
@@ -756,15 +961,10 @@ def gestion_usuarios(request):
     if busqueda:
 
         filtros = (
-
             Q(Nombre_usuario__icontains=busqueda) |
-
             Q(Apellido_usuario__icontains=busqueda) |
-
             Q(Usuario__icontains=busqueda) |
-
             Q(Email_usuario__icontains=busqueda)
-
         )
 
         if busqueda.isdigit():
@@ -808,9 +1008,20 @@ def crear_usuario(request):
             'ID_Perfil'
         )
 
+        if not perfil_id:
+
+            messages.error(
+                request,
+                'Debe seleccionar un perfil.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
         perfil = get_object_or_404(
             Perfiles,
-            pk=perfil_id
+            ID_Perfil=perfil_id
         )
 
         dni = request.POST.get(
@@ -838,11 +1049,11 @@ def crear_usuario(request):
             ''
         ).strip()
 
-        if len(contrasena) < 8:
+        if not dni or not dni.isdigit():
 
             messages.error(
                 request,
-                'La contraseña debe tener al menos 8 caracteres.'
+                'Debe ingresar un DNI válido.'
             )
 
             return redirect(
@@ -865,6 +1076,54 @@ def crear_usuario(request):
             messages.error(
                 request,
                 'Debe ingresar el apellido del usuario.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
+        if not email:
+
+            messages.error(
+                request,
+                'Debe ingresar el correo electrónico.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
+        if len(contrasena) < 8:
+
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
+        if Usuarios.objects.filter(
+            DNI=int(dni)
+        ).exists():
+
+            messages.error(
+                request,
+                'Ya existe un usuario con ese DNI.'
+            )
+
+            return redirect(
+                'gestion_usuarios'
+            )
+
+        if Usuarios.objects.filter(
+            Email_usuario__iexact=email
+        ).exists():
+
+            messages.error(
+                request,
+                'Ya existe un usuario con ese correo electrónico.'
             )
 
             return redirect(
@@ -924,7 +1183,7 @@ def crear_usuario(request):
 
             ID_Perfil=perfil,
 
-            DNI=dni,
+            DNI=int(dni),
 
             Apellido_usuario=apellido,
 
@@ -949,11 +1208,8 @@ def crear_usuario(request):
             request,
 
             f'El usuario {usuario.Usuario} '
-
             f'ha sido registrado correctamente. '
-
             f'Deberá cambiar su contraseña '
-
             f'en el próximo inicio de sesión.'
 
         )
@@ -1001,6 +1257,27 @@ def editar_usuario(request, pk):
                 }
             )
 
+        email_existente = Usuarios.objects.filter(
+            Email_usuario__iexact=nuevo_email
+        ).exclude(
+            ID_Usuario=pk
+        ).exists()
+
+        if email_existente:
+
+            messages.error(
+                request,
+                'Ya existe otro usuario con ese correo electrónico.'
+            )
+
+            return render(
+                request,
+                'inventario/editar_usuario.html',
+                {
+                    'usuario': usuario
+                }
+            )
+
         usuario.Email_usuario = nuevo_email
 
         usuario.save()
@@ -1008,7 +1285,7 @@ def editar_usuario(request, pk):
         messages.success(
             request,
             f'El usuario {usuario.Usuario} '
-            f'ha sido modificado correctamente'
+            f'ha sido modificado correctamente.'
         )
 
         return redirect(
@@ -1033,7 +1310,6 @@ def dar_baja_usuario(request, pk):
     usuario_admin = usuario_es_administrador(request)
 
     if not usuario_admin:
-
         return redirect('panel_principal')
 
     usuario = get_object_or_404(
@@ -1042,10 +1318,12 @@ def dar_baja_usuario(request, pk):
     )
 
     if usuario.ID_Usuario == usuario_admin.ID_Usuario:
+
         messages.error(
             request,
             'No puede darse de baja a sí mismo.'
         )
+
         return redirect(
             'gestion_usuarios'
         )
@@ -1058,15 +1336,15 @@ def dar_baja_usuario(request, pk):
 
         usuario.save()
 
-
         messages.success(
             request,
-            'Usuario dado de baja correctamente'
+            'Usuario dado de baja correctamente.'
         )
 
     return redirect(
         'gestion_usuarios'
     )
+
 
 # ============================================================
 # ACTIVAR USUARIO
@@ -1084,16 +1362,18 @@ def activar_usuario(request, id):
         ID_Usuario=id
     )
 
-    usuario.Estado_usuario = True
+    if request.method == 'POST':
 
-    usuario.Fecha_Baja = None
+        usuario.Estado_usuario = True
 
-    usuario.save()
+        usuario.Fecha_Baja = None
 
-    messages.success(
-        request,
-        f'El usuario {usuario.Usuario} fue activado correctamente'
-    )
+        usuario.save()
+
+        messages.success(
+            request,
+            f'El usuario {usuario.Usuario} fue activado correctamente.'
+        )
 
     return redirect(
         'gestion_usuarios'
@@ -1197,10 +1477,7 @@ def cambiar_contrasena(request):
     )
 
     if not usuario_id:
-
-        return redirect(
-            'login'
-        )
+        return redirect('login')
 
     usuario = get_object_or_404(
         Usuarios,
@@ -1511,58 +1788,6 @@ def gestion_permisos(request):
     if not usuario:
         return redirect('panel_principal')
 
-    if request.method == 'POST':
-
-        nombre_permiso = request.POST.get(
-            'Nombre_permiso',
-            ''
-        ).strip()
-
-        descripcion_permiso = request.POST.get(
-            'Descripcion_permiso',
-            ''
-        ).strip()
-
-        if not nombre_permiso:
-
-            messages.error(
-                request,
-                'Debe ingresar el nombre del permiso.'
-            )
-
-            return redirect(
-                'gestion_permisos'
-            )
-
-        permiso_existente = Permisos.objects.filter(
-            Nombre_permiso__iexact=nombre_permiso
-        ).exists()
-
-        if permiso_existente:
-
-            messages.error(
-                request,
-                'Ya existe un permiso con ese nombre.'
-            )
-
-            return redirect(
-                'gestion_permisos'
-            )
-
-        Permisos.objects.create(
-            Nombre_permiso=nombre_permiso,
-            Descripcion_permiso=descripcion_permiso
-        )
-
-        messages.success(
-            request,
-            'Permiso creado correctamente.'
-        )
-
-        return redirect(
-            'gestion_permisos'
-        )
-
     busqueda = request.GET.get(
         'q',
         ''
@@ -1575,11 +1800,8 @@ def gestion_permisos(request):
     if busqueda:
 
         permisos = permisos.filter(
-
             Q(Nombre_permiso__icontains=busqueda) |
-
             Q(Descripcion_permiso__icontains=busqueda)
-
         )
 
     return render(
@@ -1706,7 +1928,6 @@ def editar_permiso(request, pk):
             )
 
         permiso.Nombre_permiso = nombre_permiso
-
         permiso.Descripcion_permiso = descripcion_permiso
 
         permiso.save()
@@ -1760,25 +1981,10 @@ def eliminar_permiso(request, pk):
 
 def mis_permisos(request):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
-
-        return redirect(
-            'login'
-        )
-
-    usuario = get_object_or_404(
-        Usuarios.objects.select_related(
-            'ID_Perfil'
-        ),
-        ID_Usuario=usuario_id
-    )
-
-    if not usuario.ID_Perfil:
-        return redirect('panel_principal')
+    if not usuario:
+        return redirect('login')
 
     if usuario.ID_Perfil.Nombre_perfil != 'Vendedor':
 
@@ -1799,123 +2005,15 @@ def mis_permisos(request):
 
 
 # ============================================================
-# TIPOS DE MOVIMIENTOS
-# ============================================================
-
-def gestion_tipos_movimientos(request):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    busqueda = request.GET.get(
-        'q',
-        ''
-    ).strip()
-
-    tipos = TiposMovimientos.objects.all()
-
-    if busqueda:
-
-        tipos = tipos.filter(
-            Nombre_tipo_movimiento__icontains=busqueda
-        )
-
-    return render(
-        request,
-        'inventario/tipos_movimientos.html',
-        {
-            'tipos_movimientos': tipos,
-            'busqueda': busqueda,
-            'usuario': usuario
-        }
-    )
-
-
-def crear_tipo_movimiento(request):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    if request.method == 'POST':
-
-        nombre = request.POST.get(
-            'Nombre_tipo_movimiento',
-            ''
-        ).strip()
-
-        if nombre:
-
-            TiposMovimientos.objects.create(
-                Nombre_tipo_movimiento=nombre
-            )
-
-            messages.success(
-                request,
-                'Tipo de movimiento registrado correctamente.'
-            )
-
-    return redirect(
-        'gestion_tipos_movimientos'
-    )
-
-
-def editar_tipo_movimiento(request, pk):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    tipo = get_object_or_404(
-        TiposMovimientos,
-        pk=pk
-    )
-
-    if request.method == 'POST':
-
-        tipo.Nombre_tipo_movimiento = request.POST.get(
-            'Nombre_tipo_movimiento',
-            ''
-        ).strip()
-
-        tipo.save()
-
-        messages.success(
-            request,
-            'Tipo de movimiento actualizado correctamente.'
-        )
-
-    return redirect(
-        'gestion_tipos_movimientos'
-    )
-
-
-# ============================================================
 # PRODUCTOS
 # ============================================================
 
 def gestion_productos(request):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
-
-        return redirect(
-            'login'
-        )
-
-    usuario = get_object_or_404(
-        Usuarios.objects.select_related(
-            'ID_Perfil'
-        ),
-        ID_Usuario=usuario_id
-    )
+    if not usuario:
+        return redirect('login')
 
     busqueda = request.GET.get(
         'q',
@@ -1930,19 +2028,14 @@ def gestion_productos(request):
     productos = Productos.objects.select_related(
         'ID_Tipo_producto',
         'stock'
-    ).prefetch_related(
-        'agroquimicos',
-        'proveedores'
     ).all()
 
     if busqueda:
 
         productos = productos.filter(
-
             Q(Nombre_producto__icontains=busqueda) |
-
-            Q(Descripcion_producto__icontains=busqueda)
-
+            Q(Descripcion_producto__icontains=busqueda) |
+            Q(Marca__icontains=busqueda)
         )
 
     if tipo_id:
@@ -1951,12 +2044,8 @@ def gestion_productos(request):
             ID_Tipo_producto_id=tipo_id
         )
 
-    tipos_productos = TiposProductos.objects.all()
-
-    agroquimicos = Agroquimicos.objects.all()
-
-    proveedores = Proveedores.objects.filter(
-        estado_proveedor=True
+    tipos_productos = TiposProductos.objects.filter(
+        Estado_tipo_producto=True
     )
 
     return render(
@@ -1965,8 +2054,6 @@ def gestion_productos(request):
         {
             'productos': productos,
             'tipos_productos': tipos_productos,
-            'agroquimicos': agroquimicos,
-            'proveedores': proveedores,
             'busqueda': busqueda,
             'usuario': usuario
         }
@@ -1975,12 +2062,9 @@ def gestion_productos(request):
 
 def crear_producto(request):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
-
+    if not usuario:
         return redirect('login')
 
     if request.method == 'POST':
@@ -1989,75 +2073,208 @@ def crear_producto(request):
             'ID_Tipo_producto'
         )
 
-        tipo = get_object_or_404(
-            TiposProductos,
-            pk=tipo_id
+        marca = request.POST.get(
+            'Marca',
+            ''
+        ).strip()
+
+        nombre = request.POST.get(
+            'Nombre_producto',
+            ''
+        ).strip()
+
+        descripcion = request.POST.get(
+            'Descripcion_producto',
+            ''
+        ).strip()
+
+        precio = request.POST.get(
+            'Precio',
+            ''
+        ).strip()
+
+        cantidad_presentacion = request.POST.get(
+            'Cantidad_presentacion',
+            ''
+        ).strip()
+
+        unidad_medida = request.POST.get(
+            'Unidad_medida_producto',
+            ''
+        ).strip()
+
+        estado_producto = request.POST.get(
+            'Estado_producto',
+            'Activo'
         )
 
-        producto = Productos.objects.create(
+        # --------------------------------------------------------
+        # VALIDAR TIPO
+        # --------------------------------------------------------
+
+        if not tipo_id:
+
+            messages.error(
+                request,
+                'Debe seleccionar un tipo de producto.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        tipo = get_object_or_404(
+            TiposProductos,
+            ID_Tipo_producto=tipo_id,
+            Estado_tipo_producto=True
+        )
+
+        # --------------------------------------------------------
+        # VALIDAR NOMBRE
+        # --------------------------------------------------------
+
+        if not nombre:
+
+            messages.error(
+                request,
+                'Debe ingresar el nombre del producto.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        # --------------------------------------------------------
+        # VALIDAR PRECIO
+        # --------------------------------------------------------
+
+        if not precio:
+
+            messages.error(
+                request,
+                'Debe ingresar el precio del producto.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        try:
+
+            precio = Decimal(precio)
+
+        except (InvalidOperation, TypeError):
+
+            messages.error(
+                request,
+                'El precio ingresado no es válido.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        if precio <= 0:
+
+            messages.error(
+                request,
+                'El precio debe ser mayor a cero.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        # --------------------------------------------------------
+        # VALIDAR CANTIDAD DE PRESENTACIÓN
+        # --------------------------------------------------------
+
+        if cantidad_presentacion:
+
+            try:
+
+                cantidad_presentacion = Decimal(
+                    cantidad_presentacion
+                )
+
+            except (InvalidOperation, TypeError):
+
+                messages.error(
+                    request,
+                    'La cantidad de presentación no es válida.'
+                )
+
+                return redirect(
+                    'gestion_productos'
+                )
+
+            if cantidad_presentacion <= 0:
+
+                messages.error(
+                    request,
+                    'La cantidad de presentación debe ser mayor a cero.'
+                )
+
+                return redirect(
+                    'gestion_productos'
+                )
+
+        else:
+
+            cantidad_presentacion = None
+
+        # --------------------------------------------------------
+        # VERIFICAR PRODUCTO DUPLICADO
+        # --------------------------------------------------------
+
+        if marca:
+
+            producto_existente = Productos.objects.filter(
+                Nombre_producto__iexact=nombre,
+                Marca__iexact=marca
+            ).exists()
+
+        else:
+
+            producto_existente = Productos.objects.filter(
+                Nombre_producto__iexact=nombre,
+                Marca__isnull=True
+            ).exists()
+
+        if producto_existente:
+
+            messages.error(
+                request,
+                'Ya existe un producto con esos datos.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        # --------------------------------------------------------
+        # CREAR PRODUCTO
+        # --------------------------------------------------------
+
+        Productos.objects.create(
 
             ID_Tipo_producto=tipo,
 
-            Nombre_producto=request.POST.get(
-                'Nombre_producto',
-                ''
-            ).strip(),
+            Marca=marca or None,
 
-            Descripcion_producto=request.POST.get(
-                'Descripcion_producto',
-                ''
-            ).strip(),
+            Nombre_producto=nombre,
 
-            Fecha_vencimiento=request.POST.get(
-                'Fecha_vencimiento'
-            ) or None,
+            Descripcion_producto=descripcion or None,
 
-            Precio=request.POST.get(
-                'Precio'
-            ),
+            Precio=precio,
 
-            Estado_producto=request.POST.get(
-                'Estado_producto',
-                'Disponible'
-            )
+            Cantidad_presentacion=cantidad_presentacion,
+
+            Unidad_medida_producto=unidad_medida or None,
+
+            Estado_producto=estado_producto
 
         )
-
-        agroquimicos_ids = request.POST.getlist(
-            'agroquimicos'
-        )
-
-        for agro_id in agroquimicos_ids:
-
-            if agro_id:
-
-                agro = get_object_or_404(
-                    Agroquimicos,
-                    pk=agro_id
-                )
-
-                ProductosXAgroquimicos.objects.get_or_create(
-                    ID_Producto=producto,
-                    ID_Agroquimico=agro
-                )
-
-        proveedores_ids = request.POST.getlist(
-            'proveedores'
-        )
-
-        for proveedor_id in proveedores_ids:
-
-            if proveedor_id:
-
-                proveedor = get_object_or_404(
-                    Proveedores,
-                    pk=proveedor_id
-                )
-
-                ProductosXProveedores.objects.get_or_create(
-                    ID_Producto=producto,
-                    ID_Proveedor=proveedor
-                )
 
         messages.success(
             request,
@@ -2071,17 +2288,14 @@ def crear_producto(request):
 
 def editar_producto(request, pk):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
-
+    if not usuario:
         return redirect('login')
 
     producto = get_object_or_404(
         Productos,
-        pk=pk
+        ID_Producto=pk
     )
 
     if request.method == 'POST':
@@ -2090,69 +2304,216 @@ def editar_producto(request, pk):
             'ID_Tipo_producto'
         )
 
-        producto.ID_Tipo_producto = get_object_or_404(
-            TiposProductos,
-            pk=tipo_id
-        )
+        marca = request.POST.get(
+            'Marca',
+            ''
+        ).strip()
 
-        producto.Nombre_producto = request.POST.get(
+        nombre = request.POST.get(
             'Nombre_producto',
             ''
         ).strip()
 
-        producto.Descripcion_producto = request.POST.get(
+        descripcion = request.POST.get(
             'Descripcion_producto',
             ''
         ).strip()
 
-        producto.Fecha_vencimiento = request.POST.get(
-            'Fecha_vencimiento'
-        ) or None
+        precio = request.POST.get(
+            'Precio',
+            ''
+        ).strip()
 
-        producto.Precio = request.POST.get(
-            'Precio'
-        )
+        cantidad_presentacion = request.POST.get(
+            'Cantidad_presentacion',
+            ''
+        ).strip()
 
-        producto.Estado_producto = request.POST.get(
+        unidad_medida = request.POST.get(
+            'Unidad_medida_producto',
+            ''
+        ).strip()
+
+        estado_producto = request.POST.get(
             'Estado_producto',
-            'Disponible'
+            producto.Estado_producto
         )
+
+        # --------------------------------------------------------
+        # VALIDAR TIPO
+        # --------------------------------------------------------
+
+        if not tipo_id:
+
+            messages.error(
+                request,
+                'Debe seleccionar un tipo de producto.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        tipo = get_object_or_404(
+            TiposProductos,
+            ID_Tipo_producto=tipo_id,
+            Estado_tipo_producto=True
+        )
+
+        # --------------------------------------------------------
+        # VALIDAR NOMBRE
+        # --------------------------------------------------------
+
+        if not nombre:
+
+            messages.error(
+                request,
+                'Debe ingresar el nombre del producto.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        # --------------------------------------------------------
+        # VALIDAR PRECIO
+        # --------------------------------------------------------
+
+        if not precio:
+
+            messages.error(
+                request,
+                'Debe ingresar el precio del producto.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        try:
+
+            precio = Decimal(precio)
+
+        except (InvalidOperation, TypeError):
+
+            messages.error(
+                request,
+                'El precio ingresado no es válido.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        if precio <= 0:
+
+            messages.error(
+                request,
+                'El precio debe ser mayor a cero.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        # --------------------------------------------------------
+        # VALIDAR CANTIDAD DE PRESENTACIÓN
+        # --------------------------------------------------------
+
+        if cantidad_presentacion:
+
+            try:
+
+                cantidad_presentacion = Decimal(
+                    cantidad_presentacion
+                )
+
+            except (InvalidOperation, TypeError):
+
+                messages.error(
+                    request,
+                    'La cantidad de presentación no es válida.'
+                )
+
+                return redirect(
+                    'gestion_productos'
+                )
+
+            if cantidad_presentacion <= 0:
+
+                messages.error(
+                    request,
+                    'La cantidad de presentación debe ser mayor a cero.'
+                )
+
+                return redirect(
+                    'gestion_productos'
+                )
+
+        else:
+
+            cantidad_presentacion = None
+
+        # --------------------------------------------------------
+        # VERIFICAR PRODUCTO DUPLICADO
+        # --------------------------------------------------------
+
+        if marca:
+
+            producto_existente = Productos.objects.filter(
+                Nombre_producto__iexact=nombre,
+                Marca__iexact=marca
+            ).exclude(
+                ID_Producto=pk
+            ).exists()
+
+        else:
+
+            producto_existente = Productos.objects.filter(
+                Nombre_producto__iexact=nombre,
+                Marca__isnull=True
+            ).exclude(
+                ID_Producto=pk
+            ).exists()
+
+        if producto_existente:
+
+            messages.error(
+                request,
+                'Ya existe otro producto con esos datos.'
+            )
+
+            return redirect(
+                'gestion_productos'
+            )
+
+        # --------------------------------------------------------
+        # ACTUALIZAR PRODUCTO
+        # --------------------------------------------------------
+
+        producto.ID_Tipo_producto = tipo
+
+        producto.Marca = marca or None
+
+        producto.Nombre_producto = nombre
+
+        producto.Descripcion_producto = (
+            descripcion or None
+        )
+
+        producto.Precio = precio
+
+        producto.Cantidad_presentacion = (
+            cantidad_presentacion
+        )
+
+        producto.Unidad_medida_producto = (
+            unidad_medida or None
+        )
+
+        producto.Estado_producto = estado_producto
 
         producto.save()
-
-        ProductosXAgroquimicos.objects.filter(
-            ID_Producto=producto
-        ).delete()
-
-        agroquimicos_ids = request.POST.getlist(
-            'agroquimicos'
-        )
-
-        for agro_id in agroquimicos_ids:
-
-            if agro_id:
-
-                ProductosXAgroquimicos.objects.create(
-                    ID_Producto=producto,
-                    ID_Agroquimico_id=agro_id
-                )
-
-        ProductosXProveedores.objects.filter(
-            ID_Producto=producto
-        ).delete()
-
-        proveedores_ids = request.POST.getlist(
-            'proveedores'
-        )
-
-        for proveedor_id in proveedores_ids:
-
-            if proveedor_id:
-
-                ProductosXProveedores.objects.create(
-                    ID_Producto=producto,
-                    ID_Proveedor_id=proveedor_id
-                )
 
         messages.success(
             request,
@@ -2164,31 +2525,39 @@ def editar_producto(request, pk):
     )
 
 
-def dar_baja_producto(request, pk):
+def cambiar_estado_producto(request, pk):
 
-    usuario_id = request.session.get(
-        'usuario_id'
-    )
+    usuario = usuario_autenticado(request)
 
-    if not usuario_id:
-
+    if not usuario:
         return redirect('login')
 
     producto = get_object_or_404(
         Productos,
-        pk=pk
+        ID_Producto=pk
     )
 
     if request.method == 'POST':
 
-        producto.Estado_producto = 'No disponible'
+        if producto.Estado_producto == 'Activo':
+
+            producto.Estado_producto = 'Inactivo'
+
+            messages.success(
+                request,
+                'Producto dado de baja correctamente.'
+            )
+
+        else:
+
+            producto.Estado_producto = 'Activo'
+
+            messages.success(
+                request,
+                'Producto activado correctamente.'
+            )
 
         producto.save()
-
-        messages.success(
-            request,
-            'Producto dado de baja correctamente.'
-        )
 
     return redirect(
         'gestion_productos'
@@ -2196,214 +2565,205 @@ def dar_baja_producto(request, pk):
 
 
 # ============================================================
-# PRODUCTOS POR PROVEEDOR
+# REGISTRAR INGRESO DE LOTE
 # ============================================================
 
-def gestion_productos_proveedores(request):
+def registrar_ingreso_lote(request):
 
     usuario = usuario_es_administrador(request)
 
     if not usuario:
         return redirect('panel_principal')
 
-    relaciones = ProductosXProveedores.objects.select_related(
-        'ID_Producto',
-        'ID_Proveedor'
-    ).all()
-
-    return render(
-        request,
-        'inventario/productos_proveedores.html',
-        {
-            'relaciones': relaciones,
-            'usuario': usuario
-        }
+    productos = Productos.objects.filter(
+        Estado_producto='Activo'
+    ).order_by(
+        'Nombre_producto'
     )
 
-
-# ============================================================
-# STOCK
-# ============================================================
-
-def gestion_stock(request):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    busqueda = request.GET.get(
-        'q',
-        ''
-    ).strip()
-
-    stock = Stock.objects.select_related(
-        'ID_Producto'
-    ).all()
-
-    if busqueda:
-
-        stock = stock.filter(
-            ID_Producto__Nombre_producto__icontains=busqueda
-        )
-
-    productos = Productos.objects.all()
-
-    return render(
-        request,
-        'inventario/stock.html',
-        {
-            'stock': stock,
-            'productos': productos,
-            'busqueda': busqueda,
-            'usuario': usuario
-        }
+    proveedores = Proveedores.objects.filter(
+        estado_proveedor=True
+    ).order_by(
+        'nombre_proveedor'
     )
-
-
-def crear_stock(request):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
 
     if request.method == 'POST':
+
+        proveedor_id = request.POST.get(
+            'ID_Proveedor'
+        )
 
         producto_id = request.POST.get(
             'ID_Producto'
         )
 
+        numero_lote = request.POST.get(
+            'Numero_lote',
+            ''
+        ).strip()
+
+        cantidad = request.POST.get(
+            'Cantidad_ingresada'
+        )
+
+        fecha_ingreso = request.POST.get(
+            'Fecha_ingreso'
+        )
+
+        fecha_vencimiento = request.POST.get(
+            'Fecha_vencimiento'
+        )
+
+        if not proveedor_id or not producto_id:
+
+            messages.error(
+                request,
+                'Debe seleccionar el proveedor y el producto.'
+            )
+
+            return redirect(
+                'registrar_ingreso_lote'
+            )
+
+        if not numero_lote:
+
+            messages.error(
+                request,
+                'Debe ingresar el número de lote.'
+            )
+
+            return redirect(
+                'registrar_ingreso_lote'
+            )
+
+        try:
+
+            cantidad = int(cantidad)
+
+        except (TypeError, ValueError):
+
+            messages.error(
+                request,
+                'La cantidad ingresada no es válida.'
+            )
+
+            return redirect(
+                'registrar_ingreso_lote'
+            )
+
+        if cantidad <= 0:
+
+            messages.error(
+                request,
+                'La cantidad debe ser mayor a cero.'
+            )
+
+            return redirect(
+                'registrar_ingreso_lote'
+            )
+
+        if not fecha_ingreso:
+
+            messages.error(
+                request,
+                'Debe ingresar la fecha de ingreso.'
+            )
+
+            return redirect(
+                'registrar_ingreso_lote'
+            )
+
+        if fecha_vencimiento and fecha_vencimiento < fecha_ingreso:
+
+            messages.error(
+                request,
+                'La fecha de vencimiento no puede ser anterior a la fecha de ingreso.'
+            )
+
+            return redirect(
+                'registrar_ingreso_lote'
+            )
+
+        proveedor = get_object_or_404(
+            Proveedores,
+            ID_Proveedor=proveedor_id,
+            estado_proveedor=True
+        )
+
         producto = get_object_or_404(
             Productos,
-            pk=producto_id
+            ID_Producto=producto_id,
+            Estado_producto='Activo'
         )
 
-        cantidad_stock = int(
-            request.POST.get(
-                'Cantidad_stock',
-                0
-            )
+        tipo_entrada = get_object_or_404(
+            TiposMovimientos,
+            Nombre_tipo_movimiento__iexact='Entrada'
         )
 
-        stock_minimo = int(
-            request.POST.get(
-                'Stock_minimo',
-                0
-            )
-        )
-
-        stock = Stock.objects.create(
-
+        lote_existente = Lotes.objects.filter(
+            ID_Proveedor=proveedor,
             ID_Producto=producto,
+            Numero_lote=numero_lote
+        ).exists()
 
-            Cantidad_stock=cantidad_stock,
+        if lote_existente:
 
-            Stock_minimo=stock_minimo
-
-        )
-
-        if cantidad_stock <= stock_minimo:
-
-            Alertas.objects.create(
-
-                ID_Stock=stock,
-
-                Tipo_alerta='Stock mínimo',
-
-                Mensaje=(
-
-                    f'El producto {producto.Nombre_producto} '
-
-                    f'alcanzó el stock mínimo.'
-
-                )
-
+            messages.error(
+                request,
+                'Ya existe un lote con esos datos.'
             )
 
-        messages.success(
-
-            request,
-
-            'Stock registrado correctamente.'
-
-        )
-
-    return redirect(
-        'gestion_stock'
-    )
-
-
-def editar_stock(request, pk):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    stock = get_object_or_404(
-        Stock,
-        pk=pk
-    )
-
-    if request.method == 'POST':
-
-        cantidad_anterior = stock.Cantidad_stock
-
-        stock.Cantidad_stock = int(
-            request.POST.get(
-                'Cantidad_stock',
-                0
+            return redirect(
+                'registrar_ingreso_lote'
             )
+
+        lote = Lotes.objects.create(
+            ID_Proveedor=proveedor,
+            ID_Producto=producto,
+            Numero_lote=numero_lote,
+            Cantidad_ingresada=cantidad,
+            Cantidad_actual=cantidad,
+            Fecha_ingreso=fecha_ingreso,
+            Fecha_vencimiento=fecha_vencimiento or None
         )
 
-        stock.Stock_minimo = int(
-            request.POST.get(
-                'Stock_minimo',
-                0
-            )
+        stock, creado = Stock.objects.get_or_create(
+            ID_Producto=producto,
+            defaults={
+                'Cantidad_stock': 0,
+                'Stock_minimo': 0
+            }
         )
 
+        stock.Cantidad_stock += cantidad
         stock.save()
 
-        if (
-
-            cantidad_anterior > stock.Stock_minimo
-
-            and
-
-            stock.Cantidad_stock <= stock.Stock_minimo
-
-        ):
-
-            Alertas.objects.create(
-
-                ID_Stock=stock,
-
-                Tipo_alerta='Stock mínimo',
-
-                Mensaje=(
-
-                    f'El producto '
-
-                    f'{stock.ID_Producto.Nombre_producto} '
-
-                    f'alcanzó el stock mínimo.'
-
-                )
-
-            )
-
-        messages.success(
-
-            request,
-
-            'Stock actualizado correctamente.'
-
+        MovimientosStock.objects.create(
+            ID_Usuario=usuario,
+            ID_Tipo_movimiento=tipo_entrada,
+            ID_Lote=lote,
+            Cantidad_movimiento_stock=cantidad,
+            Observaciones='Ingreso de lote'
         )
 
-    return redirect(
-        'gestion_stock'
+        messages.success(
+            request,
+            'Ingreso de lote registrado correctamente.'
+        )
+
+        return redirect(
+            'registrar_ingreso_lote'
+        )
+
+    return render(
+        request,
+        'inventario/registrar_ingreso_lote.html',
+        {
+            'usuario': usuario,
+            'productos': productos,
+            'proveedores': proveedores
+        }
     )
 
 
@@ -2419,28 +2779,33 @@ def gestion_movimientos_stock(request):
         return redirect('panel_principal')
 
     movimientos = MovimientosStock.objects.select_related(
-
         'ID_Usuario',
-
         'ID_Tipo_movimiento',
-
-        'ID_Stock',
-
-        'ID_Stock__ID_Producto'
-
+        'ID_Lote',
+        'ID_Lote__ID_Producto',
+        'ID_Lote__ID_Proveedor'
     ).all().order_by(
-
         '-Fecha_hora_movimiento'
-
     )
 
-    usuarios = Usuarios.objects.all()
+    usuarios = Usuarios.objects.filter(
+        Estado_usuario=True
+    ).all()
 
-    tipos_movimientos = TiposMovimientos.objects.all()
+    tipos_movimientos = TiposMovimientos.objects.exclude(
+        Nombre_tipo_movimiento__iexact='Entrada'
+    )
 
     stock = Stock.objects.select_related(
         'ID_Producto'
     ).all()
+
+    lotes = Lotes.objects.select_related(
+        'ID_Producto',
+        'ID_Proveedor'
+    ).filter(
+        Cantidad_actual__gt=0
+    )
 
     return render(
         request,
@@ -2450,6 +2815,7 @@ def gestion_movimientos_stock(request):
             'usuarios': usuarios,
             'tipos_movimientos': tipos_movimientos,
             'stock': stock,
+            'lotes': lotes,
             'usuario': usuario
         }
     )
@@ -2466,31 +2832,73 @@ def crear_movimiento_stock(request):
 
         usuario = get_object_or_404(
             Usuarios,
-            pk=request.POST.get(
+            ID_Usuario=request.POST.get(
                 'ID_Usuario'
-            )
+            ),
+            Estado_usuario=True
         )
 
         tipo_movimiento = get_object_or_404(
             TiposMovimientos,
-            pk=request.POST.get(
+            ID_Tipo_movimiento=request.POST.get(
                 'ID_Tipo_movimiento'
             )
         )
 
-        stock = get_object_or_404(
-            Stock,
-            pk=request.POST.get(
-                'ID_Stock'
+        lote = get_object_or_404(
+            Lotes.objects.select_related(
+                'ID_Producto'
+            ),
+            ID_Lote=request.POST.get(
+                'ID_Lote'
             )
         )
 
-        cantidad = int(
-            request.POST.get(
-                'Cantidad',
-                0
-            )
+        producto = lote.ID_Producto
+
+        stock = get_object_or_404(
+            Stock,
+            ID_Producto=producto
         )
+
+        if (
+            tipo_movimiento.Nombre_tipo_movimiento
+            .strip()
+            .lower()
+            == 'entrada'
+        ):
+
+            messages.error(
+                request,
+                'Los movimientos de entrada se registran mediante el ingreso de lote.'
+            )
+
+            return redirect(
+                'gestion_movimientos_stock'
+            )
+
+        try:
+
+            cantidad = int(
+                request.POST.get(
+                    'Cantidad_movimiento_stock',
+                    request.POST.get(
+                        'Cantidad',
+                        0
+                    )
+                )
+            )
+
+        except (TypeError, ValueError):
+
+            messages.error(
+                request,
+                'La cantidad ingresada no es válida.'
+            )
+
+            return redirect(
+                'gestion_movimientos_stock'
+            )
 
         if cantidad <= 0:
 
@@ -2503,39 +2911,41 @@ def crear_movimiento_stock(request):
                 'gestion_movimientos_stock'
             )
 
+        if cantidad > lote.Cantidad_actual:
+
+            messages.error(
+                request,
+                'No hay suficiente cantidad disponible en el lote seleccionado.'
+            )
+
+            return redirect(
+                'gestion_movimientos_stock'
+            )
+
+        if cantidad > stock.Cantidad_stock:
+
+            messages.error(
+                request,
+                'No hay suficiente stock disponible.'
+            )
+
+            return redirect(
+                'gestion_movimientos_stock'
+            )
+
         cantidad_anterior = stock.Cantidad_stock
 
         nombre_movimiento = (
-            tipo_movimiento.Nombre_tipo_movimiento.lower()
+            tipo_movimiento.Nombre_tipo_movimiento
+            .strip()
+            .lower()
         )
 
         if nombre_movimiento == 'salida por venta':
 
-            if cantidad > stock.Cantidad_stock:
-
-                messages.error(
-                    request,
-                    'No hay suficiente stock disponible.'
-                )
-
-                return redirect(
-                    'gestion_movimientos_stock'
-                )
-
             stock.Cantidad_stock -= cantidad
 
         elif nombre_movimiento == 'salida por vencimiento':
-
-            if cantidad > stock.Cantidad_stock:
-
-                messages.error(
-                    request,
-                    'No hay suficiente stock disponible.'
-                )
-
-                return redirect(
-                    'gestion_movimientos_stock'
-                )
 
             stock.Cantidad_stock -= cantidad
 
@@ -2552,52 +2962,45 @@ def crear_movimiento_stock(request):
 
         stock.save()
 
+        lote.Cantidad_actual -= cantidad
+        lote.save()
+
+        observaciones = request.POST.get(
+            'Observaciones',
+            ''
+        ).strip()
+
         MovimientosStock.objects.create(
-
             ID_Usuario=usuario,
-
             ID_Tipo_movimiento=tipo_movimiento,
-
-            ID_Stock=stock,
-
-            Cantidad=cantidad
-
+            ID_Lote=lote,
+            Cantidad_movimiento_stock=cantidad,
+            Observaciones=observaciones or None
         )
 
         if (
-
             cantidad_anterior > stock.Stock_minimo
-
             and
-
             stock.Cantidad_stock <= stock.Stock_minimo
-
         ):
 
             Alertas.objects.create(
-
+                ID_Lote=None,
                 ID_Stock=stock,
-
                 Tipo_alerta='Stock mínimo',
-
                 Mensaje=(
-
                     f'El producto '
-
-                    f'{stock.ID_Producto.Nombre_producto} '
-
+                    f'{producto.Nombre_producto} '
                     f'alcanzó el stock mínimo.'
-
-                )
-
+                ),
+                Cantidad_al_generar=stock.Cantidad_stock,
+                Stock_minimo_al_generar=stock.Stock_minimo,
+                Atendida=False
             )
 
         messages.success(
-
             request,
-
             'Movimiento de stock registrado correctamente.'
-
         )
 
     return redirect(
@@ -2606,77 +3009,75 @@ def crear_movimiento_stock(request):
 
 
 # ============================================================
-# ALERTAS
+# GENERAR ALERTAS DE VENCIMIENTO
 # ============================================================
 
 def generar_alertas_vencimiento():
 
-    fecha_actual = timezone.localdate()
+    fecha_actual = timezone.now().date()
 
-    fecha_limite = fecha_actual + timedelta(
-        days=30
+    fecha_limite = (
+        fecha_actual + timedelta(days=30)
     )
 
     productos = Productos.objects.filter(
-
-        Fecha_vencimiento__isnull=False,
-
-        Fecha_vencimiento__gte=fecha_actual,
-
-        Fecha_vencimiento__lte=fecha_limite
-
-    )
+        lotes__Fecha_vencimiento__isnull=False,
+        lotes__Fecha_vencimiento__gte=fecha_actual,
+        lotes__Fecha_vencimiento__lte=fecha_limite
+    ).distinct()
 
     for producto in productos:
 
-        try:
+        stock = getattr(
+            producto,
+            'stock',
+            None
+        )
 
-            stock = Stock.objects.get(
-                ID_Producto=producto
-            )
-
-        except Stock.DoesNotExist:
-
+        if not stock:
             continue
 
-        existe_alerta = Alertas.objects.filter(
+        lotes = producto.lotes.filter(
+            Fecha_vencimiento__isnull=False,
+            Fecha_vencimiento__gte=fecha_actual,
+            Fecha_vencimiento__lte=fecha_limite,
+            Cantidad_actual__gt=0
+        )
 
-            ID_Stock=stock,
-
-            Tipo_alerta='Vencimiento',
-
-            Mensaje__icontains=producto.Nombre_producto
-
-        ).exists()
-
-        if not existe_alerta:
+        for lote in lotes:
 
             dias_restantes = (
-
-                producto.Fecha_vencimiento
-
-                - fecha_actual
-
+                lote.Fecha_vencimiento - fecha_actual
             ).days
 
-            Alertas.objects.create(
-
+            existe_alerta = Alertas.objects.filter(
+                ID_Lote=lote,
                 ID_Stock=stock,
+                Tipo_alerta='Vencimiento'
+            ).exists()
 
-                Tipo_alerta='Vencimiento',
+            if not existe_alerta:
 
-                Mensaje=(
-
-                    f'El producto {producto.Nombre_producto} '
-
-                    f'vence en {dias_restantes} días '
-
-                    f'({producto.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
-
+                Alertas.objects.create(
+                    ID_Lote=lote,
+                    ID_Stock=stock,
+                    Tipo_alerta='Vencimiento',
+                    Mensaje=(
+                        f'El producto '
+                        f'{producto.Nombre_producto} '
+                        f'del lote {lote.Numero_lote} '
+                        f'vence en {dias_restantes} días '
+                        f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
+                    ),
+                    Cantidad_al_generar=lote.Cantidad_actual,
+                    Stock_minimo_al_generar=stock.Stock_minimo,
+                    Atendida=False
                 )
 
-            )
 
+# ============================================================
+# HISTORIAL DE ALERTAS
+# ============================================================
 
 def gestion_alertas(request):
 
@@ -2723,53 +3124,38 @@ def gestion_alertas(request):
     ).strip()
 
     alertas = Alertas.objects.select_related(
-
+        'ID_Lote',
+        'ID_Lote__ID_Producto',
+        'ID_Lote__ID_Proveedor',
         'ID_Stock',
-
-        'ID_Stock__ID_Producto'
-
+        'ID_Stock__ID_Producto',
+        'ID_Usuario'
     ).all().order_by(
-
         '-Fecha_hora_historial_alerta'
-
     )
 
     if fecha:
 
         alertas = alertas.filter(
-
             Fecha_hora_historial_alerta__date=fecha
-
         )
 
     if fecha_desde:
 
         alertas = alertas.filter(
-
             Fecha_hora_historial_alerta__date__gte=fecha_desde
-
         )
 
     if fecha_hasta:
 
         alertas = alertas.filter(
-
             Fecha_hora_historial_alerta__date__lte=fecha_hasta
-
         )
 
     if usuario_id:
 
-        stock_ids = MovimientosStock.objects.filter(
-
-            ID_Usuario_id=usuario_id
-
-        ).values(
-            'ID_Stock'
-        )
-
         alertas = alertas.filter(
-            ID_Stock__in=stock_ids
+            ID_Usuario_id=usuario_id
         )
 
     if tipo_alerta:
@@ -2791,18 +3177,15 @@ def gestion_alertas(request):
         )
 
     usuarios = Usuarios.objects.filter(
-
         Estado_usuario=True
-
     ).order_by(
-
         'Apellido_usuario',
-
         'Nombre_usuario'
-
     )
 
-    productos = Productos.objects.all().order_by(
+    productos = Productos.objects.filter(
+        Estado_producto='Activo'
+    ).order_by(
         'Nombre_producto'
     )
 
@@ -2812,50 +3195,21 @@ def gestion_alertas(request):
         'ID_Producto__Nombre_producto'
     )
 
-    for alerta in alertas:
-
-        alerta.usuarios_relacionados = Usuarios.objects.filter(
-
-            ID_Usuario__in=MovimientosStock.objects.filter(
-
-                ID_Stock=alerta.ID_Stock
-
-            ).values(
-                'ID_Usuario'
-            )
-
-        ).distinct()
-
     return render(
-
         request,
-        
         'inventario/alertas.html',
         {
-
             'alertas': alertas,
-
             'usuarios': usuarios,
-
             'productos': productos,
-
             'stock': stock,
-
             'fecha': fecha,
-
             'fecha_desde': fecha_desde,
-
             'fecha_hasta': fecha_hasta,
-
             'usuario_id': usuario_id,
-
             'tipo_alerta': tipo_alerta,
-
             'producto_id': producto_id,
-
             'stock_id': stock_id,
-            
             'usuario': usuario
         }
-
     )

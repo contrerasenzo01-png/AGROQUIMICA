@@ -1,0 +1,592 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Gestión de Subtipos - Agroquímica del Valle</title>
+
+    <link rel="stylesheet" href="{% static 'inventario/styles/subtipos.css' %}">
+</head>
+
+<body>
+
+    <div class="layout-principal">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div>
+
+                <div class="logo">
+                    🌿 Agroquímica del Valle
+                </div>
+
+                <ul class="nav-menu">
+
+                    <!-- PANEL PRINCIPAL -->
+                    <li class="nav-item">
+                        <a href="{% url 'panel_principal' %}" class="nav-link">
+                            <span class="nav-icon">🎛️</span>
+                            Panel Principal
+                        </a>
+                    </li>
+
+
+                    {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
+
+                        <!-- OPCIONES DEL VENDEDOR -->
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_productos' %}" class="nav-link">
+                                <span class="nav-icon">📦</span>
+                                Productos
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                                <span class="nav-icon">🗂️</span>
+                                Tipos de Productos
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_subtipos' %}" class="nav-link active">
+                                <span class="nav-icon">🗃️</span>
+                                Subtipos
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'mis_permisos' %}" class="nav-link">
+                                <span class="nav-icon">🔐</span>
+                                Mis permisos
+                            </a>
+                        </li>
+
+
+                    {% else %}
+
+                        <!-- OPCIONES DEL ADMINISTRADOR -->
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+                                <span class="nav-icon">👤</span>
+                                Usuarios del sistema
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_productos' %}" class="nav-link">
+                                <span class="nav-icon">📦</span>
+                                Productos
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                                <span class="nav-icon">🗂️</span>
+                                Tipos de Productos
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_subtipos' %}" class="nav-link active">
+                                <span class="nav-icon">🗃️</span>
+                                Subtipos
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                                <span class="nav-icon">🚚</span>
+                                Proveedores
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'registrar_ingreso_lote' %}" class="nav-link">
+                                <span class="nav-icon">📥</span>
+                                Ingreso de Lote
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                                <span class="nav-icon">📊</span>
+                                Movimientos Stock
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'historial_alertas' %}" class="nav-link">
+                                <span class="nav-icon">🔔</span>
+                                Historial de Alertas
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+                                <span class="nav-icon">👥</span>
+                                Perfiles de acceso
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'gestion_permisos' %}" class="nav-link">
+                                <span class="nav-icon">🔐</span>
+                                Permisos del sistema
+                            </a>
+                        </li>
+
+                    {% endif %}
+
+                </ul>
+
+            </div>
+
+
+            <!-- Footer del Sidebar -->
+            <div class="user-info">
+
+                <div class="user-role">
+                    {{ usuario.ID_Perfil.Nombre_perfil }}
+                </div>
+
+                <div class="user-email">
+                    {{ usuario.Email_usuario }}
+                </div>
+
+                <a href="{% url 'cerrar_sesion' %}" class="logout-link">
+                    Cerrar sesión
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <!-- ==========================================
+             CONTENIDO PRINCIPAL
+             ========================================== -->
+
+        <main class="main-content">
+
+            <div class="header-gestion">
+
+                <div>
+
+                    <h1>Gestión de Subtipos</h1>
+
+                    <p class="subtitulo-activos">
+                        Administre los subtipos de productos.
+                    </p>
+
+                </div>
+
+
+                <div class="acciones-header">
+
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        onclick="abrirModalCrear()">
+
+                        + Nuevo subtipo
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================================
+                 MENSAJES
+                 ========================================== -->
+
+            {% if messages %}
+
+                {% for message in messages %}
+
+                    <div class="mensaje">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+
+            <!-- ==========================================
+                 BUSCADOR
+                 ========================================== -->
+
+            <form method="GET" class="barra-filtros">
+
+                <input
+                    type="text"
+                    name="buscar"
+                    class="input-buscar"
+                    placeholder="Buscar subtipo..."
+                    value="{{ buscar|default:'' }}"
+                >
+
+                <button
+                    type="submit"
+                    class="btn btn-outline">
+
+                    Buscar
+
+                </button>
+
+            </form>
+
+
+            <!-- ==========================================
+                 TABLA DE SUBTIPOS
+                 ========================================== -->
+
+            <div class="tabla-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Subtipo</th>
+
+                            <th>Tipo de producto</th>
+
+                            <th>Estado</th>
+
+                            <th>Acciones</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for subtipo in subtipos %}
+
+                            <tr>
+
+                                <!-- SUBTIPO -->
+                                <td>
+
+                                    <div class="prod-nombre">
+                                        {{ subtipo.Nombre_subtipo }}
+                                    </div>
+
+                                </td>
+
+
+                                <!-- TIPO DE PRODUCTO -->
+                                <td>
+
+                                    {{ subtipo.ID_Tipo_producto.Nombre_tipo_producto }}
+
+                                </td>
+
+
+                                <!-- ESTADO -->
+                                <td>
+
+                                    {% if subtipo.Estado_subtipo %}
+
+                                        <span class="badge-estado activo">
+                                            Activo
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge-estado inactivo">
+                                            Inactivo
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- ACCIONES -->
+                                <td>
+
+                                    <div class="acciones-tabla">
+
+                                        <!-- EDITAR -->
+                                        <button
+                                            type="button"
+                                            class="btn btn-outline btn-pequeno"
+                                            onclick="abrirModalEditar(
+                                                '{{ subtipo.ID_Subtipo }}',
+                                                '{{ subtipo.ID_Tipo_producto.ID_Tipo_producto }}',
+                                                '{{ subtipo.Nombre_subtipo|escapejs }}'
+                                            )">
+
+                                            Editar
+
+                                        </button>
+
+
+                                        <!-- CAMBIAR ESTADO -->
+                                        <form
+                                            method="POST"
+                                            action="{% url 'cambiar_estado_subtipo' subtipo.ID_Subtipo %}"
+                                            style="display:inline;">
+
+                                            {% csrf_token %}
+
+                                            {% if subtipo.Estado_subtipo %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-danger btn-pequeno">
+
+                                                    Dar de baja
+
+                                                </button>
+
+                                            {% else %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-primary btn-pequeno">
+
+                                                    Activar
+
+                                                </button>
+
+                                            {% endif %}
+
+                                        </form>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="4"
+                                    class="sin-registros">
+
+                                    No hay subtipos registrados.
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <!-- ==========================================
+         MODAL CREAR / EDITAR SUBTIPO
+         ========================================== -->
+
+    <div
+        class="modal"
+        id="modalSubtipo">
+
+        <div class="modal-content">
+
+            <h2 id="tituloModal">
+                Nuevo subtipo
+            </h2>
+
+
+            <form
+                method="POST"
+                id="formSubtipo"
+                action="{% url 'crear_subtipo' %}">
+
+                {% csrf_token %}
+
+
+                <!-- TIPO DE PRODUCTO -->
+                <div class="form-group">
+
+                    <label for="tipo_producto">
+                        Tipo de producto
+                    </label>
+
+                    <select
+                        name="tipo_producto"
+                        id="tipo_producto"
+                        required>
+
+                        <option value="">
+                            Seleccionar tipo
+                        </option>
+
+                        {% for tipo in tipos_productos %}
+
+                            <option value="{{ tipo.ID_Tipo_producto }}">
+                                {{ tipo.Nombre_tipo_producto }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- NOMBRE DEL SUBTIPO -->
+                <div class="form-group">
+
+                    <label for="nombre_subtipo">
+                        Nombre del subtipo
+                    </label>
+
+                    <input
+                        type="text"
+                        name="nombre_subtipo"
+                        id="nombre_subtipo"
+                        maxlength="50"
+                        required>
+
+                </div>
+
+
+                <!-- BOTONES -->
+                <div class="modal-acciones">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        onclick="cerrarModal()">
+
+                        Cancelar
+
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+
+                        Guardar
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         JAVASCRIPT
+         ========================================== -->
+
+    <script>
+
+        function abrirModalCrear() {
+
+            const modal =
+                document.getElementById("modalSubtipo");
+
+            const formulario =
+                document.getElementById("formSubtipo");
+
+
+            document.getElementById("tituloModal").textContent =
+                "Nuevo subtipo";
+
+
+            formulario.action =
+                "{% url 'crear_subtipo' %}";
+
+
+            document.getElementById("tipo_producto").value =
+                "";
+
+            document.getElementById("nombre_subtipo").value =
+                "";
+
+
+            modal.style.display = "flex";
+
+        }
+
+
+        function abrirModalEditar(id, tipo, nombre) {
+
+            const modal =
+                document.getElementById("modalSubtipo");
+
+            const formulario =
+                document.getElementById("formSubtipo");
+
+
+            document.getElementById("tituloModal").textContent =
+                "Editar subtipo";
+
+
+            formulario.action =
+                "/subtipos/editar/" + id + "/";
+
+
+            document.getElementById("tipo_producto").value =
+                tipo;
+
+            document.getElementById("nombre_subtipo").value =
+                nombre;
+
+
+            modal.style.display = "flex";
+
+        }
+
+
+        function cerrarModal() {
+
+            document.getElementById("modalSubtipo").style.display =
+                "none";
+
+        }
+
+
+        window.onclick = function(event) {
+
+            const modal =
+                document.getElementById("modalSubtipo");
+
+
+            if (event.target === modal) {
+
+                cerrarModal();
+
+            }
+
+        };
+
+    </script>
+
+</body>
+</html>

@@ -23,21 +23,34 @@ class TiposProductos(models.Model):
         return self.Nombre_tipo_producto
 
 
-class Agroquimicos(models.Model):
-    ID_Agroquimico = models.AutoField(primary_key=True)
-    Nombre_agroquimico = models.CharField(max_length=60)
-    Descripcion_agroquimico = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True
+class Subtipos(models.Model):
+    ID_Subtipo = models.AutoField(primary_key=True)
+
+    ID_Tipo_producto = models.ForeignKey(
+        TiposProductos,
+        on_delete=models.CASCADE,
+        db_column='ID_Tipo_producto',
+        related_name='subtipos'
+    )
+
+    Nombre_subtipo = models.CharField(max_length=50)
+
+    ESTADO_CHOICES = [
+        (True, 'Activo'),
+        (False, 'Inactivo'),
+    ]
+
+    Estado_subtipo = models.BooleanField(
+        default=True,
+        choices=ESTADO_CHOICES
     )
 
     class Meta:
-        db_table = 'AGROQUIMICOS'
-        verbose_name_plural = "Agroquímicos"
+        db_table = 'SUBTIPOS'
+        verbose_name_plural = "Subtipos"
 
     def __str__(self):
-        return self.Nombre_agroquimico
+        return self.Nombre_subtipo
 
 
 class Proveedores(models.Model):
@@ -138,10 +151,12 @@ class Perfiles(models.Model):
 
     def __str__(self):
         return self.Nombre_perfil
-    
+
+
 class Permisos(models.Model):
     ID_Permiso = models.AutoField(primary_key=True)
     Nombre_permiso = models.CharField(max_length=100)
+
     Descripcion_permiso = models.CharField(
         max_length=255,
         blank=True,
@@ -190,7 +205,10 @@ class Usuarios(models.Model):
 
     Nombre_usuario = models.CharField(max_length=50)
 
-    Usuario = models.CharField(max_length=50,unique=True)
+    Usuario = models.CharField(
+        max_length=50,
+        unique=True
+    )
 
     Contrasena = models.CharField(
         max_length=255,
@@ -232,15 +250,16 @@ class Productos(models.Model):
         db_column='ID_Tipo_producto'
     )
 
+    Marca = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
     Nombre_producto = models.CharField(max_length=50)
 
     Descripcion_producto = models.CharField(
         max_length=100,
-        blank=True,
-        null=True
-    )
-
-    Fecha_vencimiento = models.DateField(
         blank=True,
         null=True
     )
@@ -250,25 +269,28 @@ class Productos(models.Model):
         decimal_places=2
     )
 
+    Cantidad_presentacion = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    Unidad_medida_producto = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True
+    )
+
     ESTADO_CHOICES = [
-        ('Disponible', 'Disponible'),
-        ('No disponible', 'No disponible'),
+        ('Activo', 'Activo'),
+        ('Inactivo', 'Inactivo'),
     ]
 
     Estado_producto = models.CharField(
-        max_length=20,
+        max_length=10,
         choices=ESTADO_CHOICES,
-        default='Disponible'
-    )
-
-    agroquimicos = models.ManyToManyField(
-        Agroquimicos,
-        through='ProductosXAgroquimicos'
-    )
-
-    proveedores = models.ManyToManyField(
-        Proveedores,
-        through='ProductosXProveedores'
+        default='Activo'
     )
 
     class Meta:
@@ -279,50 +301,42 @@ class Productos(models.Model):
         return self.Nombre_producto
 
 
-class ProductosXAgroquimicos(models.Model):
-    ID_Producto = models.ForeignKey(
-        Productos,
-        on_delete=models.CASCADE,
-        db_column='ID_Producto'
-    )
-
-    ID_Agroquimico = models.ForeignKey(
-        Agroquimicos,
-        on_delete=models.CASCADE,
-        db_column='ID_Agroquimico'
-    )
-
-    class Meta:
-        db_table = 'PRODUCTOS_X_AGROQUIMICOS'
-
-        unique_together = (
-            ('ID_Producto', 'ID_Agroquimico'),
-        )
-
-        verbose_name_plural = "Productos por Agroquímicos"
-
-
-class ProductosXProveedores(models.Model):
-    ID_Producto = models.ForeignKey(
-        Productos,
-        on_delete=models.CASCADE,
-        db_column='ID_Producto'
-    )
+class Lotes(models.Model):
+    ID_Lote = models.AutoField(primary_key=True)
 
     ID_Proveedor = models.ForeignKey(
         Proveedores,
+        on_delete=models.PROTECT,
+        db_column='ID_Proveedor',
+        related_name='lotes'
+    )
+
+    ID_Producto = models.ForeignKey(
+        Productos,
         on_delete=models.CASCADE,
-        db_column='ID_Proveedor'
+        db_column='ID_Producto',
+        related_name='lotes'
+    )
+
+    Numero_lote = models.CharField(max_length=50)
+
+    Cantidad_ingresada = models.IntegerField()
+
+    Cantidad_actual = models.IntegerField()
+
+    Fecha_ingreso = models.DateField()
+
+    Fecha_vencimiento = models.DateField(
+        null=True,
+        blank=True
     )
 
     class Meta:
-        db_table = 'PRODUCTOS_X_PROVEEDORES'
+        db_table = 'LOTES'
+        verbose_name_plural = "Lotes"
 
-        unique_together = (
-            ('ID_Producto', 'ID_Proveedor'),
-        )
-
-        verbose_name_plural = "Productos por Proveedores"
+    def __str__(self):
+        return self.Numero_lote
 
 
 class Stock(models.Model):
@@ -331,7 +345,8 @@ class Stock(models.Model):
     ID_Producto = models.OneToOneField(
         Productos,
         on_delete=models.CASCADE,
-        db_column='ID_Producto'
+        db_column='ID_Producto',
+        related_name='stock'
     )
 
     Cantidad_stock = models.IntegerField()
@@ -352,30 +367,61 @@ class Stock(models.Model):
 class Alertas(models.Model):
     ID_Historial_alerta = models.AutoField(primary_key=True)
 
+    ID_Lote = models.ForeignKey(
+        Lotes,
+        on_delete=models.CASCADE,
+        db_column='ID_Lote',
+        related_name='alertas',
+        null=True,
+        blank=True
+    )
+
     ID_Stock = models.ForeignKey(
         Stock,
         on_delete=models.CASCADE,
-        db_column='ID_Stock'
+        db_column='ID_Stock',
+        related_name='alertas'
     )
 
-    Tipo_alerta = models.CharField(
-        max_length=50
-    )
+    Tipo_alerta = models.CharField(max_length=50)
 
-    Mensaje = models.CharField(
-        max_length=255
-    )
+    Mensaje = models.CharField(max_length=255)
 
     Fecha_hora_historial_alerta = models.DateTimeField(
         auto_now_add=True
     )
 
+    Cantidad_al_generar = models.IntegerField(
+        null=True,
+        blank=True
+    )
+
+    Stock_minimo_al_generar = models.IntegerField(
+        null=True,
+        blank=True
+    )
+
+    Atendida = models.BooleanField(
+        default=False
+    )
+
+    Fecha_hora_atencion = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    ID_Usuario = models.ForeignKey(
+        Usuarios,
+        on_delete=models.SET_NULL,
+        db_column='ID_Usuario',
+        related_name='alertas_atendidas',
+        null=True,
+        blank=True
+    )
+
     class Meta:
         db_table = 'HISTORIAL_ALERTAS'
-        verbose_name_plural = "Historial de Alertas"
-
-    def __str__(self):
-        return self.Mensaje
+        verbose_name_plural = "Historial de alertas"
 
 
 class MovimientosStock(models.Model):
@@ -393,17 +439,26 @@ class MovimientosStock(models.Model):
         db_column='ID_Tipo_movimiento'
     )
 
-    ID_Stock = models.ForeignKey(
-        Stock,
-        on_delete=models.CASCADE,
-        db_column='ID_Stock'
+    ID_Lote = models.ForeignKey(
+        Lotes,
+        on_delete=models.PROTECT,
+        db_column='ID_Lote',
+        related_name='movimientos',
+        null=True,
+        blank=True
     )
 
     Fecha_hora_movimiento = models.DateTimeField(
         auto_now_add=True
     )
 
-    Cantidad = models.IntegerField()
+    Cantidad_movimiento_stock = models.IntegerField()
+
+    Observaciones = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )
 
     class Meta:
         db_table = 'MOVIMIENTOS_STOCK'
@@ -412,5 +467,5 @@ class MovimientosStock(models.Model):
     def __str__(self):
         return (
             f"Movimiento {self.ID_Movimiento_stock} - "
-            f"{self.Cantidad} unidades"
+            f"{self.Cantidad_movimiento_stock} unidades"
         )

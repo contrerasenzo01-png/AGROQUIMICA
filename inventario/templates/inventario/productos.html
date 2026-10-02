@@ -8,296 +8,308 @@
     <title>Gestión de Productos - Agroquímica del Valle</title>
     <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}">
 </head>
+
 <body>
 
-    <div class="layout-principal">
+<div class="layout-principal">
 
-<!-- Sidebar -->
-<aside class="sidebar">
+    <!-- ====================================================== -->
+    <!-- SIDEBAR -->
+    <!-- ====================================================== -->
 
-    <div>
+    <aside class="sidebar">
 
-        <div class="logo">
-            🌿 Agroquímica del Valle
+        <div>
+
+            <div class="logo">
+                🌿 Agroquímica del Valle
+            </div>
+
+            <ul class="nav-menu">
+
+                <!-- PANEL PRINCIPAL -->
+                <li class="nav-item">
+                    <a href="{% url 'panel_principal' %}" class="nav-link">
+                        <span class="nav-icon">🎛️</span>
+                        Panel Principal
+                    </a>
+                </li>
+
+
+                {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
+
+                    <!-- OPCIONES DEL VENDEDOR -->
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_productos' %}" class="nav-link active">
+                            <span class="nav-icon">📦</span>
+                            Productos
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                            <span class="nav-icon">🗂️</span>
+                            Tipos de Productos
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'mis_permisos' %}" class="nav-link">
+                            <span class="nav-icon">🔐</span>
+                            Mis permisos
+                        </a>
+                    </li>
+
+
+                {% else %}
+
+                    <!-- OPCIONES DEL ADMINISTRADOR -->
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_usuarios' %}" class="nav-link">
+                            <span class="nav-icon">👤</span>
+                            Usuarios del sistema
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_productos' %}" class="nav-link active">
+                            <span class="nav-icon">📦</span>
+                            Productos
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
+                            <span class="nav-icon">🗂️</span>
+                            Tipos de Productos
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_subtipos' %}" class="nav-link">
+                            <span class="nav-icon">🗃️</span>
+                            Subtipos
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_proveedores' %}" class="nav-link">
+                            <span class="nav-icon">🚚</span>
+                            Proveedores
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'registrar_ingreso_lote' %}" class="nav-link">
+                            <span class="nav-icon">📥</span>
+                            Ingreso de Lote
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
+                            <span class="nav-icon">📊</span>
+                            Movimientos Stock
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'historial_alertas' %}" class="nav-link">
+                            <span class="nav-icon">🔔</span>
+                            Historial de Alertas
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_perfiles' %}" class="nav-link">
+                            <span class="nav-icon">👥</span>
+                            Perfiles de acceso
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'gestion_permisos' %}" class="nav-link">
+                            <span class="nav-icon">🔐</span>
+                            Permisos del sistema
+                        </a>
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
         </div>
 
-        <ul class="nav-menu">
 
-            <!-- PANEL PRINCIPAL -->
-            <li class="nav-item">
-                <a href="{% url 'panel_principal' %}" class="nav-link">
-                    <span class="nav-icon">🎛️</span>
-                    Panel Principal
-                </a>
-            </li>
+        <!-- FOOTER DEL SIDEBAR -->
 
+        <div class="user-info">
 
-            {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
+            <div class="user-role">
+                {{ usuario.ID_Perfil.Nombre_perfil }}
+            </div>
 
-                <!-- OPCIONES DEL VENDEDOR -->
+            <div class="user-email">
+                {{ usuario.Email_usuario }}
+            </div>
 
-                <li class="nav-item">
-                    <a href="{% url 'gestion_productos' %}" class="nav-link active">
-                        <span class="nav-icon">📦</span>
-                        Productos
-                    </a>
-                </li>
+            <a href="{% url 'cerrar_sesion' %}" class="logout-link">
+                Cerrar sesión
+            </a>
 
-                <li class="nav-item">
-                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                        <span class="nav-icon">🗂️</span>
-                        Tipos de Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'mis_permisos' %}" class="nav-link">
-                        <span class="nav-icon">🔐</span>
-                        Mis permisos
-                    </a>
-                </li>
-
-
-            {% else %}
-
-                <!-- OPCIONES DEL ADMINISTRADOR -->
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-                        <span class="nav-icon">👤</span>
-                        Usuarios del sistema
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_productos' %}" class="nav-link active">
-                        <span class="nav-icon">📦</span>
-                        Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                        <span class="nav-icon">🗂️</span>
-                        Tipos de Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                        <span class="nav-icon">🚚</span>
-                        Proveedores
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                        <span class="nav-icon">📊</span>
-                        Movimientos Stock
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'historial_alertas' %}" class="nav-link">
-                        <span class="nav-icon">🔔</span>
-                        Historial de Alertas
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_perfiles' %}" class="nav-link">
-                        <span class="nav-icon">👥</span>
-                        Perfiles de acceso
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_permisos' %}" class="nav-link">
-                        <span class="nav-icon">🔐</span>
-                        Permisos del sistema
-                    </a>
-                </li>
-
-            {% endif %}
-
-        </ul>
-
-    </div>
-
-
-    <!-- Footer del Sidebar -->
-    <div class="user-info">
-
-        <div class="user-role">
-            {{ usuario.ID_Perfil.Nombre_perfil }}
         </div>
 
-        <div class="user-email">
-            {{ usuario.Email_usuario }}
-        </div>
-
-        <a href="{% url 'cerrar_sesion' %}" class="logout-link">
-            Cerrar sesión
-        </a>
-
-    </div>
-
-</aside>
+    </aside>
 
 
-        <!-- Contenido Principal -->
-        <main class="main-content">
+    <!-- ====================================================== -->
+    <!-- CONTENIDO PRINCIPAL -->
+    <!-- ====================================================== -->
 
-            <header class="header-gestion">
+    <main class="main-content">
 
-                <div>
+        <header class="header-gestion">
 
-                    <h1>
-                        Gestión de Productos
-                    </h1>
+            <div>
 
-                    <p class="subtitulo-activos">
-                        {{ productos|length }} productos disponibles
-                    </p>
+                <h1>
+                    Gestión de Productos
+                </h1>
 
-                </div>
-
-
-                <div class="acciones-header">
-
-                    <button
-                        class="btn btn-outline"
-                        type="button"
-                        onclick="abrirModalBaja()"
-                    >
-                        Dar de baja
-                    </button>
-
-                    <button
-                        class="btn btn-outline"
-                        type="button"
-                        onclick="abrirModalModificar()"
-                    >
-                        Modificar
-                    </button>
-
-                    <button
-                        class="btn btn-primary"
-                        type="button"
-                        onclick="abrirModalRegistrar()"
-                    >
-                        + Registrar producto
-                    </button>
-
-                </div>
-
-            </header>
-
-
-            <!-- Filtros -->
-            <div class="barra-filtros">
-
-                <form method="GET">
-
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ busqueda }}"
-                        placeholder="Buscar producto..."
-                        class="input-buscar"
-                    >
-
-                </form>
-
-
-                <select
-                    class="select-grupos"
-                    onchange="filtrarTipo(this.value)"
-                >
-
-                    <option value="">
-                        Productos
-                    </option>
-
-                    {% for tipo in tipos_productos %}
-
-                        <option
-                            value="{{ tipo.ID_Tipo_producto }}"
-                            {% if request.GET.tipo == tipo.ID_Tipo_producto|stringformat:"s" %}
-                                selected
-                            {% endif %}
-                        >
-                            {{ tipo.Nombre_tipo_producto }}
-                        </option>
-
-                    {% endfor %}
-
-                </select>
+                <p class="subtitulo-activos">
+                    {{ productos|length }} productos registrados
+                </p>
 
             </div>
 
+            <div class="acciones-header">
 
-            <!-- Tabla de Productos -->
-            <div class="tabla-container">
+                <button
+                    class="btn btn-outline"
+                    type="button"
+                    onclick="abrirModalBaja()"
+                >
+                    Dar de baja
+                </button>
 
-                <table>
+                <button
+                    class="btn btn-outline"
+                    type="button"
+                    onclick="abrirModalModificar()"
+                >
+                    Modificar
+                </button>
 
-                    <thead>
+                <button
+                    class="btn btn-primary"
+                    type="button"
+                    onclick="abrirModalRegistrar()"
+                >
+                    + Registrar producto
+                </button>
 
-                        <tr>
-                            <th>ID_Producto</th>
-                            <th>Nombre_producto</th>
-                            <th>Tipo_producto</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>Stock_mínimo</th>
-                            <th>Fecha_vencimiento</th>
-                            <th>Estado_producto</th>
-                        </tr>
+            </div>
 
-                    </thead>
+        </header>
 
 
-                    <tbody>
+        <!-- ====================================================== -->
+        <!-- FILTROS -->
+        <!-- ====================================================== -->
 
-                        {% for producto in productos %}
+        <div class="barra-filtros">
+
+            <form method="GET">
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ busqueda }}"
+                    placeholder="Buscar producto..."
+                    class="input-buscar"
+                >
+
+            </form>
+
+
+            <select
+                class="select-grupos"
+                onchange="filtrarTipo(this.value)"
+            >
+
+                <option value="">
+                    Productos
+                </option>
+
+                {% for tipo in tipos_productos %}
+
+                    <option
+                        value="{{ tipo.ID_Tipo_producto }}"
+                        {% if request.GET.tipo == tipo.ID_Tipo_producto|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ tipo.Nombre_tipo_producto }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <!-- ====================================================== -->
+        <!-- TABLA DE PRODUCTOS -->
+        <!-- ====================================================== -->
+
+        <div class="tabla-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Tipo de producto</th>
+                        <th>Marca</th>
+                        <th>Descripción</th>
+                        <th>Precio</th>
+                        <th>Cantidad de presentación</th>
+                        <th>Unidad de medida</th>
+                        <th>Estado</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for producto in productos %}
 
                         <tr>
 
                             <td>
                                 <strong>
-                                    {{ producto.ID_Producto }}
+                                    {{ producto.Nombre_producto }}
                                 </strong>
                             </td>
 
 
                             <td>
-
-                                <div class="prod-nombre">
-                                    {{ producto.Nombre_producto }}
-                                </div>
-
-                                <div class="prod-desc">
-                                    {{ producto.Descripcion_producto|default:"Sin descripción" }}
-                                </div>
-
+                                {{ producto.ID_Tipo_producto.Nombre_tipo_producto }}
                             </td>
 
 
                             <td>
+                                {{ producto.Marca|default:"Sin marca" }}
+                            </td>
 
-                                {{ producto.ID_Tipo_producto.Nombre_tipo_producto }}
 
-                                {% for agro in producto.agroquimicos.all %}
-
-                                    <br>
-
-                                    <small>
-                                        {{ agro.Nombre_agroquimico }}
-                                    </small>
-
-                                {% endfor %}
-
+                            <td>
+                                {{ producto.Descripcion_producto|default:"Sin descripción" }}
                             </td>
 
 
@@ -307,62 +319,27 @@
 
 
                             <td>
+                                {{ producto.Cantidad_presentacion|default:"-" }}
+                            </td>
 
-                                {% if producto.stock %}
 
-                                    {{ producto.stock.Cantidad_stock }}
-
-                                {% else %}
-
-                                    Sin stock
-
-                                {% endif %}
-
+                            <td>
+                                {{ producto.Unidad_medida_producto|default:"-" }}
                             </td>
 
 
                             <td>
 
-                                {% if producto.stock %}
-
-                                    {{ producto.stock.Stock_minimo }}
-
-                                {% else %}
-
-                                    Sin stock
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <td>
-
-                                {% if producto.Fecha_vencimiento %}
-
-                                    {{ producto.Fecha_vencimiento|date:"d/m/Y" }}
-
-                                {% else %}
-
-                                    Sin fecha
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <td>
-
-                                {% if producto.Estado_producto == "Disponible" %}
+                                {% if producto.Estado_producto == 'Activo' %}
 
                                     <span class="badge-estado activo">
-                                        Disponible
+                                        Activo
                                     </span>
 
                                 {% else %}
 
                                     <span class="badge-estado">
-                                        No disponible
+                                        Inactivo
                                     </span>
 
                                 {% endif %}
@@ -372,7 +349,7 @@
                         </tr>
 
 
-                        {% empty %}
+                    {% empty %}
 
                         <tr>
 
@@ -382,900 +359,820 @@
 
                         </tr>
 
-                        {% endfor %}
+                    {% endfor %}
 
-                    </tbody>
+                </tbody>
 
-                </table>
+            </table>
 
-            </div>
-
-        </main>
-
-    </div>
+        </div>
 
 
-    <!-- ====================================================== -->
-    <!-- MODAL: REGISTRAR PRODUCTO -->
-    <!-- ====================================================== -->
+        <!-- ====================================================== -->
+        <!-- MODAL: REGISTRAR PRODUCTO -->
+        <!-- ====================================================== -->
 
-    <div id="modalRegistrar" class="modal">
+        <div id="modalRegistrar" class="modal">
 
-        <div class="modal-content">
+            <div class="modal-content">
 
-            <h2>
-                Registrar Nuevo Producto
-            </h2>
-
-
-            <form
-                method="POST"
-                action="{% url 'crear_producto' %}"
-            >
-
-                {% csrf_token %}
+                <h2>
+                    Registrar Nuevo Producto
+                </h2>
 
 
-                <!-- Tipo de Producto -->
-                <div class="form-group">
-
-                    <label>
-                        Tipo de Producto
-                    </label>
-
-                    <select
-                        id="tipoPrincipalRegistrar"
-                        name="ID_Tipo_producto"
-                        onchange="manejarCambioTipo('Registrar')"
-                        required
-                    >
-
-                        <option value="">
-                            Seleccione un tipo de producto
-                        </option>
-
-                        {% for tipo in tipos_productos %}
-
-                            <option
-                                value="{{ tipo.ID_Tipo_producto }}"
-                            >
-                                {{ tipo.Nombre_tipo_producto }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
-
-
-                <!-- Agroquímicos -->
-                <div
-                    class="form-group"
-                    id="contenedorSubtipoRegistrar"
-                    style="display: none;"
+                <form
+                    method="POST"
+                    action="{% url 'crear_producto' %}"
                 >
 
-                    <label>
-                        Agroquímicos
-                    </label>
-
-                    <select
-                        id="subtipoRegistrar"
-                        name="agroquimicos"
-                    >
-
-                        <option value="">
-                            Seleccione agroquímico...
-                        </option>
-
-                        {% for agro in agroquimicos %}
-
-                            <option
-                                value="{{ agro.ID_Agroquimico }}"
-                            >
-                                {{ agro.Nombre_agroquimico }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
+                    {% csrf_token %}
 
 
-                <!-- Proveedor -->
-                <div class="form-group">
+                    <!-- Tipo de producto -->
 
-                    <label>
-                        Proveedor
-                    </label>
+                    <div class="form-group">
 
-                    <select
-                        name="proveedores"
-                    >
+                        <label>
+                            Tipo de Producto
+                        </label>
 
-                        <option value="">
-                            Seleccione proveedor...
-                        </option>
-
-                        {% for proveedor in proveedores %}
-
-                            <option
-                                value="{{ proveedor.ID_Proveedor }}"
-                            >
-                                {{ proveedor.nombre_proveedor }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
-
-
-                <!-- Nombre -->
-                <div class="form-group">
-
-                    <label>
-                        Nombre_producto
-                    </label>
-
-                    <input
-                        type="text"
-                        name="Nombre_producto"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Descripción -->
-                <div class="form-group">
-
-                    <label>
-                        Descripcion_producto
-                    </label>
-
-                    <textarea
-                        name="Descripcion_producto"
-                    ></textarea>
-
-                </div>
-
-
-                <!-- Precio -->
-                <div class="form-group">
-
-                    <label>
-                        Precio
-                    </label>
-
-                    <input
-                        type="number"
-                        name="Precio"
-                        step="0.01"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Fecha de vencimiento -->
-                <div class="form-group">
-
-                    <label>
-                        Fecha_vencimiento
-                    </label>
-
-                    <input
-                        type="date"
-                        name="Fecha_vencimiento"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Estado -->
-                <div class="form-group">
-
-                    <label>
-                        Estado_producto
-                    </label>
-
-                    <select name="Estado_producto">
-
-                        <option
-                            value="Disponible"
-                            selected
+                        <select
+                            name="ID_Tipo_producto"
+                            required
                         >
-                            Disponible
-                        </option>
 
-                        <option value="No disponible">
-                            No disponible
-                        </option>
+                            <option value="">
+                                Seleccione un tipo de producto
+                            </option>
 
-                    </select>
+                            {% for tipo in tipos_productos %}
 
-                </div>
-
-
-                <div class="modal-acciones">
-
-                    <button
-                        type="button"
-                        class="btn btn-outline"
-                        onclick="cerrarModales()"
-                    >
-                        Cancelar
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-                        Guardar Producto
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-    </div>
-
-
-    <!-- ====================================================== -->
-    <!-- MODAL: MODIFICAR PRODUCTO -->
-    <!-- ====================================================== -->
-
-    <div id="modalModificar" class="modal">
-
-        <div class="modal-content">
-
-            <h2>
-                Modificar Producto
-            </h2>
-
-            <p>
-                Seleccione el producto que desea modificar.
-            </p>
-
-
-            <div class="tabla-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-                            <th>ID</th>
-                            <th>Producto</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        {% for producto in productos %}
-
-                        <tr>
-
-                            <td>
-                                {{ producto.ID_Producto }}
-                            </td>
-
-                            <td>
-                                {{ producto.Nombre_producto }}
-                            </td>
-
-                            <td>
-                                {{ producto.Estado_producto }}
-                            </td>
-
-                            <td>
-
-                                <button
-                                    type="button"
-                                    class="btn btn-outline"
-                                    onclick="abrirFormularioModificar(
-                                        '{{ producto.ID_Producto }}',
-                                        '{{ producto.ID_Tipo_producto.ID_Tipo_producto }}',
-                                        '{{ producto.Nombre_producto|escapejs }}',
-                                        '{{ producto.Descripcion_producto|default:''|escapejs }}',
-                                        '{{ producto.Precio }}',
-                                        '{% if producto.Fecha_vencimiento %}{{ producto.Fecha_vencimiento|date:"Y-m-d" }}{% endif %}',
-                                        '{{ producto.Estado_producto }}'
-                                    )"
+                                <option
+                                    value="{{ tipo.ID_Tipo_producto }}"
                                 >
-                                    Modificar
-                                </button>
+                                    {{ tipo.Nombre_tipo_producto }}
+                                </option>
 
-                            </td>
+                            {% endfor %}
 
-                        </tr>
+                        </select>
 
-                        {% empty %}
-
-                        <tr>
-
-                            <td colspan="4">
-                                No hay productos registrados.
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
+                    </div>
 
 
-            <div class="modal-acciones">
+                    <!-- Nombre -->
 
-                <button
-                    type="button"
-                    class="btn btn-outline"
-                    onclick="cerrarModales()"
-                >
-                    Cancelar
-                </button>
+                    <div class="form-group">
+
+                        <label>
+                            Nombre del Producto
+                        </label>
+
+                        <input
+                            type="text"
+                            name="Nombre_producto"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Marca -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Marca
+                        </label>
+
+                        <input
+                            type="text"
+                            name="Marca"
+                        >
+
+                    </div>
+
+
+                    <!-- Descripción -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Descripción
+                        </label>
+
+                        <textarea
+                            name="Descripcion_producto"
+                        ></textarea>
+
+                    </div>
+
+
+                    <!-- Precio -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Precio
+                        </label>
+
+                        <input
+                            type="number"
+                            name="Precio"
+                            step="0.01"
+                            min="0.01"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Cantidad de presentación -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Cantidad de presentación
+                        </label>
+
+                        <input
+                            type="number"
+                            name="Cantidad_presentacion"
+                            step="0.01"
+                            min="0.01"
+                        >
+
+                    </div>
+
+
+                    <!-- Unidad de medida -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Unidad de medida
+                        </label>
+
+                        <input
+                            type="text"
+                            name="Unidad_medida_producto"
+                            placeholder="Ejemplo: kg, litros"
+                        >
+
+                    </div>
+
+
+                    <!-- Estado -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Estado
+                        </label>
+
+                        <select name="Estado_producto">
+
+                            <option value="Activo" selected>
+                                Activo
+                            </option>
+
+                            <option value="Inactivo">
+                                Inactivo
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- Acciones -->
+
+                    <div class="modal-acciones">
+
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            onclick="cerrarModales()"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Guardar Producto
+                        </button>
+
+                    </div>
+
+                </form>
 
             </div>
 
         </div>
 
-    </div>
 
+        <!-- ====================================================== -->
+        <!-- MODAL: MODIFICAR PRODUCTO -->
+        <!-- ====================================================== -->
 
-    <!-- ====================================================== -->
-    <!-- MODAL: FORMULARIO MODIFICAR -->
-    <!-- ====================================================== -->
+        <div id="modalModificar" class="modal">
 
-    <div id="modalFormularioModificar" class="modal">
+            <div class="modal-content">
 
-        <div class="modal-content">
+                <h2>
+                    Modificar Producto
+                </h2>
 
-            <h2>
-                Modificar Producto
-            </h2>
+                <p>
+                    Seleccione el producto que desea modificar.
+                </p>
 
 
-            <form
-                id="formModificarProducto"
-                method="POST"
-            >
+                <div class="tabla-container">
 
-                {% csrf_token %}
+                    <table>
 
+                        <thead>
 
-                <!-- Tipo -->
-                <div class="form-group">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
 
-                    <label>
-                        Tipo de Producto
-                    </label>
+                        </thead>
 
-                    <select
-                        id="tipoPrincipalModificar"
-                        name="ID_Tipo_producto"
-                        onchange="manejarCambioTipo('Modificar')"
-                        required
-                    >
 
-                        <option value="">
-                            Seleccione un tipo de producto
-                        </option>
+                        <tbody>
 
-                        {% for tipo in tipos_productos %}
+                            {% for producto in productos %}
 
-                            <option
-                                value="{{ tipo.ID_Tipo_producto }}"
-                            >
-                                {{ tipo.Nombre_tipo_producto }}
-                            </option>
+                                <tr>
 
-                        {% endfor %}
+                                    <td>
+                                        {{ producto.Nombre_producto }}
+                                    </td>
 
-                    </select>
 
-                </div>
+                                    <td>
 
+                                        {% if producto.Estado_producto == 'Activo' %}
+                                            Activo
+                                        {% else %}
+                                            Inactivo
+                                        {% endif %}
 
-                <!-- Agroquímico -->
-                <div
-                    class="form-group"
-                    id="contenedorSubtipoModificar"
-                    style="display: none;"
-                >
+                                    </td>
 
-                    <label>
-                        Agroquímicos
-                    </label>
 
-                    <select
-                        id="subtipoModificar"
-                        name="agroquimicos"
-                    >
-
-                        <option value="">
-                            Seleccione agroquímico...
-                        </option>
-
-                        {% for agro in agroquimicos %}
-
-                            <option
-                                value="{{ agro.ID_Agroquimico }}"
-                            >
-                                {{ agro.Nombre_agroquimico }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
-
-
-                <!-- Proveedor -->
-                <div class="form-group">
-
-                    <label>
-                        Proveedor
-                    </label>
-
-                    <select
-                        name="proveedores"
-                    >
-
-                        <option value="">
-                            Seleccione proveedor...
-                        </option>
-
-                        {% for proveedor in proveedores %}
-
-                            <option
-                                value="{{ proveedor.ID_Proveedor }}"
-                            >
-                                {{ proveedor.nombre_proveedor }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
-
-
-                <!-- Nombre -->
-                <div class="form-group">
-
-                    <label>
-                        Nombre_producto
-                    </label>
-
-                    <input
-                        id="nombreModificar"
-                        type="text"
-                        name="Nombre_producto"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Descripción -->
-                <div class="form-group">
-
-                    <label>
-                        Descripcion_producto
-                    </label>
-
-                    <textarea
-                        id="descripcionModificar"
-                        name="Descripcion_producto"
-                    ></textarea>
-
-                </div>
-
-
-                <!-- Precio -->
-                <div class="form-group">
-
-                    <label>
-                        Precio
-                    </label>
-
-                    <input
-                        id="precioModificar"
-                        type="number"
-                        name="Precio"
-                        step="0.01"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Fecha -->
-                <div class="form-group">
-
-                    <label>
-                        Fecha_vencimiento
-                    </label>
-
-                    <input
-                        id="fechaModificar"
-                        type="date"
-                        name="Fecha_vencimiento"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Estado -->
-                <div class="form-group">
-
-                    <label>
-                        Estado_producto
-                    </label>
-
-                    <select
-                        id="estadoModificar"
-                        name="Estado_producto"
-                    >
-
-                        <option value="Disponible">
-                            Disponible
-                        </option>
-
-                        <option value="No disponible">
-                            No disponible
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="modal-acciones">
-
-                    <button
-                        type="button"
-                        class="btn btn-outline"
-                        onclick="cerrarModales()"
-                    >
-                        Cancelar
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-                        Guardar cambios
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-    </div>
-
-
-    <!-- ====================================================== -->
-    <!-- MODAL: DAR DE BAJA -->
-    <!-- ====================================================== -->
-
-    <div id="modalBaja" class="modal">
-
-        <div class="modal-content alerta-baja-box">
-
-            <div class="advertencia-banner">
-                ⚠ ¿Estás segura de dar de baja este producto?
-            </div>
-
-
-            <h2>
-                Dar de baja producto
-            </h2>
-
-
-            <p>
-                Seleccione el producto que desea dar de baja.
-            </p>
-
-
-            <div class="tabla-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-                            <th>ID</th>
-                            <th>Producto</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        {% for producto in productos %}
-
-                        <tr>
-
-                            <td>
-                                {{ producto.ID_Producto }}
-                            </td>
-
-                            <td>
-                                {{ producto.Nombre_producto }}
-                            </td>
-
-                            <td>
-                                {{ producto.Estado_producto }}
-                            </td>
-
-                            <td>
-
-                                {% if producto.Estado_producto == "Disponible" %}
-
-                                    <form
-                                        method="POST"
-                                        action="{% url 'dar_baja_producto' producto.ID_Producto %}"
-                                    >
-
-                                        {% csrf_token %}
+                                    <td>
 
                                         <button
-                                            type="submit"
-                                            class="btn btn-danger"
+                                            type="button"
+                                            class="btn btn-outline"
+                                            onclick="abrirFormularioModificar(
+                                                '{{ producto.ID_Producto }}',
+                                                '{{ producto.ID_Tipo_producto.ID_Tipo_producto }}',
+                                                '{{ producto.Nombre_producto|escapejs }}',
+                                                '{{ producto.Marca|default:''|escapejs }}',
+                                                '{{ producto.Descripcion_producto|default:''|escapejs }}',
+                                                '{{ producto.Precio }}',
+                                                '{{ producto.Cantidad_presentacion|default:'' }}',
+                                                '{{ producto.Unidad_medida_producto|default:''|escapejs }}',
+                                                '{{ producto.Estado_producto }}'
+                                            )"
                                         >
-                                            Sí, dar de baja
+                                            Modificar
                                         </button>
 
-                                    </form>
+                                    </td>
 
-                                {% else %}
-
-                                    <span>
-                                        Ya no disponible
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-                        </tr>
-
-                        {% empty %}
-
-                        <tr>
-
-                            <td colspan="4">
-                                No hay productos registrados.
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
+                                </tr>
 
 
-            <div class="modal-acciones">
+                            {% empty %}
 
-                <button
-                    type="button"
-                    class="btn btn-outline"
-                    onclick="cerrarModales()"
-                >
-                    Cancelar
-                </button>
+                                <tr>
+
+                                    <td colspan="3">
+                                        No hay productos registrados.
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div class="modal-acciones">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        onclick="cerrarModales()"
+                    >
+                        Cancelar
+                    </button>
+
+                </div>
 
             </div>
 
         </div>
 
-    </div>
+
+        <!-- ====================================================== -->
+        <!-- MODAL: FORMULARIO MODIFICAR -->
+        <!-- ====================================================== -->
+
+        <div id="modalFormularioModificar" class="modal">
+
+            <div class="modal-content">
+
+                <h2>
+                    Modificar Producto
+                </h2>
 
 
-    <!-- ====================================================== -->
-    <!-- JAVASCRIPT -->
-    <!-- ====================================================== -->
+                <form
+                    id="formModificarProducto"
+                    method="POST"
+                >
 
-    <script>
-
-        function abrirModalRegistrar() {
-
-            document.getElementById(
-                'modalRegistrar'
-            ).style.display = 'flex';
-
-        }
+                    {% csrf_token %}
 
 
-        function abrirModalModificar() {
+                    <!-- Tipo de producto -->
 
-            document.getElementById(
-                'modalModificar'
-            ).style.display = 'flex';
+                    <div class="form-group">
 
-        }
+                        <label>
+                            Tipo de Producto
+                        </label>
 
+                        <select
+                            id="tipoPrincipalModificar"
+                            name="ID_Tipo_producto"
+                            required
+                        >
 
-        function abrirFormularioModificar(
-            id,
-            tipo,
-            nombre,
-            descripcion,
-            precio,
-            fecha,
-            estado
-        ) {
+                            <option value="">
+                                Seleccione un tipo de producto
+                            </option>
 
-            cerrarModales();
+                            {% for tipo in tipos_productos %}
 
-            document.getElementById(
-                'modalFormularioModificar'
-            ).style.display = 'flex';
+                                <option
+                                    value="{{ tipo.ID_Tipo_producto }}"
+                                >
+                                    {{ tipo.Nombre_tipo_producto }}
+                                </option>
 
+                            {% endfor %}
 
-            document.getElementById(
-                'formModificarProducto'
-            ).action =
-                "{% url 'editar_producto' 0 %}".replace(
-                    '/0/',
-                    '/' + id + '/'
-                );
+                        </select>
+
+                    </div>
 
 
-            document.getElementById(
-                'tipoPrincipalModificar'
-            ).value = tipo;
+                    <!-- Nombre -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Nombre del Producto
+                        </label>
+
+                        <input
+                            id="nombreModificar"
+                            type="text"
+                            name="Nombre_producto"
+                            required
+                        >
+
+                    </div>
 
 
-            document.getElementById(
-                'nombreModificar'
-            ).value = nombre;
+                    <!-- Marca -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Marca
+                        </label>
+
+                        <input
+                            id="marcaModificar"
+                            type="text"
+                            name="Marca"
+                        >
+
+                    </div>
 
 
-            document.getElementById(
-                'descripcionModificar'
-            ).value = descripcion;
+                    <!-- Descripción -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Descripción
+                        </label>
+
+                        <textarea
+                            id="descripcionModificar"
+                            name="Descripcion_producto"
+                        ></textarea>
+
+                    </div>
 
 
-            document.getElementById(
-                'precioModificar'
-            ).value = precio;
+                    <!-- Precio -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Precio
+                        </label>
+
+                        <input
+                            id="precioModificar"
+                            type="number"
+                            name="Precio"
+                            step="0.01"
+                            min="0.01"
+                            required
+                        >
+
+                    </div>
 
 
-            document.getElementById(
-                'fechaModificar'
-            ).value = fecha;
+                    <!-- Cantidad de presentación -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Cantidad de presentación
+                        </label>
+
+                        <input
+                            id="cantidadPresentacionModificar"
+                            type="number"
+                            name="Cantidad_presentacion"
+                            step="0.01"
+                            min="0.01"
+                        >
+
+                    </div>
 
 
-            document.getElementById(
-                'estadoModificar'
-            ).value = estado;
+                    <!-- Unidad de medida -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Unidad de medida
+                        </label>
+
+                        <input
+                            id="unidadMedidaModificar"
+                            type="text"
+                            name="Unidad_medida_producto"
+                            placeholder="Ejemplo: kg, litros"
+                        >
+
+                    </div>
 
 
-            manejarCambioTipo(
-                'Modificar'
-            );
+                    <!-- Estado -->
 
-        }
+                    <div class="form-group">
+
+                        <label>
+                            Estado
+                        </label>
+
+                        <select
+                            id="estadoModificar"
+                            name="Estado_producto"
+                        >
+
+                            <option value="Activo">
+                                Activo
+                            </option>
+
+                            <option value="Inactivo">
+                                Inactivo
+                            </option>
+
+                        </select>
+
+                    </div>
 
 
-        function abrirModalBaja() {
+                    <!-- Acciones -->
 
-            document.getElementById(
-                'modalBaja'
-            ).style.display = 'flex';
+                    <div class="modal-acciones">
 
-        }
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            onclick="cerrarModales()"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Guardar cambios
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
 
 
-        function cerrarModales() {
+        <!-- ====================================================== -->
+        <!-- MODAL: DAR DE BAJA -->
+        <!-- ====================================================== -->
 
-            document.querySelectorAll(
-                '.modal'
-            ).forEach(
-                m => m.style.display = 'none'
-            );
+        <div id="modalBaja" class="modal">
 
-        }
+            <div class="modal-content alerta-baja-box">
+
+                <div class="advertencia-banner">
+                    ⚠ ¿Estás segura de dar de baja este producto?
+                </div>
 
 
-        function manejarCambioTipo(modo) {
+                <h2>
+                    Dar de baja producto
+                </h2>
 
-            const selectTipo =
+
+                <p>
+                    Seleccione el producto que desea dar de baja.
+                </p>
+
+
+                <div class="tabla-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Producto</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for producto in productos %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ producto.Nombre_producto }}
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if producto.Estado_producto == 'Activo' %}
+                                            Activo
+                                        {% else %}
+                                            Inactivo
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if producto.Estado_producto == 'Activo' %}
+
+                                            <form
+                                                method="POST"
+                                                action="{% url 'dar_baja_producto' producto.ID_Producto %}"
+                                            >
+
+                                                {% csrf_token %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-danger"
+                                                >
+                                                    Sí, dar de baja
+                                                </button>
+
+                                            </form>
+
+                                        {% else %}
+
+                                            <span>
+                                                Ya está inactivo
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+
+                            {% empty %}
+
+                                <tr>
+
+                                    <td colspan="3">
+                                        No hay productos registrados.
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div class="modal-acciones">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        onclick="cerrarModales()"
+                    >
+                        Cancelar
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ====================================================== -->
+        <!-- JAVASCRIPT -->
+        <!-- ====================================================== -->
+
+        <script>
+
+            function abrirModalRegistrar() {
+
                 document.getElementById(
-                    'tipoPrincipal' + modo
-                );
-
-            const contenedorSubtipo =
-                document.getElementById(
-                    'contenedorSubtipo' + modo
-                );
-
-
-            if (
-                selectTipo.value === ''
-            ) {
-
-                contenedorSubtipo.style.display =
-                    'none';
-
-                return;
+                    'modalRegistrar'
+                ).style.display = 'flex';
 
             }
 
 
-            const textoTipo =
-                selectTipo.options[
-                    selectTipo.selectedIndex
-                ].text.toLowerCase();
+            function abrirModalModificar() {
 
-
-            if (
-                textoTipo.includes('agroqu')
-            ) {
-
-                contenedorSubtipo.style.display =
-                    'block';
-
-            } else {
-
-                contenedorSubtipo.style.display =
-                    'none';
+                document.getElementById(
+                    'modalModificar'
+                ).style.display = 'flex';
 
             }
 
-        }
 
-
-        function filtrarTipo(idTipo) {
-
-            if (
-                idTipo === ''
+            function abrirFormularioModificar(
+                id,
+                tipo,
+                nombre,
+                marca,
+                descripcion,
+                precio,
+                cantidadPresentacion,
+                unidadMedida,
+                estado
             ) {
+
+                cerrarModales();
+
+
+                document.getElementById(
+                    'modalFormularioModificar'
+                ).style.display = 'flex';
+
+
+                document.getElementById(
+                    'formModificarProducto'
+                ).action =
+                    "{% url 'editar_producto' 0 %}".replace(
+                        '/0/',
+                        '/' + id + '/'
+                    );
+
+
+                document.getElementById(
+                    'tipoPrincipalModificar'
+                ).value = tipo;
+
+
+                document.getElementById(
+                    'nombreModificar'
+                ).value = nombre;
+
+
+                document.getElementById(
+                    'marcaModificar'
+                ).value = marca;
+
+
+                document.getElementById(
+                    'descripcionModificar'
+                ).value = descripcion;
+
+
+                document.getElementById(
+                    'precioModificar'
+                ).value = precio;
+
+
+                document.getElementById(
+                    'cantidadPresentacionModificar'
+                ).value = cantidadPresentacion;
+
+
+                document.getElementById(
+                    'unidadMedidaModificar'
+                ).value = unidadMedida;
+
+
+                document.getElementById(
+                    'estadoModificar'
+                ).value = estado;
+
+            }
+
+
+            function abrirModalBaja() {
+
+                document.getElementById(
+                    'modalBaja'
+                ).style.display = 'flex';
+
+            }
+
+
+            function cerrarModales() {
+
+                document.querySelectorAll(
+                    '.modal'
+                ).forEach(
+                    m => m.style.display = 'none'
+                );
+
+            }
+
+
+            function filtrarTipo(idTipo) {
+
+                if (idTipo === '') {
+
+                    window.location.href =
+                        "{% url 'gestion_productos' %}";
+
+                    return;
+
+                }
+
 
                 window.location.href =
-                    "{% url 'gestion_productos' %}";
-
-                return;
+                    "{% url 'gestion_productos' %}"
+                    + "?tipo="
+                    + idTipo;
 
             }
 
+        </script>
 
-            window.location.href =
-                "{% url 'gestion_productos' %}"
-                + "?tipo="
-                + idTipo;
+    </main>
 
-        }
-
-    </script>
+</div>
 
 </body>
 </html>

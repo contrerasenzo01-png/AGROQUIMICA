@@ -22,10 +22,12 @@ urlpatterns = [
     path('tipos-productos/editar/<int:pk>/', views.editar_tipo_producto, name='editar_tipo_producto'),
     path('tipos-productos/baja/<int:pk>/', views.dar_baja_tipo_producto, name='dar_baja_tipo_producto'),
 
-    # Agroquímicos
-    path('agroquimicos/', views.gestion_agroquimicos, name='gestion_agroquimicos'),
-    path('agroquimicos/crear/', views.crear_agroquimico, name='crear_agroquimico'),
-    path('agroquimicos/editar/<int:pk>/', views.editar_agroquimico, name='editar_agroquimico'),
+    # Subtipos
+    path('subtipos/', views.gestion_subtipos, name='gestion_subtipos'),
+    path('subtipos/crear/', views.crear_subtipo, name='crear_subtipo'),
+    path('subtipos/editar/<int:pk>/', views.editar_subtipo, name='editar_subtipo'),
+    path('subtipos/cambiar-estado/<int:pk>/', views.cambiar_estado_subtipo, name='cambiar_estado_subtipo'),
+
 
     # Usuarios
     path('usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
@@ -43,24 +45,17 @@ urlpatterns = [
     path('perfiles/cambiar-estado/<int:id>/', views.cambiar_estado_perfil, name='cambiar_estado_perfil'),
     path('mis-permisos/', views.mis_permisos, name='mis_permisos'),
 
-    # Tipos de movimientos
-    path('tipos-movimientos/', views.gestion_tipos_movimientos, name='gestion_tipos_movimientos'),
-    path('tipos-movimientos/crear/', views.crear_tipo_movimiento, name='crear_tipo_movimiento'),
-    path('tipos-movimientos/editar/<int:pk>/', views.editar_tipo_movimiento, name='editar_tipo_movimiento'),
 
     # Productos
     path('productos/', views.gestion_productos, name='gestion_productos'),
     path('productos/crear/', views.crear_producto, name='crear_producto'),
     path('productos/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
-    path('productos/baja/<int:pk>/', views.dar_baja_producto, name='dar_baja_producto'),
+    path('productos/cambiar-estado/<int:pk>/', views.cambiar_estado_producto, name='cambiar_estado_producto'),
 
-    # Productos por proveedor
-    path('productos-proveedores/', views.gestion_productos_proveedores, name='gestion_productos_proveedores'),
 
-    # Stock
-    path('stock/', views.gestion_stock, name='gestion_stock'),
-    path('stock/crear/', views.crear_stock, name='crear_stock'),
-    path('stock/editar/<int:pk>/', views.editar_stock, name='editar_stock'),
+    # Registrar ingreso de lote
+    path('ingreso-lote/', views.registrar_ingreso_lote, name='registrar_ingreso_lote'),
+
 
     # Movimientos de stock
     path('movimientos-stock/', views.gestion_movimientos_stock, name='gestion_movimientos_stock'),

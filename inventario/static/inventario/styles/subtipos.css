@@ -1,0 +1,489 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f1f5f3;
+    color: #1c2a23;
+}
+
+
+/* ==========================================
+   ESTRUCTURA PRINCIPAL
+   ========================================== */
+
+.layout-principal {
+    display: flex;
+    min-height: 100vh;
+}
+
+
+/* ==========================================
+   SIDEBAR
+   ========================================== */
+
+.sidebar {
+    width: 220px;
+    background: #0b311e;
+    color: white;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+}
+
+.logo {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 28px;
+    padding-left: 4px;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 5px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    color: #dce9e2;
+    text-decoration: none;
+    font-size: 13.5px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.nav-link:hover {
+    background: #16472d;
+    color: white;
+}
+
+.nav-link.active {
+    background: #16472d;
+    color: white;
+    font-weight: 600;
+}
+
+.nav-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+
+/* ==========================================
+   INFORMACIÓN DEL USUARIO
+   ========================================== */
+
+.user-info {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 15px;
+}
+
+.user-role {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.user-email {
+    font-size: 11px;
+    color: #b8cbc1;
+    margin-bottom: 12px;
+    word-break: break-word;
+}
+
+.logout-link {
+    display: inline-block;
+    color: #dce9e2;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.logout-link:hover {
+    color: white;
+}
+
+
+/* ==========================================
+   CONTENIDO PRINCIPAL
+   ========================================== */
+
+.main-content {
+    flex: 1;
+    padding: 25px 30px;
+    min-width: 0;
+}
+
+
+/* ==========================================
+   ENCABEZADO
+   ========================================== */
+
+.header-gestion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.header-gestion h1 {
+    font-size: 20px;
+    font-weight: 650;
+    color: #1c2a23;
+}
+
+.subtitulo-activos {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #6d7d74;
+}
+
+.acciones-header {
+    display: flex;
+    align-items: center;
+}
+
+
+/* ==========================================
+   BOTONES
+   ========================================== */
+
+.btn {
+    border: none;
+    border-radius: 6px;
+    padding: 9px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-primary {
+    background: #0b311e;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #16472d;
+}
+
+.btn-outline {
+    background: white;
+    color: #1c2a23;
+    border: 1px solid #d4dfd9;
+}
+
+.btn-outline:hover {
+    background: #f4f7f5;
+    border-color: #bfcfc6;
+}
+
+.btn-danger {
+    background: #fff;
+    color: #a13b3b;
+    border: 1px solid #e2caca;
+}
+
+.btn-danger:hover {
+    background: #fdf1f1;
+}
+
+.btn-pequeno {
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+
+/* ==========================================
+   MENSAJES
+   ========================================== */
+
+.mensaje {
+    background: #e8f3ec;
+    border: 1px solid #c9dfd0;
+    color: #245c39;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 15px;
+    font-size: 12px;
+}
+
+
+/* ==========================================
+   BARRA DE BÚSQUEDA
+   ========================================== */
+
+.barra-filtros {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.input-buscar {
+    width: 300px;
+    padding: 9px 10px;
+    border: 1px solid #dce7e1;
+    border-radius: 6px;
+    background: white;
+    color: #1c2a23;
+    font-size: 12px;
+    outline: none;
+}
+
+.input-buscar:focus {
+    border-color: #9bb5a5;
+}
+
+.input-buscar::placeholder {
+    color: #9aa9a1;
+}
+
+
+/* ==========================================
+   TABLA
+   ========================================== */
+
+.tabla-container {
+    background: white;
+    border: 1px solid #e2ece6;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f7f9f8;
+}
+
+th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 650;
+    color: #5d6d64;
+    border-bottom: 1px solid #e2ece6;
+}
+
+td {
+    padding: 12px 14px;
+    font-size: 12px;
+    color: #34433b;
+    border-bottom: 1px solid #edf2ef;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tbody tr:hover {
+    background: #fafcfb;
+}
+
+.prod-nombre {
+    font-weight: 600;
+    color: #1c2a23;
+}
+
+
+/* ==========================================
+   ESTADOS
+   ========================================== */
+
+.badge-estado {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.badge-estado.activo {
+    background: #e5f2e9;
+    color: #28623b;
+}
+
+.badge-estado.inactivo {
+    background: #f1f1f1;
+    color: #777;
+}
+
+
+/* ==========================================
+   ACCIONES DE LA TABLA
+   ========================================== */
+
+.acciones-tabla {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+/* ==========================================
+   SIN REGISTROS
+   ========================================== */
+
+.sin-registros {
+    text-align: center;
+    padding: 30px 15px;
+    color: #7c8a83;
+    font-size: 12px;
+}
+
+
+/* ==========================================
+   MODAL
+   ========================================== */
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 49, 30, 0.35);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 430px;
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    border: 1px solid #e2ece6;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.modal-content h2 {
+    font-size: 17px;
+    font-weight: 650;
+    color: #1c2a23;
+    margin-bottom: 20px;
+}
+
+
+/* ==========================================
+   FORMULARIO DEL MODAL
+   ========================================== */
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #34433b;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid #dce7e1;
+    border-radius: 6px;
+    background: white;
+    color: #1c2a23;
+    font-size: 12px;
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #9bb5a5;
+}
+
+
+/* ==========================================
+   BOTONES DEL MODAL
+   ========================================== */
+
+.modal-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 22px;
+}
+
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 800px) {
+
+    .sidebar {
+        width: 200px;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    .header-gestion {
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .input-buscar {
+        width: 250px;
+    }
+
+}
+
+@media (max-width: 650px) {
+
+    .layout-principal {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+    }
+
+    .user-info {
+        margin-top: 20px;
+    }
+
+    .header-gestion {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .barra-filtros {
+        width: 100%;
+    }
+
+    .input-buscar {
+        flex: 1;
+        width: auto;
+    }
+
+}
