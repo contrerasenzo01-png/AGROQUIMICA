@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Productos - Agroquímica del Valle</title>
     <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}">
+
 </head>
 
 <body>
@@ -164,7 +165,7 @@
     </aside>
 
 
-    <!-- ====================================================== -->
+   <!-- ====================================================== -->
     <!-- CONTENIDO PRINCIPAL -->
     <!-- ====================================================== -->
 
@@ -185,22 +186,6 @@
             </div>
 
             <div class="acciones-header">
-
-                <button
-                    class="btn btn-outline"
-                    type="button"
-                    onclick="abrirModalBaja()"
-                >
-                    Dar de baja
-                </button>
-
-                <button
-                    class="btn btn-outline"
-                    type="button"
-                    onclick="abrirModalModificar()"
-                >
-                    Modificar
-                </button>
 
                 <button
                     class="btn btn-primary"
@@ -262,108 +247,182 @@
 
 
         <!-- ====================================================== -->
-        <!-- TABLA DE PRODUCTOS -->
+        <!-- LISTADO DE PRODUCTOS -->
         <!-- ====================================================== -->
 
-        <div class="tabla-container">
+        <div class="productos-lista">
 
-            <table>
+            {% for producto in productos %}
 
-                <thead>
+            <div class="card-container">
 
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Tipo de producto</th>
-                        <th>Marca</th>
-                        <th>Descripción</th>
-                        <th>Precio</th>
-                        <th>Cantidad de presentación</th>
-                        <th>Unidad de medida</th>
-                        <th>Estado</th>
-                    </tr>
+                <!-- CABECERA DEL PRODUCTO -->
+                <div class="card-header">
 
-                </thead>
+                    <div class="card-left">
 
+                        <div class="avatar-producto">
+                            {{ producto.Nombre_producto|slice:":2"|upper }}
+                        </div>
 
-                <tbody>
+                        <div class="card-info">
 
-                    {% for producto in productos %}
+                            <h4>
+                                {{ producto.Nombre_producto }}
 
-                        <tr>
+                                <span class="codigo-producto">
+                                    (PROD-{{ producto.ID_Producto }})
+                                </span>
+                            </h4>
 
-                            <td>
-                                <strong>
-                                    {{ producto.Nombre_producto }}
-                                </strong>
-                            </td>
-
-
-                            <td>
+                            <p>
                                 {{ producto.ID_Tipo_producto.Nombre_tipo_producto }}
-                            </td>
-
-
-                            <td>
+                                ·
                                 {{ producto.Marca|default:"Sin marca" }}
-                            </td>
+                            </p>
+
+                        </div>
+
+                    </div>
 
 
-                            <td>
-                                {{ producto.Descripcion_producto|default:"Sin descripción" }}
-                            </td>
+                    <!-- ACCIONES -->
+                    <div class="card-actions">
+
+                        <!-- ESTADO -->
+                        {% if producto.Estado_producto == 'Activo' %}
+
+                            <span class="badge-activo">
+                                Activo
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge-inactivo">
+                                Inactivo
+                            </span>
+
+                        {% endif %}
 
 
-                            <td>
-                                ${{ producto.Precio }}
-                            </td>
+                        <!-- EDITAR -->
+                        <button
+                            type="button"
+                            class="btn-action"
+                            onclick="abrirFormularioModificar(
+                                '{{ producto.ID_Producto }}',
+                                '{{ producto.ID_Tipo_producto.ID_Tipo_producto }}',
+                                '{{ producto.Nombre_producto|escapejs }}',
+                                '{{ producto.Marca|default:''|escapejs }}',
+                                '{{ producto.Descripcion_producto|default:''|escapejs }}',
+                                '{{ producto.Precio }}',
+                                '{{ producto.Cantidad_presentacion|default:'' }}',
+                                '{{ producto.Unidad_medida_producto|default:''|escapejs }}',
+                                '{{ producto.Estado_producto }}'
+                            )"
+                        >
+                            Editar
+                        </button>
 
 
-                            <td>
-                                {{ producto.Cantidad_presentacion|default:"-" }}
-                            </td>
+                        <!-- BAJA / ACTIVAR -->
+                        <form
+                            method="POST"
+                            action="{% url 'cambiar_estado_producto' producto.ID_Producto %}"
+                            style="display:inline;"
+                        >
 
+                            {% csrf_token %}
 
-                            <td>
-                                {{ producto.Unidad_medida_producto|default:"-" }}
-                            </td>
-
-
-                            <td>
-
+                            <button
+                                type="submit"
+                                class="btn-action {% if producto.Estado_producto == 'Activo' %}btn-baja{% else %}btn-activar{% endif %}"
+                            >
                                 {% if producto.Estado_producto == 'Activo' %}
-
-                                    <span class="badge-estado activo">
-                                        Activo
-                                    </span>
-
+                                    Baja
                                 {% else %}
-
-                                    <span class="badge-estado">
-                                        Inactivo
-                                    </span>
-
+                                    Activar
                                 {% endif %}
+                            </button>
 
-                            </td>
-
-                        </tr>
+                        </form>
 
 
-                    {% empty %}
+                        <!-- FLECHA -->
+                        <button
+                            type="button"
+                            class="btn-arrow"
+                            onclick="toggleProducto('{{ producto.ID_Producto }}')"
+                            id="arrow-{{ producto.ID_Producto }}"
+                            aria-label="Mostrar detalles"
+                        >
+                            ▲
+                        </button>
 
-                        <tr>
+                    </div>
 
-                            <td colspan="8">
-                                No hay productos registrados.
-                            </td>
+                </div>
 
-                        </tr>
 
-                    {% endfor %}
+                <!-- DETALLES DEL PRODUCTO -->
+                <div
+                    class="card-details"
+                    id="details-{{ producto.ID_Producto }}"
+                >
 
-                </tbody>
+                    <div class="detalle-item">
+                        <strong>Tipo de producto</strong>
+                        <span>
+                            {{ producto.ID_Tipo_producto.Nombre_tipo_producto }}
+                        </span>
+                    </div>
 
-            </table>
+                    <div class="detalle-item">
+                        <strong>Marca</strong>
+                        <span>
+                            {{ producto.Marca|default:"Sin marca" }}
+                        </span>
+                    </div>
+
+                    <div class="detalle-item">
+                        <strong>Descripción</strong>
+                        <span>
+                            {{ producto.Descripcion_producto|default:"Sin descripción" }}
+                        </span>
+                    </div>
+
+                    <div class="detalle-item">
+                        <strong>Precio</strong>
+                        <span>
+                            ${{ producto.Precio }}
+                        </span>
+                    </div>
+
+                    <div class="detalle-item">
+                        <strong>Cantidad de presentación</strong>
+                        <span>
+                            {{ producto.Cantidad_presentacion|default:"-" }}
+                        </span>
+                    </div>
+
+                    <div class="detalle-item">
+                        <strong>Unidad de medida</strong>
+                        <span>
+                            {{ producto.Unidad_medida_producto|default:"-" }}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% empty %}
+
+                <div class="sin-productos">
+                    No hay productos registrados.
+                </div>
+
+            {% endfor %}
 
         </div>
 
@@ -426,7 +485,7 @@
                     <div class="form-group">
 
                         <label>
-                            Nombre del Producto
+                            Nombre_producto
                         </label>
 
                         <input
@@ -459,7 +518,7 @@
                     <div class="form-group">
 
                         <label>
-                            Descripción
+                            Descripcion_producto
                         </label>
 
                         <textarea
@@ -493,7 +552,7 @@
                     <div class="form-group">
 
                         <label>
-                            Cantidad de presentación
+                            Cantidad_presentacion
                         </label>
 
                         <input
@@ -511,7 +570,7 @@
                     <div class="form-group">
 
                         <label>
-                            Unidad de medida
+                            Unidad_medida
                         </label>
 
                         <input
@@ -528,7 +587,7 @@
                     <div class="form-group">
 
                         <label>
-                            Estado
+                            Estado_producto
                         </label>
 
                         <select name="Estado_producto">
@@ -748,7 +807,7 @@
                     <div class="form-group">
 
                         <label>
-                            Nombre del Producto
+                            Nombre_producto
                         </label>
 
                         <input
@@ -783,7 +842,7 @@
                     <div class="form-group">
 
                         <label>
-                            Descripción
+                            Descripcion_producto
                         </label>
 
                         <textarea
@@ -819,7 +878,7 @@
                     <div class="form-group">
 
                         <label>
-                            Cantidad de presentación
+                            Cantidad_presentacion
                         </label>
 
                         <input
@@ -838,7 +897,7 @@
                     <div class="form-group">
 
                         <label>
-                            Unidad de medida
+                            Unidad_medida
                         </label>
 
                         <input
@@ -856,7 +915,7 @@
                     <div class="form-group">
 
                         <label>
-                            Estado
+                            Estado_producto
                         </label>
 
                         <select
@@ -1145,6 +1204,41 @@
                 ).forEach(
                     m => m.style.display = 'none'
                 );
+
+            }
+
+
+            function toggleProducto(id) {
+
+                const details = document.getElementById(
+                    'details-' + id
+                );
+
+                const arrow = document.getElementById(
+                    'arrow-' + id
+                );
+
+                if (!details) {
+                    return;
+                }
+
+                if (details.style.display === 'grid') {
+
+                    details.style.display = 'none';
+
+                    if (arrow) {
+                        arrow.textContent = '▲';
+                    }
+
+                } else {
+
+                    details.style.display = 'grid';
+
+                    if (arrow) {
+                        arrow.textContent = '▼';
+                    }
+
+                }
 
             }
 
