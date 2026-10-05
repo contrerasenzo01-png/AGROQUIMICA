@@ -1,21 +1,6 @@
 /* ============================================================
-   GESTIÓN DE TIPOS DE PRODUCTO
-   Agroquímica del Valle
-
-   Sidebar y Topbar:
-   sidebar.css / topbar.css
-
-   Este archivo controla solamente el contenido
-   de la página de Tipos de Producto.
-   ============================================================ */
-
-
-/* ============================================================
    CONTENEDOR PRINCIPAL
    ============================================================ */
-body {
-    background: red !important;
-}
 
 .header {
     width: 100%;
