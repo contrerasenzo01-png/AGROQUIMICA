@@ -1,0 +1,479 @@
+{% load static %}
+
+<!-- ==========================================
+     ICONOS SVG
+     ========================================== -->
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+
+    <!-- Hoja / Logo -->
+    <symbol id="i-leaf" viewBox="0 0 24 24">
+        <path d="M20.5 3.5C12 3.5 5.5 6.5 4 13c-.7 3.1 1.1 5.8 4.2 6.5 3.3.7 6.5-1.5 7.8-4.5 0.9-2 1.2-4.2 1.1-6.4-2.7.7-5.2 2-7.3 3.9-1.5 1.4-2.6 3.1-3.4 5"/>
+    </symbol>
+
+    <!-- Panel -->
+    <symbol id="i-panel" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </symbol>
+
+    <!-- Usuarios -->
+    <symbol id="i-users" viewBox="0 0 24 24">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </symbol>
+
+    <!-- Producto / Caja -->
+    <symbol id="i-package" viewBox="0 0 24 24">
+        <path d="m21 16-9 5-9-5V8l9-5 9 5v8Z"/>
+        <path d="m3.3 7.8 8.7 5 8.7-5"/>
+        <path d="M12 22V12.8"/>
+        <path d="m7.5 5.5 9 5"/>
+    </symbol>
+
+    <!-- Capas / Tipos -->
+    <symbol id="i-layers" viewBox="0 0 24 24">
+        <polygon points="12 2 22 7 12 12 2 7 12 2"/>
+        <polyline points="2 12 12 17 22 12"/>
+        <polyline points="2 17 12 22 22 17"/>
+    </symbol>
+
+    <!-- Etiquetas / Subtipos -->
+    <symbol id="i-tags" viewBox="0 0 24 24">
+        <path d="M20.59 13.41 11 3.83V3H4v7h.83l9.58 9.59a2 2 0 0 0 2.83 0l3.35-3.35a2 2 0 0 0 0-2.83Z"/>
+        <circle cx="7.5" cy="6.5" r="1"/>
+    </symbol>
+
+    <!-- Proveedor -->
+    <symbol id="i-truck" viewBox="0 0 24 24">
+        <rect x="1" y="3" width="15" height="13" rx="1"/>
+        <path d="M16 8h4l3 3v5h-7V8Z"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/>
+        <circle cx="18.5" cy="18.5" r="2.5"/>
+    </symbol>
+
+    <!-- Ingreso -->
+    <symbol id="i-inbox" viewBox="0 0 24 24">
+        <path d="M3 4h18v16H3z"/>
+        <path d="M3 14h5l2 3h4l2-3h5"/>
+    </symbol>
+
+    <!-- Movimientos -->
+    <symbol id="i-swap" viewBox="0 0 24 24">
+        <path d="M7 7h13l-3-3"/>
+        <path d="m20 7-3 3"/>
+        <path d="M17 17H4l3 3"/>
+        <path d="m4 17 3-3"/>
+    </symbol>
+
+    <!-- Alertas -->
+    <symbol id="i-bell" viewBox="0 0 24 24">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+        <path d="M10 21h4"/>
+    </symbol>
+
+    <!-- Perfiles -->
+    <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+        <path d="m9 12 2 2 4-4"/>
+    </symbol>
+
+    <!-- Permisos -->
+    <symbol id="i-key" viewBox="0 0 24 24">
+        <circle cx="7.5" cy="15.5" r="5.5"/>
+        <path d="m12 12 9-9"/>
+        <path d="m17 7 3 3"/>
+        <path d="m14 10 3 3"/>
+    </symbol>
+
+    <!-- Cerrar sesión -->
+    <symbol id="i-logout" viewBox="0 0 24 24">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+    </symbol>
+
+</svg>
+
+
+<!-- ==========================================
+     SIDEBAR
+     ========================================== -->
+
+<aside class="sidebar" id="sidebar">
+
+
+    <!-- LOGO -->
+
+    <div class="sidebar-logo">
+
+        <div class="logo-icon">
+
+            <svg class="logo-svg">
+                <use href="#i-leaf"></use>
+            </svg>
+
+        </div>
+
+        <div class="logo-text">
+
+            <strong>Agroquímica</strong>
+
+            <span>del Valle</span>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         MENÚ
+         ========================================== -->
+
+    <nav class="sidebar-nav">
+
+
+        <!-- PANEL PRINCIPAL -->
+
+        <div class="nav-item">
+
+            <a href="{% url 'panel_principal' %}"
+               class="nav-link {% if activo == 'panel' %}active{% endif %}">
+
+                <svg class="nav-icon">
+                    <use href="#i-panel"></use>
+                </svg>
+
+                <span>Panel Principal</span>
+
+            </a>
+
+        </div>
+
+
+        <!-- ==========================================
+             MENÚ PARA VENDEDOR
+             ========================================== -->
+
+        {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
+
+
+            <!-- SECCIÓN GESTIÓN -->
+
+            <div class="nav-section">
+                <span class="nav-section-title">GESTIÓN</span>
+            </div>
+
+
+            <!-- PRODUCTOS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_productos' %}"
+                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-package"></use>
+                    </svg>
+
+                    <span>Productos</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- TIPOS DE PRODUCTOS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_tipos_productos' %}"
+                   class="nav-link {% if activo == 'tipos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-layers"></use>
+                    </svg>
+
+                    <span>Tipos de Productos</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- MIS PERMISOS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'mis_permisos' %}"
+                   class="nav-link {% if activo == 'mis_permisos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-key"></use>
+                    </svg>
+
+                    <span>Mis permisos</span>
+
+                </a>
+
+            </div>
+
+
+        {% else %}
+
+
+            <!-- ==========================================
+                 MENÚ PARA ADMINISTRADOR
+                 ========================================== -->
+
+            <!-- SECCIÓN ADMINISTRACIÓN -->
+
+            <div class="nav-section">
+                <span class="nav-section-title">ADMINISTRACIÓN</span>
+            </div>
+
+
+            <!-- USUARIOS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_usuarios' %}"
+                   class="nav-link {% if activo == 'usuarios' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-users"></use>
+                    </svg>
+
+                    <span>Usuarios del sistema</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- PRODUCTOS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_productos' %}"
+                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-package"></use>
+                    </svg>
+
+                    <span>Productos</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- TIPOS DE PRODUCTOS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_tipos_productos' %}"
+                   class="nav-link {% if activo == 'tipos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-layers"></use>
+                    </svg>
+
+                    <span>Tipos de Productos</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- SUBTIPOS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_subtipos' %}"
+                   class="nav-link {% if activo == 'subtipos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-tags"></use>
+                    </svg>
+
+                    <span>Subtipos</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- PROVEEDORES -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_proveedores' %}"
+                   class="nav-link {% if activo == 'proveedores' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-truck"></use>
+                    </svg>
+
+                    <span>Proveedores</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- INGRESO DE LOTE -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'registrar_ingreso_lote' %}"
+                   class="nav-link {% if activo == 'lotes' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-inbox"></use>
+                    </svg>
+
+                    <span>Ingreso de Lote</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- MOVIMIENTOS DE STOCK -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_movimientos_stock' %}"
+                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-swap"></use>
+                    </svg>
+
+                    <span>Movimientos Stock</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- HISTORIAL DE ALERTAS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'historial_alertas' %}"
+                   class="nav-link {% if activo == 'alertas' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-bell"></use>
+                    </svg>
+
+                    <span>Historial de Alertas</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- ==========================================
+                 SECCIÓN SEGURIDAD
+                 ========================================== -->
+
+            <div class="nav-section">
+                <span class="nav-section-title">SEGURIDAD</span>
+            </div>
+
+
+            <!-- PERFILES -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_perfiles' %}"
+                   class="nav-link {% if activo == 'perfiles' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-shield"></use>
+                    </svg>
+
+                    <span>Perfiles de acceso</span>
+
+                </a>
+
+            </div>
+
+
+            <!-- PERMISOS -->
+
+            <div class="nav-item">
+
+                <a href="{% url 'gestion_permisos' %}"
+                   class="nav-link {% if activo == 'permisos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-key"></use>
+                    </svg>
+
+                    <span>Permisos del sistema</span>
+
+                </a>
+
+            </div>
+
+
+        {% endif %}
+
+    </nav>
+
+
+    <!-- ==========================================
+         PIE DEL SIDEBAR
+         ========================================== -->
+
+    <div class="sidebar-footer">
+
+
+        <!-- INFORMACIÓN DEL USUARIO -->
+
+        <div class="sidebar-user">
+
+            <div class="sidebar-user-avatar">
+                {{ usuario.Email_usuario|first|upper }}
+            </div>
+
+            <div class="sidebar-user-info">
+
+                <span class="sidebar-user-name">
+                    {{ usuario.Email_usuario }}
+                </span>
+
+                <span class="sidebar-user-role">
+                    {{ usuario.ID_Perfil.Nombre_perfil }}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- CERRAR SESIÓN -->
+
+        <a href="{% url 'cerrar_sesion' %}"
+           class="logout-link">
+
+            <svg class="nav-icon">
+                <use href="#i-logout"></use>
+            </svg>
+
+            <span>Cerrar sesión</span>
+
+        </a>
+
+    </div>
+
+</aside>

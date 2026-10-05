@@ -25,41 +25,6 @@ body {
     overflow: hidden;
 }
 
-
-/* ==========================================
-   BARRA LATERAL
-   ========================================== */
-
-.sidebar {
-    width: 220px;
-    background-color: #0b311e;
-    color: #ffffff;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 24px 16px;
-    height: 100vh;
-    flex-shrink: 0;
-}
-
-
-/* Logo */
-
-.logo {
-    font-size: 15px;
-    font-weight: 700;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 28px;
-}
-
-.logo img {
-    flex-shrink: 0;
-}
-
-
 /* ==========================================
    MENÚ DE NAVEGACIÓN
    ========================================== */

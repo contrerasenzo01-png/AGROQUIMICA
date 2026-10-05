@@ -1,0 +1,113 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet"
+>
+
+    <title>
+        {% block title %}
+            Agroquímica del Valle
+        {% endblock %}
+    </title>
+
+    <link rel="stylesheet" href="{% static 'inventario/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/topbar.css' %}">
+
+    {% block extra_css %}
+    {% endblock %}
+</head>
+
+<body>
+
+    <div class="layout">
+
+        {% include 'inventario/_sidebar.html' with activo=activo %}
+
+        <div class="page-area">
+
+            <!-- TOPBAR -->
+            <header class="topbar">
+
+                <button
+                    class="topbar-menu"
+                    id="topbarMenuToggle"
+                    type="button"
+                    aria-label="Cerrar menú">
+                    ☰
+                </button>
+
+                <div class="topbar-brand">
+                    <span class="topbar-title">
+                        Agroquímica del Valle
+                    </span>
+                </div>
+
+                <div class="topbar-user">
+
+                    <div class="topbar-user-info">
+                        <strong>
+                            {{ usuario.Email_usuario }}
+                        </strong>
+
+                        <span>
+                            {{ usuario.ID_Perfil.Nombre_perfil }}
+                        </span>
+                    </div>
+
+                    <div class="topbar-avatar">
+                        {{ usuario.Email_usuario|first|upper }}
+                    </div>
+
+                </div>
+
+            </header>
+
+            <!-- CONTENIDO -->
+            <main class="main-content">
+
+                {% block contenido %}
+                {% endblock %}
+
+            </main>
+
+        </div>
+
+    </div>
+
+    {% block extra_js %}
+    {% endblock %}
+
+
+    <!-- FUNCIONAMIENTO DEL BOTÓN DEL MENÚ -->
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const menu = document.getElementById('topbarMenuToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            if (!menu || !sidebar) {
+                return;
+            }
+
+            menu.addEventListener('click', function () {
+
+                sidebar.classList.toggle('sidebar-hidden');
+
+            });
+
+        });
+
+    </script>
+
+</body>
+</html>

@@ -22,68 +22,6 @@ body {
 
 
 /* ==========================================
-   SIDEBAR
-   ========================================== */
-
-.sidebar {
-    width: 220px;
-    background: #0b311e;
-    color: white;
-    padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 100vh;
-}
-
-.logo {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 28px;
-    padding-left: 4px;
-}
-
-.nav-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.nav-item {
-    margin-bottom: 5px;
-}
-
-.nav-link {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 9px 10px;
-    color: #dce9e2;
-    text-decoration: none;
-    font-size: 13.5px;
-    border-radius: 6px;
-    transition: background 0.2s ease;
-}
-
-.nav-link:hover {
-    background: #16472d;
-    color: white;
-}
-
-.nav-link.active {
-    background: #16472d;
-    color: white;
-    font-weight: 600;
-}
-
-.nav-icon {
-    width: 20px;
-    text-align: center;
-    font-size: 14px;
-}
-
-
-/* ==========================================
    INFORMACIÓN DEL USUARIO
    ========================================== */
 

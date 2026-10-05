@@ -1,268 +1,221 @@
+{% extends 'inventario/base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Productos - Agroquímica del Valle</title>
+{% block title %}
+    Gestión de lotes - Agroquímica del Valle
+{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/ingreso_lote.css' %}">
-</head>
-<body>
+{% endblock %}
 
-    <div class="layout-principal">
+{% block contenido %}
 
-        <!-- Sidebar -->
-        <aside class="sidebar">
+<div class="lt-page">
 
-            <div>
+    <!-- ENCABEZADO -->
+    <div class="lt-header">
+        <div>
+            <h1 class="lt-title">Gestión de lotes</h1>
+            <p class="lt-sub">Trazabilidad de cada ingreso, desde el proveedor hasta el stock.</p>
+        </div>
 
-                <div class="logo">
-                    🌿 Agroquímica del Valle
-                </div>
-
-                <ul class="nav-menu">
-
-                    <!-- PANEL PRINCIPAL -->
-                    <li class="nav-item">
-                        <a href="{% url 'panel_principal' %}" class="nav-link">
-                            <span class="nav-icon">🎛️</span>
-                            Panel Principal
-                        </a>
-                    </li>
-
-                    {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
-
-                        <!-- OPCIONES DEL VENDEDOR -->
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_productos' %}" class="nav-link active">
-                                <span class="nav-icon">📦</span>
-                                Productos
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                                <span class="nav-icon">🗂️</span>
-                                Tipos de Productos
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'mis_permisos' %}" class="nav-link">
-                                <span class="nav-icon">🔐</span>
-                                Mis permisos
-                            </a>
-                        </li>
-
-                    {% else %}
-
-                        <!-- OPCIONES DEL ADMINISTRADOR -->
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-                                <span class="nav-icon">👤</span>
-                                Usuarios del sistema
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_productos' %}" class="nav-link active">
-                                <span class="nav-icon">📦</span>
-                                Productos
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                                <span class="nav-icon">🗂️</span>
-                                Tipos de Productos
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_subtipos' %}" class="nav-link">
-                                <span class="nav-icon">🗃️</span>
-                                Subtipos
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                                <span class="nav-icon">🚚</span>
-                                Proveedores
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'registrar_ingreso_lote' %}" class="nav-link">
-                                <span class="nav-icon">📥</span>
-                                Ingreso de Lote
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                                <span class="nav-icon">📊</span>
-                                Movimientos Stock
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'historial_alertas' %}" class="nav-link">
-                                <span class="nav-icon">🔔</span>
-                                Historial de Alertas
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_perfiles' %}" class="nav-link">
-                                <span class="nav-icon">👥</span>
-                                Perfiles de acceso
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{% url 'gestion_permisos' %}" class="nav-link">
-                                <span class="nav-icon">🔐</span>
-                                Permisos del sistema
-                            </a>
-                        </li>
-
-                    {% endif %}
-
-                </ul>
-
-            </div>
-
-            <!-- Footer del Sidebar -->
-            <div class="user-info">
-
-                <div class="user-role">
-                    {{ usuario.ID_Perfil.Nombre_perfil }}
-                </div>
-
-                <div class="user-email">
-                    {{ usuario.Email_usuario }}
-                </div>
-
-                <a href="{% url 'cerrar_sesion' %}" class="logout-link">
-                    Cerrar sesión
-                </a>
-
-            </div>
-
-        </aside>
-
-        <main class="contenido">
-
-            <div class="encabezado">
-                <h1>Registrar ingreso de lote</h1>
-                <p>Registre el ingreso de un nuevo lote de productos.</p>
-            </div>
-
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="mensaje">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            <div class="formulario-contenedor">
-
-                <form method="POST">
-                    {% csrf_token %}
-
-                    <div class="campo">
-                        <label for="proveedor">Proveedor</label>
-                        <select name="proveedor" id="proveedor" required>
-                            <option value="">Seleccionar proveedor</option>
-
-                            {% for proveedor in proveedores %}
-                                <option value="{{ proveedor.ID_Proveedor }}">
-                                    {{ proveedor.nombre_proveedor }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="campo">
-                        <label for="producto">Producto</label>
-                        <select name="producto" id="producto" required>
-                            <option value="">Seleccionar producto</option>
-
-                            {% for producto in productos %}
-                                <option value="{{ producto.ID_Producto }}">
-                                    {{ producto.Nombre_producto }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="campo">
-                        <label for="numero_lote">Número de lote</label>
-                        <input
-                            type="text"
-                            name="numero_lote"
-                            id="numero_lote"
-                            maxlength="50"
-                            required
-                        >
-                    </div>
-
-                    <div class="campo">
-                        <label for="cantidad_ingresada">Cantidad ingresada</label>
-                        <input
-                            type="number"
-                            name="cantidad_ingresada"
-                            id="cantidad_ingresada"
-                            min="1"
-                            required
-                        >
-                    </div>
-
-                    <div class="fila">
-
-                        <div class="campo">
-                            <label for="fecha_ingreso">Fecha de ingreso</label>
-                            <input
-                                type="date"
-                                name="fecha_ingreso"
-                                id="fecha_ingreso"
-                                required
-                            >
-                        </div>
-
-                        <div class="campo">
-                            <label for="fecha_vencimiento">Fecha de vencimiento</label>
-                            <input
-                                type="date"
-                                name="fecha_vencimiento"
-                                id="fecha_vencimiento"
-                            >
-                        </div>
-
-                    </div>
-
-                    <div class="acciones">
-                        <a href="{% url 'gestion_productos' %}" class="btn-cancelar">
-                            Cancelar
-                        </a>
-
-                        <button type="submit" class="btn-registrar">
-                            Registrar ingreso
-                        </button>
-                    </div>
-
-                </form>
-
-            </div>
-
-        </main>
-
+        <button type="button" class="lt-btn lt-btn-primary" onclick="abrirModalLote()">
+            <svg class="lt-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Registrar lote
+        </button>
     </div>
 
-</body>
-</html>
+
+    <!-- MENSAJES -->
+    {% if messages %}
+        <div class="lt-messages">
+            {% for message in messages %}
+                <div class="lt-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+
+    <!-- BÚSQUEDA -->
+    {% with total=lotes|length %}
+
+    <form method="GET" class="lt-toolbar">
+        <div class="lt-search">
+            <svg class="lt-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" name="q" value="{{ busqueda }}"
+                   placeholder="Buscar por lote, producto o proveedor...">
+        </div>
+
+        <span class="lt-count">
+            {{ total }} lote{{ total|pluralize }} registrado{{ total|pluralize }}
+        </span>
+    </form>
+
+
+    <!-- TABLA -->
+    <div class="lt-card">
+        <div class="lt-table-wrap">
+            <table class="lt-table">
+                <thead>
+                    <tr>
+                        <th>Número de lote</th>
+                        <th>Producto</th>
+                        <th>Proveedor</th>
+                        <th>Ingreso</th>
+                        <th>Vencimiento</th>
+                        <th>Ingresadas</th>
+                        <th>Disponibles</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for l in lotes %}
+                        <tr>
+                            <td><span class="lt-num">{{ l.Numero_lote }}</span></td>
+
+                            <td>{{ l.ID_Producto.Nombre_producto }}</td>
+
+                            <td class="lt-muted">
+                                {{ l.ID_Proveedor.nombre_proveedor|default:"Sin atribuir" }}
+                            </td>
+
+                            <td class="lt-muted">
+                                {{ l.Fecha_ingreso|date:"d \d\e M \d\e Y"|lower }}
+                            </td>
+
+                            <td>
+                                {% if not l.Fecha_vencimiento %}
+                                    <span class="lt-muted">Sin vencimiento</span>
+                                {% elif l.Fecha_vencimiento < hoy %}
+                                    <span class="lt-fecha lt-vencido">{{ l.Fecha_vencimiento|date:"d \d\e M \d\e Y"|lower }}</span>
+                                {% elif l.Fecha_vencimiento <= limite %}
+                                    <span class="lt-fecha lt-por-vencer">{{ l.Fecha_vencimiento|date:"d \d\e M \d\e Y"|lower }}</span>
+                                {% else %}
+                                    <span class="lt-muted">{{ l.Fecha_vencimiento|date:"d \d\e M \d\e Y"|lower }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td><span class="lt-cant">{{ l.Cantidad_ingresada }}</span></td>
+
+                            <td><span class="lt-cant">{{ l.Cantidad_actual }}</span></td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="lt-vacio">No se encontraron lotes.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="lt-pie">
+            <span>{{ total }} lote{{ total|pluralize }} encontrado{{ total|pluralize }}</span>
+            <span>Agroquímicos del Valle</span>
+        </div>
+    </div>
+
+    {% endwith %}
+
+</div>
+
+
+<!-- ===================== MODAL REGISTRAR LOTE ===================== -->
+<div id="modalLote" class="lt-modal">
+    <div class="lt-modal-box" role="dialog" aria-modal="true" aria-labelledby="lt-modal-titulo">
+
+        <div class="lt-modal-head">
+            <div>
+                <div class="lt-modal-eyebrow">Nuevo registro</div>
+                <h2 id="lt-modal-titulo">Registrar lote</h2>
+            </div>
+
+            <button type="button" class="lt-modal-x" onclick="cerrarModalLote()" aria-label="Cerrar">
+                <svg class="lt-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'registrar_ingreso_lote' %}" class="lt-modal-body">
+            {% csrf_token %}
+
+            <div class="lt-campo">
+                <label for="ID_Producto">Producto vigente</label>
+                <select name="ID_Producto" id="ID_Producto" required>
+                    <option value="">Seleccionar producto</option>
+                    {% for producto in productos %}
+                        <option value="{{ producto.ID_Producto }}">{{ producto.Nombre_producto }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="lt-campo">
+                <label for="ID_Proveedor">Proveedor activo</label>
+                <select name="ID_Proveedor" id="ID_Proveedor" required>
+                    <option value="">Seleccionar proveedor</option>
+                    {% for proveedor in proveedores %}
+                        <option value="{{ proveedor.ID_Proveedor }}">{{ proveedor.nombre_proveedor }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="lt-fila">
+                <div class="lt-campo">
+                    <label for="Numero_lote">Número de lote</label>
+                    <input type="text" name="Numero_lote" id="Numero_lote"
+                           maxlength="50" placeholder="Ej. AV-2026-042" required>
+                </div>
+
+                <div class="lt-campo">
+                    <label for="Cantidad_ingresada">Cantidad ingresada (unidades)</label>
+                    <input type="number" name="Cantidad_ingresada" id="Cantidad_ingresada"
+                           min="1" step="1" required>
+                </div>
+            </div>
+
+            <div class="lt-fila">
+                <div class="lt-campo">
+                    <label for="Fecha_ingreso">Fecha de ingreso</label>
+                    <input type="date" name="Fecha_ingreso" id="Fecha_ingreso"
+                           value="{{ hoy|date:'Y-m-d' }}" required>
+                </div>
+
+                <div class="lt-campo">
+                    <label for="Fecha_vencimiento">Fecha de vencimiento</label>
+                    <input type="date" name="Fecha_vencimiento" id="Fecha_vencimiento" required>
+                </div>
+            </div>
+
+            <div class="lt-modal-pie">
+                <button type="button" class="lt-btn lt-btn-claro" onclick="cerrarModalLote()">Cancelar</button>
+                <button type="submit" class="lt-btn lt-btn-primary">Guardar lote</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+
+<script>
+    const modalLote = document.getElementById("modalLote");
+
+    function abrirModalLote() {
+        modalLote.classList.add("abierto");
+        document.getElementById("ID_Producto").focus();
+    }
+
+    function cerrarModalLote() {
+        modalLote.classList.remove("abierto");
+    }
+
+    // Cerrar al hacer clic fuera de la ventana o con la tecla Esc
+    modalLote.addEventListener("click", function (e) {
+        if (e.target === modalLote) cerrarModalLote();
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") cerrarModalLote();
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,446 @@
+{% extends 'inventario/base.html' %}
+{% load static %}
+
+{% block title %}
+    Movimientos de stock - Agroquímica del Valle
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{% static 'inventario/styles/movimientos_stock.css' %}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="page-header">
+
+    <div>
+        <div class="page-eyebrow">
+            Agroquímicos del Valle
+        </div>
+
+        <h1 class="page-title">
+            Movimientos de stock
+        </h1>
+
+        <p class="page-sub">
+            El historial de ingresos y egresos de cada lote.
+        </p>
+    </div>
+
+    <button type="button"
+            class="btn btn-primary"
+            onclick="abrirModal()">
+        ⇄ Registrar egreso
+    </button>
+
+</div>
+
+
+{% if messages %}
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+{% endif %}
+
+
+<form method="GET" class="toolbar">
+
+    <input
+        type="text"
+        name="q"
+        value="{{ busqueda }}"
+        class="search-box"
+        placeholder="Buscar producto, lote u observaciones..."
+    >
+
+    <select
+        name="tipo"
+        class="filter-select"
+        onchange="this.form.submit()"
+    >
+
+        <option value="">
+            Todos los movimientos
+        </option>
+
+        {% for t in todos_tipos %}
+
+            <option
+                value="{{ t.ID_Tipo_movimiento }}"
+                {% if tipo_sel == t.ID_Tipo_movimiento|stringformat:"s" %}
+                    selected
+                {% endif %}
+            >
+                {{ t.Nombre_tipo_movimiento }}
+            </option>
+
+        {% endfor %}
+
+    </select>
+
+    <button type="submit"
+            class="btn btn-secondary">
+        Buscar
+    </button>
+
+</form>
+
+
+<div class="card">
+
+    <div class="table-wrap">
+
+        <table class="custom-table">
+
+            <thead>
+
+                <tr>
+                    <th>Fecha y hora</th>
+                    <th>Producto</th>
+                    <th>Lote</th>
+                    <th>Tipo</th>
+                    <th>Cantidad</th>
+                    <th>Usuario</th>
+                    <th>Observaciones</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for m in movimientos %}
+
+                    {% with tipo=m.ID_Tipo_movimiento.Nombre_tipo_movimiento %}
+
+                        <tr>
+
+                            <td>
+
+                                <span class="mov-fecha">
+                                    {{ m.Fecha_hora_movimiento|date:"d/m/Y" }}
+                                </span>
+
+                                <span class="mov-hora">
+                                    {{ m.Fecha_hora_movimiento|date:"H:i" }}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+                                {{ m.ID_Lote.ID_Producto.Nombre_producto|default:"—" }}
+                            </td>
+
+
+                            <td>
+                                {{ m.ID_Lote.Numero_lote|default:"—" }}
+                            </td>
+
+
+                            <td>
+
+                                {% if tipo == "Entrada" %}
+
+                                    <span class="tag tag-entrada">
+                                        Ingreso
+                                    </span>
+
+                                {% elif tipo == "Salida por venta" %}
+
+                                    <span class="tag tag-salida">
+                                        Egreso
+                                    </span>
+
+                                {% elif tipo == "Salida por vencimiento" %}
+
+                                    <span class="tag tag-vencimiento">
+                                        Vencimiento
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="tag tag-otro">
+                                        {{ tipo }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+
+                                {% if tipo == "Entrada" %}
+
+                                    <span class="mov-cantidad pos">
+                                        +{{ m.Cantidad_movimiento }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="mov-cantidad neg">
+                                        -{{ m.Cantidad_movimiento }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+                                {{ m.ID_Usuario.Apellido_usuario }}
+                                {{ m.ID_Usuario.Nombre_usuario }}
+                            </td>
+
+
+                            <td>
+
+                                <span class="mov-obs">
+                                    {{ m.Observaciones|default:"—" }}
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    {% endwith %}
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="7"
+                            class="tabla-vacia">
+
+                            No se encontraron movimientos de stock.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="tabla-pie">
+
+        <span>
+            {{ movimientos|length }}
+            movimiento{{ movimientos|length|pluralize }}
+        </span>
+
+        <span>
+            Agroquímicos del Valle
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- MODAL REGISTRAR EGRESO -->
+
+<div id="modalEgreso"
+     class="modal">
+
+    <div class="modal-contenido">
+
+        <div class="modal-header">
+
+            <h2>
+                Registrar egreso
+            </h2>
+
+            <button type="button"
+                    class="modal-cerrar"
+                    onclick="cerrarModal()">
+
+                &times;
+
+            </button>
+
+        </div>
+
+
+        <form method="POST"
+              action="{% url 'crear_movimiento_stock' %}">
+
+            {% csrf_token %}
+
+
+            <input type="hidden"
+                   name="ID_Usuario"
+                   value="{{ usuario.ID_Usuario }}">
+
+
+            <div class="form-group">
+
+                <label for="ID_Lote">
+                    Lote
+                </label>
+
+                <select
+                    name="ID_Lote"
+                    id="ID_Lote"
+                    required
+                >
+
+                    <option value="">
+                        Seleccionar lote
+                    </option>
+
+                    {% for l in lotes %}
+
+                        <option value="{{ l.ID_Lote }}">
+
+                            {{ l.ID_Producto.Nombre_producto }}
+                            -
+                            Lote {{ l.Numero_lote }}
+                            -
+                            Disponible: {{ l.Cantidad_actual }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="ID_Tipo_movimiento">
+                    Tipo de movimiento
+                </label>
+
+                <select
+                    name="ID_Tipo_movimiento"
+                    id="ID_Tipo_movimiento"
+                    required
+                >
+
+                    <option value="">
+                        Seleccionar tipo
+                    </option>
+
+                    {% for t in tipos_movimientos %}
+
+                        <option value="{{ t.ID_Tipo_movimiento }}">
+                            {{ t.Nombre_tipo_movimiento }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="Cantidad_movimiento">
+                    Cantidad
+                </label>
+
+                <input
+                    type="number"
+                    name="Cantidad_movimiento"
+                    id="Cantidad_movimiento"
+                    min="1"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="Observaciones">
+                    Observaciones
+                </label>
+
+                <textarea
+                    name="Observaciones"
+                    id="Observaciones"
+                    rows="3"
+                    placeholder="Ingrese una observación..."
+                ></textarea>
+
+            </div>
+
+
+            <div class="modal-acciones">
+
+                <button
+                    type="button"
+                    class="btn btn-cancelar"
+                    onclick="cerrarModal()"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Registrar egreso
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+function abrirModal() {
+
+    document.getElementById("modalEgreso").style.display = "flex";
+
+}
+
+
+function cerrarModal() {
+
+    document.getElementById("modalEgreso").style.display = "none";
+
+}
+
+
+window.addEventListener("click", function (e) {
+
+    if (e.target.id === "modalEgreso") {
+
+        cerrarModal();
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

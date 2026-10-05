@@ -11,6 +11,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+
+        # ---------------------------------------------------------
+        # PRODUCTOS - eliminar relación con AGROQUIMICOS
+        # ---------------------------------------------------------
+
         migrations.SeparateDatabaseAndState(
             database_operations=[],
             state_operations=[
@@ -25,124 +30,187 @@ class Migration(migrations.Migration):
             ],
         ),
 
-        migrations.RemoveField(
-            model_name='productosxagroquimicos',
-            name='ID_Producto',
-        ),
-
-        migrations.RemoveField(
-            model_name='productosxproveedores',
-            name='ID_Producto',
-        ),
-
-        migrations.RemoveField(
-            model_name='productosxproveedores',
-            name='ID_Proveedor',
-        ),
-
-        migrations.RemoveField(
-            model_name='productos',
-            name='proveedores',
-        ),
+        # ---------------------------------------------------------
+        # ALERTAS
+        # ---------------------------------------------------------
 
         migrations.AlterModelOptions(
             name='alertas',
-            options={'verbose_name_plural': 'Historial de alertas'},
+            options={
+                'verbose_name_plural': 'Historial de alertas'
+            },
         ),
 
-        migrations.RenameField(
-            model_name='movimientosstock',
-            old_name='Cantidad',
-            new_name='Cantidad_movimiento_stock',
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='alertas',
+                    name='Atendida',
+                    field=models.BooleanField(
+                        default=False
+                    ),
+                ),
+            ],
         ),
 
-        migrations.RemoveField(
-            model_name='movimientosstock',
-            name='ID_Stock',
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='alertas',
+                    name='Cantidad_al_generar',
+                    field=models.IntegerField(
+                        blank=True,
+                        null=True
+                    ),
+                ),
+            ],
         ),
 
-        migrations.RemoveField(
-            model_name='productos',
-            name='Fecha_vencimiento',
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='alertas',
+                    name='Fecha_hora_atencion',
+                    field=models.DateTimeField(
+                        blank=True,
+                        null=True
+                    ),
+                ),
+            ],
         ),
 
-        migrations.AddField(
-            model_name='alertas',
-            name='Atendida',
-            field=models.BooleanField(default=False),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='alertas',
+                    name='ID_Usuario',
+                    field=models.ForeignKey(
+                        blank=True,
+                        db_column='ID_Usuario',
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='alertas_atendidas',
+                        to='inventario.usuarios',
+                    ),
+                ),
+            ],
         ),
 
-        migrations.AddField(
-            model_name='alertas',
-            name='Cantidad_al_generar',
-            field=models.IntegerField(blank=True, null=True),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='alertas',
+                    name='Stock_minimo_al_generar',
+                    field=models.IntegerField(
+                        blank=True,
+                        null=True
+                    ),
+                ),
+            ],
         ),
 
-        migrations.AddField(
-            model_name='alertas',
-            name='Fecha_hora_atencion',
-            field=models.DateTimeField(blank=True, null=True),
+        # ---------------------------------------------------------
+        # MOVIMIENTOS STOCK - OBSERVACIONES
+        # ---------------------------------------------------------
+
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='movimientosstock',
+                    name='Observaciones',
+                    field=models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True
+                    ),
+                ),
+            ],
         ),
 
-        migrations.AddField(
-            model_name='alertas',
-            name='ID_Usuario',
-            field=models.ForeignKey(
-                blank=True,
-                db_column='ID_Usuario',
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name='alertas_atendidas',
-                to='inventario.usuarios'
-            ),
+        # ---------------------------------------------------------
+        # MOVIMIENTOS STOCK
+        # Cantidad -> Cantidad_movimiento_stock
+        #
+        # La columna Cantidad_movimiento_stock YA EXISTE
+        # físicamente en la base de datos.
+        #
+        # Por eso solo modificamos el estado de Django.
+        # ---------------------------------------------------------
+
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RemoveField(
+                    model_name='movimientosstock',
+                    name='Cantidad',
+                ),
+                migrations.AddField(
+                    model_name='movimientosstock',
+                    name='Cantidad_movimiento_stock',
+                    field=models.IntegerField(),
+                ),
+            ],
         ),
 
-        migrations.AddField(
-            model_name='alertas',
-            name='Stock_minimo_al_generar',
-            field=models.IntegerField(blank=True, null=True),
+        # ---------------------------------------------------------
+        # PRODUCTOS - nuevos campos
+        # ---------------------------------------------------------
+
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='productos',
+                    name='Cantidad_presentacion',
+                    field=models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        max_digits=10,
+                        null=True
+                    ),
+                ),
+            ],
         ),
 
-        migrations.AddField(
-            model_name='movimientosstock',
-            name='Observaciones',
-            field=models.CharField(
-                blank=True,
-                max_length=255,
-                null=True
-            ),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='productos',
+                    name='Marca',
+                    field=models.CharField(
+                        blank=True,
+                        max_length=50,
+                        null=True
+                    ),
+                ),
+            ],
         ),
 
-        migrations.AddField(
-            model_name='productos',
-            name='Cantidad_presentacion',
-            field=models.DecimalField(
-                blank=True,
-                decimal_places=2,
-                max_digits=10,
-                null=True
-            ),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='productos',
+                    name='Unidad_medida_producto',
+                    field=models.CharField(
+                        blank=True,
+                        max_length=20,
+                        null=True
+                    ),
+                ),
+            ],
         ),
 
-        migrations.AddField(
-            model_name='productos',
-            name='Marca',
-            field=models.CharField(
-                blank=True,
-                max_length=50,
-                null=True
-            ),
-        ),
-
-        migrations.AddField(
-            model_name='productos',
-            name='Unidad_medida_producto',
-            field=models.CharField(
-                blank=True,
-                max_length=20,
-                null=True
-            ),
-        ),
+        # ---------------------------------------------------------
+        # ALERTAS - ID_STOCK
+        # ---------------------------------------------------------
 
         migrations.AlterField(
             model_name='alertas',
@@ -154,6 +222,10 @@ class Migration(migrations.Migration):
                 to='inventario.stock'
             ),
         ),
+
+        # ---------------------------------------------------------
+        # PRODUCTOS - ESTADO
+        # ---------------------------------------------------------
 
         migrations.AlterField(
             model_name='productos',
@@ -168,6 +240,10 @@ class Migration(migrations.Migration):
             ),
         ),
 
+        # ---------------------------------------------------------
+        # STOCK - ID_PRODUCTO
+        # ---------------------------------------------------------
+
         migrations.AlterField(
             model_name='stock',
             name='ID_Producto',
@@ -179,129 +255,200 @@ class Migration(migrations.Migration):
             ),
         ),
 
-        migrations.CreateModel(
-            name='Lotes',
-            fields=[
-                (
-                    'ID_Lote',
-                    models.AutoField(
-                        primary_key=True,
-                        serialize=False
-                    )
+        # ---------------------------------------------------------
+        # LOTES
+        #
+        # La tabla LOTES ya existe en la base de datos.
+        # Solo actualizamos el estado de Django.
+        # ---------------------------------------------------------
+
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.CreateModel(
+                    name='Lotes',
+                    fields=[
+                        (
+                            'ID_Lote',
+                            models.AutoField(
+                                primary_key=True,
+                                serialize=False
+                            )
+                        ),
+                        (
+                            'Numero_lote',
+                            models.CharField(
+                                max_length=50
+                            )
+                        ),
+                        (
+                            'Cantidad_ingresada',
+                            models.IntegerField()
+                        ),
+                        (
+                            'Cantidad_actual',
+                            models.IntegerField()
+                        ),
+                        (
+                            'Fecha_ingreso',
+                            models.DateField()
+                        ),
+                        (
+                            'Fecha_vencimiento',
+                            models.DateField(
+                                blank=True,
+                                null=True
+                            )
+                        ),
+                        (
+                            'ID_Producto',
+                            models.ForeignKey(
+                                db_column='ID_Producto',
+                                on_delete=django.db.models.deletion.CASCADE,
+                                related_name='lotes',
+                                to='inventario.productos'
+                            )
+                        ),
+                        (
+                            'ID_Proveedor',
+                            models.ForeignKey(
+                                db_column='ID_Proveedor',
+                                on_delete=django.db.models.deletion.PROTECT,
+                                related_name='lotes',
+                                to='inventario.proveedores'
+                            )
+                        ),
+                    ],
+                    options={
+                        'verbose_name_plural': 'Lotes',
+                        'db_table': 'LOTES',
+                    },
                 ),
-                (
-                    'Numero_lote',
-                    models.CharField(max_length=50)
-                ),
-                (
-                    'Cantidad_ingresada',
-                    models.IntegerField()
-                ),
-                (
-                    'Cantidad_actual',
-                    models.IntegerField()
-                ),
-                (
-                    'Fecha_ingreso',
-                    models.DateField()
-                ),
-                (
-                    'Fecha_vencimiento',
-                    models.DateField(
+            ],
+        ),
+
+        # ---------------------------------------------------------
+        # ALERTAS - ID_LOTE
+        #
+        # La columna ya existe físicamente.
+        # ---------------------------------------------------------
+
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='alertas',
+                    name='ID_Lote',
+                    field=models.ForeignKey(
                         blank=True,
-                        null=True
-                    )
-                ),
-                (
-                    'ID_Producto',
-                    models.ForeignKey(
-                        db_column='ID_Producto',
+                        db_column='ID_Lote',
+                        null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='lotes',
-                        to='inventario.productos'
-                    )
+                        related_name='alertas',
+                        to='inventario.lotes'
+                    ),
                 ),
-                (
-                    'ID_Proveedor',
-                    models.ForeignKey(
-                        db_column='ID_Proveedor',
+            ],
+        ),
+
+        # ---------------------------------------------------------
+        # MOVIMIENTOS STOCK - ID_LOTE
+        #
+        # La columna ya existe físicamente.
+        # ---------------------------------------------------------
+
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='movimientosstock',
+                    name='ID_Lote',
+                    field=models.ForeignKey(
+                        blank=True,
+                        db_column='ID_Lote',
+                        null=True,
                         on_delete=django.db.models.deletion.PROTECT,
-                        related_name='lotes',
-                        to='inventario.proveedores'
-                    )
+                        related_name='movimientos',
+                        to='inventario.lotes'
+                    ),
                 ),
             ],
-            options={
-                'verbose_name_plural': 'Lotes',
-                'db_table': 'LOTES',
-            },
         ),
 
-        migrations.AddField(
-            model_name='alertas',
-            name='ID_Lote',
-            field=models.ForeignKey(
-                blank=True,
-                db_column='ID_Lote',
-                null=True,
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name='alertas',
-                to='inventario.lotes'
-            ),
-        ),
+        # ---------------------------------------------------------
+        # SUBTIPOS
+        #
+        # La tabla SUBTIPOS ya existe en la base de datos.
+        # Solo actualizamos el estado de Django.
+        # ---------------------------------------------------------
 
-        migrations.AddField(
-            model_name='movimientosstock',
-            name='ID_Lote',
-            field=models.ForeignKey(
-                blank=True,
-                db_column='ID_Lote',
-                null=True,
-                on_delete=django.db.models.deletion.PROTECT,
-                related_name='movimientos',
-                to='inventario.lotes'
-            ),
-        ),
-
-        migrations.CreateModel(
-            name='Subtipos',
-            fields=[
-                (
-                    'ID_Subtipo',
-                    models.AutoField(
-                        primary_key=True,
-                        serialize=False
-                    )
-                ),
-                (
-                    'Nombre_subtipo',
-                    models.CharField(max_length=50)
-                ),
-                (
-                    'Estado_subtipo',
-                    models.BooleanField(
-                        choices=[
-                            (True, 'Activo'),
-                            (False, 'Inactivo')
-                        ],
-                        default=True
-                    )
-                ),
-                (
-                    'ID_Tipo_producto',
-                    models.ForeignKey(
-                        db_column='ID_Tipo_producto',
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name='subtipos',
-                        to='inventario.tiposproductos'
-                    )
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.CreateModel(
+                    name='Subtipos',
+                    fields=[
+                        (
+                            'ID_Subtipo',
+                            models.AutoField(
+                                primary_key=True,
+                                serialize=False
+                            )
+                        ),
+                        (
+                            'Nombre_subtipo',
+                            models.CharField(
+                                max_length=50
+                            )
+                        ),
+                        (
+                            'Estado_subtipo',
+                            models.BooleanField(
+                                choices=[
+                                    (True, 'Activo'),
+                                    (False, 'Inactivo')
+                                ],
+                                default=True
+                            )
+                        ),
+                        (
+                            'ID_Tipo_producto',
+                            models.ForeignKey(
+                                db_column='ID_Tipo_producto',
+                                on_delete=django.db.models.deletion.CASCADE,
+                                related_name='subtipos',
+                                to='inventario.tiposproductos'
+                            )
+                        ),
+                    ],
+                    options={
+                        'verbose_name_plural': 'Subtipos',
+                        'db_table': 'SUBTIPOS',
+                    },
                 ),
             ],
-            options={
-                'verbose_name_plural': 'Subtipos',
-                'db_table': 'SUBTIPOS',
-            },
         ),
+
+        # ---------------------------------------------------------
+        # PRODUCTOS - eliminar relación con PROVEEDORES
+        #
+        # ProductosXProveedores ya no se utiliza.
+        # La relación actual se maneja mediante LOTES.
+        # ---------------------------------------------------------
+
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RemoveField(
+                    model_name='productos',
+                    name='proveedores',
+                ),
+            ],
+        ),
+
+        # ---------------------------------------------------------
+        # ELIMINAR MODELOS OBSOLETOS DEL ESTADO DE DJANGO
+        # ---------------------------------------------------------
 
         migrations.DeleteModel(
             name='Agroquimicos',
