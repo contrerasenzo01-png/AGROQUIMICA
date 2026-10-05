@@ -42,7 +42,9 @@
 }
 
 
-/* SIDEBAR OCULTO */
+/* ==========================================
+   SIDEBAR OCULTO
+   ========================================== */
 
 .sidebar.sidebar-hidden {
     transform: translateX(-100%);
@@ -58,7 +60,7 @@
     min-width: 0;
     min-height: 100vh;
 
-    margin-left: 252px;
+    margin-left: 220px;
 
     transition: margin-left 0.3s ease;
 }
@@ -68,6 +70,24 @@
 
 .sidebar.sidebar-hidden ~ .page-area {
     margin-left: 0;
+}
+
+
+/* ==========================================
+   CONTENIDO PRINCIPAL
+   ========================================== */
+
+.main-content {
+    width: 100%;
+    max-width: 1400px;
+
+    box-sizing: border-box;
+
+    margin: 0 auto;
+
+    padding: 28px 32px 40px;
+
+    font-family: 'Inter', sans-serif;
 }
 
 
@@ -373,15 +393,32 @@
    RESPONSIVE
    ========================================== */
 
-@media (max-width: 800px) {
+@media (max-width: 1000px) {
 
     .sidebar {
-        width: 190px;
-        min-width: 190px;
+        width: 210px;
+        min-width: 210px;
     }
 
     .page-area {
-        margin-left: 222px;
+        margin-left: 210px;
+    }
+}
+
+
+@media (max-width: 800px) {
+
+    .sidebar {
+        width: 200px;
+        min-width: 200px;
+    }
+
+    .page-area {
+        margin-left: 200px;
+    }
+
+    .main-content {
+        padding: 24px 22px 32px;
     }
 
     .sidebar.sidebar-hidden ~ .page-area {
@@ -406,6 +443,6 @@
     }
 
     .main-content {
-        padding: 16px;
+        padding: 18px 16px 30px;
     }
 }

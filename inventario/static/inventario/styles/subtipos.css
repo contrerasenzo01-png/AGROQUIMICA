@@ -1,427 +1,727 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* ============================================================
+   GESTIÓN DE SUBTIPOS
+   Agroquímica del Valle
 
-body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f1f5f3;
+   Este archivo contiene solamente los estilos propios
+   de la vista de Subtipos.
+
+   Sidebar y Topbar:
+   Se encuentran en sidebar.css y topbar.css.
+   ============================================================ */
+
+
+/* ============================================================
+   CONTENEDOR PRINCIPAL
+   ============================================================ */
+
+.subtipos-page {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    font-family: 'Inter', sans-serif;
     color: #1c2a23;
 }
 
 
-/* ==========================================
-   ESTRUCTURA PRINCIPAL
-   ========================================== */
+/* ============================================================
+   ENCABEZADO
+   ============================================================ */
 
-.layout-principal {
+.subtipos-header {
     display: flex;
-    min-height: 100vh;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
 }
 
-
-/* ==========================================
-   INFORMACIÓN DEL USUARIO
-   ========================================== */
-
-.user-info {
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    padding-top: 15px;
-}
-
-.user-role {
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 3px;
-}
-
-.user-email {
-    font-size: 11px;
-    color: #b8cbc1;
-    margin-bottom: 12px;
-    word-break: break-word;
-}
-
-.logout-link {
-    display: inline-block;
-    color: #dce9e2;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-.logout-link:hover {
-    color: white;
-}
-
-
-/* ==========================================
-   CONTENIDO PRINCIPAL
-   ========================================== */
-
-.main-content {
-    flex: 1;
-    padding: 25px 30px;
+.subtipos-header-text {
     min-width: 0;
 }
 
-
-/* ==========================================
-   ENCABEZADO
-   ========================================== */
-
-.header-gestion {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 22px;
+.subtipos-eyebrow {
+    display: block;
+    margin-bottom: 7px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #718279;
 }
 
-.header-gestion h1 {
-    font-size: 20px;
-    font-weight: 650;
-    color: #1c2a23;
+.subtipos-title {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: #17382a;
 }
 
-.subtitulo-activos {
-    margin-top: 4px;
-    font-size: 12px;
-    color: #6d7d74;
-}
-
-.acciones-header {
-    display: flex;
-    align-items: center;
+.subtipos-subtitle {
+    margin: 7px 0 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #718279;
 }
 
 
-/* ==========================================
+/* ============================================================
    BOTONES
-   ========================================== */
+   ============================================================ */
 
-.btn {
-    border: none;
-    border-radius: 6px;
-    padding: 9px 14px;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
+.subtipos-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.btn-primary {
-    background: #0b311e;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #16472d;
-}
-
-.btn-outline {
-    background: white;
-    color: #1c2a23;
-    border: 1px solid #d4dfd9;
-}
-
-.btn-outline:hover {
-    background: #f4f7f5;
-    border-color: #bfcfc6;
-}
-
-.btn-danger {
-    background: #fff;
-    color: #a13b3b;
-    border: 1px solid #e2caca;
-}
-
-.btn-danger:hover {
-    background: #fdf1f1;
-}
-
-.btn-pequeno {
-    padding: 6px 10px;
-    font-size: 11px;
-}
-
-
-/* ==========================================
-   MENSAJES
-   ========================================== */
-
-.mensaje {
-    background: #e8f3ec;
-    border: 1px solid #c9dfd0;
-    color: #245c39;
-    border-radius: 6px;
-    padding: 10px 12px;
-    margin-bottom: 15px;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 17px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+        background-color .18s ease,
+        border-color .18s ease,
+        transform .18s ease;
+}
+
+.subtipos-btn:hover {
+    transform: translateY(-1px);
+}
+
+.subtipos-btn-primary {
+    background-color: #185a38;
+    color: #ffffff;
+    border-color: #185a38;
+}
+
+.subtipos-btn-primary:hover {
+    background-color: #134a2e;
+    border-color: #134a2e;
+}
+
+.subtipos-btn-secondary {
+    background-color: #ffffff;
+    color: #31483c;
+    border-color: #dce5df;
+}
+
+.subtipos-btn-secondary:hover {
+    background-color: #f4f7f5;
+}
+
+.subtipos-btn-search {
+    min-height: 34px;
+    background-color: #185a38;
+    color: #ffffff;
+    border-color: #185a38;
+}
+
+.subtipos-btn-search:hover {
+    background-color: #134a2e;
+}
+
+.btn-plus {
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1;
 }
 
 
-/* ==========================================
-   BARRA DE BÚSQUEDA
-   ========================================== */
+/* ============================================================
+   MENSAJES
+   ============================================================ */
 
-.barra-filtros {
+.subtipos-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.subtipos-message {
+    padding: 11px 15px;
+    border: 1px solid #dce5df;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 12px;
+    color: #31483c;
+}
+
+.subtipos-message.success {
+    background-color: #edf8f1;
+    border-color: #b8dfc5;
+    color: #17643b;
+}
+
+.subtipos-message.error {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.subtipos-message.warning {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.message-text {
+    display: block;
+}
+
+
+/* ============================================================
+   BUSCADOR
+   ============================================================ */
+
+.subtipos-search {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 15px;
+    gap: 10px;
+    width: 100%;
+    min-height: 46px;
+    margin-bottom: 18px;
+    padding: 5px 6px 5px 13px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border: 1px solid #e1e9e4;
+    border-radius: 10px;
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease;
 }
 
-.input-buscar {
-    width: 300px;
-    padding: 9px 10px;
-    border: 1px solid #dce7e1;
-    border-radius: 6px;
-    background: white;
-    color: #1c2a23;
-    font-size: 12px;
+.subtipos-search:focus-within {
+    border-color: #79ad8d;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .09);
+}
+
+.search-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    color: #7b8b83;
+}
+
+.search-icon svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+}
+
+.subtipos-search input {
+    flex: 1;
+    min-width: 0;
+    height: 34px;
+    padding: 0;
+    border: none;
     outline: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #24362d;
 }
 
-.input-buscar:focus {
-    border-color: #9bb5a5;
-}
-
-.input-buscar::placeholder {
+.subtipos-search input::placeholder {
     color: #9aa9a1;
 }
 
 
-/* ==========================================
-   TABLA
-   ========================================== */
+/* ============================================================
+   TARJETA DE TABLA
+   ============================================================ */
 
-.tabla-container {
-    background: white;
-    border: 1px solid #e2ece6;
-    border-radius: 8px;
+.subtipos-card {
+    width: 100%;
+    overflow: hidden;
+    background-color: #ffffff;
+    border: 1px solid #e1e9e4;
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+
+.subtipos-table-wrapper {
+    width: 100%;
     overflow-x: auto;
 }
 
-table {
+
+/* ============================================================
+   TABLA
+   ============================================================ */
+
+.subtipos-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: auto;
 }
 
-thead {
-    background: #f7f9f8;
+.subtipos-table thead {
+    background-color: #fafcfb;
 }
 
-th {
+.subtipos-table th {
+    padding: 13px 17px;
+    border-bottom: 1px solid #e1e9e4;
     text-align: left;
-    padding: 12px 14px;
-    font-size: 11px;
-    font-weight: 650;
-    color: #5d6d64;
-    border-bottom: 1px solid #e2ece6;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #718279;
 }
 
-td {
-    padding: 12px 14px;
-    font-size: 12px;
-    color: #34433b;
+.subtipos-table td {
+    padding: 14px 17px;
     border-bottom: 1px solid #edf2ef;
+    vertical-align: middle;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #34483d;
 }
 
-tbody tr:last-child td {
+.subtipos-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-tbody tr:hover {
-    background: #fafcfb;
+.subtipos-table tbody tr {
+    transition: background-color .15s ease;
 }
 
-.prod-nombre {
+.subtipos-table tbody tr:hover {
+    background-color: #f9fbfa;
+}
+
+.subtipos-table tbody tr.fila-inactiva {
+    background-color: #fcfdfc;
+}
+
+.subtipos-table tbody tr.fila-inactiva:hover {
+    background-color: #f8faf9;
+}
+
+
+/* ============================================================
+   NOMBRE DEL SUBTIPO
+   ============================================================ */
+
+.subtipo-name {
     font-weight: 600;
-    color: #1c2a23;
+    color: #173d2b;
+}
+
+.fila-inactiva .subtipo-name {
+    color: #7b8b83;
 }
 
 
-/* ==========================================
+/* ============================================================
+   TIPO DE PRODUCTO
+   ============================================================ */
+
+.subtipo-type {
+    color: #63756c;
+}
+
+
+/* ============================================================
    ESTADOS
-   ========================================== */
+   ============================================================ */
 
-.badge-estado {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.badge-estado.activo {
-    background: #e5f2e9;
-    color: #28623b;
-}
-
-.badge-estado.inactivo {
-    background: #f1f1f1;
-    color: #777;
-}
-
-
-/* ==========================================
-   ACCIONES DE LA TABLA
-   ========================================== */
-
-.acciones-tabla {
-    display: flex;
+.subtipo-status {
+    display: inline-flex;
     align-items: center;
     gap: 6px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+.subtipo-status.activo {
+    background-color: #e8f5ee;
+    color: #1b7a4a;
+}
+
+.subtipo-status.inactivo {
+    background-color: #eef1ef;
+    color: #7b8a82;
 }
 
 
-/* ==========================================
-   SIN REGISTROS
-   ========================================== */
+/* ============================================================
+   ACCIONES
+   ============================================================ */
 
-.sin-registros {
-    text-align: center;
-    padding: 30px 15px;
-    color: #7c8a83;
-    font-size: 12px;
+.subtipo-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.subtipo-actions form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 31px;
+    padding: 0 11px;
+    box-sizing: border-box;
+    border: 1px solid #dce5df;
+    border-radius: 7px;
+    background-color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #334b3e;
+    cursor: pointer;
+    transition:
+        background-color .15s ease,
+        border-color .15s ease,
+        color .15s ease;
+}
+
+.action-btn svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.action-edit:hover {
+    background-color: #f2f7f4;
+    border-color: #c9d9d0;
+}
+
+.action-delete {
+    color: #53675d;
+}
+
+.action-delete:hover {
+    background-color: #fff5f5;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.action-activate {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.action-activate:hover {
+    background-color: #dcfce7;
 }
 
 
-/* ==========================================
+/* ============================================================
+   TABLA VACÍA
+   ============================================================ */
+
+.subtipos-empty {
+    height: 130px;
+    padding: 30px 16px !important;
+    text-align: center !important;
+    color: #7b8b83 !important;
+}
+
+
+/* ============================================================
+   PIE DE TABLA
+   ============================================================ */
+
+.subtipos-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 11px 17px;
+    border-top: 1px solid #e1e9e4;
+    background-color: #fafcfb;
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5px;
+    color: #788880;
+}
+
+
+/* ============================================================
    MODAL
-   ========================================== */
+   ============================================================ */
 
-.modal {
+.subtipos-modal {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(11, 49, 30, 0.35);
+    z-index: 3000;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
     padding: 20px;
+    box-sizing: border-box;
+    background-color: rgba(15, 42, 29, .50);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
-.modal-content {
+.subtipos-modal-content {
     width: 100%;
-    max-width: 430px;
-    background: white;
-    border-radius: 8px;
-    padding: 24px;
-    border: 1px solid #e2ece6;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .25);
+    animation: modalEntrada .20s ease-out;
 }
 
-.modal-content h2 {
-    font-size: 17px;
-    font-weight: 650;
-    color: #1c2a23;
-    margin-bottom: 20px;
-}
+@keyframes modalEntrada {
 
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
 
-/* ==========================================
-   FORMULARIO DEL MODAL
-   ========================================== */
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #34433b;
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 9px 10px;
-    border: 1px solid #dce7e1;
-    border-radius: 6px;
-    background: white;
-    color: #1c2a23;
-    font-size: 12px;
-    outline: none;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: #9bb5a5;
 }
 
 
-/* ==========================================
-   BOTONES DEL MODAL
-   ========================================== */
+/* ============================================================
+   CABECERA DEL MODAL
+   ============================================================ */
 
-.modal-acciones {
+.modal-header {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e1e9e4;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: #20392c;
+}
+
+.modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background-color: transparent;
+    color: #7b8b83;
+    font-family: 'Inter', sans-serif;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        background-color .15s ease,
+        color .15s ease;
+}
+
+.modal-close:hover {
+    background-color: #f1f5f3;
+    color: #263d31;
+}
+
+
+/* ============================================================
+   CUERPO DEL MODAL
+   ============================================================ */
+
+.modal-body {
+    padding: 22px 22px 8px;
+}
+
+.modal-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 17px;
+}
+
+.modal-group label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #2d4638;
+}
+
+.modal-group input,
+.modal-group select {
+    width: 100%;
+    height: 39px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border: 1px solid #dce5df;
+    border-radius: 8px;
+    outline: none;
+    background-color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #263b30;
+    transition:
+        border-color .15s ease,
+        box-shadow .15s ease;
+}
+
+.modal-group input::placeholder {
+    color: #a0ada6;
+}
+
+.modal-group input:focus,
+.modal-group select:focus {
+    border-color: #6da982;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .10);
+}
+
+
+/* ============================================================
+   PIE DEL MODAL
+   ============================================================ */
+
+.modal-footer {
+    display: flex;
+    align-items: center;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 22px;
+    gap: 9px;
+    padding: 16px 22px;
+    border-top: 1px solid #e1e9e4;
+}
+
+.modal-footer .subtipos-btn {
+    min-height: 35px;
+    padding: 0 17px;
 }
 
 
-/* ==========================================
+/* ============================================================
    RESPONSIVE
-   ========================================== */
+   ============================================================ */
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
 
-    .sidebar {
-        width: 200px;
-    }
-
-    .main-content {
-        padding: 20px;
-    }
-
-    .header-gestion {
+    .subtipos-header {
         align-items: flex-start;
-        gap: 15px;
+        flex-direction: column;
     }
 
-    .input-buscar {
-        width: 250px;
+    .subtipos-header-action {
+        width: 100%;
+    }
+
+    .subtipos-header-action .subtipos-btn {
+        width: auto;
     }
 
 }
 
-@media (max-width: 650px) {
 
-    .layout-principal {
-        flex-direction: column;
+@media (max-width: 700px) {
+
+    .subtipos-title {
+        font-size: 24px;
     }
 
-    .sidebar {
-        width: 100%;
-        min-height: auto;
+    .subtipos-search {
+        min-height: 44px;
     }
 
-    .user-info {
-        margin-top: 20px;
+    .subtipos-table th,
+    .subtipos-table td {
+        padding: 12px 13px;
     }
 
-    .header-gestion {
-        flex-direction: column;
+    .subtipos-table-footer {
         align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
     }
 
-    .barra-filtros {
+    .subtipo-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .subtipos-modal {
+        padding: 12px;
+    }
+
+    .subtipos-modal-content {
+        max-height: 94vh;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .subtipos-header-action .subtipos-btn {
         width: 100%;
     }
 
-    .input-buscar {
-        flex: 1;
-        width: auto;
+    .subtipos-search {
+        flex-wrap: wrap;
+        padding: 7px;
+    }
+
+    .subtipos-search input {
+        min-width: 150px;
+    }
+
+    .subtipos-btn-search {
+        width: 100%;
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .modal-footer .subtipos-btn {
+        width: 100%;
     }
 
 }

@@ -1,475 +1,324 @@
+{% extends 'inventario/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tipos de productos - Agroquímicos del Valle</title>
-  <link rel="stylesheet" href="{% static 'inventario/styles/tipos_productos.css' %}">
 
-</head>
-<body>
+{% block title %}
+    Tipos de productos - Agroquímica del Valle
+{% endblock %}
 
-<div class="layout">
-   <!-- BARRA LATERAL (SIDEBAR) -->
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/styles/tipos_productos.css' %}">
+{% endblock %}
 
-<!-- Sidebar -->
-<aside class="sidebar">
-
-    <div>
-
-        <div class="logo">
-            🌿 Agroquímica del Valle
-        </div>
-
-        <ul class="nav-menu">
-
-            <!-- PANEL PRINCIPAL -->
-            <li class="nav-item">
-                <a href="{% url 'panel_principal' %}" class="nav-link">
-                    <span class="nav-icon">🎛️</span>
-                    Panel Principal
-                </a>
-            </li>
-
-
-            {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
-
-                <!-- OPCIONES DEL VENDEDOR -->
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_productos' %}" class="nav-link">
-                        <span class="nav-icon">📦</span>
-                        Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link active">
-                        <span class="nav-icon">🗂️</span>
-                        Tipos de Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'mis_permisos' %}" class="nav-link">
-                        <span class="nav-icon">🔐</span>
-                        Mis permisos
-                    </a>
-                </li>
-
-
-            {% else %}
-
-                <!-- OPCIONES DEL ADMINISTRADOR -->
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-                        <span class="nav-icon">👤</span>
-                        Usuarios del sistema
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_productos' %}" class="nav-link">
-                        <span class="nav-icon">📦</span>
-                        Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link active">
-                        <span class="nav-icon">🗂️</span>
-                        Tipos de Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_subtipos' %}" class="nav-link">
-                        <span class="nav-icon">🗃️</span>
-                        Subtipos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                        <span class="nav-icon">🚚</span>
-                        Proveedores
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'registrar_ingreso_lote' %}" class="nav-link">
-                        <span class="nav-icon">📥</span>
-                        Ingreso de Lote
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                        <span class="nav-icon">📊</span>
-                        Movimientos Stock
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'historial_alertas' %}" class="nav-link">
-                        <span class="nav-icon">🔔</span>
-                        Historial de Alertas
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_perfiles' %}" class="nav-link">
-                        <span class="nav-icon">👥</span>
-                        Perfiles de acceso
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_permisos' %}" class="nav-link">
-                        <span class="nav-icon">🔐</span>
-                        Permisos del sistema
-                    </a>
-                </li>
-
-            {% endif %}
-
-        </ul>
-
-    </div>
-
-
-    <!-- Footer del Sidebar -->
-    <div class="user-info">
-
-        <div class="user-role">
-            {{ usuario.ID_Perfil.Nombre_perfil }}
-        </div>
-
-        <div class="user-email">
-            {{ usuario.Email_usuario }}
-        </div>
-
-        <a href="{% url 'cerrar_sesion' %}" class="logout-link">
-            Cerrar sesión
-        </a>
-
-    </div>
-
-</aside>
-
+{% block contenido %}
 
 <!-- ===================================================== -->
 <!-- CONTENIDO PRINCIPAL -->
 <!-- ===================================================== -->
 
-<main class="main-content">
+<header class="header">
 
-    <header class="header">
+    <div>
+        <h2 class="title">
+            Gestión de Tipos de Producto
+        </h2>
 
-        <div>
+        <p class="subtitle">
+            Administre los tipos de productos registrados en el sistema.
+        </p>
+    </div>
 
-            <h2 class="title">
-                Gestión de Tipos de Producto
-            </h2>
+    <button
+        type="button"
+        class="btn-nuevo"
+        onclick="abrirModalCrear()"
+    >
+        + Nuevo tipo
+    </button>
 
-        </div>
+</header>
 
 
-        <button
-            type="button"
-            class="btn-nuevo"
-            onclick="abrirModalCrear()"
+<!-- ===================================================== -->
+<!-- BUSCADOR -->
+<!-- ===================================================== -->
+
+<form method="GET" onsubmit="return false;">
+
+    <input
+        type="text"
+        id="searchInput"
+        name="q"
+        value="{{ busqueda }}"
+        onkeyup="filtrarTipos()"
+        class="search-box"
+        placeholder="Buscar por ID o nombre..."
+    >
+
+</form>
+
+
+<!-- ===================================================== -->
+<!-- LISTA DE TIPOS -->
+<!-- ===================================================== -->
+
+<section id="listaTipos">
+
+    {% for tipo in tipos_productos %}
+
+        <div
+            id="card-{{ tipo.ID_Tipo_producto }}"
+            class="card-container tipo-card
+            {% if not tipo.Estado_tipo_producto %}inactivo{% endif %}"
+
+            data-search="
+                {{ tipo.ID_Tipo_producto }}
+                {{ tipo.Nombre_tipo_producto|lower }}
+            "
         >
-            + Nuevo tipo
-        </button>
 
-    </header>
-
-
-    <!-- ================================================= -->
-    <!-- BUSCADOR -->
-    <!-- ================================================= -->
-
-    <form method="GET" onsubmit="return false;">
-
-        <input
-            type="text"
-            id="searchInput"
-            name="q"
-            value="{{ busqueda }}"
-            onkeyup="filtrarTipos()"
-            class="search-box"
-            placeholder="Buscar por ID o nombre..."
-        >
-
-    </form>
-
-
-    <!-- ================================================= -->
-    <!-- LISTA DE TIPOS -->
-    <!-- ================================================= -->
-
-    <section id="listaTipos">
-
-        {% for tipo in tipos_productos %}
+            <!-- ENCABEZADO DE TARJETA -->
 
             <div
-                id="card-{{ tipo.ID_Tipo_producto }}"
-                class="card-container tipo-card
-                {% if not tipo.Estado_tipo_producto %}inactivo{% endif %}"
-
-                data-search="
-                    {{ tipo.ID_Tipo_producto }}
-                    {{ tipo.Nombre_tipo_producto|lower }}
-                "
+                class="card-header"
+                onclick="toggleDetails(
+                    'details-{{ tipo.ID_Tipo_producto }}',
+                    'arrow-{{ tipo.ID_Tipo_producto }}'
+                )"
             >
 
-                <!-- ENCABEZADO DE TARJETA -->
+                <div class="card-left">
 
-                <div
-                    class="card-header"
-                    onclick="toggleDetails(
-                        'details-{{ tipo.ID_Tipo_producto }}',
-                        'arrow-{{ tipo.ID_Tipo_producto }}'
-                    )"
-                >
-
-                    <div class="card-left">
-
-                        <div class="avatar">
-                            TP
-                        </div>
-
-
-                        <div class="card-info">
-
-                            <h4 class="prov-nombre">
-
-                                {{ tipo.Nombre_tipo_producto }}
-
-                                <span class="sup-code">
-                                    (TP{{ tipo.ID_Tipo_producto }})
-                                </span>
-
-                            </h4>
-
-                            <p class="prov-email">
-                                Tipo de producto
-                            </p>
-
-                        </div>
-
+                    <div class="avatar">
+                        TP
                     </div>
 
+                    <div class="card-info">
 
-                    <!-- ACCIONES -->
+                        <h4 class="prov-nombre">
 
-                    <div
-                        class="card-actions"
-                        onclick="event.stopPropagation();"
-                    >
+                            {{ tipo.Nombre_tipo_producto }}
 
-                        <!-- ESTADO -->
-
-                        <span
-                            id="badge-estado-{{ tipo.ID_Tipo_producto }}"
-                            class="
-                                {% if tipo.Estado_tipo_producto %}
-                                    badge-activo
-                                {% else %}
-                                    badge-inactivo
-                                {% endif %}
-                            "
-                        >
-
-                            {% if tipo.Estado_tipo_producto %}
-                                Activo
-                            {% else %}
-                                Inactivo
-                            {% endif %}
-
-                        </span>
-
-
-                        <!-- EDITAR -->
-
-                        <button
-                            type="button"
-                            class="btn-action"
-
-                            onclick="abrirModalEditar(
-                                '{{ tipo.ID_Tipo_producto }}',
-                                '{{ tipo.Nombre_tipo_producto|escapejs }}',
-                                '{{ tipo.Estado_tipo_producto|lower }}'
-                            )"
-                        >
-                            Editar
-                        </button>
-
-
-                        <!-- CAMBIAR ESTADO -->
-
-                        <form
-                            id="form-estado-{{ tipo.ID_Tipo_producto }}"
-                            method="POST"
-                            action="{% url 'dar_baja_tipo_producto' tipo.ID_Tipo_producto %}"
-                            style="display:inline;"
-                            onsubmit="procesarSolicitudEstado(
-                                event,
-                                '{{ tipo.ID_Tipo_producto }}',
-                                '{{ tipo.Nombre_tipo_producto|escapejs }}'
-                            )"
-                        >
-
-                            {% csrf_token %}
-
-                            <input
-                                type="hidden"
-                                name="estado"
-                                id="estado-{{ tipo.ID_Tipo_producto }}"
-
-                                value="{% if tipo.Estado_tipo_producto %}inactivo{% else %}activo{% endif %}"
-                            >
-
-
-                            <button
-                                type="submit"
-                                id="btn-estado-{{ tipo.ID_Tipo_producto }}"
-
-                                class="
-                                    btn-action
-                                    {% if tipo.Estado_tipo_producto %}
-                                        btn-baja
-                                    {% else %}
-                                        btn-activar
-                                    {% endif %}
-                                "
-                            >
-
-                                {% if tipo.Estado_tipo_producto %}
-                                    Baja
-                                {% else %}
-                                    Activar
-                                {% endif %}
-
-                            </button>
-
-                        </form>
-
-
-                        <!-- FLECHA -->
-
-                        <button
-                            type="button"
-                            class="btn-arrow"
-
-                            onclick="toggleDetails(
-                                'details-{{ tipo.ID_Tipo_producto }}',
-                                'arrow-{{ tipo.ID_Tipo_producto }}'
-                            )"
-                        >
-
-                            <span id="arrow-{{ tipo.ID_Tipo_producto }}">
-                                ▲
+                            <span class="sup-code">
+                                (TP{{ tipo.ID_Tipo_producto }})
                             </span>
 
-                        </button>
+                        </h4>
+
+                        <p class="prov-email">
+                            Tipo de producto
+                        </p>
 
                     </div>
 
                 </div>
 
 
-                <!-- ================================================= -->
-                <!-- DETALLE -->
-                <!-- ================================================= -->
+                <!-- ACCIONES -->
 
                 <div
-                    id="details-{{ tipo.ID_Tipo_producto }}"
-                    class="card-details hidden"
+                    class="card-actions"
+                    onclick="event.stopPropagation();"
                 >
 
-                    <div class="detail-item">
+                    <!-- ESTADO -->
 
-                        <span class="label">
-                            ID_Tipo_producto
-                        </span>
+                    <span
+                        id="badge-estado-{{ tipo.ID_Tipo_producto }}"
+                        class="
+                            {% if tipo.Estado_tipo_producto %}
+                                badge-activo
+                            {% else %}
+                                badge-inactivo
+                            {% endif %}
+                        "
+                    >
 
-                        <span class="value">
-                            TP{{ tipo.ID_Tipo_producto }}
-                        </span>
+                        {% if tipo.Estado_tipo_producto %}
+                            Activo
+                        {% else %}
+                            Inactivo
+                        {% endif %}
 
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span class="label">
-                            nombre_tipo_producto
-                        </span>
-
-                        <span class="value">
-                            {{ tipo.Nombre_tipo_producto }}
-                        </span>
-
-                    </div>
+                    </span>
 
 
-                    <div class="detail-item">
+                    <!-- EDITAR -->
 
-                        <span class="label">
-                            estado_tipo_producto
-                        </span>
+                    <button
+                        type="button"
+                        class="btn-action"
 
-                        <span
-                            class="value"
-                            id="detail-estado-text-{{ tipo.ID_Tipo_producto }}"
+                        onclick="abrirModalEditar(
+                            '{{ tipo.ID_Tipo_producto }}',
+                            '{{ tipo.Nombre_tipo_producto|escapejs }}',
+                            '{{ tipo.Estado_tipo_producto|lower }}'
+                        )"
+                    >
+                        Editar
+                    </button>
+
+
+                    <!-- CAMBIAR ESTADO -->
+
+                    <form
+                        id="form-estado-{{ tipo.ID_Tipo_producto }}"
+                        method="POST"
+                        action="{% url 'dar_baja_tipo_producto' tipo.ID_Tipo_producto %}"
+                        class="form-estado"
+                        onsubmit="procesarSolicitudEstado(
+                            event,
+                            '{{ tipo.ID_Tipo_producto }}',
+                            '{{ tipo.Nombre_tipo_producto|escapejs }}'
+                        )"
+                    >
+
+                        {% csrf_token %}
+
+                        <input
+                            type="hidden"
+                            name="estado"
+                            id="estado-{{ tipo.ID_Tipo_producto }}"
+
+                            value="{% if tipo.Estado_tipo_producto %}inactivo{% else %}activo{% endif %}"
+                        >
+
+
+                        <button
+                            type="submit"
+                            id="btn-estado-{{ tipo.ID_Tipo_producto }}"
+
+                            class="
+                                btn-action
+                                {% if tipo.Estado_tipo_producto %}
+                                    btn-baja
+                                {% else %}
+                                    btn-activar
+                                {% endif %}
+                            "
                         >
 
                             {% if tipo.Estado_tipo_producto %}
-
-                                <span style="color:#15803d;">
-                                    Activo
-                                </span>
-
+                                Baja
                             {% else %}
-
-                                <span style="color:#6b7280;">
-                                    Inactivo
-                                </span>
-
+                                Activar
                             {% endif %}
 
+                        </button>
+
+                    </form>
+
+
+                    <!-- FLECHA -->
+
+                    <button
+                        type="button"
+                        class="btn-arrow"
+
+                        onclick="toggleDetails(
+                            'details-{{ tipo.ID_Tipo_producto }}',
+                            'arrow-{{ tipo.ID_Tipo_producto }}'
+                        )"
+                    >
+
+                        <span id="arrow-{{ tipo.ID_Tipo_producto }}">
+                            ▲
                         </span>
 
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DETALLE -->
+            <!-- ================================================= -->
+
+            <div
+                id="details-{{ tipo.ID_Tipo_producto }}"
+                class="card-details hidden"
+            >
+
+                <div class="detail-item">
+
+                    <span class="label">
+                        ID_Tipo_producto
+                    </span>
+
+                    <span class="value">
+                        TP{{ tipo.ID_Tipo_producto }}
+                    </span>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span class="label">
+                        nombre_tipo_producto
+                    </span>
+
+                    <span class="value">
+                        {{ tipo.Nombre_tipo_producto }}
+                    </span>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <span class="label">
+                        estado_tipo_producto
+                    </span>
+
+                    <span
+                        class="value"
+                        id="detail-estado-text-{{ tipo.ID_Tipo_producto }}"
+                    >
+
+                        {% if tipo.Estado_tipo_producto %}
+
+                            <span class="estado-text-activo">
+                                Activo
+                            </span>
+
+                        {% else %}
+
+                            <span class="estado-text-inactivo">
+                                Inactivo
+                            </span>
+
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+
+                <!-- PRODUCTOS ASOCIADOS -->
+
+                <div class="products-section">
+
+                    <div class="products-title">
+                        Productos asociados
                     </div>
 
+                    <div class="products-list">
 
-                    <!-- PRODUCTOS ASOCIADOS -->
+                        {% for producto in tipo.productos_set.all %}
 
-                    <div class="products-section">
+                            <span class="product-tag">
+                                {{ producto.Nombre_producto }}
+                            </span>
 
-                        <div class="products-list">
+                        {% empty %}
 
-                            {% for producto in tipo.productos_set.all %}
+                            <span class="product-tag">
+                                Sin productos asociados
+                            </span>
 
-                                <span class="product-tag">
-
-                                    {{ producto.Nombre_producto }}
-
-                                </span>
-
-                            {% empty %}
-
-                                <span class="product-tag">
-                                    Sin productos asociados
-                                </span>
-
-                            {% endfor %}
-
-                        </div>
+                        {% endfor %}
 
                     </div>
 
@@ -477,24 +326,28 @@
 
             </div>
 
+        </div>
 
-        {% empty %}
+    {% empty %}
 
-            <p
-                style="
-                    text-align: center;
-                    color: #7f8c8d;
-                    margin-top: 40px;
-                "
-            >
-                No se encontraron tipos de producto.
-            </p>
+        <p class="empty-message">
+            No se encontraron tipos de producto.
+        </p>
 
-        {% endfor %}
+    {% endfor %}
 
-    </section>
+</section>
 
-</main>
+
+<!-- ===================================================== -->
+<!-- CONTENEDOR DE TOASTS -->
+<!-- ===================================================== -->
+
+<div
+    id="toastContainer"
+    class="toast-container"
+>
+</div>
 
 
 <!-- ===================================================== -->
@@ -617,10 +470,7 @@
                         estado_tipo_producto
                     </span>
 
-                    <span
-                        class="val"
-                        style="color:#15803d;"
-                    >
+                    <span class="val estado-modal-activo">
                         Activo
                     </span>
 
@@ -691,7 +541,6 @@
         >
 
             {% csrf_token %}
-
 
             <div class="modal-body">
 
@@ -798,7 +647,6 @@
 
             {% csrf_token %}
 
-
             <div class="modal-body">
 
                 <div class="form-group">
@@ -831,18 +679,7 @@
                         value="True"
                     >
 
-                    <div
-                        style="
-                            padding: 10px;
-                            background-color: #f0fdf4;
-                            border: 1px solid #dcfce7;
-                            color: #15803d;
-                            border-radius: 6px;
-                            font-size: 13px;
-                            font-weight: 600;
-                            display: inline-block;
-                        "
-                    >
+                    <div class="estado-activo-box">
                         Activo
                     </div>
 
@@ -878,9 +715,10 @@
 </div>
 
 
-<!-- ===================================================== -->
-<!-- JAVASCRIPT -->
-<!-- ===================================================== -->
+{% endblock %}
+
+
+{% block extra_js %}
 
 <script>
 
@@ -1333,7 +1171,7 @@
 
 
                     detailText.innerHTML =
-                        '<span style="color:#6b7280;">Inactivo</span>';
+                        '<span class="estado-text-inactivo">Inactivo</span>';
 
 
                     mostrarToast(
@@ -1373,7 +1211,7 @@
 
 
                     detailText.innerHTML =
-                        '<span style="color:#15803d;">Activo</span>';
+                        '<span class="estado-text-activo">Activo</span>';
 
 
                     mostrarToast(
@@ -1400,6 +1238,4 @@
 
 </script>
 
-</body>
-
-</html>
+{% endblock %}

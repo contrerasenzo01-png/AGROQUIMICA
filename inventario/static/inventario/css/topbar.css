@@ -12,7 +12,8 @@
     box-sizing: border-box;
 
     background-color: #ffffff;
-    border-bottom: 1px solid #e5e9e6;
+
+    border-bottom: 1px solid #e1e9e4;
 
     display: flex;
     align-items: center;
@@ -35,7 +36,7 @@
     height: 38px;
 
     border: none;
-    border-radius: 6px;
+    border-radius: 7px;
 
     background-color: transparent;
 
@@ -54,8 +55,8 @@
     padding: 0;
 
     transition:
-        background-color 0.2s ease,
-        transform 0.2s ease;
+        background-color 0.18s ease,
+        transform 0.18s ease;
 }
 
 .topbar-menu:hover {
@@ -117,6 +118,7 @@
     white-space: nowrap;
 
     font-family: 'Inter', sans-serif;
+
     font-size: 12px;
     font-weight: 600;
 
@@ -127,6 +129,7 @@
     margin-top: 3px;
 
     font-family: 'Inter', sans-serif;
+
     font-size: 11px;
 
     color: #7b8e82;
@@ -134,7 +137,7 @@
 
 
 /* ==========================================
-   AVATAR DEL USUARIO
+   AVATAR
    ========================================== */
 
 .topbar-avatar {
@@ -150,6 +153,7 @@
     color: #1b5e3a;
 
     font-family: 'Inter', sans-serif;
+
     font-size: 12px;
     font-weight: 700;
 
