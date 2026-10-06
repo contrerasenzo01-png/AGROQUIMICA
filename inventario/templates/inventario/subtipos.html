@@ -6,327 +6,146 @@
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/styles/subtipos.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/styles/tipos_subtipos.css' %}">
 {% endblock %}
 
 {% block contenido %}
 
-<div class="subtipos-page">
-
-    <!-- =====================================================
-         ENCABEZADO
-         ===================================================== -->
-
-    <div class="subtipos-header">
-
-        <div class="subtipos-header-text">
-
-            <h1 class="subtipos-title">
-                Gestión de Subtipos
-            </h1>
-
-            <p class="subtipos-subtitle">
-                Administre los subtipos de productos.
-            </p>
-
-        </div>
-
-        <div class="subtipos-header-action">
-
-            <button
-                type="button"
-                class="subtipos-btn subtipos-btn-primary"
-                onclick="abrirModalCrear()">
-
-                <span class="btn-plus">+</span>
-                Nuevo subtipo
-
-            </button>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         MENSAJES
-         ===================================================== -->
+<!-- Mensajes Django (toasts) -->
+<div class="ts-toasts" id="toastContainer">
 
     {% if messages %}
-
-        <div class="subtipos-messages">
-
-            {% for message in messages %}
-
-                <div class="subtipos-message {{ message.tags }}">
-
-                    <span class="message-text">
-                        {{ message }}
-                    </span>
-
-                </div>
-
-            {% endfor %}
-
-        </div>
-
+        {% for message in messages %}
+            <div class="ts-toast {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}"
+                 id="toast-{{ forloop.counter }}">
+                <span>{{ message }}</span>
+                <span class="ts-toast-x" onclick="this.parentElement.remove()">✕</span>
+            </div>
+        {% endfor %}
     {% endif %}
 
+</div>
 
-    <!-- =====================================================
-         BUSCADOR
-         ===================================================== -->
 
-    <form
-        method="GET"
-        class="subtipos-search">
+<div class="ts-page">
 
-        <div class="search-icon">
+    <!-- ENCABEZADO -->
+    <header class="ts-header">
 
-            <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true">
-
-                <circle
-                    cx="11"
-                    cy="11"
-                    r="7">
-                </circle>
-
-                <line
-                    x1="16.5"
-                    y1="16.5"
-                    x2="21"
-                    y2="21">
-                </line>
-
-            </svg>
-
+        <div>
+            <div class="ts-eyebrow">Agroquímicos del Valle</div>
+            <h1 class="ts-title">Tipos y subtipos</h1>
+            <p class="ts-sub">Una clasificación flexible para organizar tu catálogo de productos.</p>
         </div>
 
-        <input
-            type="text"
-            name="buscar"
-            placeholder="Buscar subtipo..."
-            value="{{ buscar|default:'' }}"
-            autocomplete="off"
-        >
-
-        <button
-            type="submit"
-            class="subtipos-btn subtipos-btn-search">
-
-            Buscar
-
+        <button type="button" class="ts-btn ts-btn-primary" onclick="abrirModalCrear()">
+            <svg class="ts-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo subtipo
         </button>
+
+    </header>
+
+
+    <!-- PESTAÑAS -->
+    <nav class="ts-tabs">
+
+        <a href="{% url 'gestion_tipos_productos' %}" class="ts-tab">
+            Tipos de producto
+            {% if total_tipos is not None %}<span class="ts-contador">{{ total_tipos }}</span>{% endif %}
+        </a>
+
+        <a href="{% url 'gestion_subtipos' %}" class="ts-tab activa">
+            Subtipos
+            {% if total_subtipos is not None %}<span class="ts-contador">{{ total_subtipos }}</span>{% endif %}
+        </a>
+
+    </nav>
+
+
+    <!-- BUSCADOR (se envía con Enter; la vista filtra por "q") -->
+    <form method="GET" class="ts-search">
+
+        <svg class="ts-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+
+        <input type="text" name="q" value="{{ busqueda|default:'' }}" placeholder="Buscar clasificación...">
 
     </form>
 
 
-    <!-- =====================================================
-         TABLA
-         ===================================================== -->
+    <!-- TABLA -->
+    <section class="ts-card">
 
-    <div class="subtipos-card">
+        <div class="ts-table-wrap">
 
-        <div class="subtipos-table-wrapper">
-
-            <table class="subtipos-table">
+            <table class="ts-table">
 
                 <thead>
-
                     <tr>
-
-                        <th>
-                            Subtipo
-                        </th>
-
-                        <th>
-                            Tipo de producto
-                        </th>
-
-                        <th>
-                            Estado
-                        </th>
-
-                        <th>
-                            Acciones
-                        </th>
-
+                        <th>Nombre</th>
+                        <th>Tipo de producto</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
-
                 </thead>
 
                 <tbody>
 
                     {% for subtipo in subtipos %}
 
-                        <tr
-                            {% if not subtipo.Estado_subtipo %}
-                                class="fila-inactiva"
-                            {% endif %}
-                        >
+                        <tr class="{% if not subtipo.Estado_subtipo %}inactivo{% endif %}">
 
-                            <!-- SUBTIPO -->
+                            <td><span class="ts-nombre">{{ subtipo.Nombre_subtipo }}</span></td>
+
+                            <td class="ts-muted">{{ subtipo.ID_Tipo_producto.Nombre_tipo_producto }}</td>
+
+                            <td class="ts-muted">{{ subtipo.Descripcion_subtipo|default:"—" }}</td>
+
                             <td>
-
-                                <div class="subtipo-name">
-                                    {{ subtipo.Nombre_subtipo }}
-                                </div>
-
-                            </td>
-
-
-                            <!-- TIPO DE PRODUCTO -->
-                            <td>
-
-                                <span class="subtipo-type">
-                                    {{ subtipo.ID_Tipo_producto.Nombre_tipo_producto }}
-                                </span>
-
-                            </td>
-
-
-                            <!-- ESTADO -->
-                            <td>
-
                                 {% if subtipo.Estado_subtipo %}
-
-                                    <span class="subtipo-status activo">
-
-                                        <span class="status-dot"></span>
-
-                                        Activo
-
-                                    </span>
-
+                                    <span class="ts-badge ts-activo">Activo</span>
                                 {% else %}
-
-                                    <span class="subtipo-status inactivo">
-
-                                        <span class="status-dot"></span>
-
-                                        Inactivo
-
-                                    </span>
-
+                                    <span class="ts-badge ts-inactivo">Inactivo</span>
                                 {% endif %}
-
                             </td>
 
-
-                            <!-- ACCIONES -->
                             <td>
-
-                                <div class="subtipo-actions">
+                                <div class="ts-acciones">
 
                                     <!-- EDITAR -->
-
-                                    <button
-                                        type="button"
-                                        class="action-btn action-edit"
+                                    <button type="button" class="ts-accion"
                                         onclick="abrirModalEditar(
                                             '{{ subtipo.ID_Subtipo }}',
                                             '{{ subtipo.ID_Tipo_producto.ID_Tipo_producto }}',
-                                            '{{ subtipo.Nombre_subtipo|escapejs }}'
+                                            '{{ subtipo.Nombre_subtipo|escapejs }}',
+                                            '{{ subtipo.Descripcion_subtipo|default:''|escapejs }}'
                                         )">
-
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            aria-hidden="true">
-
-                                            <path
-                                                d="M12 20h9">
-                                            </path>
-
-                                            <path
-                                                d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z">
-                                            </path>
-
-                                        </svg>
-
-                                        Editar
-
+                                        <svg class="ts-icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+                                        Modificar
                                     </button>
 
-
                                     <!-- CAMBIAR ESTADO -->
-
-                                    <form
-                                        method="POST"
-                                        action="{% url 'cambiar_estado_subtipo' subtipo.ID_Subtipo %}">
+                                    <form method="POST" action="{% url 'cambiar_estado_subtipo' subtipo.ID_Subtipo %}">
 
                                         {% csrf_token %}
 
                                         {% if subtipo.Estado_subtipo %}
-
-                                            <button
-                                                type="submit"
-                                                class="action-btn action-delete">
-
-                                                <svg
-                                                    viewBox="0 0 24 24"
-                                                    aria-hidden="true">
-
-                                                    <path
-                                                        d="M3 6h18">
-                                                    </path>
-
-                                                    <path
-                                                        d="M8 6V4h8v2">
-                                                    </path>
-
-                                                    <path
-                                                        d="M19 6l-1 14H6L5 6">
-                                                    </path>
-
-                                                    <path
-                                                        d="M10 11v5">
-                                                    </path>
-
-                                                    <path
-                                                        d="M14 11v5">
-                                                    </path>
-
-                                                </svg>
-
-                                                Dar de baja
-
-                                            </button>
-
+                                            <button type="submit" class="ts-accion ts-baja">Desactivar</button>
                                         {% else %}
-
-                                            <button
-                                                type="submit"
-                                                class="action-btn action-activate">
-
-                                                Activar
-
-                                            </button>
-
+                                            <button type="submit" class="ts-accion ts-activar">Activar</button>
                                         {% endif %}
 
                                     </form>
 
                                 </div>
-
                             </td>
 
                         </tr>
 
-
                     {% empty %}
 
                         <tr>
-
-                            <td
-                                colspan="4"
-                                class="subtipos-empty">
-
-                                No hay subtipos registrados.
-
-                            </td>
-
+                            <td colspan="5" class="ts-vacio">No hay subtipos registrados.</td>
                         </tr>
 
                     {% endfor %}
@@ -337,147 +156,61 @@
 
         </div>
 
-
-        <!-- PIE DE TABLA -->
-
-        <div class="subtipos-table-footer">
-
+        <div class="ts-pie">
             <span>
-                Subtipos registrados
+                {{ subtipos|length }} registro{{ subtipos|length|pluralize }} encontrado{{ subtipos|length|pluralize }}
             </span>
-
-            <span>
-                {{ subtipos|length }} registros
-            </span>
-
+            <span>Agroquímicos del Valle</span>
         </div>
 
-    </div>
+    </section>
 
 </div>
 
 
-<!-- =========================================================
-     MODAL CREAR / EDITAR SUBTIPO
-     ========================================================= -->
+<!-- ===================== MODAL CREAR / EDITAR SUBTIPO ===================== -->
+<div class="ts-modal" id="modalSubtipo">
 
-<div
-    class="subtipos-modal"
-    id="modalSubtipo">
+    <div class="ts-modal-box">
 
-    <div class="subtipos-modal-content">
-
-
-        <!-- CABECERA DEL MODAL -->
-
-        <div class="modal-header">
-
-            <h2 id="tituloModal">
-                Nuevo subtipo
-            </h2>
-
-            <button
-                type="button"
-                class="modal-close"
-                onclick="cerrarModal()"
-                aria-label="Cerrar">
-
-                ×
-
+        <div class="ts-modal-head">
+            <h2 id="tituloModal">Registrar subtipo</h2>
+            <button type="button" class="ts-modal-x" onclick="cerrarModal()" aria-label="Cerrar">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
-
         </div>
 
-
-        <!-- FORMULARIO -->
-
-        <form
-            method="POST"
-            id="formSubtipo"
-            action="{% url 'crear_subtipo' %}">
+        <form method="POST" id="formSubtipo" action="{% url 'crear_subtipo' %}">
 
             {% csrf_token %}
 
+            <div class="ts-modal-body">
 
-            <div class="modal-body">
-
-
-                <!-- TIPO DE PRODUCTO -->
-
-                <div class="modal-group">
-
-                    <label for="tipo_producto">
-                        Tipo de producto
-                    </label>
-
-                    <select
-                        name="tipo_producto"
-                        id="tipo_producto"
-                        required>
-
-                        <option value="">
-                            Seleccionar tipo
-                        </option>
-
-                        {% for tipo in tipos_productos %}
-
-                            <option
-                                value="{{ tipo.ID_Tipo_producto }}">
-
-                                {{ tipo.Nombre_tipo_producto }}
-
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
+                <div class="ts-grupo">
+                    <label for="nombre_subtipo">Nombre *</label>
+                    <input type="text" name="Nombre_subtipo" id="nombre_subtipo" maxlength="60" required>
                 </div>
 
+                <div class="ts-grupo">
+                    <label for="tipo_producto">Tipo de producto *</label>
+                    <select name="ID_Tipo_producto" id="tipo_producto" required>
+                        <option value="">Seleccionar tipo</option>
+                        {% for tipo in tipos_productos %}
+                            <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-                <!-- NOMBRE DEL SUBTIPO -->
-
-                <div class="modal-group">
-
-                    <label for="nombre_subtipo">
-                        Nombre del subtipo
-                    </label>
-
-                    <input
-                        type="text"
-                        name="nombre_subtipo"
-                        id="nombre_subtipo"
-                        maxlength="50"
-                        required
-                        autocomplete="off"
-                    >
-
+                <div class="ts-grupo">
+                    <label for="descripcion_subtipo">Descripción</label>
+                    <input type="text" name="Descripcion_subtipo" id="descripcion_subtipo" maxlength="200">
                 </div>
 
             </div>
 
-
-            <!-- BOTONES -->
-
-            <div class="modal-footer">
-
-                <button
-                    type="button"
-                    class="subtipos-btn subtipos-btn-secondary"
-                    onclick="cerrarModal()">
-
-                    Cancelar
-
-                </button>
-
-                <button
-                    type="submit"
-                    class="subtipos-btn subtipos-btn-primary">
-
-                    Guardar
-
-                </button>
-
+            <div class="ts-modal-pie">
+                <button type="button" class="ts-btn ts-btn-claro" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" class="ts-btn ts-btn-primary">Guardar</button>
             </div>
 
         </form>
@@ -487,100 +220,58 @@
 </div>
 
 
-<!-- =========================================================
-     JAVASCRIPT
-     ========================================================= -->
-
-{% block extra_js %}
-
 <script>
+
+    const modalSubtipo = document.getElementById('modalSubtipo');
+    const formSubtipo = document.getElementById('formSubtipo');
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.ts-toast').forEach(function (toast) {
+            setTimeout(function () { toast.remove(); }, 4000);
+        });
+    });
+
 
     function abrirModalCrear() {
 
-        const modal =
-            document.getElementById("modalSubtipo");
+        document.getElementById('tituloModal').textContent = 'Registrar subtipo';
 
-        const formulario =
-            document.getElementById("formSubtipo");
+        formSubtipo.action = "{% url 'crear_subtipo' %}";
 
+        document.getElementById('tipo_producto').value = '';
+        document.getElementById('nombre_subtipo').value = '';
+        document.getElementById('descripcion_subtipo').value = '';
 
-        document.getElementById("tituloModal").textContent =
-            "Nuevo subtipo";
-
-
-        formulario.action =
-            "{% url 'crear_subtipo' %}";
-
-
-        document.getElementById("tipo_producto").value =
-            "";
-
-
-        document.getElementById("nombre_subtipo").value =
-            "";
-
-
-        modal.style.display =
-            "flex";
+        modalSubtipo.style.display = 'flex';
 
     }
 
 
-    function abrirModalEditar(id, tipo, nombre) {
+    function abrirModalEditar(id, tipo, nombre, descripcion) {
 
-        const modal =
-            document.getElementById("modalSubtipo");
+        document.getElementById('tituloModal').textContent = 'Modificar subtipo';
 
-        const formulario =
-            document.getElementById("formSubtipo");
+        formSubtipo.action = '/subtipos/editar/' + id + '/';
 
+        document.getElementById('tipo_producto').value = tipo;
+        document.getElementById('nombre_subtipo').value = nombre;
+        document.getElementById('descripcion_subtipo').value = descripcion;
 
-        document.getElementById("tituloModal").textContent =
-            "Editar subtipo";
-
-
-        formulario.action =
-            "/subtipos/editar/" + id + "/";
-
-
-        document.getElementById("tipo_producto").value =
-            tipo;
-
-
-        document.getElementById("nombre_subtipo").value =
-            nombre;
-
-
-        modal.style.display =
-            "flex";
+        modalSubtipo.style.display = 'flex';
 
     }
 
 
     function cerrarModal() {
-
-        document.getElementById("modalSubtipo").style.display =
-            "none";
-
+        modalSubtipo.style.display = 'none';
     }
 
 
-    window.onclick = function(event) {
-
-        const modal =
-            document.getElementById("modalSubtipo");
-
-
-        if (event.target === modal) {
-
-            cerrarModal();
-
-        }
-
-    };
+    modalSubtipo.addEventListener('click', function (e) {
+        if (e.target === modalSubtipo) { cerrarModal(); }
+    });
 
 </script>
-
-{% endblock %}
 
 {% endblock %}

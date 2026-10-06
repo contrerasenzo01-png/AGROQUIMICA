@@ -14,7 +14,7 @@
    CONTENEDOR PRINCIPAL
    ============================================================ */
 
-.subtipos-page {
+.ts-page {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
@@ -24,10 +24,98 @@
 
 
 /* ============================================================
+   MENSAJES / TOASTS
+   ============================================================ */
+
+.ts-toasts {
+    position: fixed;
+    top: 75px;
+    right: 24px;
+    z-index: 4000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(360px, calc(100vw - 32px));
+}
+
+.ts-toast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 14px;
+    border: 1px solid #dce5df;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .10);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #31483c;
+    animation: toastEntrada .20s ease-out;
+}
+
+.ts-toast.success {
+    background-color: #edf8f1;
+    border-color: #b8dfc5;
+    color: #17643b;
+}
+
+.ts-toast.error {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.ts-toast.warning {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.ts-toast.info {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.ts-toast-x {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+    color: currentColor;
+    transition: background-color .15s ease;
+}
+
+.ts-toast-x:hover {
+    background-color: rgba(0, 0, 0, .06);
+}
+
+@keyframes toastEntrada {
+
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+
+/* ============================================================
    ENCABEZADO
    ============================================================ */
 
-.subtipos-header {
+.ts-header {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
@@ -35,11 +123,7 @@
     margin-bottom: 24px;
 }
 
-.subtipos-header-text {
-    min-width: 0;
-}
-
-.subtipos-eyebrow {
+.ts-eyebrow {
     display: block;
     margin-bottom: 7px;
     font-family: 'Inter', sans-serif;
@@ -50,7 +134,7 @@
     color: #718279;
 }
 
-.subtipos-title {
+.ts-title {
     margin: 0;
     font-family: 'Poppins', sans-serif;
     font-size: 28px;
@@ -60,7 +144,7 @@
     color: #17382a;
 }
 
-.subtipos-subtitle {
+.ts-sub {
     margin: 7px 0 0;
     font-family: 'Inter', sans-serif;
     font-size: 13px;
@@ -72,7 +156,7 @@
    BOTONES
    ============================================================ */
 
-.subtipos-btn {
+.ts-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -93,89 +177,95 @@
         transform .18s ease;
 }
 
-.subtipos-btn:hover {
+.ts-btn:hover {
     transform: translateY(-1px);
 }
 
-.subtipos-btn-primary {
+.ts-btn-primary {
     background-color: #185a38;
     color: #ffffff;
     border-color: #185a38;
 }
 
-.subtipos-btn-primary:hover {
+.ts-btn-primary:hover {
     background-color: #134a2e;
     border-color: #134a2e;
 }
 
-.subtipos-btn-secondary {
+.ts-btn-claro {
     background-color: #ffffff;
     color: #31483c;
     border-color: #dce5df;
 }
 
-.subtipos-btn-secondary:hover {
+.ts-btn-claro:hover {
     background-color: #f4f7f5;
 }
 
-.subtipos-btn-search {
-    min-height: 34px;
-    background-color: #185a38;
-    color: #ffffff;
-    border-color: #185a38;
-}
-
-.subtipos-btn-search:hover {
-    background-color: #134a2e;
-}
-
-.btn-plus {
-    font-size: 17px;
-    font-weight: 400;
-    line-height: 1;
+.ts-icon {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 
 /* ============================================================
-   MENSAJES
+   PESTAÑAS
    ============================================================ */
 
-.subtipos-messages {
+.ts-tabs {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #e1e9e4;
 }
 
-.subtipos-message {
-    padding: 11px 15px;
-    border: 1px solid #dce5df;
-    border-radius: 8px;
-    background-color: #ffffff;
+.ts-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 14px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    color: #718279;
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
-    color: #31483c;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+        color .15s ease,
+        border-color .15s ease;
 }
 
-.subtipos-message.success {
-    background-color: #edf8f1;
-    border-color: #b8dfc5;
-    color: #17643b;
+.ts-tab:hover {
+    color: #185a38;
 }
 
-.subtipos-message.error {
-    background-color: #fef2f2;
-    border-color: #fecaca;
-    color: #991b1b;
+.ts-tab.activa {
+    color: #185a38;
+    border-bottom-color: #185a38;
 }
 
-.subtipos-message.warning {
-    background-color: #fffbeb;
-    border-color: #fde68a;
-    color: #92400e;
-}
-
-.message-text {
-    display: block;
+.ts-contador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: #edf4ef;
+    color: #185a38;
+    font-size: 10px;
+    font-weight: 700;
 }
 
 
@@ -183,14 +273,14 @@
    BUSCADOR
    ============================================================ */
 
-.subtipos-search {
+.ts-search {
     display: flex;
     align-items: center;
     gap: 10px;
     width: 100%;
     min-height: 46px;
     margin-bottom: 18px;
-    padding: 5px 6px 5px 13px;
+    padding: 5px 13px;
     box-sizing: border-box;
     background-color: #ffffff;
     border: 1px solid #e1e9e4;
@@ -200,31 +290,19 @@
         box-shadow .18s ease;
 }
 
-.subtipos-search:focus-within {
+.ts-search:focus-within {
     border-color: #79ad8d;
     box-shadow: 0 0 0 3px rgba(24, 90, 56, .09);
 }
 
-.search-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.ts-search .ts-icon {
     width: 19px;
     height: 19px;
     flex-shrink: 0;
     color: #7b8b83;
 }
 
-.search-icon svg {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-}
-
-.subtipos-search input {
+.ts-search input {
     flex: 1;
     min-width: 0;
     height: 34px;
@@ -237,7 +315,7 @@
     color: #24362d;
 }
 
-.subtipos-search input::placeholder {
+.ts-search input::placeholder {
     color: #9aa9a1;
 }
 
@@ -246,7 +324,7 @@
    TARJETA DE TABLA
    ============================================================ */
 
-.subtipos-card {
+.ts-card {
     width: 100%;
     overflow: hidden;
     background-color: #ffffff;
@@ -255,7 +333,7 @@
     box-sizing: border-box;
 }
 
-.subtipos-table-wrapper {
+.ts-table-wrap {
     width: 100%;
     overflow-x: auto;
 }
@@ -265,17 +343,17 @@
    TABLA
    ============================================================ */
 
-.subtipos-table {
+.ts-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: auto;
 }
 
-.subtipos-table thead {
+.ts-table thead {
     background-color: #fafcfb;
 }
 
-.subtipos-table th {
+.ts-table th {
     padding: 13px 17px;
     border-bottom: 1px solid #e1e9e4;
     text-align: left;
@@ -286,7 +364,7 @@
     color: #718279;
 }
 
-.subtipos-table td {
+.ts-table td {
     padding: 14px 17px;
     border-bottom: 1px solid #edf2ef;
     vertical-align: middle;
@@ -295,46 +373,41 @@
     color: #34483d;
 }
 
-.subtipos-table tbody tr:last-child td {
+.ts-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-.subtipos-table tbody tr {
+.ts-table tbody tr {
     transition: background-color .15s ease;
 }
 
-.subtipos-table tbody tr:hover {
+.ts-table tbody tr:hover {
     background-color: #f9fbfa;
 }
 
-.subtipos-table tbody tr.fila-inactiva {
+.ts-table tbody tr.inactivo {
     background-color: #fcfdfc;
 }
 
-.subtipos-table tbody tr.fila-inactiva:hover {
+.ts-table tbody tr.inactivo:hover {
     background-color: #f8faf9;
 }
 
 
 /* ============================================================
-   NOMBRE DEL SUBTIPO
+   NOMBRE Y DATOS
    ============================================================ */
 
-.subtipo-name {
+.ts-nombre {
     font-weight: 600;
     color: #173d2b;
 }
 
-.fila-inactiva .subtipo-name {
+.inactivo .ts-nombre {
     color: #7b8b83;
 }
 
-
-/* ============================================================
-   TIPO DE PRODUCTO
-   ============================================================ */
-
-.subtipo-type {
+.ts-muted {
     color: #63756c;
 }
 
@@ -343,7 +416,7 @@
    ESTADOS
    ============================================================ */
 
-.subtipo-status {
+.ts-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -354,19 +427,12 @@
     font-weight: 600;
 }
 
-.status-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background-color: currentColor;
-}
-
-.subtipo-status.activo {
+.ts-activo {
     background-color: #e8f5ee;
     color: #1b7a4a;
 }
 
-.subtipo-status.inactivo {
+.ts-inactivo {
     background-color: #eef1ef;
     color: #7b8a82;
 }
@@ -376,19 +442,19 @@
    ACCIONES
    ============================================================ */
 
-.subtipo-actions {
+.ts-acciones {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 7px;
 }
 
-.subtipo-actions form {
+.ts-acciones form {
     display: inline-flex;
     margin: 0;
 }
 
-.action-btn {
+.ts-accion {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -410,38 +476,33 @@
         color .15s ease;
 }
 
-.action-btn svg {
+.ts-accion .ts-icon {
     width: 13px;
     height: 13px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.7;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
-.action-edit:hover {
+.ts-accion:hover {
     background-color: #f2f7f4;
     border-color: #c9d9d0;
 }
 
-.action-delete {
+.ts-baja {
     color: #53675d;
 }
 
-.action-delete:hover {
+.ts-baja:hover {
     background-color: #fff5f5;
     border-color: #fecaca;
     color: #b91c1c;
 }
 
-.action-activate {
+.ts-activar {
     background-color: #f0fdf4;
     border-color: #bbf7d0;
     color: #15803d;
 }
 
-.action-activate:hover {
+.ts-activar:hover {
     background-color: #dcfce7;
 }
 
@@ -450,7 +511,7 @@
    TABLA VACÍA
    ============================================================ */
 
-.subtipos-empty {
+.ts-vacio {
     height: 130px;
     padding: 30px 16px !important;
     text-align: center !important;
@@ -462,7 +523,7 @@
    PIE DE TABLA
    ============================================================ */
 
-.subtipos-table-footer {
+.ts-pie {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -480,7 +541,7 @@
    MODAL
    ============================================================ */
 
-.subtipos-modal {
+.ts-modal {
     display: none;
     position: fixed;
     inset: 0;
@@ -494,7 +555,7 @@
     -webkit-backdrop-filter: blur(4px);
 }
 
-.subtipos-modal-content {
+.ts-modal-box {
     width: 100%;
     max-width: 450px;
     max-height: 90vh;
@@ -525,7 +586,7 @@
    CABECERA DEL MODAL
    ============================================================ */
 
-.modal-header {
+.ts-modal-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -534,7 +595,7 @@
     border-bottom: 1px solid #e1e9e4;
 }
 
-.modal-header h2 {
+.ts-modal-head h2 {
     margin: 0;
     font-family: 'Poppins', sans-serif;
     font-size: 17px;
@@ -542,7 +603,7 @@
     color: #20392c;
 }
 
-.modal-close {
+.ts-modal-x {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -553,18 +614,20 @@
     border-radius: 6px;
     background-color: transparent;
     color: #7b8b83;
-    font-family: 'Inter', sans-serif;
-    font-size: 24px;
-    line-height: 1;
     cursor: pointer;
     transition:
         background-color .15s ease,
         color .15s ease;
 }
 
-.modal-close:hover {
+.ts-modal-x:hover {
     background-color: #f1f5f3;
     color: #263d31;
+}
+
+.ts-modal-x .ts-icon {
+    width: 18px;
+    height: 18px;
 }
 
 
@@ -572,26 +635,26 @@
    CUERPO DEL MODAL
    ============================================================ */
 
-.modal-body {
+.ts-modal-body {
     padding: 22px 22px 8px;
 }
 
-.modal-group {
+.ts-grupo {
     display: flex;
     flex-direction: column;
     gap: 7px;
     margin-bottom: 17px;
 }
 
-.modal-group label {
+.ts-grupo label {
     font-family: 'Inter', sans-serif;
     font-size: 11.5px;
     font-weight: 600;
     color: #2d4638;
 }
 
-.modal-group input,
-.modal-group select {
+.ts-grupo input,
+.ts-grupo select {
     width: 100%;
     height: 39px;
     padding: 0 12px;
@@ -608,12 +671,12 @@
         box-shadow .15s ease;
 }
 
-.modal-group input::placeholder {
+.ts-grupo input::placeholder {
     color: #a0ada6;
 }
 
-.modal-group input:focus,
-.modal-group select:focus {
+.ts-grupo input:focus,
+.ts-grupo select:focus {
     border-color: #6da982;
     box-shadow: 0 0 0 3px rgba(24, 90, 56, .10);
 }
@@ -623,7 +686,7 @@
    PIE DEL MODAL
    ============================================================ */
 
-.modal-footer {
+.ts-modal-pie {
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -632,7 +695,7 @@
     border-top: 1px solid #e1e9e4;
 }
 
-.modal-footer .subtipos-btn {
+.ts-modal-pie .ts-btn {
     min-height: 35px;
     padding: 0 17px;
 }
@@ -644,16 +707,12 @@
 
 @media (max-width: 900px) {
 
-    .subtipos-header {
+    .ts-header {
         align-items: flex-start;
         flex-direction: column;
     }
 
-    .subtipos-header-action {
-        width: 100%;
-    }
-
-    .subtipos-header-action .subtipos-btn {
+    .ts-header > .ts-btn {
         width: auto;
     }
 
@@ -662,35 +721,35 @@
 
 @media (max-width: 700px) {
 
-    .subtipos-title {
+    .ts-title {
         font-size: 24px;
     }
 
-    .subtipos-search {
+    .ts-search {
         min-height: 44px;
     }
 
-    .subtipos-table th,
-    .subtipos-table td {
+    .ts-table th,
+    .ts-table td {
         padding: 12px 13px;
     }
 
-    .subtipos-table-footer {
+    .ts-pie {
         align-items: flex-start;
         flex-direction: column;
         gap: 5px;
     }
 
-    .subtipo-actions {
+    .ts-acciones {
         align-items: flex-start;
         flex-direction: column;
     }
 
-    .subtipos-modal {
+    .ts-modal {
         padding: 12px;
     }
 
-    .subtipos-modal-content {
+    .ts-modal-box {
         max-height: 94vh;
     }
 
@@ -699,29 +758,31 @@
 
 @media (max-width: 500px) {
 
-    .subtipos-header-action .subtipos-btn {
+    .ts-header > .ts-btn {
         width: 100%;
     }
 
-    .subtipos-search {
+    .ts-search {
         flex-wrap: wrap;
         padding: 7px;
     }
 
-    .subtipos-search input {
+    .ts-search input {
         min-width: 150px;
     }
 
-    .subtipos-btn-search {
-        width: 100%;
-    }
-
-    .modal-footer {
+    .ts-modal-pie {
         flex-direction: column-reverse;
     }
 
-    .modal-footer .subtipos-btn {
+    .ts-modal-pie .ts-btn {
         width: 100%;
+    }
+
+    .ts-toasts {
+        top: 65px;
+        right: 16px;
+        width: calc(100vw - 32px);
     }
 
 }
