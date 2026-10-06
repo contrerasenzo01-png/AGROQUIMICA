@@ -1,735 +1,605 @@
-* {
+/* ============================================================
+   PERFILES DE ACCESO  ·  Agroquímicos del Valle
+   Estilos de perfiles.html.
+   Todas las clases empiezan con "pf-" para no pisar los estilos de base.css.
+   Ubicación: inventario/static/inventario/styles/perfiles.css
+   ============================================================ */
+
+/* Las variables se declaran para la página, los modales y las notificaciones
+   (los modales están fuera del contenedor .pf-page). */
+.pf-page,
+.pf-modal,
+.pf-toasts {
+    --pf-verde:        #185a38;
+    --pf-verde-hover:  #134a2e;
+    --pf-titulo:       #0f3a24;
+    --pf-borde:        #e3eae6;
+    --pf-borde-campo:  #dde7e0;
+    --pf-texto:        #1c2a23;
+    --pf-suave:        #6b7c73;
+    --pf-rojo:         #b91c1c;
+
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--pf-texto);
+}
+
+.pf-page *,
+.pf-modal,
+.pf-modal *,
+.pf-modal *::before,
+.pf-modal *::after {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-        Roboto, Helvetica, Arial, sans-serif;
+}
+
+.pf-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 
-body {
-    height: 100vh;
-    background-color: #f1f5f3;
-    color: #1c2a23;
-}
-
-
-/* ==========================================
-   LAYOUT
-   ========================================== */
-
-.layout {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-}
-
-/* ==========================================
-   MENÚ DE NAVEGACIÓN
-   ========================================== */
-
-.nav-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.nav-item {
-    margin-bottom: 6px;
-}
-
-.nav-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    color: #a3c2b2;
-    text-decoration: none;
-    border-radius: 8px;
-    font-size: 13.5px;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.nav-link.active,
-.nav-link:hover {
-    background-color: #16472d;
-    color: #ffffff;
-}
-
-.nav-icon {
-    font-size: 14px;
-    width: 18px;
-    text-align: center;
-}
-
-
-/* ==========================================
-   PIE DEL SIDEBAR
-   ========================================== */
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding-top: 15px;
-}
-
-.user-role {
-    font-size: 12px;
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.user-email {
-    font-size: 11px;
-    color: #83a595;
-    margin-bottom: 12px;
-}
-
-.logout-link {
-    font-size: 11px;
-    color: #a3c2b2;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.logout-link:hover {
-    color: #ffffff;
-}
-
-
-/* ==========================================
-   ÁREA PRINCIPAL
-   ========================================== */
-
-.main-content {
-    flex: 1;
-    padding: 25px 30px;
-    overflow-y: auto;
-    width: 100%;
-}
-
-
-/* ==========================================
-   ENCABEZADO
-   ========================================== */
-
-.header {
-    margin-bottom: 20px;
-}
-
-.header h1 {
-    font-size: 20px;
-    color: #0b311e;
-}
-
-.subtitle {
-    font-size: 12px;
-    color: #5c7367;
-    margin-top: 2px;
-}
-
-
-/* ==========================================
-   MENSAJES
-   ========================================== */
-
-.messages {
-    margin-bottom: 18px;
-}
-
-.message {
-    padding: 11px 14px;
-    border-radius: 7px;
-    font-size: 13px;
-    margin-bottom: 8px;
-}
-
-.message.success {
-    background-color: #f0fdf4;
-    border: 1px solid #86efac;
-    color: #166534;
-}
-
-.message.error {
-    background-color: #fef2f2;
-    border: 1px solid #fca5a5;
-    color: #b91c1c;
-}
-
-.message.warning {
-    background-color: #fffbe3;
-    border: 1px solid #fde047;
-    color: #92400e;
-}
-
-.message.info {
-    background-color: #eff6ff;
-    border: 1px solid #93c5fd;
-    color: #1d4ed8;
-}
-
-
-/* ==========================================
-   ACCIONES SUPERIORES
-   ========================================== */
-
-.top-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.search-form {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.search-form input {
-    width: 280px;
-    padding: 10px 12px;
-    border: 1px solid #d5e1da;
-    border-radius: 7px;
-    background-color: #ffffff;
-    color: #1c2a23;
-    font-size: 13px;
-    outline: none;
-}
-
-.search-form input:focus {
-    border-color: #1b5e3a;
-    box-shadow: 0 0 0 2px rgba(27, 94, 58, 0.08);
-}
-
-
-/* ==========================================
-   BOTONES
-   ========================================== */
-
-.btn-primary {
-    border: none;
-    background-color: #1b5e3a;
-    color: #ffffff;
-    padding: 10px 16px;
-    border-radius: 7px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-primary:hover {
-    background-color: #16472d;
-}
-
-.btn-search {
-    border: none;
-    background-color: #0b311e;
-    color: #ffffff;
-    padding: 10px 15px;
-    border-radius: 7px;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.btn-search:hover {
-    background-color: #16472d;
-}
-
-.btn-clear {
-    padding: 10px 13px;
-    border-radius: 7px;
-    background-color: #e8efeb;
-    color: #365346;
-    text-decoration: none;
-    font-size: 13px;
-}
-
-.btn-clear:hover {
-    background-color: #dce7e1;
-}
-
-
-/* ==========================================
-   CONTENEDOR DE PERFILES
-   ========================================== */
-
-.profiles-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-
-/* ==========================================
-   TARJETA DE PERFIL
-   ========================================== */
-
-.profile-card {
-    background-color: #ffffff;
-    border: 1px solid #e2ece6;
-    border-radius: 8px;
-    padding: 18px;
-}
-
-
-/* ==========================================
-   ENCABEZADO DEL PERFIL
-   ========================================== */
-
-.perfil-header {
+/* ---------- ENCABEZADO ---------- */
+.pf-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 20px;
-}
-
-
-/* Información del perfil */
-
-.perfil-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.perfil-info h3 {
-    font-size: 16px;
-    color: #0b311e;
-    margin-bottom: 4px;
-}
-
-.perfil-id {
-    display: block;
-    font-size: 11px;
-    color: #8a9e93;
-}
-
-
-/* ==========================================
-   ACCIONES DEL PERFIL
-   ========================================== */
-
-.perfil-acciones {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-
-/* ==========================================
-   ESTADO DEL PERFIL
-   ========================================== */
-
-.estado {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.estado.activo {
-    background-color: #d1fae5;
-    color: #065f46;
-}
-
-.estado.inactivo {
-    background-color: #e5e7eb;
-    color: #374151;
-}
-
-
-/* ==========================================
-   BOTÓN EDITAR
-   ========================================== */
-
-.btn-edit {
-    border: 1px solid #cbd9d1;
-    background-color: #ffffff;
-    color: #1b5e3a;
-    padding: 7px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.btn-edit:hover {
-    background-color: #f0fdf4;
-}
-
-
-/* ==========================================
-   BOTÓN DAR DE BAJA
-   ========================================== */
-
-.btn-delete {
-    border: 1px solid #fca5a5;
-    background-color: #ffffff;
-    color: #b91c1c;
-    padding: 7px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.btn-delete:hover {
-    background-color: #fef2f2;
-}
-
-
-/* ==========================================
-   PERMISOS DEL PERFIL
-   ========================================== */
-
-.permissions-section {
-    margin-top: 14px;
-}
-
-.permissions-section h3 {
-    font-size: 12px;
-    font-weight: 600;
-    color: #5c7367;
-    margin-bottom: 10px;
-}
-
-.permissions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-
-/* Permiso mostrado dentro de una tarjeta */
-
-.permission-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background-color: #f5f8f6;
-    border: 1px solid #e2ece6;
-    border-radius: 6px;
-    padding: 9px 11px;
-}
-
-.permission-item strong {
-    font-size: 12px;
-    color: #1c2a23;
-}
-
-.permission-item span {
-    font-size: 11px;
-    color: #71867b;
-}
-
-
-/* ==========================================
-   SIN PERMISOS
-   ========================================== */
-
-.no-permissions {
-    font-size: 12px;
-    color: #8a9e93;
-    padding: 8px 0;
-}
-
-
-/* ==========================================
-   ESTADO VACÍO
-   ========================================== */
-
-.empty-state {
-    background-color: #ffffff;
-    border: 1px solid #e2ece6;
-    border-radius: 8px;
-    padding: 40px;
-    text-align: center;
-}
-
-.empty-state h2 {
-    font-size: 16px;
-    color: #0b311e;
-    margin-bottom: 8px;
-}
-
-.empty-state p {
-    font-size: 12px;
-    color: #8a9e93;
-}
-
-
-/* ==========================================
-   MODALES
-   ========================================== */
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    inset: 0;
-    background-color: rgba(11, 49, 30, 0.45);
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.modal.show {
-    display: flex;
-}
-
-
-/* ==========================================
-   CONTENIDO DEL MODAL
-   ========================================== */
-
-.modal-content {
-    width: 100%;
-    max-width: 570px;
-    max-height: 90vh;
-    overflow-y: auto;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
-
-
-/* ==========================================
-   ENCABEZADO DEL MODAL
-   ========================================== */
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px 20px;
-    border-bottom: 1px solid #e2ece6;
-}
-
-.modal-header h2 {
-    font-size: 17px;
-    color: #0b311e;
-}
-
-.close-modal {
-    border: none;
-    background: transparent;
-    color: #5c7367;
-    font-size: 25px;
-    line-height: 1;
-    cursor: pointer;
-}
-
-.close-modal:hover {
-    color: #0b311e;
-}
-
-
-/* ==========================================
-   FORMULARIO
-   ========================================== */
-
-.modal-content form {
-    padding: 20px;
-}
-
-.form-group {
+    gap: 16px;
     margin-bottom: 20px;
 }
 
-.form-group > label {
-    display: block;
+.pf-eyebrow {
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--pf-suave);
+    margin-bottom: 8px;
+}
+
+.pf-title {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--pf-texto);
+    margin: 0 0 6px;
+}
+
+.pf-sub {
+    font-size: 13px;
+    color: var(--pf-suave);
+    margin: 0;
+}
+
+
+/* ---------- BOTONES ---------- */
+.pf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+}
+
+.pf-btn-primary       { background: var(--pf-verde); color: #fff; }
+.pf-btn-primary:hover { background: var(--pf-verde-hover); }
+
+.pf-btn-claro         { background: #fff; color: var(--pf-texto); border-color: var(--pf-borde-campo); }
+.pf-btn-claro:hover   { background: #f4f7f5; }
+
+.pf-btn-peligro       { background: var(--pf-rojo); color: #fff; }
+.pf-btn-peligro:hover { background: #991b1b; }
+
+
+/* ---------- PESTAÑAS (Tipos de producto | Subtipos) ---------- */
+.pf-tabs {
+    display: flex;
+    gap: 26px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--pf-borde);
+}
+
+.pf-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 2px 12px;
+    margin-bottom: -1px;
+    font-size: 13px;
+    color: var(--pf-suave);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color .15s;
+}
+
+.pf-tab:hover { color: var(--pf-texto); }
+
+.pf-tab.activa {
+    color: var(--pf-verde);
+    font-weight: 600;
+    border-bottom-color: var(--pf-verde);
+}
+
+.pf-contador {
+    min-width: 20px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: #eef2ef;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--pf-suave);
+}
+
+.pf-tab.activa .pf-contador { background: #e2f0e8; color: var(--pf-verde); }
+
+
+/* ---------- BÚSQUEDA ---------- */
+.pf-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 0 14px;
+    background: #fff;
+    border: 1px solid var(--pf-borde);
+    border-radius: 10px;
+    color: var(--pf-suave);
+}
+
+.pf-search:focus-within { border-color: #86c5a1; box-shadow: 0 0 0 3px rgba(24, 90, 56, .12); }
+
+.pf-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 13px 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--pf-texto);
+}
+
+
+/* ---------- TABLA ---------- */
+.pf-card {
+    background: #fff;
+    border: 1px solid var(--pf-borde);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.pf-table-wrap { overflow-x: auto; }
+
+.pf-table { width: 100%; border-collapse: collapse; }
+
+.pf-table th {
+    text-align: left;
+    padding: 14px 16px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--pf-suave);
+    background: #fafcfb;
+    border-bottom: 1px solid var(--pf-borde);
+    white-space: nowrap;
+}
+
+.pf-table td {
+    padding: 14px 16px;
+    font-size: 12.5px;
+    border-bottom: 1px solid #eef3f0;
+    vertical-align: middle;
+}
+
+.pf-table tbody tr:last-child td { border-bottom: none; }
+.pf-table tbody tr:hover         { background: #f9fbfa; }
+
+.pf-table tr.inactivo .pf-nombre { color: var(--pf-suave); }
+
+.pf-nombre { font-weight: 700; color: var(--pf-titulo); }
+.pf-muted  { color: var(--pf-suave); }
+
+.pf-vacio {
+    text-align: center;
+    padding: 40px 16px !important;
+    color: var(--pf-suave);
+}
+
+.pf-pie {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+    font-size: 11px;
+    color: var(--pf-suave);
+    border-top: 1px solid var(--pf-borde);
+    background: #fafcfb;
+}
+
+
+/* ---------- ESTADO ---------- */
+.pf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pf-badge::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.pf-activo   { background: #e8f5ee; color: #1b7a4a; }
+.pf-inactivo { background: #eef1ef; color: #7b8a82; }
+
+
+/* ---------- ACCIONES DE LA TABLA ---------- */
+.pf-acciones {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pf-acciones form { display: inline; margin: 0; }
+
+.pf-accion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    background: #fff;
+    border: 1px solid var(--pf-borde-campo);
+    border-radius: 8px;
+    font-family: inherit;
     font-size: 12px;
     font-weight: 600;
-    color: #365346;
-    margin-bottom: 7px;
+    color: #2d4739;
+    cursor: pointer;
+    transition: background-color .15s;
 }
 
-.form-group input[type="text"] {
+.pf-accion:hover { background: #f1f5f3; }
+
+.pf-baja         { color: #3f5a4c; }
+.pf-baja:hover   { background: #fef2f2; border-color: #fecaca; color: var(--pf-rojo); }
+
+.pf-activar        { color: #15803d; border-color: #bbf7d0; background: #f0fdf4; }
+.pf-activar:hover  { background: #dcfce7; }
+
+
+/* ---------- NOTIFICACIONES ---------- */
+.pf-toasts {
+    position: fixed;
+    top: 84px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pf-toast {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    min-width: 280px;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid var(--pf-borde);
+    border-left: 4px solid var(--pf-verde);
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .1);
+    font-size: 12.5px;
+    animation: pf-entrada-toast .3s ease-out forwards;
+}
+
+.pf-toast.success { border-left-color: #15803d; }
+.pf-toast.warning { border-left-color: #f59f00; }
+.pf-toast.error   { border-left-color: var(--pf-rojo); }
+
+.pf-toast-x       { cursor: pointer; font-weight: 700; color: #8a9e93; }
+.pf-toast-x:hover { color: var(--pf-texto); }
+
+@keyframes pf-entrada-toast {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pf-fadeout {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(20px); }
+}
+
+
+/* ============================================================
+   MODALES
+   ============================================================ */
+.pf-modal {
+    display: none;                /* el JS lo cambia a flex */
+    position: fixed;
+    inset: 0;
+    z-index: 9999;                /* por encima del menú lateral y la barra superior */
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(16, 40, 28, .45);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.pf-modal.show { display: flex; }
+
+.pf-modal-box {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d5e1da;
-    border-radius: 7px;
-    background-color: #ffffff;
-    color: #1c2a23;
-    font-size: 13px;
+    max-width: 540px;
+    max-height: 92vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
+    animation: pf-entrada .22s ease-out;
+}
+
+@keyframes pf-entrada {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.pf-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--pf-borde);
+}
+
+.pf-modal-head h2 {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--pf-texto);
+    margin: 0;
+}
+
+.pf-modal-x {
+    display: inline-flex;
+    padding: 4px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--pf-suave);
+    cursor: pointer;
+}
+.pf-modal-x:hover { background: #f1f5f3; color: var(--pf-texto); }
+
+.pf-modal-body { padding: 20px 22px 6px; }
+
+.pf-grupo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+
+.pf-grupo label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #1f3a2c;
+}
+
+.pf-grupo input,
+.pf-grupo select {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid var(--pf-borde-campo);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12.5px;
+    color: var(--pf-texto);
     outline: none;
+    transition: border-color .15s, box-shadow .15s;
 }
 
-.form-group input[type="text"]:focus {
-    border-color: #1b5e3a;
-    box-shadow: 0 0 0 2px rgba(27, 94, 58, 0.08);
+.pf-grupo input::placeholder { color: #a3b0a9; }
+
+.pf-grupo input:focus,
+.pf-grupo select:focus {
+    border-color: #6fb28b;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .14);
+}
+
+.pf-grupo input[readonly] {
+    background: #f3f6f4;
+    color: #5c7367;
+    cursor: default;
+}
+.pf-grupo input[readonly]:focus { border-color: var(--pf-borde-campo); box-shadow: none; }
+
+.pf-modal-pie {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 22px;
+    border-top: 1px solid var(--pf-borde);
+}
+
+.pf-modal .pf-btn {
+    height: 34px;
+    padding: 0 18px;
+    font-size: 12.5px;
 }
 
 
-/* ==========================================
-   CHECKBOXES DE PERMISOS
-   ========================================== */
+/* ---------- MODAL DE CONFIRMAR BAJA ---------- */
+.pf-aviso {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #991b1b;
+}
 
-.permissions-checkboxes {
+.pf-resumen {
+    margin-bottom: 16px;
+    padding: 14px;
+    background: #f8faf9;
+    border: 1px solid var(--pf-borde);
+    border-radius: 10px;
+}
+
+.pf-resumen-cab {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.pf-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #fde8e8;
+    color: #e02424;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pf-resumen-cab h4 { font-size: 14px; color: var(--pf-texto); margin: 0; }
+.pf-resumen-cab p  { font-size: 11px; color: var(--pf-suave); margin: 2px 0 0; }
+
+.pf-resumen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.pf-dato {
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid #eef3f0;
+    border-radius: 6px;
+}
+
+.pf-dato .lbl {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #8a9e93;
+}
+
+.pf-dato .val {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2d4739;
+    word-break: break-word;
+}
+
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 700px) {
+    .pf-header { flex-direction: column; }
+    .pf-resumen-grid { grid-template-columns: 1fr; }
+}
+
+
+/* ---------- ESPECÍFICO DE PERFILES ---------- */
+.pf-codigo {
+    display: block;
+    margin-top: 2px;
+    font-size: 10.5px;
+    color: var(--pf-suave);
+}
+
+.pf-table td.pf-permisos { max-width: 520px; }
+
+.pf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.pf-chip {
+    display: inline-block;
+    padding: 3px 9px;
+    background: #e8f2ec;
+    border: 1px solid #cfe3d7;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1b5e3a;
+    white-space: nowrap;
+}
+
+.pf-chip-mas { background: #eef1ef; border-color: #e0e6e2; color: var(--pf-suave); }
+
+.pf-sin { font-size: 12px; color: var(--pf-suave); }
+
+/* Buscador con botón "Limpiar" */
+.pf-limpiar {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--pf-suave);
+    text-decoration: none;
+    white-space: nowrap;
+}
+.pf-limpiar:hover { color: var(--pf-texto); }
+
+/* Lista de permisos con casillas */
+.pf-permisos-lista {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 330px;
+    max-height: 300px;
     overflow-y: auto;
     padding-right: 4px;
 }
 
-.permission-checkbox {
+.pf-permiso {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 11px 12px;
-    border: 1px solid #e2ece6;
-    border-radius: 7px;
-    background-color: #f8faf9;
+    padding: 10px 12px;
+    background: #f8faf9;
+    border: 1px solid var(--pf-borde);
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: background-color .15s, border-color .15s;
 }
 
-.permission-checkbox:hover {
-    background-color: #f0f7f3;
-    border-color: #cbd9d1;
-}
+.pf-permiso:hover { background: #f0f7f3; border-color: #cbd9d1; }
 
-.permission-checkbox input[type="checkbox"] {
-    margin-top: 3px;
+.pf-permiso input[type="checkbox"] {
+    flex-shrink: 0;
     width: 15px;
     height: 15px;
-    accent-color: #1b5e3a;
+    margin-top: 2px;
+    accent-color: #185a38;
     cursor: pointer;
 }
 
-.permission-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
+.pf-permiso-info { display: flex; flex-direction: column; gap: 2px; }
+.pf-permiso-info strong { font-size: 12px; color: var(--pf-texto); }
+.pf-permiso-info small  { font-size: 11px; line-height: 1.4; color: var(--pf-suave); }
 
-.permission-info strong {
-    font-size: 12px;
-    color: #1c2a23;
-}
-
-.permission-info small {
-    font-size: 11px;
-    line-height: 1.4;
-    color: #71867b;
-}
-
-
-/* ==========================================
-   BOTONES DEL MODAL
-   ========================================== */
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 9px;
-    padding-top: 5px;
-}
-
-.btn-cancel {
-    border: 1px solid #d5e1da;
-    background-color: #ffffff;
-    color: #5c7367;
-    padding: 10px 15px;
-    border-radius: 7px;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.btn-cancel:hover {
-    background-color: #f1f5f3;
-}
-
-
-/* ==========================================
-   MODAL DE ELIMINACIÓN
-   ========================================== */
-
-.delete-content {
-    max-width: 450px;
-}
-
-.delete-message {
-    padding: 20px;
-}
-
-.delete-message p {
-    font-size: 13px;
-    color: #1c2a23;
-    line-height: 1.5;
-}
-
-.warning-text {
-    margin-top: 8px;
-    color: #b91c1c !important;
-    font-size: 12px !important;
-}
-
-
-/* ==========================================
-   RESPONSIVE
-   ========================================== */
-
-@media (max-width: 900px) {
-
-    .sidebar {
-        width: 200px;
-    }
-
-    .top-actions {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .search-form {
-        width: 100%;
-    }
-
-    .search-form input {
-        flex: 1;
-        width: auto;
-    }
-
-}
-
-
-/* ==========================================
-   RESPONSIVE - PERFILES
-   ========================================== */
-
-@media (max-width: 700px) {
-
-    .layout {
-        overflow: auto;
-    }
-
-    .sidebar {
-        width: 190px;
-    }
-
-    .main-content {
-        padding: 20px;
-    }
-
-    .perfil-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .perfil-acciones {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-}
+/* Los checkbox no deben heredar el alto/ancho de los campos de texto */
+.pf-grupo input[type="checkbox"] { width: 15px; height: 15px; padding: 0; }

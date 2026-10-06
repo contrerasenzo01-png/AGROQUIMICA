@@ -1,926 +1,407 @@
+{% extends 'inventario/base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="es">
+{% block title %}
+    Gestión de Perfiles - Agroquímicos del Valle
+{% endblock %}
 
-<head>
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/styles/perfiles.css' %}">
+{% endblock %}
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block contenido %}
 
-    <title>Gestión de Perfiles</title>
+<!-- Mensajes Django (toasts) -->
+<div class="pf-toasts" id="toastContainer">
 
-    <link
-        rel="stylesheet"
-        href="{% static 'inventario/styles/perfiles.css' %}"
-    >
-
-</head>
-
-
-<body>
-
-    <div class="layout">
-
-    <!-- BARRA LATERAL -->
-    <aside class="sidebar">
-
-        <div>
-
-            <div class="logo">
-                🌿 Agroquímica del Valle
+    {% if messages %}
+        {% for message in messages %}
+            <div class="pf-toast {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}">
+                <span>{{ message }}</span>
+                <span class="pf-toast-x" onclick="this.parentElement.remove()">✕</span>
             </div>
+        {% endfor %}
+    {% endif %}
 
-            <ul class="nav-menu">
-
-                <li class="nav-item">
-                    <a href="{% url 'panel_principal' %}" class="nav-link">
-                        <span class="nav-icon">🎛️</span>
-                        Panel Principal
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-                        <span class="nav-icon">👤</span>
-                        Usuarios del sistema
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_productos' %}" class="nav-link">
-                        <span class="nav-icon">📦</span>
-                        Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                        <span class="nav-icon">🗂️</span>
-                        Tipos de Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                        <span class="nav-icon">🚚</span>
-                        Proveedores
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                        <span class="nav-icon">📊</span>
-                        Movimientos Stock
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'historial_alertas' %}" class="nav-link">
-                        <span class="nav-icon">🔔</span>
-                        Historial de Alertas
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_perfiles' %}" class="nav-link active">
-                        <span class="nav-icon">👥</span>
-                        Perfiles de acceso
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_permisos' %}" class="nav-link">
-                        <span class="nav-icon">🔐</span>
-                        Permisos del sistema
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-        <!-- USUARIO Y CERRAR SESIÓN -->
-        <div class="user-info">
-
-            <div class="user-role">
-                Administrador
-            </div>
-
-            <div class="user-email">
-                admin159@gmail.com
-            </div>
-
-            <a href="{% url 'login' %}" class="logout-link">
-                Cerrar sesión
-            </a>
-
-        </div>
-
-    </aside>
-
-
-
-        <!-- ==========================================
-             CONTENIDO PRINCIPAL
-             ========================================== -->
-
-        <main class="main-content">
-
-
-            <!-- ENCABEZADO -->
-
-            <div class="header">
-
-                <h1>
-                    GESTIÓN DE PERFILES
-                </h1>
-
-                <p class="subtitle">
-                    Administración de perfiles y permisos
-                </p>
-
-            </div>
-
-
-
-            <!-- MENSAJES -->
-
-            {% if messages %}
-
-                <div class="messages">
-
-                    {% for message in messages %}
-
-                        <div class="message {{ message.tags }}">
-
-                            {{ message }}
-
-                        </div>
-
-                    {% endfor %}
-
-                </div>
-
-            {% endif %}
-
-
-
-            <!-- BOTÓN NUEVO + BUSCADOR -->
-
-            <div class="top-actions">
-
-
-                <form
-                    method="GET"
-                    action="{% url 'gestion_perfiles' %}"
-                    class="search-form"
-                >
-
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ busqueda }}"
-                        placeholder="Buscar perfil..."
-                    >
-
-                    <button
-                        type="submit"
-                        class="btn-search"
-                    >
-                        Buscar
-                    </button>
-
-
-                    {% if busqueda %}
-
-                        <a
-                            href="{% url 'gestion_perfiles' %}"
-                            class="btn-clear"
-                        >
-                            Limpiar
-                        </a>
-
-                    {% endif %}
-
-                </form>
-
-
-                <button
-                    type="button"
-                    class="btn-primary"
-                    onclick="openCreateModal()"
-                >
-                    + Nuevo perfil
-                </button>
-
-
-            </div>
-
-
-
-            <!-- ==========================================
-                 LISTADO DE PERFILES
-                 ========================================== -->
-
-            <section class="profiles-container">
-
-
-                {% if perfiles %}
-
-
-                    {% for perfil in perfiles %}
-
-
-                        <div
-                            class="profile-card"
-                            data-id="{{ perfil.ID_Perfil }}"
-                            data-nombre="{{ perfil.Nombre_perfil }}"
-                            data-permisos="{% for permiso in perfil.permisos.all %}{{ permiso.ID_Permiso }}{% if not forloop.last %},{% endif %}{% endfor %}"
-                        >
-
-
-                            <!-- ENCABEZADO DEL PERFIL -->
-
-<div class="perfil-header">
-
-    <div class="perfil-info">
-
-        <h3>
-            {{ perfil.Nombre_perfil }}
-        </h3>
-
-        <span class="perfil-id">
-            ID: {{ perfil.ID_Perfil }}
-        </span>
-
-        <div class="permissions-section">
-
-            <h3>
-                Permisos asignados
-            </h3>
-
-            <div class="permissions-list">
-
-                {% for permiso in perfil.permisos.all %}
-
-                    <div class="permission-item">
-
-                        <strong>
-                            {{ permiso.Nombre_permiso }}
-                        </strong>
-
-                        {% if permiso.Descripcion_permiso %}
-                            <span>
-                                {{ permiso.Descripcion_permiso }}
-                            </span>
-                        {% endif %}
-
-                    </div>
-
-                {% empty %}
-
-                    <span class="no-permissions">
-                        Sin permisos asignados
-                    </span>
-
-                {% endfor %}
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="perfil-acciones">
-
-                {% if perfil.Estado_perfil %}
-                            <span class="estado activo">
-                                Activo
-                            </span>
-                {% else %}
-                            <span class="estado inactivo">
-                                Inactivo
-                            </span>
-                {% endif %}
-
-                <button
-                    type="button"
-                    class="btn-edit"
-                    onclick="openEditModal(
-                    '{{ perfil.ID_Perfil }}',
-                    '{{ perfil.Nombre_perfil }}'
-                    )"
-                    >
-                    Editar
-                </button>
-
-        <form
-            method="POST"
-            action="{% url 'cambiar_estado_perfil' perfil.ID_Perfil %}"
-            style="display: inline;"
-        >
-            {% csrf_token %}
-
-            {% if perfil.Estado_perfil %}
-                <button
-                    type="submit"
-                    class="btn-delete"
-                >
-                    Dar de baja
-                </button>
-            {% else %}
-                <button
-                    type="submit"
-                    class="btn-primary"
-                >
-                    Activar
-                </button>
-            {% endif %}
-        </form>
-
-    </div>
 </div>
 
 
+<div class="pf-page">
+
+    <!-- ENCABEZADO -->
+    <header class="pf-header">
+
+        <div>
+            <div class="pf-eyebrow">Agroquímicos del Valle</div>
+            <h1 class="pf-title">Perfiles de acceso</h1>
+            <p class="pf-sub">Definí qué puede hacer cada perfil dentro del sistema.</p>
+        </div>
+
+        <button type="button" class="pf-btn pf-btn-primary" onclick="openCreateModal()">
+            <svg class="pf-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo perfil
+        </button>
+
+    </header>
+
+
+    <!-- BUSCADOR (se envía con Enter; la vista filtra por "q") -->
+    <form method="GET" action="{% url 'gestion_perfiles' %}" class="pf-search">
+
+        <svg class="pf-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+
+        <input type="text" name="q" value="{{ busqueda }}" placeholder="Buscar perfil...">
+
+        {% if busqueda %}
+            <a href="{% url 'gestion_perfiles' %}" class="pf-limpiar">Limpiar</a>
+        {% endif %}
+
+    </form>
+
+
+    <!-- TABLA -->
+    <section class="pf-card">
+
+        <div class="pf-table-wrap">
+
+            <table class="pf-table">
+
+                <thead>
+                    <tr>
+                        <th>Perfil</th>
+                        <th>Permisos asignados</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for perfil in perfiles %}
+
+                        {% with lista=perfil.permisos.all %}
+
+                        <tr class="perfil-fila {% if not perfil.Estado_perfil %}inactivo{% endif %}"
+                            data-id="{{ perfil.ID_Perfil }}"
+                            data-nombre="{{ perfil.Nombre_perfil }}"
+                            data-permisos="{% for permiso in lista %}{{ permiso.ID_Permiso }}{% if not forloop.last %},{% endif %}{% endfor %}">
+
+                            <td>
+                                <span class="pf-nombre">{{ perfil.Nombre_perfil }}</span>
+                                <span class="pf-codigo">ID {{ perfil.ID_Perfil }}</span>
+                            </td>
+
+                            <td class="pf-permisos">
+                                {% if lista %}
+                                    <div class="pf-chips">
+                                        {% for permiso in lista|slice:":4" %}
+                                            <span class="pf-chip" title="{{ permiso.Descripcion_permiso|default:'' }}">{{ permiso.Nombre_permiso }}</span>
+                                        {% endfor %}
+                                        {% if lista|length > 4 %}
+                                            <span class="pf-chip pf-chip-mas">+{{ lista|length|add:"-4" }} más</span>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <span class="pf-sin">Sin permisos asignados</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if perfil.Estado_perfil %}
+                                    <span class="pf-badge pf-activo">Activo</span>
+                                {% else %}
+                                    <span class="pf-badge pf-inactivo">Inactivo</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="pf-acciones">
+
+                                    <!-- EDITAR -->
+                                    <button type="button" class="pf-accion"
+                                        onclick="openEditModal(
+                                            '{{ perfil.ID_Perfil }}',
+                                            '{{ perfil.Nombre_perfil|escapejs }}'
+                                        )">
+                                        <svg class="pf-icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+                                        Modificar
+                                    </button>
+
+                                    <!-- CAMBIAR ESTADO -->
+                                    <form method="POST" action="{% url 'cambiar_estado_perfil' perfil.ID_Perfil %}">
+
+                                        {% csrf_token %}
+
+                                        {% if perfil.Estado_perfil %}
+                                            <button type="submit" class="pf-accion pf-baja">Desactivar</button>
+                                        {% else %}
+                                            <button type="submit" class="pf-accion pf-activar">Activar</button>
+                                        {% endif %}
+
+                                    </form>
+
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        {% endwith %}
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="4" class="pf-vacio">
+                                {% if busqueda %}
+                                    No se encontraron perfiles con esa búsqueda.
+                                {% else %}
+                                    Todavía no existen perfiles registrados.
+                                {% endif %}
+                            </td>
+                        </tr>
 
                     {% endfor %}
 
+                </tbody>
 
-                {% else %}
-
-
-                    <div class="empty-state">
-
-                        <h2>
-                            No hay perfiles registrados
-                        </h2>
-
-                        <p>
-
-                            {% if busqueda %}
-
-                                No se encontraron perfiles con esa búsqueda.
-
-                            {% else %}
-
-                                Todavía no existen perfiles registrados.
-
-                            {% endif %}
-
-                        </p>
-
-                    </div>
-
-
-                {% endif %}
-
-
-            </section>
-
-
-        </main>
-
-
-    </div>
-
-
-
-    <!-- ==========================================
-         MODAL NUEVO PERFIL
-         ========================================== -->
-
-    <div
-        id="createModal"
-        class="modal"
-    >
-
-        <div class="modal-content">
-
-
-            <div class="modal-header">
-
-                <h2>
-                    Nuevo perfil
-                </h2>
-
-                <button
-                    type="button"
-                    class="close-modal"
-                    onclick="closeCreateModal()"
-                >
-                    &times;
-                </button>
-
-            </div>
-
-
-
-            <form
-                method="POST"
-                action="{% url 'crear_perfil' %}"
-            >
-
-                {% csrf_token %}
-
-
-
-                <!-- NOMBRE -->
-
-                <div class="form-group">
-
-                    <label for="createNombre">
-                        Nombre
-                    </label>
-
-                    <input
-                        type="text"
-                        id="createNombre"
-                        name="Nombre_perfil"
-                        maxlength="50"
-                        required
-                    >
-
-                </div>
-
-
-
-                <!-- PERMISOS -->
-
-                <div class="form-group">
-
-                    <label>
-                        Permisos asignados
-                    </label>
-
-
-                    <div class="permissions-checkboxes">
-
-
-                        {% for permiso in permisos %}
-
-
-                            <label class="permission-checkbox">
-
-
-                                <input
-                                    type="checkbox"
-                                    name="permisos"
-                                    value="{{ permiso.ID_Permiso }}"
-                                >
-
-
-                                <span class="permission-info">
-
-
-                                    <strong>
-                                        {{ permiso.Nombre_permiso }}
-                                    </strong>
-
-
-                                    {% if permiso.Descripcion_permiso %}
-
-                                        <small>
-                                            {{ permiso.Descripcion_permiso }}
-                                        </small>
-
-                                    {% endif %}
-
-
-                                </span>
-
-
-                            </label>
-
-
-                        {% empty %}
-
-
-                            <p class="no-permissions">
-
-                                No hay permisos registrados.
-
-                            </p>
-
-
-                        {% endfor %}
-
-
-                    </div>
-
-
-                </div>
-
-
-
-                <!-- BOTONES -->
-
-                <div class="modal-actions">
-
-
-                    <button
-                        type="button"
-                        class="btn-cancel"
-                        onclick="closeCreateModal()"
-                    >
-                        Cancelar
-                    </button>
-
-
-                    <button
-                        type="submit"
-                        class="btn-primary"
-                    >
-                        Crear perfil
-                    </button>
-
-
-                </div>
-
-
-            </form>
-
+            </table>
 
         </div>
 
-    </div>
+        <div class="pf-pie">
+            <span>{{ perfiles|length }} registro{{ perfiles|length|pluralize }} encontrado{{ perfiles|length|pluralize }}</span>
+            <span>Agroquímicos del Valle</span>
+        </div>
+
+    </section>
+
+</div>
 
 
+<!-- ===================== MODAL NUEVO PERFIL ===================== -->
+<div id="createModal" class="pf-modal">
 
-    <!-- ==========================================
-         MODAL EDITAR PERFIL
-         ========================================== -->
+    <div class="pf-modal-box">
 
-    <div
-        id="editModal"
-        class="modal"
-    >
+        <div class="pf-modal-head">
+            <h2>Registrar perfil</h2>
+            <button type="button" class="pf-modal-x" onclick="closeCreateModal()" aria-label="Cerrar">
+                <svg class="pf-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
 
-        <div class="modal-content">
+        <form method="POST" action="{% url 'crear_perfil' %}">
 
+            {% csrf_token %}
 
-            <div class="modal-header">
+            <div class="pf-modal-body">
 
-                <h2>
-                    Editar perfil
-                </h2>
-
-                <button
-                    type="button"
-                    class="close-modal"
-                    onclick="closeEditModal()"
-                >
-                    &times;
-                </button>
-
-            </div>
-
-
-
-            <form
-                method="POST"
-                id="editForm"
-            >
-
-                {% csrf_token %}
-
-
-
-                <!-- NOMBRE -->
-
-                <div class="form-group">
-
-                    <label for="editNombre">
-                        Nombre
-                    </label>
-
-                    <input
-                        type="text"
-                        id="editNombre"
-                        name="Nombre_perfil"
-                        maxlength="50"
-                        required
-                    >
-
+                <div class="pf-grupo">
+                    <label for="createNombre">Nombre *</label>
+                    <input type="text" id="createNombre" name="Nombre_perfil" maxlength="50" required>
                 </div>
 
+                <div class="pf-grupo">
 
+                    <label>Permisos asignados</label>
 
-                <!-- PERMISOS -->
-
-                <div class="form-group">
-
-                    <label>
-                        Permisos asignados
-                    </label>
-
-
-                    <div class="permissions-checkboxes">
-
+                    <div class="pf-permisos-lista">
 
                         {% for permiso in permisos %}
 
+                            <label class="pf-permiso">
 
-                            <label class="permission-checkbox">
+                                <input type="checkbox" name="permisos" value="{{ permiso.ID_Permiso }}">
 
-
-                                <input
-                                    type="checkbox"
-                                    name="permisos"
-                                    value="{{ permiso.ID_Permiso }}"
-                                    class="edit-permission"
-                                >
-
-
-                                <span class="permission-info">
-
-
-                                    <strong>
-                                        {{ permiso.Nombre_permiso }}
-                                    </strong>
-
-
+                                <span class="pf-permiso-info">
+                                    <strong>{{ permiso.Nombre_permiso }}</strong>
                                     {% if permiso.Descripcion_permiso %}
-
-                                        <small>
-                                            {{ permiso.Descripcion_permiso }}
-                                        </small>
-
+                                        <small>{{ permiso.Descripcion_permiso }}</small>
                                     {% endif %}
-
-
                                 </span>
-
 
                             </label>
 
-
                         {% empty %}
 
-
-                            <p class="no-permissions">
-
-                                No hay permisos registrados.
-
-                            </p>
-
+                            <p class="pf-sin">No hay permisos registrados.</p>
 
                         {% endfor %}
 
-
                     </div>
 
-
                 </div>
 
+            </div>
 
+            <div class="pf-modal-pie">
+                <button type="button" class="pf-btn pf-btn-claro" onclick="closeCreateModal()">Cancelar</button>
+                <button type="submit" class="pf-btn pf-btn-primary">Guardar</button>
+            </div>
 
-                <!-- BOTONES -->
-
-                <div class="modal-actions">
-
-
-                    <button
-                        type="button"
-                        class="btn-cancel"
-                        onclick="closeEditModal()"
-                    >
-                        Cancelar
-                    </button>
-
-
-                    <button
-                        type="submit"
-                        class="btn-primary"
-                    >
-                        Guardar cambios
-                    </button>
-
-
-                </div>
-
-
-            </form>
-
-
-        </div>
+        </form>
 
     </div>
 
+</div>
 
 
+<!-- ===================== MODAL EDITAR PERFIL ===================== -->
+<div id="editModal" class="pf-modal">
 
-    <!-- ==========================================
-         JAVASCRIPT
-         ========================================== -->
+    <div class="pf-modal-box">
 
-    <script>
+        <div class="pf-modal-head">
+            <h2>Modificar perfil</h2>
+            <button type="button" class="pf-modal-x" onclick="closeEditModal()" aria-label="Cerrar">
+                <svg class="pf-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
 
+        <form method="POST" id="editForm">
 
-        /* ==========================================
-           NUEVO PERFIL
-           ========================================== */
+            {% csrf_token %}
 
-        function openCreateModal() {
+            <div class="pf-modal-body">
 
-            document
-                .getElementById('createModal')
-                .classList.add('show');
+                <div class="pf-grupo">
+                    <label for="editNombre">Nombre *</label>
+                    <input type="text" id="editNombre" name="Nombre_perfil" maxlength="50" required>
+                </div>
 
-        }
+                <div class="pf-grupo">
 
+                    <label>Permisos asignados</label>
 
-        function closeCreateModal() {
+                    <div class="pf-permisos-lista">
 
-            document
-                .getElementById('createModal')
-                .classList.remove('show');
+                        {% for permiso in permisos %}
 
-        }
+                            <label class="pf-permiso">
 
+                                <input type="checkbox" name="permisos" value="{{ permiso.ID_Permiso }}" class="edit-permission">
 
+                                <span class="pf-permiso-info">
+                                    <strong>{{ permiso.Nombre_permiso }}</strong>
+                                    {% if permiso.Descripcion_permiso %}
+                                        <small>{{ permiso.Descripcion_permiso }}</small>
+                                    {% endif %}
+                                </span>
 
-        /* ==========================================
-           EDITAR PERFIL
-           ========================================== */
+                            </label>
 
-        function openEditModal(id, nombre) {
+                        {% empty %}
 
+                            <p class="pf-sin">No hay permisos registrados.</p>
 
-            const modal =
-                document.getElementById('editModal');
+                        {% endfor %}
 
+                    </div>
 
-            const form =
-                document.getElementById('editForm');
+                </div>
 
+            </div>
 
-            const nombreInput =
-                document.getElementById('editNombre');
+            <div class="pf-modal-pie">
+                <button type="button" class="pf-btn pf-btn-claro" onclick="closeEditModal()">Cancelar</button>
+                <button type="submit" class="pf-btn pf-btn-primary">Guardar cambios</button>
+            </div>
 
+        </form>
 
-            form.action =
-                "{% url 'editar_perfil' 0 %}"
-                .replace(
-                    '/0/',
-                    '/' + id + '/'
-                );
+    </div>
 
+</div>
 
-            nombreInput.value = nombre;
 
+<script>
 
+    /* TOASTS: desaparecen solos a los 4 segundos */
 
-            /*
-             * Primero desmarcamos todos los permisos.
-             */
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.pf-toast').forEach(function (toast) {
+            setTimeout(function () { toast.remove(); }, 4000);
+        });
+    });
 
-            document
-                .querySelectorAll('.edit-permission')
-                .forEach(function(checkbox) {
 
-                    checkbox.checked = false;
+    /* NUEVO PERFIL */
 
-                });
+    function openCreateModal() {
+        document.getElementById('createModal').classList.add('show');
+    }
 
 
+    function closeCreateModal() {
+        document.getElementById('createModal').classList.remove('show');
+    }
 
-            /*
-             * Buscamos el perfil seleccionado.
-             */
 
-            const perfil =
-                document.querySelector(
-                    '.profile-card[data-id="' + id + '"]'
-                );
+    /* EDITAR PERFIL */
 
+    function openEditModal(id, nombre) {
 
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
+        const nombreInput = document.getElementById('editNombre');
 
-            if (perfil) {
+        form.action = "{% url 'editar_perfil' 0 %}".replace('/0/', '/' + id + '/');
 
+        nombreInput.value = nombre;
 
-                const permisosTexto =
-                    perfil.dataset.permisos || '';
+        /* Primero se desmarcan todos los permisos */
 
+        document.querySelectorAll('.edit-permission').forEach(function (checkbox) {
+            checkbox.checked = false;
+        });
 
-                const permisos =
-                    permisosTexto
-                        ? permisosTexto.split(',')
-                        : [];
+        /* Se marcan los permisos que ya tiene el perfil */
 
+        const perfil = document.querySelector('.perfil-fila[data-id="' + id + '"]');
 
+        if (perfil) {
 
-                /*
-                 * Marcamos los permisos
-                 * que ya tiene el perfil.
-                 */
+            const permisosTexto = perfil.dataset.permisos || '';
+            const permisos = permisosTexto ? permisosTexto.split(',') : [];
 
-                document
-                    .querySelectorAll('.edit-permission')
-                    .forEach(function(checkbox) {
-
-
-                        if (
-                            permisos.includes(
-                                checkbox.value
-                            )
-                        ) {
-
-                            checkbox.checked = true;
-
-                        }
-
-                    });
-
-            }
-
-
-            modal.classList.add('show');
-
-        }
-
-
-
-        function closeEditModal() {
-
-            document
-                .getElementById('editModal')
-                .classList.remove('show');
-
-        }
-
-
-
-
-        /* ==========================================
-           CERRAR MODALES AL HACER CLICK AFUERA
-           ========================================== */
-
-        window.addEventListener(
-            'click',
-            function(event) {
-
-
-                const createModal =
-                    document.getElementById(
-                        'createModal'
-                    );
-
-
-                const editModal =
-                    document.getElementById(
-                        'editModal'
-                    );
-
-
-
-                if (
-                    event.target === createModal
-                ) {
-
-                    closeCreateModal();
-
+            document.querySelectorAll('.edit-permission').forEach(function (checkbox) {
+                if (permisos.includes(checkbox.value)) {
+                    checkbox.checked = true;
                 }
+            });
+
+        }
+
+        modal.classList.add('show');
+
+    }
 
 
-
-                if (
-                    event.target === editModal
-                ) {
-
-                    closeEditModal();
-
-                }
-
-            }
-        );
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('show');
+    }
 
 
+    /* CERRAR MODALES AL HACER CLIC AFUERA */
 
-        /* ==========================================
-           CERRAR CON ESC
-           ========================================== */
+    window.addEventListener('click', function (event) {
 
-        document.addEventListener(
-            'keydown',
-            function(event) {
+        if (event.target === document.getElementById('createModal')) { closeCreateModal(); }
+        if (event.target === document.getElementById('editModal'))   { closeEditModal(); }
 
-
-                if (event.key === 'Escape') {
-
-                    closeCreateModal();
-
-                    closeEditModal();
-
-                }
-
-            }
-        );
+    });
 
 
-    </script>
+    /* CERRAR CON ESC */
 
+    document.addEventListener('keydown', function (event) {
 
-</body>
+        if (event.key === 'Escape') {
+            closeCreateModal();
+            closeEditModal();
+        }
 
-</html>
+    });
+
+</script>
+
+{% endblock %}
