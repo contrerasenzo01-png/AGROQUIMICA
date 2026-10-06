@@ -1,352 +1,240 @@
+{% extends 'inventario/base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="es">
+{% block title %}
+    Gestión de Permisos - Agroquímica del Valle
+{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Gestión de Permisos</title>
-
+{% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/permisos.css' %}">
-</head>
+{% endblock %}
 
-<body>
+{% block contenido %}
 
-<div class="layout">
+<!-- ENCABEZADO -->
+<div class="page-header">
 
-    <!-- BARRA LATERAL -->
-    <aside class="sidebar">
-
-        <div>
-
-            <div class="logo">
-                🌿 Agroquímica del Valle
-            </div>
-
-            <ul class="nav-menu">
-
-                <li class="nav-item">
-                    <a href="{% url 'panel_principal' %}" class="nav-link">
-                        <span class="nav-icon">🎛️</span>
-                        Panel Principal
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_usuarios' %}" class="nav-link">
-                        <span class="nav-icon">👤</span>
-                        Usuarios del sistema
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_productos' %}" class="nav-link">
-                        <span class="nav-icon">📦</span>
-                        Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_tipos_productos' %}" class="nav-link">
-                        <span class="nav-icon">🗂️</span>
-                        Tipos de Productos
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_proveedores' %}" class="nav-link">
-                        <span class="nav-icon">🚚</span>
-                        Proveedores
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_movimientos_stock' %}" class="nav-link">
-                        <span class="nav-icon">📊</span>
-                        Movimientos Stock
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'historial_alertas' %}" class="nav-link">
-                        <span class="nav-icon">🔔</span>
-                        Historial de Alertas
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_perfiles' %}" class="nav-link">
-                        <span class="nav-icon">👥</span>
-                        Perfiles de acceso
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{% url 'gestion_permisos' %}" class="nav-link active">
-                        <span class="nav-icon">🔐</span>
-                        Permisos del sistema
-                    </a>
-                </li>
-
-            </ul>
-
+    <div>
+        <div class="page-title">
+            Gestión de Permisos
         </div>
 
-
-        <!-- USUARIO Y CERRAR SESIÓN -->
-        <div class="user-info">
-
-            <div class="user-role">
-                Administrador
-            </div>
-
-            <div class="user-email">
-                admin159@gmail.com
-            </div>
-
-            <a href="{% url 'login' %}" class="logout-link">
-                Cerrar sesión
-            </a>
-
+        <div class="page-sub">
+            {{ permisos|length }}
+            permiso{{ permisos|length|pluralize }}
+            registrado{{ permisos|length|pluralize }}
         </div>
+    </div>
 
-    </aside>
+    <div class="header-actions">
+        <button
+            type="button"
+            class="btn btn-primary"
+            onclick="abrirModal()">
+            + Nuevo permiso
+        </button>
+    </div>
+
+</div>
 
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="main-content">
+<!-- MENSAJES -->
+{% if messages %}
 
-        <!-- ENCABEZADO -->
-        <div class="page-header">
+    <div class="messages">
 
-            <div>
+        {% for message in messages %}
 
-                <div class="page-title">
-                    Gestión de Permisos
-                </div>
-
-                <div class="page-sub">
-                    {{ permisos|length }}
-                    permiso{{ permisos|length|pluralize }}
-                    registrado{{ permisos|length|pluralize }}
-                </div>
-
+            <div class="message {{ message.tags }}">
+                {{ message }}
             </div>
 
+        {% endfor %}
 
-            <div class="header-actions">
+    </div>
 
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    onclick="abrirModal()">
-                    + Nuevo permiso
-                </button>
-
-            </div>
-
-        </div>
+{% endif %}
 
 
-        <!-- MENSAJES -->
-        {% if messages %}
+<!-- BÚSQUEDA -->
+<form method="GET" class="toolbar">
 
-            <div class="messages">
+    <input
+        type="text"
+        name="q"
+        value="{{ busqueda }}"
+        class="search-box"
+        placeholder="Buscar permiso..."
+    >
 
-                {% for message in messages %}
+    <button
+        type="submit"
+        class="search-button">
+        Buscar
+    </button>
 
-                    <div class="message {{ message.tags }}">
-                        {{ message }}
-                    </div>
-
-                {% endfor %}
-
-            </div>
-
-        {% endif %}
-
-
-        <!-- BÚSQUEDA -->
-        <form method="GET" class="toolbar">
-
-            <input
-                type="text"
-                name="q"
-                value="{{ busqueda }}"
-                class="search-box"
-                placeholder="Buscar permiso..."
-            >
-
-            <button
-                type="submit"
-                class="search-button">
-                Buscar
-            </button>
-
-        </form>
+</form>
 
 
-        <!-- TABLA DE PERMISOS -->
-        <div class="card">
+<!-- TABLA DE PERMISOS -->
+<div class="card">
 
-            <table class="custom-table">
+    <div class="table-wrap">
 
-                <thead>
+        <table class="custom-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID_Permiso</th>
+
+                    <th>Nombre</th>
+
+                    <th>Descripción</th>
+
+                    <th>Perfiles asociados</th>
+
+                    <th></th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for permiso in permisos %}
 
                     <tr>
 
-                        <th>ID_Permiso</th>
+                        <!-- ID -->
+                        <td>
 
-                        <th>Nombre</th>
+                            <span class="perm-id">
+                                PERM{{ permiso.ID_Permiso|stringformat:"02d" }}
+                            </span>
 
-                        <th>Descripción</th>
+                        </td>
 
-                        <th>Perfiles asociados</th>
 
-                        <th></th>
+                        <!-- NOMBRE -->
+                        <td>
+
+                            <span class="perm-name">
+                                {{ permiso.Nombre_permiso }}
+                            </span>
+
+                        </td>
+
+
+                        <!-- DESCRIPCIÓN -->
+                        <td>
+
+                            <span class="perm-desc">
+
+                                {{ permiso.Descripcion_permiso|default:"Sin descripción" }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- PERFILES ASOCIADOS -->
+                        <td>
+
+                            {% for perfil in permiso.perfiles.all %}
+
+                                {% if forloop.counter == 1 %}
+
+                                    <span class="chip chip-perfil-1">
+                                        {{ perfil.Nombre_perfil }}
+                                    </span>
+
+                                {% elif forloop.counter == 2 %}
+
+                                    <span class="chip chip-perfil-2">
+                                        {{ perfil.Nombre_perfil }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="chip chip-perfil-3">
+                                        {{ perfil.Nombre_perfil }}
+                                    </span>
+
+                                {% endif %}
+
+                            {% empty %}
+
+                                <span class="perm-desc">
+                                    Sin perfiles asociados
+                                </span>
+
+                            {% endfor %}
+
+                        </td>
+
+
+                        <!-- ACCIONES -->
+                        <td>
+
+                            <div class="actions">
+
+                                <!-- EDITAR -->
+                                <button
+                                    type="button"
+                                    class="action-btn action-edit"
+                                    onclick="abrirEditarPermiso(
+                                        '{{ permiso.ID_Permiso }}',
+                                        '{{ permiso.Nombre_permiso|escapejs }}',
+                                        '{{ permiso.Descripcion_permiso|default:""|escapejs }}'
+                                    )">
+                                    Editar
+                                </button>
+
+
+                                <!-- ELIMINAR -->
+                                <button
+                                    type="button"
+                                    class="action-btn action-baja"
+                                    onclick="abrirEliminarPermiso(
+                                        '{{ permiso.ID_Permiso }}',
+                                        '{{ permiso.Nombre_permiso|escapejs }}'
+                                    )">
+                                    Eliminar
+                                </button>
+
+                            </div>
+
+                        </td>
 
                     </tr>
 
-                </thead>
 
+                {% empty %}
 
-                <tbody>
+                    <tr>
 
-                    {% for permiso in permisos %}
+                        <td
+                            colspan="5"
+                            class="tabla-vacia">
 
-                        <tr>
+                            <span class="perm-desc">
+                                No se encontraron permisos registrados.
+                            </span>
 
-                            <!-- ID -->
-                            <td>
+                        </td>
 
-                                <span class="perm-id">
-                                    PERM{{ permiso.ID_Permiso|stringformat:"02d" }}
-                                </span>
+                    </tr>
 
-                            </td>
+                {% endfor %}
 
+            </tbody>
 
-                            <!-- NOMBRE -->
-                            <td>
+        </table>
 
-                                <span class="perm-name">
-                                    {{ permiso.Nombre_permiso }}
-                                </span>
-
-                            </td>
-
-
-                            <!-- DESCRIPCIÓN -->
-                            <td>
-
-                                <span class="perm-desc">
-
-                                    {{ permiso.Descripcion_permiso|default:"Sin descripción" }}
-
-                                </span>
-
-                            </td>
-
-
-                            <!-- PERFILES ASOCIADOS -->
-                            <td>
-
-                                {% for perfil in permiso.perfiles.all %}
-
-                                    {% if forloop.counter == 1 %}
-
-                                        <span class="chip chip-perfil-1">
-                                            {{ perfil.Nombre_perfil }}
-                                        </span>
-
-                                    {% elif forloop.counter == 2 %}
-
-                                        <span class="chip chip-perfil-2">
-                                            {{ perfil.Nombre_perfil }}
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="chip chip-perfil-3">
-                                            {{ perfil.Nombre_perfil }}
-                                        </span>
-
-                                    {% endif %}
-
-                                {% empty %}
-
-                                    <span class="perm-desc">
-                                        Sin perfiles asociados
-                                    </span>
-
-                                {% endfor %}
-
-                            </td>
-
-
-                            <!-- ACCIONES -->
-                            <td>
-
-                                <div class="actions">
-
-                                    <!-- EDITAR -->
-                                    <button
-                                        type="button"
-                                        class="action-btn action-edit"
-                                        onclick="abrirEditarPermiso(
-                                            '{{ permiso.ID_Permiso }}',
-                                            '{{ permiso.Nombre_permiso|escapejs }}',
-                                            '{{ permiso.Descripcion_permiso|default:""|escapejs }}'
-                                        )">
-                                        Editar
-                                    </button>
-
-
-                                    <!-- ELIMINAR -->
-                                    <button
-                                        type="button"
-                                        class="action-btn action-baja"
-                                        onclick="abrirEliminarPermiso(
-                                            '{{ permiso.ID_Permiso }}',
-                                            '{{ permiso.Nombre_permiso|escapejs }}'
-                                        )">
-                                        Eliminar
-                                    </button>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-
-                    {% empty %}
-
-                        <tr>
-
-                            <td
-                                colspan="5"
-                                style="text-align:center; padding:30px;">
-
-                                <span class="perm-desc">
-                                    No se encontraron permisos registrados.
-                                </span>
-
-                            </td>
-
-                        </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </main>
+    </div>
 
 </div>
 
@@ -596,9 +484,6 @@
 
                 </p>
 
-
-
-
             </div>
 
 
@@ -626,10 +511,10 @@
 
 </div>
 
+{% endblock %}
 
-<!-- ========================================================= -->
-<!-- JAVASCRIPT -->
-<!-- ========================================================= -->
+
+{% block extra_js %}
 
 <script>
 
@@ -748,6 +633,4 @@ window.addEventListener("click", function(event) {
 
 </script>
 
-</body>
-
-</html>
+{% endblock %}

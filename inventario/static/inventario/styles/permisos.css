@@ -1,49 +1,7 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-        Roboto, Helvetica, Arial, sans-serif;
-}
-
-html,
 body {
-    width: 100%;
-    min-height: 100%;
-}
-
-body {
-    min-height: 100vh;
-    background-color: #f1f5f3;
+    background-color: #ffffff;
     color: #1c2a23;
-}
-
-
-/* ==========================================
-   LAYOUT GENERAL
-   ========================================== */
-
-.layout {
-    width: 100%;
-    min-height: 100vh;
-}
-
-
-/* ==========================================
-   ÁREA PRINCIPAL
-   ========================================== */
-
-.main-content {
-    margin-left: 220px;
-
-    width: calc(100% - 220px);
-    min-height: 100vh;
-
-    padding: 30px;
-
-    background-color: #f1f5f3;
-
-    overflow-y: auto;
+    font-family: 'Inter', sans-serif;
 }
 
 
@@ -61,15 +19,16 @@ body {
 }
 
 .page-title {
-    font-size: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
     color: #0b311e;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .page-sub {
     font-size: 12px;
     color: #5c7367;
-    margin-top: 3px;
+    margin-top: 4px;
 }
 
 .header-actions {
@@ -84,9 +43,12 @@ body {
    ========================================== */
 
 .btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
     padding: 9px 14px;
-    border-radius: 7px;
+    border-radius: 8px;
 
     border: 1px solid #d7e3dc;
     background-color: #ffffff;
@@ -94,10 +56,12 @@ body {
     color: #0b311e;
     text-decoration: none;
 
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
     font-weight: 600;
 
     cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 .btn:hover {
@@ -184,6 +148,7 @@ body {
     background-color: #ffffff;
     color: #1c2a23;
 
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
 
     outline: none;
@@ -202,6 +167,7 @@ body {
     background-color: #ffffff;
     color: #0b311e;
 
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
     font-weight: 600;
 
@@ -227,8 +193,11 @@ body {
 
     margin-bottom: 12px;
 
-    padding: 16px;
+    overflow: hidden;
+}
 
+.table-wrap {
+    width: 100%;
     overflow-x: auto;
 }
 
@@ -237,6 +206,7 @@ body {
 
     border-collapse: collapse;
 
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
 
     table-layout: auto;
@@ -249,19 +219,24 @@ body {
 
     color: #8a9e93;
 
-    padding: 10px 8px;
+    padding: 12px 16px;
 
+    font-size: 11px;
     font-weight: 600;
 
     white-space: nowrap;
 }
 
 .custom-table td {
-    padding: 12px 8px;
+    padding: 13px 16px;
 
     border-bottom: 1px solid #f0f4f2;
 
     vertical-align: middle;
+}
+
+.custom-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .custom-table tr:hover {
@@ -276,6 +251,7 @@ body {
 .perm-id {
     font-weight: 700;
     color: #1c2a23;
+    white-space: nowrap;
 }
 
 .perm-name {
@@ -344,6 +320,7 @@ body {
 
     border-radius: 5px;
 
+    font-family: 'Inter', sans-serif;
     font-size: 11px;
     font-weight: 600;
 
@@ -383,39 +360,51 @@ body {
 
 
 /* ==========================================
+   TABLA VACÍA
+   ========================================== */
+
+.tabla-vacia {
+    text-align: center;
+    padding: 30px 16px !important;
+}
+
+
+/* ==========================================
    MODALES
    ========================================== */
 
 .modal {
     position: fixed;
 
-    top: 0;
-    left: 0;
+    inset: 0;
 
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
 
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(15, 46, 34, 0.55);
 
     display: none;
 
     justify-content: center;
     align-items: center;
 
-    z-index: 2000;
+    padding: 20px;
+
+    z-index: 3000;
 }
 
 .modal-contenido {
     background-color: #ffffff;
 
-    border-radius: 10px;
+    border-radius: 12px;
 
     width: 100%;
     max-width: 540px;
 
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
 
-    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.22);
 
     animation: fadeInModal 0.25s ease-out;
 }
@@ -451,7 +440,8 @@ body {
 }
 
 .modal-header h2 {
-    font-size: 15px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 17px;
 
     color: #0b311e;
 
@@ -463,7 +453,7 @@ body {
 
     border: none;
 
-    font-size: 20px;
+    font-size: 22px;
 
     cursor: pointer;
 
@@ -508,8 +498,9 @@ body {
 
     border: 1px solid #d7e3dc;
 
-    border-radius: 6px;
+    border-radius: 7px;
 
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
 
     outline: none;
@@ -528,7 +519,6 @@ body {
 
 .form-group textarea {
     resize: vertical;
-
     min-height: 90px;
 }
 
@@ -631,12 +621,6 @@ body {
     color: #0b311e;
 }
 
-.advertencia-eliminar {
-    margin-top: 12px;
-
-    color: #8a9e93 !important;
-}
-
 
 /* ==========================================
    RESPONSIVE
@@ -644,19 +628,13 @@ body {
 
 @media (max-width: 900px) {
 
-    .sidebar {
-        width: 200px;
-    }
-
-    .main-content {
-        margin-left: 200px;
-        width: calc(100% - 200px);
-        padding: 25px;
-    }
-
     .page-header {
         align-items: flex-start;
         gap: 15px;
+    }
+
+    .page-title {
+        font-size: 22px;
     }
 
 }
@@ -664,21 +642,16 @@ body {
 
 @media (max-width: 700px) {
 
-    .sidebar {
-        width: 180px;
-    }
-
-    .main-content {
-        margin-left: 180px;
-        width: calc(100% - 180px);
-        padding: 20px;
-    }
-
     .page-header {
         flex-direction: column;
+        align-items: flex-start;
     }
 
     .header-actions {
+        width: 100%;
+    }
+
+    .header-actions .btn {
         width: 100%;
     }
 
@@ -693,6 +666,22 @@ body {
 
     .search-button {
         width: fit-content;
+    }
+
+    .custom-table {
+        min-width: 750px;
+    }
+
+    .modal {
+        padding: 12px;
+    }
+
+    .modal-contenido {
+        max-width: 100%;
+    }
+
+    .modal-acciones {
+        flex-wrap: wrap;
     }
 
 }
