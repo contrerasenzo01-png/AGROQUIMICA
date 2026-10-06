@@ -227,7 +227,7 @@
                     </div>
 
                     <div class="pv-dato">
-                        <span class="lbl">Correo</span>
+                        <span class="lbl">Email</span>
                         <span class="val" id="baja_email">--</span>
                     </div>
 
@@ -282,7 +282,7 @@
                 </div>
 
                 <div class="pv-grupo">
-                    <label>Correo electrónico</label>
+                    <label>Email</label>
                     <input type="email" id="edit_email" name="email_proveedor">
                 </div>
 
@@ -335,7 +335,7 @@
                                     <div><strong>Código:</strong> SUP-0{{ p.pk }}</div>
                                     <div><strong>Nombre:</strong> {{ p.nombre_proveedor }}</div>
                                     <div><strong>Teléfono:</strong> {{ p.telefono_proveedor|default:"--" }}</div>
-                                    <div><strong>Correo:</strong> {{ p.email_proveedor|default:"--" }}</div>
+                                    <div><strong>Email:</strong> {{ p.email_proveedor|default:"--" }}</div>
                                 </div>
                             {% endif %}
                         {% endfor %}
@@ -347,7 +347,7 @@
                 <div class="pv-grid">
 
                     <div class="pv-grupo pv-full">
-                        <label>Nombre del proveedor *</label>
+                        <label>Nombre del proveedor</label>
                         <input type="text" name="nombre_proveedor"
                                value="{{ request.POST.nombre_proveedor|default:'' }}" required>
                     </div>
@@ -359,7 +359,7 @@
                     </div>
 
                     <div class="pv-grupo">
-                        <label>Correo electrónico</label>
+                        <label>Emailo</label>
                         <input type="email" name="email_proveedor"
                                value="{{ request.POST.email_proveedor|default:'' }}">
                     </div>
