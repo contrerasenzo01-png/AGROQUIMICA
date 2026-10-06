@@ -378,7 +378,9 @@ def gestion_tipos_productos(request):
         {
             'tipos_productos': tipos,
             'busqueda': busqueda,
-            'usuario': usuario
+            'usuario': usuario,
+            'total_tipos': TiposProductos.objects.count(),
+            'total_subtipos': Subtipos.objects.count()
         }
     )
 
@@ -490,26 +492,27 @@ def dar_baja_tipo_producto(request, pk):
 # SUBTIPOS
 # ============================================================
 
+def _subtipo_tiene_descripcion():
+    """True si el modelo Subtipos tiene el campo Descripcion_subtipo (como en el DER)."""
+
+    return any(f.name == 'Descripcion_subtipo' for f in Subtipos._meta.get_fields())
+
+
 def gestion_subtipos(request):
 
+    # CORREGIDO: antes usaba usuario_autenticado, pero el menú de Subtipos
+    # es solo de administración y crear/editar ya exigían ser administrador.
     usuario = usuario_es_administrador(request)
 
     if not usuario:
         return redirect('panel_principal')
 
-    busqueda = request.GET.get('buscar', '').strip()
+    busqueda = request.GET.get('q', '').strip()
 
-    subtipos = Subtipos.objects.select_related(
-        'ID_Tipo_producto'
-    ).all().order_by(
-        'Nombre_subtipo'
-    )
+    subtipos = Subtipos.objects.select_related('ID_Tipo_producto').all()
 
     if busqueda:
-
-        subtipos = subtipos.filter(
-            Nombre_subtipo__icontains=busqueda
-        )
+        subtipos = subtipos.filter(Nombre_subtipo__icontains=busqueda)
 
     tipos_productos = TiposProductos.objects.filter(
         Estado_tipo_producto=True
@@ -523,8 +526,10 @@ def gestion_subtipos(request):
         {
             'subtipos': subtipos,
             'tipos_productos': tipos_productos,
-            'buscar': busqueda,
-            'usuario': usuario
+            'busqueda': busqueda,
+            'usuario': usuario,
+            'total_tipos': TiposProductos.objects.count(),
+            'total_subtipos': Subtipos.objects.count()
         }
     )
 
@@ -538,44 +543,27 @@ def crear_subtipo(request):
 
     if request.method == 'POST':
 
-        # Los nombres coinciden con el HTML actual
-        nombre = request.POST.get(
-            'nombre_subtipo',
-            ''
-        ).strip()
+        nombre = request.POST.get('Nombre_subtipo', '').strip()
+        tipo_id = request.POST.get('ID_Tipo_producto')
 
-        tipo_id = request.POST.get(
-            'tipo_producto'
-        )
-
-        # Validar nombre
         if not nombre:
 
-            messages.error(
-                request,
-                'Debe ingresar el nombre del subtipo.'
-            )
+            messages.error(request, 'Debe ingresar el nombre del subtipo.')
 
             return redirect('gestion_subtipos')
 
-        # Validar tipo
         if not tipo_id:
 
-            messages.error(
-                request,
-                'Debe seleccionar un tipo de producto.'
-            )
+            messages.error(request, 'Debe seleccionar un tipo de producto.')
 
             return redirect('gestion_subtipos')
 
-        # Buscar tipo de producto activo
         tipo = get_object_or_404(
             TiposProductos,
             ID_Tipo_producto=tipo_id,
             Estado_tipo_producto=True
         )
 
-        # Evitar subtipos duplicados dentro del mismo tipo
         existe = Subtipos.objects.filter(
             ID_Tipo_producto=tipo,
             Nombre_subtipo__iexact=nombre
@@ -590,17 +578,20 @@ def crear_subtipo(request):
 
             return redirect('gestion_subtipos')
 
-        # Crear subtipo
-        Subtipos.objects.create(
-            ID_Tipo_producto=tipo,
-            Nombre_subtipo=nombre,
-            Estado_subtipo=True
-        )
+        datos_subtipo = {
+            'ID_Tipo_producto': tipo,
+            'Nombre_subtipo': nombre,
+            'Estado_subtipo': True
+        }
 
-        messages.success(
-            request,
-            'Subtipo creado correctamente.'
-        )
+        if _subtipo_tiene_descripcion():
+            datos_subtipo['Descripcion_subtipo'] = (
+                request.POST.get('Descripcion_subtipo', '').strip() or None
+            )
+
+        Subtipos.objects.create(**datos_subtipo)
+
+        messages.success(request, 'Subtipo creado correctamente.')
 
     return redirect('gestion_subtipos')
 
@@ -612,51 +603,31 @@ def editar_subtipo(request, pk):
     if not usuario:
         return redirect('panel_principal')
 
-    subtipo = get_object_or_404(
-        Subtipos,
-        ID_Subtipo=pk
-    )
+    subtipo = get_object_or_404(Subtipos, ID_Subtipo=pk)
 
     if request.method == 'POST':
 
-        # Los nombres coinciden con el HTML actual
-        nombre = request.POST.get(
-            'nombre_subtipo',
-            ''
-        ).strip()
+        nombre = request.POST.get('Nombre_subtipo', '').strip()
+        tipo_id = request.POST.get('ID_Tipo_producto')
 
-        tipo_id = request.POST.get(
-            'tipo_producto'
-        )
-
-        # Validar nombre
         if not nombre:
 
-            messages.error(
-                request,
-                'Debe ingresar el nombre del subtipo.'
-            )
+            messages.error(request, 'Debe ingresar el nombre del subtipo.')
 
             return redirect('gestion_subtipos')
 
-        # Validar tipo
         if not tipo_id:
 
-            messages.error(
-                request,
-                'Debe seleccionar un tipo de producto.'
-            )
+            messages.error(request, 'Debe seleccionar un tipo de producto.')
 
             return redirect('gestion_subtipos')
 
-        # Buscar tipo activo
         tipo = get_object_or_404(
             TiposProductos,
             ID_Tipo_producto=tipo_id,
             Estado_tipo_producto=True
         )
 
-        # Comprobar duplicado
         existe = Subtipos.objects.filter(
             ID_Tipo_producto=tipo,
             Nombre_subtipo__iexact=nombre
@@ -673,55 +644,44 @@ def editar_subtipo(request, pk):
 
             return redirect('gestion_subtipos')
 
-        # Actualizar
         subtipo.ID_Tipo_producto = tipo
         subtipo.Nombre_subtipo = nombre
 
+        if _subtipo_tiene_descripcion():
+            subtipo.Descripcion_subtipo = (
+                request.POST.get('Descripcion_subtipo', '').strip() or None
+            )
+
         subtipo.save()
 
-        messages.success(
-            request,
-            'Subtipo modificado correctamente.'
-        )
+        messages.success(request, 'Subtipo modificado correctamente.')
 
     return redirect('gestion_subtipos')
 
 
 def cambiar_estado_subtipo(request, pk):
 
+    # CORREGIDO: antes cualquier usuario logueado (incluido Vendedor)
+    # podía activar o dar de baja subtipos.
     usuario = usuario_es_administrador(request)
 
     if not usuario:
         return redirect('panel_principal')
 
-    subtipo = get_object_or_404(
-        Subtipos,
-        ID_Subtipo=pk
-    )
+    subtipo = get_object_or_404(Subtipos, ID_Subtipo=pk)
 
     if request.method == 'POST':
 
         subtipo.Estado_subtipo = not subtipo.Estado_subtipo
-
-        subtipo.save(
-            update_fields=['Estado_subtipo']
-        )
+        subtipo.save()
 
         if subtipo.Estado_subtipo:
-
-            messages.success(
-                request,
-                'Subtipo activado correctamente.'
-            )
-
+            messages.success(request, 'Subtipo activado correctamente.')
         else:
-
-            messages.success(
-                request,
-                'Subtipo dado de baja correctamente.'
-            )
+            messages.success(request, 'Subtipo dado de baja correctamente.')
 
     return redirect('gestion_subtipos')
+
 
 # ============================================================
 # GESTIONAR USUARIOS
