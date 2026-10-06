@@ -1,398 +1,188 @@
 {% extends 'inventario/base.html' %}
-
 {% load static %}
 
-
 {% block title %}
-    Historial de Alertas
+    Historial de Alertas - Agroquímicos del Valle
 {% endblock %}
-
 
 {% block extra_css %}
-
-<link rel="stylesheet"
-      href="{% static 'inventario/styles/alertas.css' %}">
-
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
 {% endblock %}
-
 
 {% block contenido %}
 
+<div class="al-page">
 
-<!-- ========================================== -->
-<!-- CABECERA -->
-<!-- ========================================== -->
+    <!-- ENCABEZADO -->
+    <header class="al-header">
 
-<div class="alertas-header">
+        <div class="al-eyebrow">Agroquímicos del Valle</div>
+        <h1 class="al-title">Historial de alertas</h1>
+        <p class="al-sub">Consultá las alertas de stock mínimo y de vencimiento registradas por el sistema.</p>
 
-    <div>
-
-        <h1>
-            Historial de Alertas
-        </h1>
-
-        <p>
-            Consulta el historial de alertas registradas.
-        </p>
-
-    </div>
-
-</div>
+    </header>
 
 
+    <!-- CRITERIOS DE BÚSQUEDA -->
+    <form method="GET" action="{% url 'historial_alertas' %}" class="al-filtros">
 
-<!-- ========================================== -->
-<!-- CRITERIO DE BÚSQUEDA -->
-<!-- ========================================== -->
+        <div class="al-filtros-grid">
 
-<section class="filtros">
+            <!-- TIPO DE ALERTA -->
+            <div class="al-campo">
+                <label for="tipo">Tipo de alerta</label>
+                <select id="tipo" name="tipo">
+                    <option value="">Todos los tipos</option>
+                    <option value="Vencimiento" {% if tipo_alerta == 'Vencimiento' %}selected{% endif %}>Vencimiento</option>
+                    <option value="Stock mínimo" {% if tipo_alerta == 'Stock mínimo' %}selected{% endif %}>Stock mínimo</option>
+                </select>
+            </div>
 
-    <h2>
-        CRITERIO DE BÚSQUEDA
-    </h2>
+            <!-- PRODUCTO -->
+            <div class="al-campo">
+                <label for="producto">Producto</label>
+                <select id="producto" name="producto">
+                    <option value="">Todos los productos</option>
+                    {% for producto in productos %}
+                        <option value="{{ producto.ID_Producto }}"
+                            {% if producto_id|stringformat:"s" == producto.ID_Producto|stringformat:"s" %}selected{% endif %}>
+                            {{ producto.Nombre_producto }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
+            <!-- USUARIO QUE ATENDIÓ -->
+            <div class="al-campo">
+                <label for="usuario">Atendida por</label>
+                <select id="usuario" name="usuario">
+                    <option value="">Todos los usuarios</option>
+                    {% for usuario_item in usuarios %}
+                        <option value="{{ usuario_item.ID_Usuario }}"
+                            {% if usuario_id|stringformat:"s" == usuario_item.ID_Usuario|stringformat:"s" %}selected{% endif %}>
+                            {{ usuario_item.Apellido_usuario }}, {{ usuario_item.Nombre_usuario }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    <form
-        method="GET"
-        action="{% url 'historial_alertas' %}"
-    >
+            <!-- FECHA DESDE -->
+            <div class="al-campo">
+                <label for="fecha_desde">Desde</label>
+                <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+            </div>
 
-
-        <!-- USUARIO -->
-
-        <div class="campo">
-
-            <label for="usuario">
-                Usuario
-            </label>
-
-
-            <select
-                id="usuario"
-                name="usuario"
-            >
-
-                <option value="">
-                    Todos los usuarios
-                </option>
-
-
-                {% for usuario_item in usuarios %}
-
-                    <option
-                        value="{{ usuario_item.ID_Usuario }}"
-
-                        {% if usuario_id|stringformat:"s" == usuario_item.ID_Usuario|stringformat:"s" %}
-                            selected
-                        {% endif %}
-                    >
-
-                        {{ usuario_item.Apellido_usuario }},
-                        {{ usuario_item.Nombre_usuario }}
-
-                    </option>
-
-                {% endfor %}
-
-            </select>
+            <!-- FECHA HASTA -->
+            <div class="al-campo">
+                <label for="fecha_hasta">Hasta</label>
+                <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+            </div>
 
         </div>
 
+        <div class="al-filtros-acc">
 
-
-        <!-- TIPO DE ALERTA -->
-
-        <div class="campo">
-
-            <label for="tipo">
-                Tipo de alerta
-            </label>
-
-
-            <select
-                id="tipo"
-                name="tipo"
-            >
-
-                <option value="">
-                    Todos los tipos
-                </option>
-
-
-                <option
-                    value="Vencimiento"
-
-                    {% if tipo_alerta == 'Vencimiento' %}
-                        selected
-                    {% endif %}
-                >
-
-                    Vencimiento
-
-                </option>
-
-
-                <option
-                    value="Stock mínimo"
-
-                    {% if tipo_alerta == 'Stock mínimo' %}
-                        selected
-                    {% endif %}
-                >
-
-                    Stock mínimo
-
-                </option>
-
-            </select>
-
-        </div>
-
-
-
-        <!-- PRODUCTO -->
-
-        <div class="campo">
-
-            <label for="producto">
-                Producto
-            </label>
-
-
-            <select
-                id="producto"
-                name="producto"
-            >
-
-                <option value="">
-                    Todos los productos
-                </option>
-
-
-                {% for producto in productos %}
-
-                    <option
-                        value="{{ producto.ID_Producto }}"
-
-                        {% if producto_id|stringformat:"s" == producto.ID_Producto|stringformat:"s" %}
-                            selected
-                        {% endif %}
-                    >
-
-                        {{ producto.Nombre_producto }}
-
-                    </option>
-
-                {% endfor %}
-
-            </select>
-
-        </div>
-
-
-
-        <!-- ID STOCK -->
-
-        <div class="campo">
-
-            <label for="stock">
-                ID_Stock
-            </label>
-
-
-            <select
-                id="stock"
-                name="stock"
-            >
-
-                <option value="">
-                    Todos los registros
-                </option>
-
-
-                {% for item in stock %}
-
-                    <option
-                        value="{{ item.ID_Stock }}"
-
-                        {% if stock_id|stringformat:"s" == item.ID_Stock|stringformat:"s" %}
-                            selected
-                        {% endif %}
-                    >
-
-                        {{ item.ID_Stock }}
-
-                    </option>
-
-                {% endfor %}
-
-            </select>
-
-        </div>
-
-
-
-        <!-- BOTONES -->
-
-        <div class="acciones">
-
-            <button type="submit">
-                🔎 Consultar
+            <button type="submit" class="al-btn al-btn-primary">
+                <svg class="al-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                Consultar
             </button>
 
-
-            <a href="{% url 'historial_alertas' %}">
-                Limpiar
-            </a>
+            <a href="{% url 'historial_alertas' %}" class="al-btn al-btn-claro">Limpiar</a>
 
         </div>
-
 
     </form>
 
-</section>
 
+    <!-- RESULTADOS -->
+    <section class="al-card">
 
+        <div class="al-table-wrap">
 
-<!-- ========================================== -->
-<!-- RESULTADOS -->
-<!-- ========================================== -->
-
-<section class="resultados">
-
-
-    <div class="titulo-resultados">
-
-        <h2>
-            Historial de Alertas
-        </h2>
-
-
-        <span>
-            {{ alertas|length }} resultado(s)
-        </span>
-
-    </div>
-
-
-
-    {% if alertas %}
-
-
-        <!-- ========================================== -->
-        <!-- TABLA HISTORIAL_ALERTAS -->
-        <!-- ========================================== -->
-
-        <div class="tabla-contenedor">
-
-            <table>
+            <table class="al-table">
 
                 <thead>
-
                     <tr>
-
-                        <th>
-                            ID_Historial_alerta
-                        </th>
-
-                        <th>
-                            ID_Stock
-                        </th>
-
-                        <th>
-                            Tipo_alerta
-                        </th>
-
-                        <th>
-                            Mensaje
-                        </th>
-
-                        <th>
-                            Fecha_hora_historial_alerta
-                        </th>
-
+                        <th>Fecha y hora</th>
+                        <th>Tipo</th>
+                        <th>Producto</th>
+                        <th>Lote</th>
+                        <th>Mensaje</th>
+                        <th>Cantidad</th>
+                        <th>Stock mínimo</th>
+                        <th>Estado</th>
+                        <th>Atendida por</th>
                     </tr>
-
                 </thead>
 
-
                 <tbody>
-
 
                     {% for alerta in alertas %}
 
                         <tr>
 
-
-                            <!-- ID_HISTORIAL_ALERTA -->
-
-                            <td class="id-alerta">
-
-                                {{ alerta.ID_Historial_alerta }}
-
+                            <!-- FECHA Y HORA -->
+                            <td>
+                                <span class="al-fecha">{{ alerta.Fecha_hora_historial_alerta|date:"d/m/Y" }}</span>
+                                <span class="al-hora">{{ alerta.Fecha_hora_historial_alerta|date:"H:i" }}</span>
                             </td>
 
-
-
-                            <!-- ID_STOCK -->
-
+                            <!-- TIPO -->
                             <td>
-
-                                {{ alerta.ID_Stock.ID_Stock }}
-
-                            </td>
-
-
-
-                            <!-- TIPO_ALERTA -->
-
-                            <td>
-
                                 {% if alerta.Tipo_alerta == 'Vencimiento' %}
-
-                                    <span class="badge-alerta vencimiento">
-
-                                        Vencimiento
-
-                                    </span>
-
+                                    <span class="al-badge al-vencimiento">Vencimiento</span>
                                 {% else %}
-
-                                    <span class="badge-alerta stock-minimo">
-
-                                        Stock mínimo
-
-                                    </span>
-
+                                    <span class="al-badge al-stock-minimo">Stock mínimo</span>
                                 {% endif %}
-
                             </td>
 
+                            <!-- PRODUCTO -->
+                            <td><span class="al-producto">{{ alerta.ID_Stock.ID_Producto.Nombre_producto|default:"—" }}</span></td>
 
+                            <!-- LOTE -->
+                            <td class="al-muted">{{ alerta.ID_Lote.Numero_lote|default:"—" }}</td>
 
                             <!-- MENSAJE -->
+                            <td class="al-mensaje">{{ alerta.Mensaje }}</td>
 
-                            <td class="mensaje-alerta">
+                            <!-- CANTIDAD AL GENERAR -->
+                            <td class="al-num">{{ alerta.Cantidad_al_generar|default:"—" }}</td>
 
-                                {{ alerta.Mensaje }}
+                            <!-- STOCK MÍNIMO AL GENERAR -->
+                            <td class="al-num al-muted">{{ alerta.Stock_minimo_al_generar|default:"—" }}</td>
 
+                            <!-- ESTADO -->
+                            <td>
+                                {% if alerta.Atendida %}
+                                    <span class="al-estado al-atendida">Atendida</span>
+                                {% else %}
+                                    <span class="al-estado al-pendiente">Pendiente</span>
+                                {% endif %}
                             </td>
 
-
-
-                            <!-- FECHA_HORA_HISTORIAL_ALERTA -->
-
-                            <td class="fecha-alerta">
-
-                                {{ alerta.Fecha_hora_historial_alerta|date:"d/m/Y H:i:s" }}
-
+                            <!-- ATENDIDA POR -->
+                            <td class="al-muted">
+                                {% if alerta.Atendida and alerta.ID_Usuario %}
+                                    {{ alerta.ID_Usuario.Apellido_usuario }} {{ alerta.ID_Usuario.Nombre_usuario }}
+                                    {% if alerta.Fecha_hora_atencion %}
+                                        <span class="al-hora">{{ alerta.Fecha_hora_atencion|date:"d/m/Y H:i" }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    —
+                                {% endif %}
                             </td>
-
 
                         </tr>
 
-                    {% endfor %}
+                    {% empty %}
 
+                        <tr>
+                            <td colspan="9" class="al-vacio">
+                                No se encontraron alertas con los criterios seleccionados.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
 
                 </tbody>
 
@@ -400,30 +190,13 @@
 
         </div>
 
-
-    {% else %}
-
-
-        <!-- ========================================== -->
-        <!-- SIN RESULTADOS -->
-        <!-- ========================================== -->
-
-        <div class="sin-resultados">
-
-            <p>
-
-                No se encontraron alertas
-                con los criterios seleccionados.
-
-            </p>
-
+        <div class="al-pie">
+            <span>{{ alertas|length }} alerta{{ alertas|length|pluralize }} encontrada{{ alertas|length|pluralize }}</span>
+            <span>Agroquímicos del Valle</span>
         </div>
 
+    </section>
 
-    {% endif %}
-
-
-</section>
-
+</div>
 
 {% endblock %}
