@@ -247,22 +247,22 @@
             <div class="us-grid">
 
                 <div class="us-grupo">
-                    <label>Nombre *</label>
+                    <label>Nombre</label>
                     <input type="text" name="Nombre_usuario" required>
                 </div>
 
                 <div class="us-grupo">
-                    <label>Apellido *</label>
+                    <label>Apellido</label>
                     <input type="text" name="Apellido_usuario" required>
                 </div>
 
                 <div class="us-grupo us-full">
-                    <label>DNI *</label>
+                    <label>DNI</label>
                     <input type="number" name="DNI" required>
                 </div>
 
                 <div class="us-grupo us-full">
-                    <label>Perfil de acceso *</label>
+                    <label>Perfil de acceso</label>
                     <select name="ID_Perfil" required>
                         <option value="">Seleccionar perfil</option>
                         {% for perfil in perfiles %}
@@ -272,19 +272,19 @@
                 </div>
 
                 <div class="us-grupo us-full">
-                    <label>Nombre de usuario (automático)</label>
+                    <label>Nombre de usuario</label>
                     <input type="text" id="Usuario_preview"
                            placeholder="Se genera a partir del apellido y nombre" readonly>
                 </div>
 
                 <div class="us-grupo us-full">
-                    <label>Contraseña *</label>
+                    <label>Contraseña</label>
                     <input type="password" name="Contrasena" required>
                     <span class="us-hint">Mínimo 8 caracteres. El usuario deberá cambiarla en su primer ingreso.</span>
                 </div>
 
                 <div class="us-grupo us-full">
-                    <label>Correo electrónico *</label>
+                    <label>Correo electrónico</label>
                     <input type="email" name="Email_usuario" placeholder="usuario@agrovalle.com" required>
                 </div>
 
