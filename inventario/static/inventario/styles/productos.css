@@ -533,9 +533,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 14px;
-    padding: 16px 20px;
+    gap: 9px;
+    margin-bottom: 8px;
+    padding: 8px 20px;
     background: #fff;
     border: 1px solid var(--pr-borde);
     border-radius: 12px;
@@ -553,8 +553,8 @@
 .pr-filtros {
     display: flex;
     align-items: stretch;
-    gap: 12px;
-    margin-bottom: 10px;
+    gap: 10px;
+    margin-bottom: 8px;
 }
 
 .pr-filtros .pr-search { flex: 1; margin-bottom: 0; }
@@ -562,7 +562,7 @@
 .pr-select {
     min-width: 190px;
     height: 100%;
-    padding: 20px 14px;
+    padding: 14px 14px;
     background: #fff;
     border: 1px solid var(--pr-borde);
     border-radius: 10px;
