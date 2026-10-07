@@ -26,7 +26,16 @@ SECRET_KEY = 'django-insecure-sin%=ts&=rxqpd%rojsew7_bjv7$#_yd@p$50p2aja47*_$*a@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '192.168.1.8',
+    'protocol-somerset-manufacture-minimize.trycloudflare.com',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://protocol-somerset-manufacture-minimize.trycloudflare.com',
+]
 
 
 # Application definition
