@@ -1427,7 +1427,24 @@ def _leer_datos_producto(request, estado_por_defecto):
 
         cantidad_presentacion = None
 
+    stock_minimo = request.POST.get('Stock_minimo', '').strip()
+
+    if stock_minimo:
+
+        try:
+            stock_minimo = int(stock_minimo)
+        except ValueError:
+            return None, 'El stock mínimo ingresado no es válido.'
+
+        if stock_minimo < 0:
+            return None, 'El stock mínimo no puede ser negativo.'
+
+    else:
+
+        stock_minimo = None
+
     datos = {
+        'stock_minimo': stock_minimo,
         'tipo': tipo,
         'marca': marca or None,
         'nombre': nombre,
@@ -1458,6 +1475,23 @@ def _producto_duplicado(nombre, marca, excluir_pk=None):
         productos = productos.exclude(ID_Producto=excluir_pk)
 
     return productos.exists()
+
+
+def _guardar_subtipos_producto(producto, ids):
+    """
+    Guarda los subtipos elegidos en el formulario.
+    Solo actúa si el modelo Productos tiene una relación muchos a muchos
+    llamada 'subtipos'; si no la tiene, no hace nada (no da error).
+    """
+
+    relacion = getattr(producto, 'subtipos', None)
+
+    if relacion is None or not hasattr(relacion, 'set'):
+        return
+
+    ids_validos = [i for i in ids if str(i).isdigit()]
+
+    relacion.set(Subtipos.objects.filter(ID_Subtipo__in=ids_validos))
 
 
 def gestion_productos(request):
@@ -1497,7 +1531,12 @@ def gestion_productos(request):
             'productos': productos,
             'tipos_productos': tipos_productos,
             'busqueda': busqueda,
-            'usuario': usuario
+            'usuario': usuario,
+            'subtipos': Subtipos.objects.filter(
+                Estado_subtipo=True
+            ).select_related('ID_Tipo_producto').order_by('Nombre_subtipo'),
+            'total_activos': Productos.objects.filter(Estado_producto='Activo').count(),
+            'total_tipos': tipos_productos.count()
         }
     )
 
@@ -1525,16 +1564,29 @@ def crear_producto(request):
 
             return redirect('gestion_productos')
 
-        Productos.objects.create(
-            ID_Tipo_producto=datos['tipo'],
-            Marca=datos['marca'],
-            Nombre_producto=datos['nombre'],
-            Descripcion_producto=datos['descripcion'],
-            Precio=datos['precio'],
-            Cantidad_presentacion=datos['cantidad_presentacion'],
-            Unidad_medida_producto=datos['unidad_medida'],
-            Estado_producto=datos['estado_producto']
-        )
+        with transaction.atomic():
+
+            producto = Productos.objects.create(
+                ID_Tipo_producto=datos['tipo'],
+                Marca=datos['marca'],
+                Nombre_producto=datos['nombre'],
+                Descripcion_producto=datos['descripcion'],
+                Precio=datos['precio'],
+                Cantidad_presentacion=datos['cantidad_presentacion'],
+                Unidad_medida_producto=datos['unidad_medida'],
+                Estado_producto=datos['estado_producto']
+            )
+
+            # Stock inicial en 0; los ingresos se registran desde Lotes
+            Stock.objects.get_or_create(
+                ID_Producto=producto,
+                defaults={
+                    'Cantidad_stock': 0,
+                    'Stock_minimo': datos['stock_minimo'] or 0
+                }
+            )
+
+            _guardar_subtipos_producto(producto, request.POST.getlist('subtipos'))
 
         messages.success(request, 'Producto registrado correctamente.')
 
@@ -1574,7 +1626,26 @@ def editar_producto(request, pk):
         producto.Cantidad_presentacion = datos['cantidad_presentacion']
         producto.Unidad_medida_producto = datos['unidad_medida']
         producto.Estado_producto = datos['estado_producto']
-        producto.save()
+
+        with transaction.atomic():
+
+            producto.save()
+
+            if datos['stock_minimo'] is not None:
+
+                stock, creado = Stock.objects.get_or_create(
+                    ID_Producto=producto,
+                    defaults={
+                        'Cantidad_stock': 0,
+                        'Stock_minimo': datos['stock_minimo']
+                    }
+                )
+
+                if not creado:
+                    stock.Stock_minimo = datos['stock_minimo']
+                    stock.save()
+
+            _guardar_subtipos_producto(producto, request.POST.getlist('subtipos'))
 
         messages.success(request, 'Producto actualizado correctamente.')
 
