@@ -30,11 +30,11 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '192.168.1.8',
-    'protocol-somerset-manufacture-minimize.trycloudflare.com',
+    'program-processes-elections-piece.trycloudflare.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://protocol-somerset-manufacture-minimize.trycloudflare.com',
+    'https://program-processes-elections-piece.trycloudflare.com',
 ]
 
 
