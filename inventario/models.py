@@ -35,6 +35,13 @@ class Subtipos(models.Model):
 
     Nombre_subtipo = models.CharField(max_length=50)
 
+    Descripcion_subtipo = models.CharField(      # <- agregar estas 5 líneas
+        max_length=200,
+        blank=True,
+        null=True
+    )
+
+
     ESTADO_CHOICES = [
         (True, 'Activo'),
         (False, 'Inactivo'),
