@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '192.168.1.8',
+    '192.168.100.5',
     'program-processes-elections-piece.trycloudflare.com',
 ]
 
