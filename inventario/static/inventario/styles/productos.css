@@ -594,9 +594,7 @@
 
 .pr-table tr.inactivo .pr-prod-icono { background: #eef1ef; color: #9aa59f; }
 
-.pr-prod-sub,
-.pr-subtipos,
-.pr-stock-sub {
+.pr-subtipos {
     display: block;
     margin-top: 2px;
     font-size: 12px;
