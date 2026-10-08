@@ -12,7 +12,8 @@
 
 {% block contenido %}
 
-<!-- Mensajes Django + avisos del cambio de estado (toasts) -->
+<!-- ===================== MENSAJES ===================== -->
+
 <div class="pr-toasts" id="toastContainer">
 
     {% if messages %}
@@ -29,29 +30,37 @@
 
 <div class="pr-page">
 
-    <!-- ENCABEZADO -->
+    <!-- ===================== ENCABEZADO ===================== -->
+
     <header class="pr-header">
 
         <div>
             <h1 class="pr-title">Gestión de productos</h1>
         </div>
 
-        <button type="button" class="pr-btn pr-btn-primary" onclick="abrirModalCrear()">
+        <button type="button"
+                class="pr-btn pr-btn-primary"
+                onclick="abrirModalCrear()">
+
             <svg class="pr-icon" viewBox="0 0 24 24">
                 <path d="M12 5v14M5 12h14"/>
             </svg>
+
             Registrar producto
+
         </button>
 
     </header>
 
 
-    <!-- BARRA DE RESUMEN -->
+    <!-- ===================== RESUMEN ===================== -->
+
     <div class="pr-barra">
 
         <div class="pr-barra-datos">
 
             <span class="pr-barra-dato">
+
                 <svg class="pr-icon" viewBox="0 0 24 24">
                     <path d="m7.5 4.27 9 5.15"/>
                     <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
@@ -59,8 +68,12 @@
                     <path d="M12 22V12"/>
                 </svg>
 
-                <strong id="totalActivos">{{ total_activos|default:0 }}</strong>
+                <strong id="totalActivos">
+                    {{ total_activos|default:0 }}
+                </strong>
+
                 productos activos
+
             </span>
 
         </div>
@@ -68,8 +81,11 @@
     </div>
 
 
-    <!-- BÚSQUEDA Y FILTROS -->
-    <form method="GET" onsubmit="return false;" class="pr-filtros">
+    <!-- ===================== BÚSQUEDA Y FILTROS ===================== -->
+
+    <form method="GET"
+          onsubmit="return false;"
+          class="pr-filtros">
 
         <div class="pr-search">
 
@@ -87,30 +103,49 @@
 
         </div>
 
-        <select id="filtroTipo" class="pr-select" onchange="filtrarProductos()">
 
-            <option value="">Todos los tipos</option>
+        <select id="filtroTipo"
+                class="pr-select"
+                onchange="filtrarProductos()">
+
+            <option value="">
+                Todos los tipos
+            </option>
 
             {% for tipo in tipos_productos %}
+
                 <option value="{{ tipo.ID_Tipo_producto }}">
                     {{ tipo.Nombre_tipo_producto }}
                 </option>
+
             {% endfor %}
 
         </select>
 
-        <select id="filtroEstado" class="pr-select" onchange="filtrarProductos()">
 
-            <option value="">Todos los estados</option>
-            <option value="Activo">Activo</option>
-            <option value="Inactivo">Inactivo</option>
+        <select id="filtroEstado"
+                class="pr-select"
+                onchange="filtrarProductos()">
+
+            <option value="">
+                Todos los estados
+            </option>
+
+            <option value="Activo">
+                Activo
+            </option>
+
+            <option value="Inactivo">
+                Inactivo
+            </option>
 
         </select>
 
     </form>
 
 
-    <!-- TABLA -->
+    <!-- ===================== TABLA ===================== -->
+
     <section class="pr-card">
 
         <div class="pr-table-wrap">
@@ -123,8 +158,11 @@
 
                         <th>Producto</th>
                         <th>Tipo de producto</th>
+                        <th>Marca</th>
                         <th>Subtipo</th>
                         <th>Precio</th>
+                        <th>Cantidad presentación</th>
+                        <th>Unidad medida</th>
                         <th>Stock disponible</th>
                         <th>Stock mínimo</th>
                         <th>Estado</th>
@@ -139,16 +177,14 @@
 
                     {% for producto in productos %}
 
-                        {% with st=producto.stock %}
-
                         <tr id="card-{{ producto.ID_Producto }}"
                             class="producto-card {% if producto.Estado_producto != 'Activo' %}inactivo{% endif %}"
                             data-tipo="{{ producto.ID_Tipo_producto.ID_Tipo_producto }}"
                             data-estado="{{ producto.Estado_producto }}"
-                            data-search="{{ producto.ID_Producto }} prod{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {{ producto.Marca|default:''|lower }} {% for s in producto.subtipos.all %}{{ s.Nombre_subtipo|lower }} {% endfor %}">
+                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {{ producto.Marca|default:''|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %}">
 
+                            <!-- ===================== PRODUCTO ===================== -->
 
-                            <!-- PRODUCTO -->
                             <td>
 
                                 <div class="pr-prod">
@@ -171,14 +207,7 @@
                                         </span>
 
                                         <span class="pr-prod-sub">
-
-                                            {{ producto.Marca|default:"Marca por completar" }}
-
-                                            {% if producto.Cantidad_presentacion %}
-                                                · {{ producto.Cantidad_presentacion|floatformat:"-2" }}
-                                                {{ producto.Unidad_medida_producto|default:"" }}
-                                            {% endif %}
-
+                                            Producto registrado
                                         </span>
 
                                     </div>
@@ -188,7 +217,8 @@
                             </td>
 
 
-                            <!-- TIPO DE PRODUCTO -->
+                            <!-- ===================== TIPO ===================== -->
+
                             <td>
 
                                 <span class="pr-tipo">
@@ -198,43 +228,73 @@
                             </td>
 
 
-                            <!-- SUBTIPO -->
+                            <!-- ===================== MARCA ===================== -->
+
+                            <td>
+
+                                <span class="pr-tipo">
+                                    {{ producto.Marca|default:"Sin marca" }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- ===================== SUBTIPO ===================== -->
+
                             <td>
 
                                 <span class="pr-subtipos">
 
-                                    {% for s in producto.subtipos.all %}
+                                    {% if producto.ID_Subtipo %}
 
-                                        {{ s.Nombre_subtipo }}
+                                        {{ producto.ID_Subtipo.Nombre_subtipo }}
 
-                                        {% if not forloop.last %}
-                                            ,
-                                        {% endif %}
-
-                                    {% empty %}
+                                    {% else %}
 
                                         Sin subtipo
 
-                                    {% endfor %}
+                                    {% endif %}
 
                                 </span>
 
                             </td>
 
 
-                            <!-- PRECIO -->
+                            <!-- ===================== PRECIO ===================== -->
+
                             <td class="pr-precio">
+
                                 $ {{ producto.Precio|floatformat:"-2g" }}
+
                             </td>
 
 
-                            <!-- STOCK DISPONIBLE -->
+                            <!-- ===================== CANTIDAD ===================== -->
+
                             <td>
 
-                                {% if st %}
+                                {{ producto.Cantidad_presentacion|floatformat:"-2" }}
 
-                                    <span class="pr-stock {% if st.Cantidad_stock <= st.Stock_minimo %}pr-bajo{% endif %}">
-                                        {{ st.Cantidad_stock }}
+                            </td>
+
+
+                            <!-- ===================== UNIDAD ===================== -->
+
+                            <td>
+
+                                {{ producto.Unidad_medida_producto|default:"—" }}
+
+                            </td>
+
+
+                            <!-- ===================== STOCK ===================== -->
+
+                            <td>
+
+                                {% if producto.stock %}
+
+                                    <span class="pr-stock {% if producto.stock.Cantidad_stock <= producto.stock.Stock_minimo %}pr-bajo{% endif %}">
+                                        {{ producto.stock.Cantidad_stock }}
                                     </span>
 
                                     <span class="pr-stock-sub">
@@ -256,24 +316,28 @@
                             </td>
 
 
-                            <!-- STOCK MÍNIMO -->
+                            <!-- ===================== STOCK MÍNIMO ===================== -->
+
                             <td class="pr-minimo">
 
-                                {% if st %}
+                                {% if producto.stock %}
 
-                                    {{ st.Stock_minimo }}
+                                    {{ producto.stock.Stock_minimo }}
                                     <small>un.</small>
 
                                 {% else %}
 
-                                    <span class="pr-muted">—</span>
+                                    <span class="pr-muted">
+                                        —
+                                    </span>
 
                                 {% endif %}
 
                             </td>
 
 
-                            <!-- ESTADO -->
+                            <!-- ===================== ESTADO ===================== -->
+
                             <td>
 
                                 <span id="badge-estado-{{ producto.ID_Producto }}"
@@ -290,13 +354,14 @@
                             </td>
 
 
-                            <!-- ACCIONES -->
+                            <!-- ===================== ACCIONES ===================== -->
+
                             <td>
 
                                 <div class="pr-acciones">
 
-
                                     <!-- EDITAR -->
+
                                     <button type="button"
                                             class="pr-icon-btn"
                                             title="Editar producto"
@@ -311,8 +376,8 @@
                                                 '{{ producto.Cantidad_presentacion|default_if_none:''|unlocalize }}',
                                                 '{{ producto.Unidad_medida_producto|default:''|escapejs }}',
                                                 '{{ producto.Estado_producto }}',
-                                                '{% if st %}{{ st.Stock_minimo }}{% endif %}',
-                                                '{% for s in producto.subtipos.all %}{{ s.ID_Subtipo }}{% if not forloop.last %},{% endif %}{% endfor %}'
+                                                '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}',
+                                                '{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}'
                                             )">
 
                                         <svg class="pr-icon" viewBox="0 0 24 24">
@@ -324,6 +389,7 @@
 
 
                                     <!-- CAMBIAR ESTADO -->
+
                                     <form id="form-estado-{{ producto.ID_Producto }}"
                                           method="POST"
                                           action="{% url 'cambiar_estado_producto' producto.ID_Producto %}"
@@ -380,13 +446,12 @@
 
                         </tr>
 
-                        {% endwith %}
 
                     {% empty %}
 
                         <tr>
 
-                            <td colspan="8" class="pr-vacio">
+                            <td colspan="11" class="pr-vacio">
                                 No se encontraron productos.
                             </td>
 
@@ -401,6 +466,8 @@
         </div>
 
 
+        <!-- ===================== PIE ===================== -->
+
         <div class="pr-pie">
 
             <span id="contadorProductos">
@@ -412,7 +479,7 @@
             </span>
 
             <span>
-                Agroquímicos del Valle
+                Agroquímica del Valle
             </span>
 
         </div>
@@ -422,16 +489,20 @@
 </div>
 
 
+<!-- =====================================================
+     MODAL REGISTRAR PRODUCTO
+===================================================== -->
 
-<!-- ===================== MODAL REGISTRAR PRODUCTO ===================== -->
-
-<div class="pr-modal" id="modalCrearProducto">
+<div class="pr-modal"
+     id="modalCrearProducto">
 
     <div class="pr-modal-box">
 
         <div class="pr-modal-head">
 
-            <h2>Registrar producto</h2>
+            <h2>
+                Registrar producto
+            </h2>
 
             <button type="button"
                     class="pr-modal-x"
@@ -447,7 +518,8 @@
         </div>
 
 
-        <form method="POST" action="{% url 'crear_producto' %}">
+        <form method="POST"
+              action="{% url 'crear_producto' %}">
 
             {% csrf_token %}
 
@@ -455,6 +527,7 @@
 
                 <div class="pr-grid">
 
+                    <!-- NOMBRE -->
 
                     <div class="pr-grupo">
 
@@ -470,6 +543,8 @@
                     </div>
 
 
+                    <!-- MARCA -->
+
                     <div class="pr-grupo">
 
                         <label>
@@ -484,6 +559,8 @@
                     </div>
 
 
+                    <!-- DESCRIPCIÓN -->
+
                     <div class="pr-grupo pr-full">
 
                         <label>
@@ -497,6 +574,8 @@
                     </div>
 
 
+                    <!-- TIPO -->
+
                     <div class="pr-grupo pr-full">
 
                         <label>
@@ -505,7 +584,7 @@
 
                         <select name="ID_Tipo_producto"
                                 id="crear_tipo"
-                                onchange="actualizarSubtipos('crear_tipo', 'crear_subtipos')"
+                                onchange="actualizarSubtipos('crear_tipo', 'crear_subtipo')"
                                 required>
 
                             <option value="">
@@ -525,41 +604,42 @@
                     </div>
 
 
+                    <!-- SUBTIPO -->
+
                     <div class="pr-grupo pr-full">
 
                         <label>
-                            Subtipos (opcional)
+                            Subtipo
                         </label>
 
-                        <div class="pr-subtipos-caja" id="crear_subtipos">
+                        <select name="ID_Subtipo"
+                                id="crear_subtipo">
+
+                            <option value="">
+                                Sin subtipo
+                            </option>
 
                             {% for sub in subtipos %}
 
-                                <label data-tipo="{{ sub.ID_Tipo_producto.ID_Tipo_producto }}"
-                                       style="display:none;">
-
-                                    <input type="checkbox"
-                                           name="subtipos"
-                                           value="{{ sub.ID_Subtipo }}">
+                                <option value="{{ sub.ID_Subtipo }}"
+                                        data-tipo="{{ sub.ID_Tipo_producto.ID_Tipo_producto }}">
 
                                     {{ sub.Nombre_subtipo }}
 
-                                </label>
+                                </option>
 
                             {% endfor %}
 
-                            <span class="pr-sub-vacio">
-                                Elegí un tipo de producto para ver sus subtipos.
-                            </span>
-
-                        </div>
+                        </select>
 
                         <span class="pr-hint">
-                            Dejá las opciones sin marcar si el producto no tiene subtipo.
+                            Los productos que no correspondan a un subtipo pueden quedar como "Sin subtipo".
                         </span>
 
                     </div>
 
+
+                    <!-- PRECIO -->
 
                     <div class="pr-grupo">
 
@@ -575,6 +655,8 @@
 
                     </div>
 
+
+                    <!-- STOCK MÍNIMO -->
 
                     <div class="pr-grupo">
 
@@ -592,6 +674,8 @@
                     </div>
 
 
+                    <!-- CANTIDAD -->
+
                     <div class="pr-grupo">
 
                         <label>
@@ -608,13 +692,16 @@
                     </div>
 
 
+                    <!-- UNIDAD -->
+
                     <div class="pr-grupo">
 
                         <label>
                             Unidad de medida
                         </label>
 
-                        <select name="Unidad_medida_producto" required>
+                        <select name="Unidad_medida_producto"
+                                required>
 
                             <option value="">
                                 Seleccione una unidad
@@ -684,16 +771,20 @@
 </div>
 
 
+<!-- =====================================================
+     MODAL EDITAR PRODUCTO
+===================================================== -->
 
-<!-- ===================== MODAL EDITAR PRODUCTO ===================== -->
-
-<div class="pr-modal" id="modalEditarProducto">
+<div class="pr-modal"
+     id="modalEditarProducto">
 
     <div class="pr-modal-box">
 
         <div class="pr-modal-head">
 
-            <h2>Modificar producto</h2>
+            <h2>
+                Modificar producto
+            </h2>
 
             <button type="button"
                     class="pr-modal-x"
@@ -719,6 +810,7 @@
 
                 <div class="pr-grid">
 
+                    <!-- CÓDIGO -->
 
                     <div class="pr-grupo">
 
@@ -732,6 +824,8 @@
 
                     </div>
 
+
+                    <!-- ESTADO -->
 
                     <div class="pr-grupo">
 
@@ -755,6 +849,8 @@
                     </div>
 
 
+                    <!-- NOMBRE -->
+
                     <div class="pr-grupo">
 
                         <label>
@@ -769,6 +865,8 @@
                     </div>
 
 
+                    <!-- MARCA -->
+
                     <div class="pr-grupo">
 
                         <label>
@@ -781,6 +879,8 @@
 
                     </div>
 
+
+                    <!-- DESCRIPCIÓN -->
 
                     <div class="pr-grupo pr-full">
 
@@ -795,6 +895,8 @@
                     </div>
 
 
+                    <!-- TIPO -->
+
                     <div class="pr-grupo pr-full">
 
                         <label>
@@ -803,7 +905,7 @@
 
                         <select id="edit_tipo"
                                 name="ID_Tipo_producto"
-                                onchange="actualizarSubtipos('edit_tipo', 'edit_subtipos')"
+                                onchange="actualizarSubtipos('edit_tipo', 'edit_subtipo')"
                                 required>
 
                             {% for tipo in tipos_productos %}
@@ -819,38 +921,38 @@
                     </div>
 
 
+                    <!-- SUBTIPO -->
+
                     <div class="pr-grupo pr-full">
 
                         <label>
-                            Subtipos (opcional)
+                            Subtipo
                         </label>
 
-                        <div class="pr-subtipos-caja"
-                             id="edit_subtipos">
+                        <select id="edit_subtipo"
+                                name="ID_Subtipo">
+
+                            <option value="">
+                                Sin subtipo
+                            </option>
 
                             {% for sub in subtipos %}
 
-                                <label data-tipo="{{ sub.ID_Tipo_producto.ID_Tipo_producto }}"
-                                       style="display:none;">
-
-                                    <input type="checkbox"
-                                           name="subtipos"
-                                           value="{{ sub.ID_Subtipo }}">
+                                <option value="{{ sub.ID_Subtipo }}"
+                                        data-tipo="{{ sub.ID_Tipo_producto.ID_Tipo_producto }}">
 
                                     {{ sub.Nombre_subtipo }}
 
-                                </label>
+                                </option>
 
                             {% endfor %}
 
-                            <span class="pr-sub-vacio">
-                                Elegí un tipo de producto para ver sus subtipos.
-                            </span>
-
-                        </div>
+                        </select>
 
                     </div>
 
+
+                    <!-- PRECIO -->
 
                     <div class="pr-grupo">
 
@@ -868,6 +970,8 @@
                     </div>
 
 
+                    <!-- STOCK MÍNIMO -->
+
                     <div class="pr-grupo">
 
                         <label>
@@ -882,6 +986,8 @@
 
                     </div>
 
+
+                    <!-- CANTIDAD -->
 
                     <div class="pr-grupo">
 
@@ -898,6 +1004,8 @@
 
                     </div>
 
+
+                    <!-- UNIDAD -->
 
                     <div class="pr-grupo">
 
@@ -936,6 +1044,7 @@
 
                 </button>
 
+
                 <button type="submit"
                         class="pr-btn pr-btn-primary">
 
@@ -952,10 +1061,12 @@
 </div>
 
 
+<!-- =====================================================
+     MODAL CONFIRMAR BAJA
+===================================================== -->
 
-<!-- ===================== MODAL CONFIRMAR BAJA ===================== -->
-
-<div class="pr-modal" id="modalConfirmarBaja">
+<div class="pr-modal"
+     id="modalConfirmarBaja">
 
     <div class="pr-modal-box">
 
@@ -998,7 +1109,8 @@
 
                 <div class="pr-resumen-cab">
 
-                    <div class="pr-avatar" id="baja_avatar">
+                    <div class="pr-avatar"
+                         id="baja_avatar">
                         PR
                     </div>
 
@@ -1050,12 +1162,19 @@
                     </div>
 
                     <div class="pr-dato">
-                        <span class="lbl">Estado</span>
+
+                        <span class="lbl">
+                            Estado
+                        </span>
+
                         <span class="val"
                               id="baja_estado"
                               style="color:#15803d;">
+
                             Activo
+
                         </span>
+
                     </div>
 
                 </div>
@@ -1075,6 +1194,7 @@
 
             </button>
 
+
             <button type="button"
                     class="pr-btn pr-btn-peligro"
                     id="btnConfirmarBajaEjecutar">
@@ -1089,8 +1209,8 @@
 
 </div>
 
-{% endblock %}
 
+{% endblock %}
 
 
 {% block extra_js %}
@@ -1103,12 +1223,18 @@
 
 
     const ICONO_BAJA =
-        '<svg class="pr-icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+        '<svg class="pr-icon" viewBox="0 0 24 24">' +
+        '<path d="M3 6h18"/>' +
+        '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>' +
+        '<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+        '</svg>';
 
 
     const ICONO_ACTIVAR =
-        '<svg class="pr-icon" viewBox="0 0 24 24"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>';
-
+        '<svg class="pr-icon" viewBox="0 0 24 24">' +
+        '<path d="M21.801 10A10 10 0 1 1 17 3.335"/>' +
+        '<path d="m9 11 3 3L22 4"/>' +
+        '</svg>';
 
 
     /* =====================================================
@@ -1122,46 +1248,57 @@
                 .toLowerCase()
                 .trim();
 
+
         const tipo =
             document.getElementById('filtroTipo').value;
+
 
         const estado =
             document.getElementById('filtroEstado').value;
 
+
         let visibles = 0;
 
 
-        document.querySelectorAll('.producto-card').forEach(function (fila) {
+        document.querySelectorAll('.producto-card')
+            .forEach(function (fila) {
 
-            const coincideTexto =
-                fila.dataset.search
-                    .toLowerCase()
-                    .includes(query);
-
-            const coincideTipo =
-                !tipo || fila.dataset.tipo === tipo;
-
-            const coincideEstado =
-                !estado || fila.dataset.estado === estado;
-
-            const visible =
-                coincideTexto &&
-                coincideTipo &&
-                coincideEstado;
+                const coincideTexto =
+                    fila.dataset.search
+                        .toLowerCase()
+                        .includes(query);
 
 
-            fila.style.display =
-                visible ? '' : 'none';
+                const coincideTipo =
+                    !tipo ||
+                    fila.dataset.tipo === tipo;
 
 
-            if (visible) {
-                visibles++;
-            }
-
-        });
+                const coincideEstado =
+                    !estado ||
+                    fila.dataset.estado === estado;
 
 
-        document.getElementById('contadorProductos').textContent =
+                const visible =
+                    coincideTexto &&
+                    coincideTipo &&
+                    coincideEstado;
+
+
+                fila.style.display =
+                    visible ? '' : 'none';
+
+
+                if (visible) {
+                    visibles++;
+                }
+
+            });
+
+
+        document.getElementById(
+            'contadorProductos'
+        ).textContent =
             visibles +
             ' producto' +
             (visibles === 1 ? '' : 's') +
@@ -1171,66 +1308,67 @@
     }
 
 
-
     /* =====================================================
-       SUBTIPOS
+       MOSTRAR SUBTIPOS SEGÚN EL TIPO
     ===================================================== */
 
-    function actualizarSubtipos(idSelectTipo, idContenedor) {
+    function actualizarSubtipos(
+        idSelectTipo,
+        idSelectSubtipo
+    ) {
 
         const tipo =
-            document.getElementById(idSelectTipo).value;
-
-        const contenedor =
-            document.getElementById(idContenedor);
-
-        let visibles = 0;
+            document.getElementById(
+                idSelectTipo
+            ).value;
 
 
-        contenedor.querySelectorAll('label').forEach(function (etiqueta) {
+        const selectSubtipo =
+            document.getElementById(
+                idSelectSubtipo
+            );
+
+
+        const opciones =
+            selectSubtipo.querySelectorAll(
+                'option[data-tipo]'
+            );
+
+
+        opciones.forEach(function (opcion) {
 
             const mostrar =
                 tipo !== '' &&
-                etiqueta.dataset.tipo === tipo;
+                opcion.dataset.tipo === tipo;
 
 
-            etiqueta.style.display =
-                mostrar ? '' : 'none';
+            opcion.hidden =
+                !mostrar;
 
 
-            if (mostrar) {
-
-                visibles++;
-
-            } else {
-
-                const input =
-                    etiqueta.querySelector('input');
-
-                if (input) {
-                    input.checked = false;
-                }
-
-            }
+            opcion.disabled =
+                !mostrar;
 
         });
 
 
-        const aviso =
-            contenedor.querySelector('.pr-sub-vacio');
+        const opcionSeleccionada =
+            selectSubtipo.options[
+                selectSubtipo.selectedIndex
+            ];
 
 
-        aviso.style.display =
-            visibles ? 'none' : '';
+        if (
+            opcionSeleccionada &&
+            opcionSeleccionada.dataset.tipo &&
+            opcionSeleccionada.dataset.tipo !== tipo
+        ) {
 
+            selectSubtipo.value = '';
 
-        aviso.textContent =
-            tipo === ''
-                ? 'Elegí un tipo de producto para ver sus subtipos.'
-                : 'Este tipo todavía no tiene subtipos.';
+        }
 
     }
-
 
 
     /* =====================================================
@@ -1239,11 +1377,17 @@
 
     function abrirModalCrear() {
 
-        document.getElementById('modalCrearProducto').style.display =
-            'flex';
+        document.getElementById(
+            'modalCrearProducto'
+        ).style.display = 'flex';
+
+
+        actualizarSubtipos(
+            'crear_tipo',
+            'crear_subtipo'
+        );
 
     }
-
 
 
     /* =====================================================
@@ -1261,59 +1405,95 @@
         unidad,
         estado,
         stockMinimo,
-        subtiposIds
+        subtipoId
     ) {
 
-
-        document.getElementById('formEditarProducto').action =
+        document.getElementById(
+            'formEditarProducto'
+        ).action =
             "{% url 'editar_producto' 0 %}"
-                .replace('/0/', '/' + id + '/');
+                .replace(
+                    '/0/',
+                    '/' + id + '/'
+                );
 
 
-        document.getElementById('edit_id').value =
+        document.getElementById(
+            'edit_id'
+        ).value =
             'PROD' + id;
 
-        document.getElementById('edit_tipo').value =
+
+        document.getElementById(
+            'edit_tipo'
+        ).value =
             tipo;
 
-        document.getElementById('edit_nombre').value =
+
+        document.getElementById(
+            'edit_nombre'
+        ).value =
             nombre;
 
-        document.getElementById('edit_marca').value =
+
+        document.getElementById(
+            'edit_marca'
+        ).value =
             marca;
 
-        document.getElementById('edit_descripcion').value =
+
+        document.getElementById(
+            'edit_descripcion'
+        ).value =
             descripcion;
 
-        document.getElementById('edit_precio').value =
+
+        document.getElementById(
+            'edit_precio'
+        ).value =
             precio;
 
-        document.getElementById('edit_cantidad').value =
+
+        document.getElementById(
+            'edit_cantidad'
+        ).value =
             cantidad;
 
-        document.getElementById('edit_stock_minimo').value =
+
+        document.getElementById(
+            'edit_stock_minimo'
+        ).value =
             stockMinimo;
 
-        document.getElementById('edit_estado').value =
+
+        document.getElementById(
+            'edit_estado'
+        ).value =
             estado;
 
 
-        /* Unidad de medida */
-
         const selectUnidad =
-            document.getElementById('edit_unidad');
+            document.getElementById(
+                'edit_unidad'
+            );
 
 
         if (
             unidad &&
-            !Array.from(selectUnidad.options)
-                .some(function (o) {
-                    return o.value === unidad;
-                })
+            !Array.from(
+                selectUnidad.options
+            ).some(function (opcion) {
+
+                return opcion.value === unidad;
+
+            })
         ) {
 
             selectUnidad.add(
-                new Option(unidad, unidad)
+                new Option(
+                    unidad,
+                    unidad
+                )
             );
 
         }
@@ -1323,37 +1503,26 @@
             unidad;
 
 
-        /* Subtipos */
+        /* SUBTIPO */
 
         actualizarSubtipos(
             'edit_tipo',
-            'edit_subtipos'
+            'edit_subtipo'
         );
 
 
-        const marcados =
-            subtiposIds
-                ? subtiposIds.split(',')
-                : [];
+        document.getElementById(
+            'edit_subtipo'
+        ).value =
+            subtipoId || '';
 
 
-        document
-            .querySelectorAll(
-                '#edit_subtipos input[type="checkbox"]'
-            )
-            .forEach(function (casilla) {
-
-                casilla.checked =
-                    marcados.includes(casilla.value);
-
-            });
-
-
-        document.getElementById('modalEditarProducto').style.display =
+        document.getElementById(
+            'modalEditarProducto'
+        ).style.display =
             'flex';
 
     }
-
 
 
     /* =====================================================
@@ -1362,7 +1531,9 @@
 
     function cerrarModal(idModal) {
 
-        document.getElementById(idModal).style.display =
+        document.getElementById(
+            idModal
+        ).style.display =
             'none';
 
     }
@@ -1374,19 +1545,19 @@
         'modalConfirmarBaja'
     ].forEach(function (id) {
 
-        document.getElementById(id).addEventListener(
-            'click',
-            function (e) {
+        document.getElementById(id)
+            .addEventListener(
+                'click',
+                function (e) {
 
-                if (e.target === this) {
-                    cerrarModal(id);
+                    if (e.target === this) {
+                        cerrarModal(id);
+                    }
+
                 }
-
-            }
-        );
+            );
 
     });
-
 
 
     /* =====================================================
@@ -1404,24 +1575,26 @@
         unidad
     ) {
 
-
         event.preventDefault();
 
 
         const form =
             event.target;
 
+
         const btn =
             document.getElementById(
                 'btn-estado-' + id
             );
 
+
         const esActivo =
-            btn.classList.contains('pr-baja');
+            btn.classList.contains(
+                'pr-baja'
+            );
 
 
         if (esActivo) {
-
 
             formPendingState =
                 form;
@@ -1502,13 +1675,15 @@
     }
 
 
+    /* =====================================================
+       CONFIRMAR BAJA
+    ===================================================== */
 
     document.getElementById(
         'btnConfirmarBajaEjecutar'
     ).addEventListener(
         'click',
         function () {
-
 
             if (!formPendingState) {
                 return;
@@ -1536,7 +1711,6 @@
     );
 
 
-
     /* =====================================================
        CAMBIAR ESTADO
     ===================================================== */
@@ -1547,7 +1721,6 @@
         nombre,
         esBaja
     ) {
-
 
         const btn =
             document.getElementById(
@@ -1601,7 +1774,6 @@
             }
         )
 
-
         .then(function (response) {
 
             if (!response.ok) {
@@ -1614,7 +1786,6 @@
 
 
             if (esBaja) {
-
 
                 btn.classList.remove(
                     'pr-baja'
@@ -1670,7 +1841,6 @@
 
 
             } else {
-
 
                 btn.classList.remove(
                     'pr-activar'
@@ -1740,7 +1910,6 @@
     }
 
 
-
     /* =====================================================
        TOASTS
     ===================================================== */
@@ -1749,7 +1918,6 @@
         mensaje,
         tipo
     ) {
-
 
         const container =
             document.getElementById(
@@ -1787,6 +1955,7 @@
         cerrar.className =
             'pr-toast-x';
 
+
         cerrar.textContent =
             '✕';
 
@@ -1801,9 +1970,11 @@
             texto
         );
 
+
         toast.appendChild(
             cerrar
         );
+
 
         container.appendChild(
             toast
@@ -1820,7 +1991,6 @@
     }
 
 
-
     /* =====================================================
        MENSAJES DJANGO
     ===================================================== */
@@ -1828,7 +1998,6 @@
     document.addEventListener(
         'DOMContentLoaded',
         function () {
-
 
             document
                 .querySelectorAll('.pr-toast')
