@@ -598,18 +598,18 @@
 .pr-subtipos,
 .pr-stock-sub {
     display: block;
-    font-weight: 600;
+    margin-top: 2px;
     font-size: 12px;
     color: black;
 }
 
-.pr-tipo   { display: block; font-weight: 600; font-size: 12px; }
-.pr-precio { font-weight: 600; }
+.pr-tipo   { display: block; font-size: 12px; }
+.pr-precio {color: black; }
 
-.pr-stock       { display: block; font-size: 13px; font-weight: 700; }
+.pr-stock       { display: block; font-size: 13px; }
 .pr-stock.pr-bajo { color: #dc2626; }
 
-.pr-minimo small { color: var(--pr-suave); font-size: 10.5px; }
+.pr-minimo small { color: var(--pr-suave); font-size: 12px; }
 
 /* ---------- Botones de icono ---------- */
 .pr-icon-btn {
