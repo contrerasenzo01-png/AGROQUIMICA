@@ -598,9 +598,9 @@
 .pr-subtipos,
 .pr-stock-sub {
     display: block;
-    margin-top: 2px;
-    font-size: 10.5px;
-    color: var(--pr-suave);
+    font-weight: 600;
+    font-size: 12px;
+    color: black;
 }
 
 .pr-tipo   { display: block; font-weight: 600; font-size: 12px; }
