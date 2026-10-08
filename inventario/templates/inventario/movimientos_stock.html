@@ -20,9 +20,11 @@
         </h1>
     </div>
 
-    <button type="button"
-            class="btn btn-primary"
-            onclick="abrirModal()">
+    <button
+        type="button"
+        class="btn btn-primary"
+        onclick="abrirModal()"
+    >
         ⇄ Registrar egreso
     </button>
 
@@ -30,6 +32,7 @@
 
 
 {% if messages %}
+
     <div class="messages">
 
         {% for message in messages %}
@@ -41,9 +44,11 @@
         {% endfor %}
 
     </div>
+
 {% endif %}
 
 
+<!-- FILTROS -->
 <form method="GET" class="toolbar">
 
     <input
@@ -53,6 +58,7 @@
         class="search-box"
         placeholder="Buscar producto, lote u observaciones..."
     >
+
 
     <select
         name="tipo"
@@ -72,21 +78,27 @@
                     selected
                 {% endif %}
             >
+
                 {{ t.Nombre_tipo_movimiento }}
+
             </option>
 
         {% endfor %}
 
     </select>
 
-    <button type="submit"
-            class="btn btn-secondary">
+
+    <button
+        type="submit"
+        class="btn btn-secondary"
+    >
         Buscar
     </button>
 
 </form>
 
 
+<!-- TABLA -->
 <div class="card">
 
     <div class="table-wrap">
@@ -96,13 +108,35 @@
             <thead>
 
                 <tr>
-                    <th>Fecha y hora</th>
-                    <th>Producto</th>
-                    <th>Lote</th>
-                    <th>Tipo</th>
-                    <th>Cantidad</th>
-                    <th>Usuario</th>
-                    <th>Observaciones</th>
+
+                    <th>
+                        Fecha y hora
+                    </th>
+
+                    <th>
+                        Producto
+                    </th>
+
+                    <th>
+                        Lote
+                    </th>
+
+                    <th>
+                        Tipo
+                    </th>
+
+                    <th>
+                        Cantidad
+                    </th>
+
+                    <th>
+                        Usuario
+                    </th>
+
+                    <th>
+                        Observaciones
+                    </th>
+
                 </tr>
 
             </thead>
@@ -116,6 +150,7 @@
 
                         <tr>
 
+                            <!-- FECHA Y HORA -->
                             <td>
 
                                 <span class="mov-fecha">
@@ -129,31 +164,54 @@
                             </td>
 
 
+                            <!-- PRODUCTO -->
                             <td>
-                                {{ m.ID_Lote.ID_Producto.Nombre_producto|default:"—" }}
+
+                                {% if m.ID_Lote %}
+
+                                    {{ m.ID_Lote.ID_Producto.Nombre_producto }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
                             </td>
 
 
+                            <!-- LOTE -->
                             <td>
-                                {{ m.ID_Lote.Numero_lote|default:"—" }}
+
+                                {% if m.ID_Lote %}
+
+                                    {{ m.ID_Lote.Numero_lote }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
                             </td>
 
 
+                            <!-- TIPO -->
                             <td>
 
-                                {% if tipo == "Entrada" %}
+                                {% if tipo == "Entrada de lote" %}
 
                                     <span class="tag tag-entrada">
                                         Ingreso
                                     </span>
 
-                                {% elif tipo == "Salida por venta" %}
+                                {% elif tipo == "Salida por venta de producto" %}
 
                                     <span class="tag tag-salida">
                                         Egreso
                                     </span>
 
-                                {% elif tipo == "Salida por vencimiento" %}
+                                {% elif tipo == "Salida por vencimiento de producto" %}
 
                                     <span class="tag tag-vencimiento">
                                         Vencimiento
@@ -170,9 +228,10 @@
                             </td>
 
 
+                            <!-- CANTIDAD -->
                             <td>
 
-                                {% if tipo == "Entrada" %}
+                                {% if tipo == "Entrada de lote" %}
 
                                     <span class="mov-cantidad pos">
                                         +{{ m.Cantidad_movimiento }}
@@ -189,16 +248,30 @@
                             </td>
 
 
+                            <!-- USUARIO -->
                             <td>
-                                {{ m.ID_Usuario.Apellido_usuario }}
-                                {{ m.ID_Usuario.Nombre_usuario }}
+
+                                {% if m.ID_Usuario %}
+
+                                    {{ m.ID_Usuario.Apellido_usuario }}
+                                    {{ m.ID_Usuario.Nombre_usuario }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
                             </td>
 
 
+                            <!-- OBSERVACIONES -->
                             <td>
 
                                 <span class="mov-obs">
+
                                     {{ m.Observaciones|default:"—" }}
+
                                 </span>
 
                             </td>
@@ -207,12 +280,15 @@
 
                     {% endwith %}
 
+
                 {% empty %}
 
                     <tr>
 
-                        <td colspan="7"
-                            class="tabla-vacia">
+                        <td
+                            colspan="7"
+                            class="tabla-vacia"
+                        >
 
                             No se encontraron movimientos de stock.
 
@@ -229,11 +305,14 @@
     </div>
 
 
+    <!-- PIE DE TABLA -->
     <div class="tabla-pie">
 
         <span>
+
             {{ movimientos|length }}
             movimiento{{ movimientos|length|pluralize }}
+
         </span>
 
         <span>
@@ -247,20 +326,26 @@
 
 <!-- MODAL REGISTRAR EGRESO -->
 
-<div id="modalEgreso"
-     class="modal">
+<div
+    id="modalEgreso"
+    class="modal"
+>
 
     <div class="modal-contenido">
 
+
+        <!-- CABECERA -->
         <div class="modal-header">
 
             <h2>
                 Registrar egreso
             </h2>
 
-            <button type="button"
-                    class="modal-cerrar"
-                    onclick="cerrarModal()">
+            <button
+                type="button"
+                class="modal-cerrar"
+                onclick="cerrarModal()"
+            >
 
                 &times;
 
@@ -269,17 +354,23 @@
         </div>
 
 
-        <form method="POST"
-              action="{% url 'crear_movimiento_stock' %}">
+        <!-- FORMULARIO -->
+        <form
+            method="POST"
+            action="{% url 'crear_movimiento_stock' %}"
+        >
 
             {% csrf_token %}
 
 
-            <input type="hidden"
-                   name="ID_Usuario"
-                   value="{{ usuario.ID_Usuario }}">
+            <input
+                type="hidden"
+                name="ID_Usuario"
+                value="{{ usuario.ID_Usuario }}"
+            >
 
 
+            <!-- LOTE -->
             <div class="form-group">
 
                 <label for="ID_Lote">
@@ -315,6 +406,7 @@
             </div>
 
 
+            <!-- TIPO DE MOVIMIENTO -->
             <div class="form-group">
 
                 <label for="ID_Tipo_movimiento">
@@ -333,8 +425,12 @@
 
                     {% for t in tipos_movimientos %}
 
-                        <option value="{{ t.ID_Tipo_movimiento }}">
+                        <option
+                            value="{{ t.ID_Tipo_movimiento }}"
+                        >
+
                             {{ t.Nombre_tipo_movimiento }}
+
                         </option>
 
                     {% endfor %}
@@ -344,6 +440,7 @@
             </div>
 
 
+            <!-- CANTIDAD -->
             <div class="form-group">
 
                 <label for="Cantidad_movimiento">
@@ -361,6 +458,7 @@
             </div>
 
 
+            <!-- OBSERVACIONES -->
             <div class="form-group">
 
                 <label for="Observaciones">
@@ -377,6 +475,7 @@
             </div>
 
 
+            <!-- ACCIONES -->
             <div class="modal-acciones">
 
                 <button

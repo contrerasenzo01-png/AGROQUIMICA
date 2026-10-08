@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 import unicodedata
 
@@ -8,7 +8,6 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-
 from .forms import ProveedorForm
 
 from .models import (
@@ -160,13 +159,15 @@ def panel_principal(request):
     if not usuario:
         return redirect('login')
 
-    generar_alertas_vencimiento()
+    alertas_vencimiento = generar_alertas_vencimiento()
+
 
     return render(
         request,
         'inventario/panel_principal.html',
         {
-            'usuario': usuario
+            'usuario': usuario,
+            'alertas_vencimiento': alertas_vencimiento
         }
     )
 
@@ -1370,7 +1371,6 @@ def mis_permisos(request):
         }
     )
 
-
 # ============================================================
 # PRODUCTOS
 # ============================================================
@@ -1382,13 +1382,22 @@ def _leer_datos_producto(request, estado_por_defecto):
     """
 
     tipo_id = request.POST.get('ID_Tipo_producto')
+    subtipo_id = request.POST.get('ID_Subtipo')
+
     marca = request.POST.get('Marca', '').strip()
     nombre = request.POST.get('Nombre_producto', '').strip()
     descripcion = request.POST.get('Descripcion_producto', '').strip()
     precio = request.POST.get('Precio', '').strip()
     cantidad_presentacion = request.POST.get('Cantidad_presentacion', '').strip()
     unidad_medida = request.POST.get('Unidad_medida_producto', '').strip()
-    estado_producto = request.POST.get('Estado_producto', estado_por_defecto)
+    estado_producto = request.POST.get(
+        'Estado_producto',
+        estado_por_defecto
+    )
+
+    # --------------------------------------------------------
+    # VALIDAR TIPO
+    # --------------------------------------------------------
 
     if not tipo_id:
         return None, 'Debe seleccionar un tipo de producto.'
@@ -1399,8 +1408,36 @@ def _leer_datos_producto(request, estado_por_defecto):
         Estado_tipo_producto=True
     )
 
+    # --------------------------------------------------------
+    # VALIDAR SUBTIPO
+    # --------------------------------------------------------
+
+    subtipo = None
+
+    if subtipo_id:
+        subtipo = get_object_or_404(
+            Subtipos,
+            ID_Subtipo=subtipo_id,
+            Estado_subtipo=True
+        )
+
+        # El subtipo debe pertenecer al tipo seleccionado
+        if subtipo.ID_Tipo_producto_id != tipo.ID_Tipo_producto:
+            return None, (
+                'El subtipo seleccionado no corresponde '
+                'al tipo de producto.'
+            )
+
+    # --------------------------------------------------------
+    # VALIDAR NOMBRE
+    # --------------------------------------------------------
+
     if not nombre:
         return None, 'Debe ingresar el nombre del producto.'
+
+    # --------------------------------------------------------
+    # VALIDAR PRECIO
+    # --------------------------------------------------------
 
     if not precio:
         return None, 'Debe ingresar el precio del producto.'
@@ -1413,6 +1450,10 @@ def _leer_datos_producto(request, estado_por_defecto):
     if precio <= 0:
         return None, 'El precio debe ser mayor a cero.'
 
+    # --------------------------------------------------------
+    # VALIDAR CANTIDAD DE PRESENTACIÓN
+    # --------------------------------------------------------
+
     if cantidad_presentacion:
 
         try:
@@ -1421,11 +1462,16 @@ def _leer_datos_producto(request, estado_por_defecto):
             return None, 'La cantidad de presentación no es válida.'
 
         if cantidad_presentacion <= 0:
-            return None, 'La cantidad de presentación debe ser mayor a cero.'
+            return None, (
+                'La cantidad de presentación debe ser mayor a cero.'
+            )
 
     else:
-
         cantidad_presentacion = None
+
+    # --------------------------------------------------------
+    # VALIDAR STOCK MÍNIMO
+    # --------------------------------------------------------
 
     stock_minimo = request.POST.get('Stock_minimo', '').strip()
 
@@ -1433,19 +1479,23 @@ def _leer_datos_producto(request, estado_por_defecto):
 
         try:
             stock_minimo = int(stock_minimo)
-        except ValueError:
+        except (ValueError, TypeError):
             return None, 'El stock mínimo ingresado no es válido.'
 
         if stock_minimo < 0:
             return None, 'El stock mínimo no puede ser negativo.'
 
     else:
-
         stock_minimo = None
+
+    # --------------------------------------------------------
+    # DATOS VALIDADOS
+    # --------------------------------------------------------
 
     datos = {
         'stock_minimo': stock_minimo,
         'tipo': tipo,
+        'subtipo': subtipo,
         'marca': marca or None,
         'nombre': nombre,
         'descripcion': descripcion or None,
@@ -1477,23 +1527,6 @@ def _producto_duplicado(nombre, marca, excluir_pk=None):
     return productos.exists()
 
 
-def _guardar_subtipos_producto(producto, ids):
-    """
-    Guarda los subtipos elegidos en el formulario.
-    Solo actúa si el modelo Productos tiene una relación muchos a muchos
-    llamada 'subtipos'; si no la tiene, no hace nada (no da error).
-    """
-
-    relacion = getattr(producto, 'subtipos', None)
-
-    if relacion is None or not hasattr(relacion, 'set'):
-        return
-
-    ids_validos = [i for i in ids if str(i).isdigit()]
-
-    relacion.set(Subtipos.objects.filter(ID_Subtipo__in=ids_validos))
-
-
 def gestion_productos(request):
 
     usuario = usuario_autenticado(request)
@@ -1506,6 +1539,7 @@ def gestion_productos(request):
 
     productos = Productos.objects.select_related(
         'ID_Tipo_producto',
+        'ID_Subtipo',
         'stock'
     ).all()
 
@@ -1518,10 +1552,20 @@ def gestion_productos(request):
         )
 
     if tipo_id:
-        productos = productos.filter(ID_Tipo_producto_id=tipo_id)
+        productos = productos.filter(
+            ID_Tipo_producto_id=tipo_id
+        )
 
     tipos_productos = TiposProductos.objects.filter(
         Estado_tipo_producto=True
+    )
+
+    subtipos = Subtipos.objects.filter(
+        Estado_subtipo=True
+    ).select_related(
+        'ID_Tipo_producto'
+    ).order_by(
+        'Nombre_subtipo'
     )
 
     return render(
@@ -1530,12 +1574,12 @@ def gestion_productos(request):
         {
             'productos': productos,
             'tipos_productos': tipos_productos,
+            'subtipos': subtipos,
             'busqueda': busqueda,
             'usuario': usuario,
-            'subtipos': Subtipos.objects.filter(
-                Estado_subtipo=True
-            ).select_related('ID_Tipo_producto').order_by('Nombre_subtipo'),
-            'total_activos': Productos.objects.filter(Estado_producto='Activo').count(),
+            'total_activos': Productos.objects.filter(
+                Estado_producto='Activo'
+            ).count(),
             'total_tipos': tipos_productos.count()
         }
     )
@@ -1550,7 +1594,10 @@ def crear_producto(request):
 
     if request.method == 'POST':
 
-        datos, error = _leer_datos_producto(request, 'Activo')
+        datos, error = _leer_datos_producto(
+            request,
+            'Activo'
+        )
 
         if error:
 
@@ -1558,9 +1605,15 @@ def crear_producto(request):
 
             return redirect('gestion_productos')
 
-        if _producto_duplicado(datos['nombre'], datos['marca']):
+        if _producto_duplicado(
+            datos['nombre'],
+            datos['marca']
+        ):
 
-            messages.error(request, 'Ya existe un producto con esos datos.')
+            messages.error(
+                request,
+                'Ya existe un producto con esos datos.'
+            )
 
             return redirect('gestion_productos')
 
@@ -1568,6 +1621,7 @@ def crear_producto(request):
 
             producto = Productos.objects.create(
                 ID_Tipo_producto=datos['tipo'],
+                ID_Subtipo=datos['subtipo'],
                 Marca=datos['marca'],
                 Nombre_producto=datos['nombre'],
                 Descripcion_producto=datos['descripcion'],
@@ -1577,7 +1631,8 @@ def crear_producto(request):
                 Estado_producto=datos['estado_producto']
             )
 
-            # Stock inicial en 0; los ingresos se registran desde Lotes
+            # Stock inicial en 0;
+            # los ingresos se registran desde Lotes
             Stock.objects.get_or_create(
                 ID_Producto=producto,
                 defaults={
@@ -1586,9 +1641,10 @@ def crear_producto(request):
                 }
             )
 
-            _guardar_subtipos_producto(producto, request.POST.getlist('subtipos'))
-
-        messages.success(request, 'Producto registrado correctamente.')
+        messages.success(
+            request,
+            'Producto registrado correctamente.'
+        )
 
     return redirect('gestion_productos')
 
@@ -1600,11 +1656,17 @@ def editar_producto(request, pk):
     if not usuario:
         return redirect('login')
 
-    producto = get_object_or_404(Productos, ID_Producto=pk)
+    producto = get_object_or_404(
+        Productos,
+        ID_Producto=pk
+    )
 
     if request.method == 'POST':
 
-        datos, error = _leer_datos_producto(request, producto.Estado_producto)
+        datos, error = _leer_datos_producto(
+            request,
+            producto.Estado_producto
+        )
 
         if error:
 
@@ -1612,13 +1674,21 @@ def editar_producto(request, pk):
 
             return redirect('gestion_productos')
 
-        if _producto_duplicado(datos['nombre'], datos['marca'], excluir_pk=pk):
+        if _producto_duplicado(
+            datos['nombre'],
+            datos['marca'],
+            excluir_pk=pk
+        ):
 
-            messages.error(request, 'Ya existe otro producto con esos datos.')
+            messages.error(
+                request,
+                'Ya existe otro producto con esos datos.'
+            )
 
             return redirect('gestion_productos')
 
         producto.ID_Tipo_producto = datos['tipo']
+        producto.ID_Subtipo = datos['subtipo']
         producto.Marca = datos['marca']
         producto.Nombre_producto = datos['nombre']
         producto.Descripcion_producto = datos['descripcion']
@@ -1642,12 +1712,15 @@ def editar_producto(request, pk):
                 )
 
                 if not creado:
+
                     stock.Stock_minimo = datos['stock_minimo']
+
                     stock.save()
 
-            _guardar_subtipos_producto(producto, request.POST.getlist('subtipos'))
-
-        messages.success(request, 'Producto actualizado correctamente.')
+        messages.success(
+            request,
+            'Producto actualizado correctamente.'
+        )
 
     return redirect('gestion_productos')
 
@@ -1659,7 +1732,10 @@ def cambiar_estado_producto(request, pk):
     if not usuario:
         return redirect('login')
 
-    producto = get_object_or_404(Productos, ID_Producto=pk)
+    producto = get_object_or_404(
+        Productos,
+        ID_Producto=pk
+    )
 
     if request.method == 'POST':
 
@@ -1667,18 +1743,23 @@ def cambiar_estado_producto(request, pk):
 
             producto.Estado_producto = 'Inactivo'
 
-            messages.success(request, 'Producto dado de baja correctamente.')
+            messages.success(
+                request,
+                'Producto dado de baja correctamente.'
+            )
 
         else:
 
             producto.Estado_producto = 'Activo'
 
-            messages.success(request, 'Producto activado correctamente.')
+            messages.success(
+                request,
+                'Producto activado correctamente.'
+            )
 
         producto.save()
 
     return redirect('gestion_productos')
-
 
 # ============================================================
 # REGISTRAR INGRESO DE LOTE
@@ -1700,18 +1781,40 @@ def registrar_ingreso_lote(request):
         producto_id = request.POST.get('ID_Producto')
         numero_lote = request.POST.get('Numero_lote', '').strip()
         cantidad = request.POST.get('Cantidad_ingresada')
-        fecha_ingreso = request.POST.get('Fecha_ingreso')
+        fecha_ingreso = timezone.localdate()
         fecha_vencimiento = request.POST.get('Fecha_vencimiento')
+
+        if fecha_vencimiento:
+
+            try:
+                fecha_vencimiento = date.fromisoformat(
+                    fecha_vencimiento
+                )
+
+            except ValueError:
+
+                messages.error(
+                    request,
+                    'La fecha de vencimiento no es válida.'
+                )
+
+                return redirect('registrar_ingreso_lote')
 
         if not proveedor_id or not producto_id:
 
-            messages.error(request, 'Debe seleccionar el proveedor y el producto.')
+            messages.error(
+                request,
+                'Debe seleccionar el proveedor y el producto.'
+            )
 
             return redirect('registrar_ingreso_lote')
 
         if not numero_lote:
 
-            messages.error(request, 'Debe ingresar el número de lote.')
+            messages.error(
+                request,
+                'Debe ingresar el número de lote.'
+            )
 
             return redirect('registrar_ingreso_lote')
 
@@ -1719,21 +1822,22 @@ def registrar_ingreso_lote(request):
             cantidad = int(cantidad)
         except (TypeError, ValueError):
 
-            messages.error(request, 'La cantidad ingresada no es válida.')
+            messages.error(
+                request,
+                'La cantidad ingresada no es válida.'
+            )
 
             return redirect('registrar_ingreso_lote')
 
         if cantidad <= 0:
 
-            messages.error(request, 'La cantidad debe ser mayor a cero.')
+            messages.error(
+                request,
+                'La cantidad debe ser mayor a cero.'
+            )
 
             return redirect('registrar_ingreso_lote')
 
-        if not fecha_ingreso:
-
-            messages.error(request, 'Debe ingresar la fecha de ingreso.')
-
-            return redirect('registrar_ingreso_lote')
 
         if fecha_vencimiento and fecha_vencimiento < fecha_ingreso:
 
@@ -1756,9 +1860,11 @@ def registrar_ingreso_lote(request):
             Estado_producto='Activo'
         )
 
+        # El ingreso de lote genera automáticamente
+        # un movimiento de tipo "Entrada de lote".
         tipo_entrada = get_object_or_404(
             TiposMovimientos,
-            Nombre_tipo_movimiento__iexact='Entrada'
+            Nombre_tipo_movimiento__iexact='Entrada de lote'
         )
 
         lote_existente = Lotes.objects.filter(
@@ -1769,11 +1875,14 @@ def registrar_ingreso_lote(request):
 
         if lote_existente:
 
-            messages.error(request, 'Ya existe un lote con esos datos.')
+            messages.error(
+                request,
+                'Ya existe un lote con esos datos.'
+            )
 
             return redirect('registrar_ingreso_lote')
 
-        # Lote + stock + movimiento se guardan juntos (todo o nada)
+        # Lote + stock + movimiento se guardan juntos.
         with transaction.atomic():
 
             lote = Lotes.objects.create(
@@ -1802,16 +1911,20 @@ def registrar_ingreso_lote(request):
                 ID_Tipo_movimiento=tipo_entrada,
                 ID_Lote=lote,
                 Cantidad_movimiento_stock=cantidad,
-                Observaciones='Ingreso de lote'
+                Observaciones='Entrada de lote'
             )
 
-        messages.success(request, 'Ingreso de lote registrado correctamente.')
+        messages.success(
+            request,
+            'Ingreso de lote registrado correctamente.'
+        )
 
         return redirect('registrar_ingreso_lote')
 
     # ------------------------------------------------------------
     # GET: listado de lotes con buscador
     # ------------------------------------------------------------
+
     busqueda = request.GET.get('q', '').strip()
 
     lotes = Lotes.objects.select_related(
@@ -1892,15 +2005,18 @@ def gestion_movimientos_stock(request):
         )
 
     if tipo_sel:
-        movimientos = movimientos.filter(ID_Tipo_movimiento_id=tipo_sel)
 
-    # Para el filtro de la tabla: todos los tipos
+        movimientos = movimientos.filter(
+            ID_Tipo_movimiento_id=tipo_sel
+        )
+
+    # Para el filtro de la tabla: se muestran todos los tipos.
     todos_tipos = TiposMovimientos.objects.all()
 
-    # Para el modal "Registrar egreso": sin 'Entrada' (los ingresos se
-    # registran desde Ingreso de Lote y generan su movimiento solos)
+    # Para "Registrar egreso" no se muestra "Entrada de lote",
+    # porque las entradas se registran desde Ingreso de Lote.
     tipos_movimientos = TiposMovimientos.objects.exclude(
-        Nombre_tipo_movimiento__iexact='Entrada'
+        Nombre_tipo_movimiento__iexact='Entrada de lote'
     )
 
     lotes = Lotes.objects.select_related(
@@ -1940,7 +2056,10 @@ def crear_movimiento_stock(request):
 
     if not tipo_id or not lote_id:
 
-        messages.error(request, 'Debe seleccionar el lote y el tipo de movimiento.')
+        messages.error(
+            request,
+            'Debe seleccionar el lote y el tipo de movimiento.'
+        )
 
         return redirect('gestion_movimientos_stock')
 
@@ -1949,9 +2068,14 @@ def crear_movimiento_stock(request):
         ID_Tipo_movimiento=tipo_id
     )
 
-    nombre_movimiento = tipo_movimiento.Nombre_tipo_movimiento.strip().lower()
+    nombre_movimiento = (
+        tipo_movimiento.Nombre_tipo_movimiento
+        .strip()
+        .lower()
+    )
 
-    if nombre_movimiento == 'entrada':
+    # La entrada de lote NO se registra desde esta pantalla.
+    if nombre_movimiento == 'entrada de lote':
 
         messages.error(
             request,
@@ -1960,9 +2084,13 @@ def crear_movimiento_stock(request):
 
         return redirect('gestion_movimientos_stock')
 
-    if nombre_movimiento not in ('salida por venta', 'salida por vencimiento'):
+    # Solo se permiten estos dos tipos de egreso.
+    if nombre_movimiento != 'salida por vencimiento de producto':
 
-        messages.error(request, 'El tipo de movimiento no es válido.')
+        messages.error(
+            request,
+            'El tipo de movimiento no es válido.'
+        )
 
         return redirect('gestion_movimientos_stock')
 
@@ -1977,21 +2105,29 @@ def crear_movimiento_stock(request):
 
     except (TypeError, ValueError):
 
-        messages.error(request, 'La cantidad ingresada no es válida.')
+        messages.error(
+            request,
+            'La cantidad ingresada no es válida.'
+        )
 
         return redirect('gestion_movimientos_stock')
 
     if cantidad <= 0:
 
-        messages.error(request, 'La cantidad debe ser mayor a cero.')
+        messages.error(
+            request,
+            'La cantidad debe ser mayor a cero.'
+        )
 
         return redirect('gestion_movimientos_stock')
 
-    observaciones = request.POST.get('Observaciones', '').strip()
+    observaciones = request.POST.get(
+        'Observaciones',
+        ''
+    ).strip()
 
-    # CORREGIDO: el usuario del movimiento es el que tiene la sesión
-    # iniciada (antes se tomaba de un campo del formulario), y todo el
-    # descuento se hace en una transacción con las filas bloqueadas.
+    # El usuario del movimiento es el usuario
+    # que tiene la sesión iniciada.
     with transaction.atomic():
 
         lote = get_object_or_404(
@@ -2017,7 +2153,10 @@ def crear_movimiento_stock(request):
 
         if cantidad > stock.Cantidad_stock:
 
-            messages.error(request, 'No hay suficiente stock disponible.')
+            messages.error(
+                request,
+                'No hay suficiente stock disponible.'
+            )
 
             return redirect('gestion_movimientos_stock')
 
@@ -2037,6 +2176,8 @@ def crear_movimiento_stock(request):
             Observaciones=observaciones or None
         )
 
+        # Generar alerta cuando el stock alcanza
+        # o queda por debajo del mínimo.
         if (
             cantidad_anterior > stock.Stock_minimo
             and
@@ -2044,7 +2185,6 @@ def crear_movimiento_stock(request):
         ):
 
             Alertas.objects.create(
-                ID_Lote=None,
                 ID_Stock=stock,
                 Tipo_alerta='Stock mínimo',
                 Mensaje=(
@@ -2057,9 +2197,13 @@ def crear_movimiento_stock(request):
                 Atendida=False
             )
 
-    messages.success(request, 'Movimiento de stock registrado correctamente.')
+    messages.success(
+        request,
+        'Movimiento de stock registrado correctamente.'
+    )
 
     return redirect('gestion_movimientos_stock')
+
 
 
 # ============================================================
@@ -2068,57 +2212,53 @@ def crear_movimiento_stock(request):
 
 def generar_alertas_vencimiento():
 
-    fecha_actual = timezone.now().date()
-
+    fecha_actual = timezone.localdate()
     fecha_limite = fecha_actual + timedelta(days=30)
 
-    productos = Productos.objects.filter(
-        lotes__Fecha_vencimiento__isnull=False,
-        lotes__Fecha_vencimiento__gte=fecha_actual,
-        lotes__Fecha_vencimiento__lte=fecha_limite
-    ).distinct()
+    lotes = Lotes.objects.select_related(
+        'ID_Producto'
+    ).filter(
+        Fecha_vencimiento__isnull=False,
+        Fecha_vencimiento__gte=fecha_actual,
+        Fecha_vencimiento__lte=fecha_limite,
+        Cantidad_actual__gt=0
+    ).order_by(
+        'Fecha_vencimiento'
+    )
 
-    for producto in productos:
+    alertas_vencimiento = []
 
-        stock = getattr(producto, 'stock', None)
+    for lote in lotes:
 
-        if not stock:
-            continue
+        dias_restantes = (
+            lote.Fecha_vencimiento - fecha_actual
+        ).days
 
-        lotes = producto.lotes.filter(
-            Fecha_vencimiento__isnull=False,
-            Fecha_vencimiento__gte=fecha_actual,
-            Fecha_vencimiento__lte=fecha_limite,
-            Cantidad_actual__gt=0
-        )
+        if dias_restantes == 0:
+            mensaje = (
+                f'El producto '
+                f'{lote.ID_Producto.Nombre_producto} '
+                f'del lote {lote.Numero_lote} '
+                f'vence hoy '
+                f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
+            )
+        else:
+            mensaje = (
+                f'El producto '
+                f'{lote.ID_Producto.Nombre_producto} '
+                f'del lote {lote.Numero_lote} '
+                f'vence en {dias_restantes} días '
+                f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
+            )
 
-        for lote in lotes:
+        alertas_vencimiento.append({
+            'producto': lote.ID_Producto,
+            'lote': lote,
+            'dias_restantes': dias_restantes,
+            'mensaje': mensaje
+        })
 
-            dias_restantes = (lote.Fecha_vencimiento - fecha_actual).days
-
-            existe_alerta = Alertas.objects.filter(
-                ID_Lote=lote,
-                ID_Stock=stock,
-                Tipo_alerta='Vencimiento'
-            ).exists()
-
-            if not existe_alerta:
-
-                Alertas.objects.create(
-                    ID_Lote=lote,
-                    ID_Stock=stock,
-                    Tipo_alerta='Vencimiento',
-                    Mensaje=(
-                        f'El producto '
-                        f'{producto.Nombre_producto} '
-                        f'del lote {lote.Numero_lote} '
-                        f'vence en {dias_restantes} días '
-                        f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
-                    ),
-                    Cantidad_al_generar=lote.Cantidad_actual,
-                    Stock_minimo_al_generar=stock.Stock_minimo,
-                    Atendida=False
-                )
+    return alertas_vencimiento
 
 
 # ============================================================
@@ -2132,47 +2272,146 @@ def gestion_alertas(request):
     if not usuario:
         return redirect('panel_principal')
 
-    generar_alertas_vencimiento()
-
-    fecha = request.GET.get('fecha', '').strip()
-    fecha_desde = request.GET.get('fecha_desde', '').strip()
-    fecha_hasta = request.GET.get('fecha_hasta', '').strip()
-    usuario_id = request.GET.get('usuario', '').strip()
     tipo_alerta = request.GET.get('tipo', '').strip()
     producto_id = request.GET.get('producto', '').strip()
-    stock_id = request.GET.get('stock', '').strip()
+    usuario_id = request.GET.get('usuario', '').strip()
+    fecha_desde = request.GET.get('desde', '').strip()
+    fecha_hasta = request.GET.get('hasta', '').strip()
 
-    alertas = Alertas.objects.select_related(
-        'ID_Lote',
-        'ID_Lote__ID_Producto',
-        'ID_Lote__ID_Proveedor',
+    # ========================================================
+    # ALERTAS DE STOCK MÍNIMO
+    # ========================================================
+
+    alertas_stock = Alertas.objects.select_related(
         'ID_Stock',
         'ID_Stock__ID_Producto',
         'ID_Usuario'
-    ).all().order_by(
-        '-Fecha_hora_historial_alerta'
-    )
+    ).all()
 
-    if fecha:
-        alertas = alertas.filter(Fecha_hora_historial_alerta__date=fecha)
-
-    if fecha_desde:
-        alertas = alertas.filter(Fecha_hora_historial_alerta__date__gte=fecha_desde)
-
-    if fecha_hasta:
-        alertas = alertas.filter(Fecha_hora_historial_alerta__date__lte=fecha_hasta)
-
-    if usuario_id:
-        alertas = alertas.filter(ID_Usuario_id=usuario_id)
-
-    if tipo_alerta:
-        alertas = alertas.filter(Tipo_alerta=tipo_alerta)
+    if tipo_alerta == 'Stock mínimo':
+        alertas_stock = alertas_stock.filter(
+            Tipo_alerta='Stock mínimo'
+        )
 
     if producto_id:
-        alertas = alertas.filter(ID_Stock__ID_Producto_id=producto_id)
+        alertas_stock = alertas_stock.filter(
+            ID_Stock__ID_Producto_id=producto_id
+        )
 
-    if stock_id:
-        alertas = alertas.filter(ID_Stock_id=stock_id)
+    if usuario_id:
+        alertas_stock = alertas_stock.filter(
+            ID_Usuario_id=usuario_id
+        )
+
+    if fecha_desde:
+        alertas_stock = alertas_stock.filter(
+            Fecha_hora_historial_alerta__date__gte=fecha_desde
+        )
+
+    if fecha_hasta:
+        alertas_stock = alertas_stock.filter(
+            Fecha_hora_historial_alerta__date__lte=fecha_hasta
+        )
+
+    alertas = []
+
+    for alerta in alertas_stock:
+
+        alertas.append({
+            'tipo': 'Stock mínimo',
+            'producto': alerta.ID_Stock.ID_Producto,
+            'lote': None,
+            'mensaje': alerta.Mensaje,
+            'fecha': alerta.Fecha_hora_historial_alerta,
+            'atendida': alerta.Atendida,
+            'usuario': alerta.ID_Usuario
+        })
+
+    # ========================================================
+    # ALERTAS DE VENCIMIENTO
+    # ========================================================
+
+    if tipo_alerta in ('', 'Vencimiento'):
+
+        fecha_actual = timezone.localdate()
+        fecha_limite = fecha_actual + timedelta(days=30)
+
+        lotes = Lotes.objects.select_related(
+            'ID_Producto'
+        ).filter(
+            Fecha_vencimiento__isnull=False,
+            Fecha_vencimiento__gte=fecha_actual,
+            Fecha_vencimiento__lte=fecha_limite,
+            Cantidad_actual__gt=0
+        )
+
+        if producto_id:
+            lotes = lotes.filter(
+                ID_Producto_id=producto_id
+            )
+
+        if fecha_desde:
+            lotes = lotes.filter(
+                Fecha_vencimiento__gte=fecha_desde
+            )
+
+        if fecha_hasta:
+            lotes = lotes.filter(
+                Fecha_vencimiento__lte=fecha_hasta
+            )
+
+        for lote in lotes:
+
+            dias_restantes = (
+                lote.Fecha_vencimiento - fecha_actual
+            ).days
+
+            if dias_restantes == 0:
+                mensaje = (
+                    f'El producto '
+                    f'{lote.ID_Producto.Nombre_producto} '
+                    f'del lote {lote.Numero_lote} '
+                    f'vence hoy '
+                    f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
+                )
+
+            else:
+                mensaje = (
+                    f'El producto '
+                    f'{lote.ID_Producto.Nombre_producto} '
+                    f'del lote {lote.Numero_lote} '
+                    f'vence en {dias_restantes} días '
+                    f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
+                )
+
+            alertas.append({
+                'tipo': 'Vencimiento',
+                'producto': lote.ID_Producto,
+                'lote': lote,
+                'mensaje': mensaje,
+                'fecha': lote.Fecha_vencimiento,
+                'atendida': False,
+                'usuario': None
+            })
+
+    # ========================================================
+    # ORDENAR ALERTAS
+    # ========================================================
+
+    alertas.sort(
+        key=lambda alerta: alerta['fecha'],
+        reverse=True
+    )
+
+    # ========================================================
+    # DATOS PARA LOS FILTROS
+    # ========================================================
+
+    productos = Productos.objects.filter(
+        Estado_producto='Activo'
+    ).order_by(
+        'Nombre_producto'
+    )
 
     usuarios = Usuarios.objects.filter(
         Estado_usuario=True
@@ -2181,33 +2420,18 @@ def gestion_alertas(request):
         'Nombre_usuario'
     )
 
-    productos = Productos.objects.filter(
-        Estado_producto='Activo'
-    ).order_by(
-        'Nombre_producto'
-    )
-
-    stock = Stock.objects.select_related(
-        'ID_Producto'
-    ).all().order_by(
-        'ID_Producto__Nombre_producto'
-    )
-
     return render(
         request,
-        'inventario/alertas.html',
+        'inventario/historial_alertas.html',
         {
             'alertas': alertas,
-            'usuarios': usuarios,
-            'productos': productos,
-            'stock': stock,
-            'fecha': fecha,
-            'fecha_desde': fecha_desde,
-            'fecha_hasta': fecha_hasta,
-            'usuario_id': usuario_id,
             'tipo_alerta': tipo_alerta,
             'producto_id': producto_id,
-            'stock_id': stock_id,
+            'usuario_id': usuario_id,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'productos': productos,
+            'usuarios': usuarios,
             'usuario': usuario
         }
     )

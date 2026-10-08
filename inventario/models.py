@@ -257,6 +257,15 @@ class Productos(models.Model):
         db_column='ID_Tipo_producto'
     )
 
+    ID_Subtipo = models.ForeignKey(
+        Subtipos,
+        on_delete=models.SET_NULL,
+        db_column='ID_Subtipo',
+        related_name='productos',
+        null=True,
+        blank=True
+    )
+
     Marca = models.CharField(
         max_length=50,
         null=True,
@@ -373,15 +382,6 @@ class Stock(models.Model):
 
 class Alertas(models.Model):
     ID_Historial_alerta = models.AutoField(primary_key=True)
-
-    ID_Lote = models.ForeignKey(
-        Lotes,
-        on_delete=models.CASCADE,
-        db_column='ID_Lote',
-        related_name='alertas',
-        null=True,
-        blank=True
-    )
 
     ID_Stock = models.ForeignKey(
         Stock,

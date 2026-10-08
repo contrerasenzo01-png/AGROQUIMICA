@@ -1,0 +1,459 @@
+{% extends 'inventario/base.html' %}
+{% load static %}
+
+{% block title %}
+    Historial de Alertas - Agroquímicos del Valle
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="al-page">
+
+    <!-- ENCABEZADO -->
+    <header class="al-header">
+
+        <h1 class="al-title">
+            Historial de alertas
+        </h1>
+
+    </header>
+
+
+    <!-- CRITERIOS DE BÚSQUEDA -->
+    <form method="GET"
+          action="{% url 'historial_alertas' %}"
+          class="al-filtros">
+
+        <div class="al-filtros-grid">
+
+            <!-- TIPO DE ALERTA -->
+            <div class="al-campo">
+
+                <label for="tipo">
+                    Tipo de alerta
+                </label>
+
+                <select id="tipo" name="tipo">
+
+                    <option value="">
+                        Todos los tipos
+                    </option>
+
+                    <option value="Vencimiento"
+                        {% if tipo_alerta == 'Vencimiento' %}
+                            selected
+                        {% endif %}>
+                        Vencimiento
+                    </option>
+
+                    <option value="Stock mínimo"
+                        {% if tipo_alerta == 'Stock mínimo' %}
+                            selected
+                        {% endif %}>
+                        Stock mínimo
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- PRODUCTO -->
+            <div class="al-campo">
+
+                <label for="producto">
+                    Producto
+                </label>
+
+                <select id="producto" name="producto">
+
+                    <option value="">
+                        Todos los productos
+                    </option>
+
+                    {% for producto in productos %}
+
+                        <option value="{{ producto.ID_Producto }}"
+                            {% if producto_id|stringformat:"s" == producto.ID_Producto|stringformat:"s" %}
+                                selected
+                            {% endif %}>
+
+                            {{ producto.Nombre_producto }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- USUARIO QUE ATENDIÓ -->
+            <div class="al-campo">
+
+                <label for="usuario">
+                    Atendida por
+                </label>
+
+                <select id="usuario" name="usuario">
+
+                    <option value="">
+                        Todos los usuarios
+                    </option>
+
+                    {% for usuario_item in usuarios %}
+
+                        <option value="{{ usuario_item.ID_Usuario }}"
+                            {% if usuario_id|stringformat:"s" == usuario_item.ID_Usuario|stringformat:"s" %}
+                                selected
+                            {% endif %}>
+
+                            {{ usuario_item.Apellido_usuario }},
+                            {{ usuario_item.Nombre_usuario }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- FECHA DESDE -->
+            <div class="al-campo">
+
+                <label for="fecha_desde">
+                    Desde
+                </label>
+
+                <input
+                    type="date"
+                    id="fecha_desde"
+                    name="fecha_desde"
+                    value="{{ fecha_desde }}"
+                >
+
+            </div>
+
+
+            <!-- FECHA HASTA -->
+            <div class="al-campo">
+
+                <label for="fecha_hasta">
+                    Hasta
+                </label>
+
+                <input
+                    type="date"
+                    id="fecha_hasta"
+                    name="fecha_hasta"
+                    value="{{ fecha_hasta }}"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- ACCIONES -->
+        <div class="al-filtros-acc">
+
+            <button
+                type="submit"
+                class="al-btn al-btn-primary"
+            >
+
+                <svg
+                    class="al-icon"
+                    viewBox="0 0 24 24"
+                >
+                    <circle
+                        cx="11"
+                        cy="11"
+                        r="7"
+                    />
+
+                    <path
+                        d="m21 21-4.3-4.3"
+                    />
+                </svg>
+
+                Consultar
+
+            </button>
+
+
+            <a
+                href="{% url 'historial_alertas' %}"
+                class="al-btn al-btn-claro"
+            >
+                Limpiar
+            </a>
+
+        </div>
+
+    </form>
+
+
+    <!-- RESULTADOS -->
+    <section class="al-card">
+
+        <div class="al-table-wrap">
+
+            <table class="al-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Fecha y hora
+                        </th>
+
+                        <th>
+                            Tipo
+                        </th>
+
+                        <th>
+                            Producto
+                        </th>
+
+                        <th>
+                            Lote
+                        </th>
+
+                        <th>
+                            Mensaje
+                        </th>
+
+                        <th>
+                            Cantidad
+                        </th>
+
+                        <th>
+                            Stock mínimo
+                        </th>
+
+                        <th>
+                            Estado
+                        </th>
+
+                        <th>
+                            Atendida por
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for alerta in alertas %}
+
+                        <tr>
+
+                            <!-- FECHA Y HORA -->
+                            <td>
+
+                                <span class="al-fecha">
+
+                                    {{ alerta.fecha|date:"d/m/Y" }}
+
+                                </span>
+
+                                <span class="al-hora">
+
+                                    {% if alerta.tipo == 'Vencimiento' %}
+                                        —
+                                    {% else %}
+                                        {{ alerta.fecha|date:"H:i" }}
+                                    {% endif %}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- TIPO -->
+                            <td>
+
+                                {% if alerta.tipo == 'Vencimiento' %}
+
+                                    <span class="al-badge al-vencimiento">
+                                        Vencimiento
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="al-badge al-stock-minimo">
+                                        Stock mínimo
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- PRODUCTO -->
+                            <td>
+
+                                <span class="al-producto">
+
+                                    {% if alerta.producto %}
+
+                                        {{ alerta.producto.Nombre_producto }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- LOTE -->
+                            <td class="al-muted">
+
+                                {% if alerta.lote %}
+
+                                    {{ alerta.lote.Numero_lote }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- MENSAJE -->
+                            <td class="al-mensaje">
+
+                                {{ alerta.mensaje|default:"—" }}
+
+                            </td>
+
+
+                            <!-- CANTIDAD -->
+                            <td class="al-num">
+
+                                {{ alerta.cantidad|default:"—" }}
+
+                            </td>
+
+
+                            <!-- STOCK MÍNIMO -->
+                            <td class="al-num al-muted">
+
+                                {{ alerta.stock_minimo|default:"—" }}
+
+                            </td>
+
+
+                            <!-- ESTADO -->
+                            <td>
+
+                                {% if alerta.atendida %}
+
+                                    <span class="al-estado al-atendida">
+                                        Atendida
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="al-estado al-pendiente">
+                                        Pendiente
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- ATENDIDA POR -->
+                            <td class="al-muted">
+
+                                {% if alerta.atendida and alerta.usuario %}
+
+                                    {{ alerta.usuario.Apellido_usuario }}
+                                    {{ alerta.usuario.Nombre_usuario }}
+
+                                    {% if alerta.fecha_atencion %}
+
+                                        <span class="al-hora">
+
+                                            {{ alerta.fecha_atencion|date:"d/m/Y H:i" }}
+
+                                        </span>
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="9"
+                                class="al-vacio"
+                            >
+
+                                No se encontraron alertas
+                                con los criterios seleccionados.
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- PIE -->
+        <div class="al-pie">
+
+            <span>
+
+                {{ alertas|length }}
+                alerta{{ alertas|length|pluralize }}
+                encontrada{{ alertas|length|pluralize }}
+
+            </span>
+
+            <span>
+                Agroquímicos del Valle
+            </span>
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

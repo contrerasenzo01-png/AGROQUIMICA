@@ -16,7 +16,7 @@
     <!-- ENCABEZADO -->
     <div class="lt-header">
         <div>
-            <h1 class="lt-title">Gestión de lotes</h1>
+            <h1 class="lt-title">Registrar ingreso de lotes</h1>
         </div>
 
         <button type="button" class="lt-btn lt-btn-primary" onclick="abrirModalLote()">
@@ -46,9 +46,6 @@
                    placeholder="Buscar por lote, producto o proveedor...">
         </div>
 
-        <span class="lt-count">
-            {{ total }} lote{{ total|pluralize }} registrado{{ total|pluralize }}
-        </span>
     </form>
 
 
@@ -61,10 +58,10 @@
                         <th>Número de lote</th>
                         <th>Producto</th>
                         <th>Proveedor</th>
-                        <th>Ingreso</th>
-                        <th>Vencimiento</th>
-                        <th>Ingresadas</th>
-                        <th>Disponibles</th>
+                        <th>Fecha ingreso</th>
+                        <th>Fecha vencimiento</th>
+                        <th>Cantidad ingresada</th>
+                        <th>Cantidad actual</th>
                     </tr>
                 </thead>
 
@@ -111,7 +108,6 @@
 
         <div class="lt-pie">
             <span>{{ total }} lote{{ total|pluralize }} encontrado{{ total|pluralize }}</span>
-            <span>Agroquímicos del Valle</span>
         </div>
     </div>
 
@@ -166,7 +162,7 @@
                 </div>
 
                 <div class="lt-campo">
-                    <label for="Cantidad_ingresada">Cantidad ingresada (unidades)</label>
+                    <label for="Cantidad_ingresada">Cantidad ingresada</label>
                     <input type="number" name="Cantidad_ingresada" id="Cantidad_ingresada"
                            min="1" step="1" required>
                 </div>
@@ -176,7 +172,7 @@
                 <div class="lt-campo">
                     <label for="Fecha_ingreso">Fecha de ingreso</label>
                     <input type="date" name="Fecha_ingreso" id="Fecha_ingreso"
-                           value="{{ hoy|date:'Y-m-d' }}" required>
+                           value="{{ hoy|date:'Y-m-d' }}" readonly>
                 </div>
 
                 <div class="lt-campo">
