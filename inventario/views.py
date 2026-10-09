@@ -1762,91 +1762,103 @@ def cambiar_estado_producto(request, pk):
     return redirect('gestion_productos')
 
 # ============================================================
-# REGISTRAR INGRESO DE LOTE
+# GESTIÓN DE LOTES
 # ============================================================
 
 def registrar_ingreso_lote(request):
+    """Registra lotes nuevos y muestra el listado de lotes."""
 
     usuario = usuario_es_administrador(request)
 
     if not usuario:
         return redirect('panel_principal')
 
-    # ------------------------------------------------------------
-    # POST: registrar un lote nuevo
-    # ------------------------------------------------------------
+    # ========================================================
+    # POST: REGISTRAR UN LOTE NUEVO
+    # ========================================================
+
     if request.method == 'POST':
 
-        proveedor_id = request.POST.get('ID_Proveedor')
-        producto_id = request.POST.get('ID_Producto')
+        proveedor_id = request.POST.get('ID_Proveedor', '').strip()
+        producto_id = request.POST.get('ID_Producto', '').strip()
         numero_lote = request.POST.get('Numero_lote', '').strip()
-        cantidad = request.POST.get('Cantidad_ingresada')
+        cantidad_input = request.POST.get('Cantidad_ingresada', '').strip()
+        fecha_vencimiento_input = request.POST.get(
+            'Fecha_vencimiento', ''
+        ).strip()
+
         fecha_ingreso = timezone.localdate()
-        fecha_vencimiento = request.POST.get('Fecha_vencimiento')
 
-        if fecha_vencimiento:
-
-            try:
-                fecha_vencimiento = date.fromisoformat(
-                    fecha_vencimiento
-                )
-
-            except ValueError:
-
-                messages.error(
-                    request,
-                    'La fecha de vencimiento no es válida.'
-                )
-
-                return redirect('registrar_ingreso_lote')
+        # ----------------------------------------------------
+        # VALIDAR CAMPOS OBLIGATORIOS
+        # ----------------------------------------------------
 
         if not proveedor_id or not producto_id:
-
             messages.error(
                 request,
                 'Debe seleccionar el proveedor y el producto.'
             )
-
             return redirect('registrar_ingreso_lote')
 
         if not numero_lote:
-
             messages.error(
                 request,
                 'Debe ingresar el número de lote.'
             )
-
             return redirect('registrar_ingreso_lote')
 
         try:
-            cantidad = int(cantidad)
+            cantidad = int(cantidad_input)
         except (TypeError, ValueError):
-
             messages.error(
                 request,
                 'La cantidad ingresada no es válida.'
             )
-
             return redirect('registrar_ingreso_lote')
 
         if cantidad <= 0:
-
             messages.error(
                 request,
                 'La cantidad debe ser mayor a cero.'
             )
-
             return redirect('registrar_ingreso_lote')
 
+        # ----------------------------------------------------
+        # VALIDAR FECHA DE VENCIMIENTO
+        # ----------------------------------------------------
 
-        if fecha_vencimiento and fecha_vencimiento < fecha_ingreso:
+        if not fecha_vencimiento_input:
+            messages.error(
+                request,
+                'La fecha de vencimiento es obligatoria.'
+            )
+            return redirect('registrar_ingreso_lote')
+
+        try:
+            fecha_vencimiento = date.fromisoformat(
+                fecha_vencimiento_input
+            )
+            
+        except ValueError:
+            messages.error(
+                request,
+                'La fecha de vencimiento no es válida.'
+            )
+            return redirect('registrar_ingreso_lote')
+
+        if fecha_vencimiento < fecha_ingreso:
 
             messages.error(
                 request,
-                'La fecha de vencimiento no puede ser anterior a la fecha de ingreso.'
+                'La fecha de vencimiento no puede ser anterior '
+                'a la fecha de ingreso.'
             )
 
             return redirect('registrar_ingreso_lote')
+
+        # ----------------------------------------------------
+        # VALIDAR PROVEEDOR Y PRODUCTO ACTIVOS
+        # ----------------------------------------------------
 
         proveedor = get_object_or_404(
             Proveedores,
@@ -1860,59 +1872,91 @@ def registrar_ingreso_lote(request):
             Estado_producto='Activo'
         )
 
-        # El ingreso de lote genera automáticamente
-        # un movimiento de tipo "Entrada de lote".
-        tipo_entrada = get_object_or_404(
-            TiposMovimientos,
-            Nombre_tipo_movimiento__iexact='Entrada de lote'
-        )
+        # ----------------------------------------------------
+        # VALIDAR NÚMERO DE LOTE DUPLICADO
+        # ----------------------------------------------------
 
         lote_existente = Lotes.objects.filter(
             ID_Proveedor=proveedor,
             ID_Producto=producto,
-            Numero_lote=numero_lote
+            Numero_lote__iexact=numero_lote
         ).exists()
 
         if lote_existente:
-
             messages.error(
                 request,
-                'Ya existe un lote con esos datos.'
+                'Ya existe un lote con ese número para el '
+                'producto y proveedor seleccionados.'
             )
-
             return redirect('registrar_ingreso_lote')
 
-        # Lote + stock + movimiento se guardan juntos.
-        with transaction.atomic():
+        # ----------------------------------------------------
+        # BUSCAR TIPO DE MOVIMIENTO DE ENTRADA
+        # ----------------------------------------------------
 
-            lote = Lotes.objects.create(
-                ID_Proveedor=proveedor,
-                ID_Producto=producto,
-                Numero_lote=numero_lote,
-                Cantidad_ingresada=cantidad,
-                Cantidad_actual=cantidad,
-                Fecha_ingreso=fecha_ingreso,
-                Fecha_vencimiento=fecha_vencimiento or None
+        tipo_entrada = TiposMovimientos.objects.filter(
+            Nombre_tipo_movimiento__iexact='Entrada de lote'
+        ).first()
+
+        if not tipo_entrada:
+            messages.error(
+                request,
+                'No está registrado el tipo de movimiento '
+                '"Entrada de lote". Debe crearlo antes de '
+                'registrar ingresos.'
             )
+            return redirect('registrar_ingreso_lote')
 
-            stock, creado = Stock.objects.select_for_update().get_or_create(
-                ID_Producto=producto,
-                defaults={
-                    'Cantidad_stock': 0,
-                    'Stock_minimo': 0
-                }
+        # ----------------------------------------------------
+        # GUARDAR LOTE, STOCK Y MOVIMIENTO EN UNA TRANSACCIÓN
+        # ----------------------------------------------------
+
+        try:
+            with transaction.atomic():
+
+                # Crear el lote inicialmente activo.
+                lote = Lotes.objects.create(
+                    ID_Proveedor=proveedor,
+                    ID_Producto=producto,
+                    Numero_lote=numero_lote,
+                    Cantidad_ingresada=cantidad,
+                    Cantidad_actual=cantidad,
+                    Fecha_ingreso=fecha_ingreso,
+                    Fecha_vencimiento=fecha_vencimiento,
+                    Estado_lote='Activo'
+                )
+
+                # Obtener el stock del producto o inicializarlo.
+                stock, _ = (
+                    Stock.objects.select_for_update().get_or_create(
+                        ID_Producto=producto,
+                        defaults={
+                            'Cantidad_stock': 0,
+                            'Stock_minimo': 0
+                        }
+                    )
+                )
+
+                # Sumar la cantidad recibida al stock general.
+                stock.Cantidad_stock += cantidad
+                stock.save(update_fields=['Cantidad_stock'])
+
+                # Registrar el movimiento de entrada.
+                MovimientosStock.objects.create(
+                    ID_Usuario=usuario,
+                    ID_Tipo_movimiento=tipo_entrada,
+                    ID_Lote=lote,
+                    Cantidad_movimiento_stock=cantidad,
+                    Observaciones='Entrada de lote'
+                )
+
+        except Exception:
+            messages.error(
+                request,
+                'No se pudo registrar el lote. Verifique los datos '
+                'y vuelva a intentarlo.'
             )
-
-            stock.Cantidad_stock += cantidad
-            stock.save()
-
-            MovimientosStock.objects.create(
-                ID_Usuario=usuario,
-                ID_Tipo_movimiento=tipo_entrada,
-                ID_Lote=lote,
-                Cantidad_movimiento_stock=cantidad,
-                Observaciones='Entrada de lote'
-            )
+            return redirect('registrar_ingreso_lote')
 
         messages.success(
             request,
@@ -1921,11 +1965,12 @@ def registrar_ingreso_lote(request):
 
         return redirect('registrar_ingreso_lote')
 
-    # ------------------------------------------------------------
-    # GET: listado de lotes con buscador
-    # ------------------------------------------------------------
+    # ========================================================
+    # GET: LISTAR Y BUSCAR LOTES
+    # ========================================================
 
     busqueda = request.GET.get('q', '').strip()
+    estado_filtro = request.GET.get('estado', '').strip()
 
     lotes = Lotes.objects.select_related(
         'ID_Producto',
@@ -1935,14 +1980,23 @@ def registrar_ingreso_lote(request):
         '-ID_Lote'
     )
 
+    # Buscar por número de lote, producto o proveedor.
     if busqueda:
-
         lotes = lotes.filter(
-            Q(Numero_lote__icontains=busqueda) |
-            Q(ID_Producto__Nombre_producto__icontains=busqueda) |
-            Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
+            Q(Numero_lote__icontains=busqueda)
+            | Q(ID_Producto__Nombre_producto__icontains=busqueda)
+            | Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
         )
 
+    # Filtro opcional por estado.
+    if estado_filtro in ('Activo', 'Inactivo'):
+        lotes = lotes.filter(
+            Estado_lote=estado_filtro
+        )
+    else:
+        estado_filtro = ''
+
+    # Productos y proveedores disponibles para registrar un lote.
     productos = Productos.objects.filter(
         Estado_producto='Activo'
     ).order_by(
@@ -1966,10 +2020,237 @@ def registrar_ingreso_lote(request):
             'productos': productos,
             'proveedores': proveedores,
             'busqueda': busqueda,
+            'estado_filtro': estado_filtro,
             'hoy': hoy,
             'limite': hoy + timedelta(days=30),
         }
     )
+
+
+# ============================================================
+# EDITAR LOTE
+# ============================================================
+
+def editar_lote(request, id):
+    """Permite editar el número, proveedor y vencimiento de un lote."""
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
+    lote = get_object_or_404(
+        Lotes.objects.select_related(
+            'ID_Producto',
+            'ID_Proveedor'
+        ),
+        ID_Lote=id
+    )
+
+    if request.method != 'POST':
+        return redirect('registrar_ingreso_lote')
+
+    numero_lote = request.POST.get(
+        'Numero_lote', ''
+    ).strip()
+
+    proveedor_id = request.POST.get(
+        'ID_Proveedor', ''
+    ).strip()
+
+    fecha_vencimiento_input = request.POST.get(
+        'Fecha_vencimiento', ''
+    ).strip()
+
+    # --------------------------------------------------------
+    # VALIDAR NÚMERO DE LOTE
+    # --------------------------------------------------------
+
+    if not numero_lote:
+        messages.error(
+            request,
+            'Debe ingresar el número de lote.'
+        )
+        return redirect('registrar_ingreso_lote')
+
+    # No permitir cambiar el producto de un lote existente.
+    # Así se conserva la relación con sus movimientos históricos.
+    producto_id_recibido = request.POST.get('ID_Producto', '').strip()
+
+    if (
+        producto_id_recibido
+        and producto_id_recibido != str(lote.ID_Producto_id)
+    ):
+        messages.error(
+            request,
+            'No se puede cambiar el producto de un lote existente.'
+        )
+        return redirect('registrar_ingreso_lote')
+
+    if not proveedor_id:
+        messages.error(
+            request,
+            'Debe seleccionar un proveedor.'
+        )
+        return redirect('registrar_ingreso_lote')
+
+    # --------------------------------------------------------
+    # VALIDAR FECHA DE VENCIMIENTO
+    # --------------------------------------------------------
+
+    if not fecha_vencimiento_input:
+        messages.error(
+            request,
+            'La fecha de vencimiento es obligatoria.'
+        )
+        return redirect('registrar_ingreso_lote')
+
+    try:
+        fecha_vencimiento = date.fromisoformat(
+            fecha_vencimiento_input
+        )
+    except ValueError:
+        messages.error(
+            request,
+            'La fecha de vencimiento no es válida.'
+        )
+        return redirect('registrar_ingreso_lote')
+
+    if fecha_vencimiento < lote.Fecha_ingreso:
+        messages.error(
+            request,
+            'La fecha de vencimiento no puede ser anterior '
+            'a la fecha de ingreso.'
+        )
+        return redirect('registrar_ingreso_lote')
+    
+
+    # --------------------------------------------------------
+    # VALIDAR PROVEEDOR
+    # --------------------------------------------------------
+
+    proveedor = get_object_or_404(
+        Proveedores,
+        ID_Proveedor=proveedor_id,
+        estado_proveedor=True
+    )
+
+    # --------------------------------------------------------
+    # EVITAR DUPLICADOS
+    # --------------------------------------------------------
+
+    duplicado = Lotes.objects.filter(
+        Numero_lote__iexact=numero_lote,
+        ID_Producto=lote.ID_Producto,
+        ID_Proveedor=proveedor
+    ).exclude(
+        ID_Lote=lote.ID_Lote
+    ).exists()
+
+    if duplicado:
+        messages.error(
+            request,
+            'Ya existe un lote con ese número para el producto '
+            'y proveedor seleccionados.'
+        )
+        return redirect('registrar_ingreso_lote')
+
+    # --------------------------------------------------------
+    # GUARDAR CAMBIOS
+    # --------------------------------------------------------
+
+    lote.Numero_lote = numero_lote
+    lote.ID_Proveedor = proveedor
+    lote.Fecha_vencimiento = fecha_vencimiento
+
+    lote.save(
+        update_fields=[
+            'Numero_lote',
+            'ID_Proveedor',
+            'Fecha_vencimiento'
+        ]
+    )
+
+    messages.success(
+        request,
+        'Lote actualizado correctamente.'
+    )
+
+    return redirect('registrar_ingreso_lote')
+
+
+# ============================================================
+# CAMBIAR ESTADO DEL LOTE
+# ============================================================
+
+def cambiar_estado_lote(request, id):
+    """Activa o da de baja un lote sin eliminarlo de la base."""
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
+    lote = get_object_or_404(
+        Lotes,
+        ID_Lote=id
+    )
+
+    if request.method != 'POST':
+        return redirect('registrar_ingreso_lote')
+
+    estado_solicitado = request.POST.get(
+        'estado', ''
+    ).strip().lower()
+
+    # --------------------------------------------------------
+    # DAR DE BAJA
+    # --------------------------------------------------------
+
+    if estado_solicitado == 'inactivo':
+
+        # No desactivar un lote que todavía tiene unidades.
+        if lote.Cantidad_actual > 0:
+            messages.error(
+                request,
+                'No puede dar de baja el lote porque todavía tiene '
+                'unidades disponibles. Registre primero la salida '
+                'correspondiente.'
+            )
+            return redirect('registrar_ingreso_lote')
+
+        lote.Estado_lote = 'Inactivo'
+
+        mensaje = (
+            f'El lote {lote.Numero_lote} fue dado de baja correctamente.'
+        )
+
+    # --------------------------------------------------------
+    # ACTIVAR
+    # --------------------------------------------------------
+
+    elif estado_solicitado == 'activo':
+
+        lote.Estado_lote = 'Activo'
+
+        mensaje = (
+            f'El lote {lote.Numero_lote} fue activado correctamente.'
+        )
+
+    else:
+        messages.error(
+            request,
+            'El estado solicitado no es válido.'
+        )
+        return redirect('registrar_ingreso_lote')
+
+    lote.save(
+        update_fields=['Estado_lote']
+    )
+
+    messages.success(request, mensaje)
+
+    return redirect('registrar_ingreso_lote')
 
 
 # ============================================================

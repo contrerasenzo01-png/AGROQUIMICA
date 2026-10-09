@@ -342,9 +342,18 @@ class Lotes(models.Model):
 
     Fecha_ingreso = models.DateField()
 
-    Fecha_vencimiento = models.DateField(
-        null=True,
-        blank=True
+    Fecha_vencimiento = models.DateField()
+
+    # Estado del lote
+    ESTADO_CHOICES = [
+        ('Activo', 'Activo'),
+        ('Inactivo', 'Inactivo'),
+    ]
+
+    Estado_lote = models.CharField(
+        max_length=10,
+        choices=ESTADO_CHOICES,
+        default='Activo'
     )
 
     class Meta:

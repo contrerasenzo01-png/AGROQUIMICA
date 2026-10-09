@@ -1,835 +1,481 @@
 /* ============================================================
-   CONTENEDOR PRINCIPAL
+   TIPOS DE PRODUCTO - estructura de tabla
+   (mismas clases pr-* que usa la pantalla de productos)
    ============================================================ */
 
-.header {
+.pr-page {
     width: 100%;
+}
 
+
+/* ============================================================
+   ENCABEZADO
+   ============================================================ */
+
+.pr-header {
+    width: 100%;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-
     gap: 24px;
-
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
-
-/* ============================================================
-   TÍTULO
-   ============================================================ */
-
-.header > div {
+.pr-header > div {
     min-width: 0;
 }
 
-.title {
+.pr-title {
     margin: 0;
-
     font-family: 'Poppins', sans-serif;
-
     font-size: 28px;
     line-height: 1.2;
-
     font-weight: 700;
-
     letter-spacing: -0.02em;
-
     color: #17382a;
 }
 
-.subtitle {
-    margin: 7px 0 0;
 
-    font-family: 'Inter', sans-serif;
+/* ============================================================
+   ÍCONOS
+   ============================================================ */
 
-    font-size: 13px;
-
-    color: #718279;
+.pr-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 
 /* ============================================================
-   BOTÓN NUEVO
+   BOTONES
    ============================================================ */
 
-.btn-nuevo {
+.pr-btn {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
-
     gap: 7px;
-
     min-height: 38px;
-
     padding: 0 17px;
-
     box-sizing: border-box;
-
-    border: 1px solid #185a38;
-
+    border: 1px solid transparent;
     border-radius: 8px;
-
-    background-color: #185a38;
-
-    color: #ffffff;
-
     font-family: 'Inter', sans-serif;
-
     font-size: 12px;
     font-weight: 600;
-
     line-height: 1;
-
     cursor: pointer;
-
-    transition:
-        background-color .18s ease,
-        border-color .18s ease,
-        transform .18s ease;
+    transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
 }
 
-.btn-nuevo:hover {
-    background-color: #134a2e;
+.pr-btn-primary {
+    border-color: #185a38;
+    background: #185a38;
+    color: #ffffff;
+}
 
+.pr-btn-primary:hover {
+    background: #134a2e;
     border-color: #134a2e;
-
     transform: translateY(-1px);
 }
 
-
-/* ============================================================
-   BUSCADOR
-   ============================================================ */
-
-form:has(.search-box) {
-    width: 100%;
-
-    margin: 0 0 18px;
-}
-
-.search-box {
-    width: 100%;
-
-    height: 46px;
-
-    padding: 0 13px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #e1e9e4;
-
-    border-radius: 10px;
-
-    outline: none;
-
+.pr-btn-claro {
+    border-color: #dce5df;
     background: #ffffff;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 12.5px;
-
-    color: #24362d;
-
-    transition:
-        border-color .18s ease,
-        box-shadow .18s ease;
+    color: #31483c;
 }
 
-.search-box::placeholder {
-    color: #9aa9a1;
-}
-
-.search-box:focus {
-    border-color: #79ad8d;
-
-    box-shadow:
-        0 0 0 3px rgba(24, 90, 56, .09);
-}
-
-
-/* ============================================================
-   LISTA DE TIPOS
-   ============================================================ */
-
-#listaTipos {
-    width: 100%;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 12px;
-}
-
-
-/* ============================================================
-   TARJETA
-   ============================================================ */
-
-.card-container {
-    width: 100%;
-
-    box-sizing: border-box;
-
-    background: #ffffff;
-
-    border: 1px solid #e1e9e4;
-
-    border-radius: 12px;
-
-    overflow: hidden;
-
-    transition:
-        border-color .18s ease,
-        box-shadow .18s ease;
-}
-
-.card-container:hover {
-    border-color: #d1ddd6;
-
-    box-shadow:
-        0 5px 18px rgba(27, 58, 43, .06);
-}
-
-
-/* ============================================================
-   TARJETA INACTIVA
-   ============================================================ */
-
-.card-container.inactivo {
-    background: #fcfdfc;
-}
-
-.card-container.inactivo:hover {
-    box-shadow: none;
-}
-
-
-/* ============================================================
-   ENCABEZADO DE TARJETA
-   ============================================================ */
-
-.card-header {
-    min-height: 72px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 18px;
-
-    padding: 14px 17px;
-
-    box-sizing: border-box;
-
-    cursor: pointer;
-
-    background: #ffffff;
-
-    transition: background-color .15s ease;
-}
-
-.card-header:hover {
-    background: #fafcfb;
-}
-
-
-/* ============================================================
-   PARTE IZQUIERDA
-   ============================================================ */
-
-.card-left {
-    min-width: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-}
-
-
-/* ============================================================
-   AVATAR
-   ============================================================ */
-
-.avatar {
-    width: 38px;
-    height: 38px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 9px;
-
-    background: #e8f5ee;
-
-    color: #185a38;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 10px;
-
-    font-weight: 700;
-
-    letter-spacing: .03em;
-}
-
-.inactivo .avatar {
-    background: #eef1ef;
-
-    color: #7b8a82;
-}
-
-
-/* ============================================================
-   INFORMACIÓN
-   ============================================================ */
-
-.card-info {
-    min-width: 0;
-
-    display: flex;
-
-    flex-direction: column;
-}
-
-.prov-nombre {
-    margin: 0;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-
-    font-family: 'Poppins', sans-serif;
-
-    font-size: 14px;
-
-    line-height: 1.35;
-
-    font-weight: 600;
-
-    color: #173d2b;
-}
-
-.inactivo .prov-nombre {
-    color: #7b8b83;
-}
-
-.sup-code {
-    margin-left: 4px;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 10px;
-
-    font-weight: 500;
-
-    color: #8a9991;
-}
-
-.prov-email {
-    margin: 4px 0 0;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 11px;
-
-    color: #718279;
-}
-
-
-/* ============================================================
-   ACCIONES
-   ============================================================ */
-
-.card-actions {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-end;
-
-    flex-wrap: wrap;
-
-    gap: 7px;
-
-    flex-shrink: 0;
-}
-
-
-/* ============================================================
-   BADGES DE ESTADO
-   ============================================================ */
-
-.badge-activo,
-.badge-inactivo {
-    display: inline-flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 6px;
-
-    min-height: 24px;
-
-    padding: 0 9px;
-
-    box-sizing: border-box;
-
-    border-radius: 6px;
-
-    white-space: nowrap;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 10.5px;
-
-    font-weight: 600;
-}
-
-.badge-activo::before,
-.badge-inactivo::before {
-    content: '';
-
-    width: 5px;
-    height: 5px;
-
-    border-radius: 50%;
-
-    background: currentColor;
-}
-
-.badge-activo {
-    background: #e8f5ee;
-
-    color: #1b7a4a;
-}
-
-.badge-inactivo {
-    background: #eef1ef;
-
-    color: #7b8a82;
-}
-
-
-/* ============================================================
-   BOTONES DE ACCIÓN
-   ============================================================ */
-
-.btn-action {
-    display: inline-flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    min-height: 31px;
-
-    padding: 0 11px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #dce5df;
-
-    border-radius: 7px;
-
-    background: #ffffff;
-
-    color: #334b3e;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 10.5px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        background-color .15s ease,
-        border-color .15s ease,
-        color .15s ease;
-}
-
-.btn-action:hover {
-    background: #f2f7f4;
-
+.pr-btn-claro:hover {
+    background: #f4f7f5;
     border-color: #c9d9d0;
 }
 
-
-/* BAJA */
-
-.btn-baja {
-    color: #53675d;
+.pr-btn-peligro {
+    border-color: #b91c1c;
+    background: #b91c1c;
+    color: #ffffff;
 }
 
-.btn-baja:hover {
+.pr-btn-peligro:hover {
+    background: #991b1b;
+    border-color: #991b1b;
+}
+
+
+/* ============================================================
+   BÚSQUEDA Y FILTROS
+   ============================================================ */
+
+.pr-filtros {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 0 0 18px;
+}
+
+.pr-search {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.pr-search .pr-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    color: #7b8b83;
+    pointer-events: none;
+}
+
+.pr-search input {
+    width: 100%;
+    height: 46px;
+    padding: 0 13px 0 40px;
+    box-sizing: border-box;
+    border: 1px solid #e1e9e4;
+    border-radius: 10px;
+    outline: none;
+    background: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #24362d;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.pr-search input::placeholder {
+    color: #9aa9a1;
+}
+
+.pr-search input:focus {
+    border-color: #79ad8d;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .09);
+}
+
+.pr-select {
+    height: 46px;
+    min-width: 170px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border: 1px solid #e1e9e4;
+    border-radius: 10px;
+    outline: none;
+    background: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #24362d;
+    cursor: pointer;
+}
+
+.pr-select:focus {
+    border-color: #79ad8d;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .09);
+}
+
+
+/* ============================================================
+   TARJETA CONTENEDORA DE LA TABLA
+   ============================================================ */
+
+.pr-card {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #e1e9e4;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.pr-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+
+/* ============================================================
+   TABLA
+   ============================================================ */
+
+.pr-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pr-table th {
+    padding: 14px 18px;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid #e1e9e4;
+    background: #fafcfb;
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #718279;
+}
+
+.pr-table td {
+    padding: 16px 18px;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf2ef;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #34483d;
+}
+
+.pr-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.pr-table tbody tr {
+    transition: background-color .15s ease;
+}
+
+.pr-table tbody tr:hover {
+    background: #fafcfb;
+}
+
+.pr-table tr.inactivo .pr-nombre,
+.pr-table tr.inactivo td {
+    color: #7b8b83;
+}
+
+.pr-vacio {
+    padding: 40px 16px !important;
+    text-align: center;
+    color: #7b8b83 !important;
+    font-size: 12.5px;
+}
+
+
+/* ============================================================
+   CELDA DE TIPO (ícono + nombre)
+   ============================================================ */
+
+.pr-prod {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pr-prod-icono {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: #f6ede3;
+    color: #a86a35;
+}
+
+tr.inactivo .pr-prod-icono {
+    background: #eef1ef;
+    color: #7b8a82;
+}
+
+.pr-nombre {
+    display: block;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #173d2b;
+}
+
+
+/* ============================================================
+   BADGE DE ESTADO
+   ============================================================ */
+
+.pr-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 24px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pr-badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.pr-activo {
+    background: #e8f5ee;
+    color: #1b7a4a;
+}
+
+.pr-inactivo {
+    background: #eef1ef;
+    color: #7b8a82;
+}
+
+
+/* ============================================================
+   ACCIONES (lápiz y papelera)
+   ============================================================ */
+
+.pr-acciones {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.pr-form-estado {
+    display: flex;
+    margin: 0;
+}
+
+.pr-icon-btn {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-sizing: border-box;
+    border: 1px solid #dce5df;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #334b3e;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.pr-icon-btn:hover {
+    background: #f2f7f4;
+    border-color: #c9d9d0;
+}
+
+.pr-icon-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* Papelera: dar de baja */
+
+.pr-icon-btn.pr-baja {
     background: #fff5f5;
-
     border-color: #fecaca;
-
     color: #b91c1c;
 }
 
+.pr-icon-btn.pr-baja:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
 
-/* ACTIVAR */
+/* Tilde: activar */
 
-.btn-activar {
+.pr-icon-btn.pr-activar {
     background: #f0fdf4;
-
     border-color: #bbf7d0;
-
     color: #15803d;
 }
 
-.btn-activar:hover {
+.pr-icon-btn.pr-activar:hover {
     background: #dcfce7;
-
     border-color: #86efac;
 }
 
 
 /* ============================================================
-   BOTÓN FLECHA
+   PIE DE TABLA
    ============================================================ */
 
-.btn-arrow {
-    width: 31px;
-    height: 31px;
-
-    display: inline-flex;
-
+.pr-pie {
+    display: flex;
     align-items: center;
-    justify-content: center;
-
-    padding: 0;
-
-    border: 1px solid #dce5df;
-
-    border-radius: 7px;
-
-    background: #ffffff;
-
-    color: #53675d;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 10px;
-
-    cursor: pointer;
-
-    transition:
-        background-color .15s ease,
-        border-color .15s ease,
-        transform .15s ease;
-}
-
-.btn-arrow:hover {
-    background: #f2f7f4;
-
-    border-color: #c9d9d0;
-}
-
-
-/* ============================================================
-   DETALLES
-   ============================================================ */
-
-.card-details {
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, minmax(0, 1fr));
-
-    gap: 14px 18px;
-
-    padding: 17px;
-
-    box-sizing: border-box;
-
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
     border-top: 1px solid #e1e9e4;
-
     background: #fafcfb;
-}
-
-.card-details.hidden {
-    display: none;
-}
-
-
-/* ============================================================
-   ITEMS DE DETALLE
-   ============================================================ */
-
-.detail-item {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 5px;
-
-    min-width: 0;
-}
-
-.detail-item .label {
     font-family: 'Inter', sans-serif;
-
-    font-size: 9.5px;
-
-    font-weight: 600;
-
-    letter-spacing: .06em;
-
-    text-transform: uppercase;
-
+    font-size: 11.5px;
     color: #718279;
 }
 
-.detail-item .value {
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    word-break: break-word;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 12px;
-
-    color: #34483d;
-}
-
 
 /* ============================================================
-   ESTADO DENTRO DEL DETALLE
+   TOASTS
    ============================================================ */
 
-.estado-text-activo {
-    color: #1b7a4a;
-
-    font-weight: 600;
-}
-
-.estado-text-inactivo {
-    color: #7b8a82;
-
-    font-weight: 600;
-}
-
-
-/* ============================================================
-   PRODUCTOS ASOCIADOS
-   ============================================================ */
-
-.products-section {
-    grid-column: 1 / -1;
-
-    padding-top: 15px;
-
-    border-top: 1px solid #e1e9e4;
-}
-
-.products-title {
-    margin-bottom: 9px;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 10.5px;
-
-    font-weight: 600;
-
-    color: #718279;
-}
-
-.products-list {
-    display: flex;
-
-    align-items: center;
-
-    flex-wrap: wrap;
-
-    gap: 6px;
-}
-
-.product-tag {
-    display: inline-flex;
-
-    align-items: center;
-
-    min-height: 27px;
-
-    padding: 0 9px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #e1e9e4;
-
-    border-radius: 6px;
-
-    background: #ffffff;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 10.5px;
-
-    color: #53675d;
-}
-
-
-/* ============================================================
-   SIN RESULTADOS
-   ============================================================ */
-
-.empty-message {
-    width: 100%;
-
-    min-height: 130px;
-
-    margin: 0;
-
-    padding: 30px 16px;
-
-    box-sizing: border-box;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    text-align: center;
-
-    border: 1px solid #e1e9e4;
-
-    border-radius: 12px;
-
-    background: #ffffff;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 12px;
-
-    color: #7b8b83;
-}
-
-
-/* ============================================================
-   TOAST
-   ============================================================ */
-
-.toast-container {
+.pr-toasts {
     position: fixed;
-
     right: 22px;
     bottom: 22px;
-
     z-index: 5000;
-
     display: flex;
-
     flex-direction: column;
-
     gap: 8px;
 }
 
-.toast {
+.pr-toast {
     min-width: 260px;
-
     max-width: 380px;
-
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     gap: 15px;
-
     padding: 12px 15px;
-
     box-sizing: border-box;
-
     border: 1px solid #dce5df;
-
     border-radius: 8px;
-
     background: #ffffff;
-
-    box-shadow:
-        0 8px 25px rgba(0, 0, 0, .10);
-
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .10);
     font-family: 'Inter', sans-serif;
-
     font-size: 12px;
-
     color: #31483c;
-
-    animation: toastEntrada .20s ease-out;
+    animation: prToastEntrada .20s ease-out;
 }
 
-.toast.success {
+.pr-toast.success {
     background: #edf8f1;
-
     border-color: #b8dfc5;
-
     color: #17643b;
 }
 
-.toast.warning {
+.pr-toast.warning {
     background: #fffbeb;
-
     border-color: #fde68a;
-
     color: #92400e;
 }
 
-.toast-close {
+.pr-toast.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.pr-toast-x {
     flex-shrink: 0;
-
     cursor: pointer;
-
     font-size: 13px;
-
-    color: currentColor;
 }
 
-@keyframes toastEntrada {
-
-    from {
-        opacity: 0;
-
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeOut {
-
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-    }
+@keyframes prToastEntrada {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 
@@ -837,28 +483,142 @@ form:has(.search-box) {
    MODALES
    ============================================================ */
 
-.modal {
+.pr-modal {
     display: none;
-
     position: fixed;
-
     inset: 0;
-
     z-index: 3000;
-
     align-items: center;
-
     justify-content: center;
-
     padding: 20px;
-
     box-sizing: border-box;
-
     background: rgba(15, 42, 29, .50);
-
     backdrop-filter: blur(4px);
-
     -webkit-backdrop-filter: blur(4px);
+}
+
+.pr-modal-box {
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .25);
+    animation: prModalEntrada .20s ease-out;
+}
+
+.pr-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e1e9e4;
+}
+
+.pr-modal-head h2 {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: #20392c;
+}
+
+.pr-modal-x {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #7b8b83;
+    cursor: pointer;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.pr-modal-x:hover {
+    background: #f1f5f3;
+    color: #263d31;
+}
+
+.pr-modal-body {
+    padding: 22px 22px 8px;
+}
+
+.pr-modal-pie {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 9px;
+    padding: 16px 22px;
+    border-top: 1px solid #e1e9e4;
+}
+
+@keyframes prModalEntrada {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ============================================================
+   FORMULARIOS DE MODALES
+   ============================================================ */
+
+.pr-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.pr-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.pr-grupo.pr-full {
+    grid-column: 1 / -1;
+}
+
+.pr-grupo label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #2d4638;
+}
+
+.pr-grupo input,
+.pr-grupo select {
+    width: 100%;
+    height: 39px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border: 1px solid #dce5df;
+    border-radius: 8px;
+    outline: none;
+    background: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #263b30;
+}
+
+.pr-grupo input:focus,
+.pr-grupo select:focus {
+    border-color: #6da982;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .10);
+}
+
+.pr-grupo input[readonly] {
+    background: #f7f9f8;
+    color: #718279;
 }
 
 
@@ -866,528 +626,96 @@ form:has(.search-box) {
    MODAL DE BAJA
    ============================================================ */
 
-.modal-baja-container {
-    width: 100%;
-
-    max-width: 500px;
-
-    max-height: 90vh;
-
-    overflow-y: auto;
-
-    box-sizing: border-box;
-
-    background: #ffffff;
-
-    border-radius: 14px;
-
-    box-shadow:
-        0 24px 60px rgba(0, 0, 0, .25);
-
-    animation: modalEntrada .20s ease-out;
-}
-
-.modal-baja-header {
+.pr-aviso {
     display: flex;
-
     align-items: center;
-
-    justify-content: space-between;
-
-    gap: 15px;
-
-    padding: 18px 22px;
-
-    border-bottom: 1px solid #e1e9e4;
-}
-
-.modal-baja-header h3 {
-    margin: 0;
-
-    font-family: 'Poppins', sans-serif;
-
-    font-size: 17px;
-
-    font-weight: 600;
-
-    color: #20392c;
-}
-
-
-/* ============================================================
-   MODAL GENERAL
-   ============================================================ */
-
-.modal-content {
-    width: 100%;
-
-    max-width: 450px;
-
-    max-height: 90vh;
-
-    overflow-y: auto;
-
-    box-sizing: border-box;
-
-    background: #ffffff;
-
-    border-radius: 14px;
-
-    box-shadow:
-        0 24px 60px rgba(0, 0, 0, .25);
-
-    animation: modalEntrada .20s ease-out;
-}
-
-.modal-header {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 15px;
-
-    padding: 18px 22px;
-
-    border-bottom: 1px solid #e1e9e4;
-}
-
-.modal-header h3 {
-    margin: 0;
-
-    font-family: 'Poppins', sans-serif;
-
-    font-size: 17px;
-
-    font-weight: 600;
-
-    color: #20392c;
-}
-
-.close-btn {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    width: 30px;
-    height: 30px;
-
-    flex-shrink: 0;
-
-    border-radius: 6px;
-
-    color: #7b8b83;
-
-    font-size: 18px;
-
-    line-height: 1;
-
-    cursor: pointer;
-
-    transition:
-        background-color .15s ease,
-        color .15s ease;
-}
-
-.close-btn:hover {
-    background: #f1f5f3;
-
-    color: #263d31;
-}
-
-
-/* ============================================================
-   ALERTA DE BAJA
-   ============================================================ */
-
-.alert-baja-warning {
-    display: flex;
-
-    align-items: center;
-
     gap: 9px;
-
-    margin: 18px 22px 0;
-
+    margin-bottom: 16px;
     padding: 11px 13px;
-
     border: 1px solid #fde68a;
-
     border-radius: 8px;
-
     background: #fffbeb;
-
     font-family: 'Inter', sans-serif;
-
     font-size: 11.5px;
-
     line-height: 1.4;
-
     color: #92400e;
 }
 
-
-/* ============================================================
-   TARJETA DE BAJA
-   ============================================================ */
-
-.baja-card-wrapper {
-    margin: 17px 22px;
-
+.pr-resumen {
+    margin-bottom: 14px;
     border: 1px solid #e1e9e4;
-
     border-radius: 10px;
-
     overflow: hidden;
-
     background: #ffffff;
 }
 
-.baja-profile-header {
+.pr-resumen-cab {
     display: flex;
-
     align-items: center;
-
     gap: 11px;
-
     padding: 14px;
-
     border-bottom: 1px solid #edf2ef;
-
     background: #fafcfb;
 }
 
-.avatar-baja {
+.pr-avatar {
     width: 38px;
     height: 38px;
-
     flex-shrink: 0;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     border-radius: 9px;
-
-    background: #e8f5ee;
-
-    color: #185a38;
-
+    background: #f6ede3;
+    color: #a86a35;
     font-family: 'Inter', sans-serif;
-
     font-size: 10px;
-
     font-weight: 700;
 }
 
-.baja-profile-info {
-    min-width: 0;
-}
-
-.baja-profile-info h4 {
+.pr-resumen-cab h4 {
     margin: 0;
-
     font-family: 'Poppins', sans-serif;
-
     font-size: 14px;
-
     font-weight: 600;
-
     color: #173d2b;
 }
 
-.baja-profile-info p {
+.pr-resumen-cab p {
     margin: 4px 0 0;
-
     font-family: 'Inter', sans-serif;
-
     font-size: 10.5px;
-
     color: #718279;
 }
 
-
-/* ============================================================
-   DATOS DE BAJA
-   ============================================================ */
-
-.baja-grid {
+.pr-resumen-grid {
     display: grid;
-
     grid-template-columns: 1fr 1fr;
-
-    gap: 0;
-
     padding: 4px 14px 14px;
 }
 
-.baja-item {
+.pr-dato {
     display: flex;
-
     flex-direction: column;
-
     gap: 5px;
-
     padding: 11px 7px;
 }
 
-.baja-item .lbl {
+.pr-dato .lbl {
     font-family: 'Inter', sans-serif;
-
     font-size: 9.5px;
-
     font-weight: 600;
-
     letter-spacing: .05em;
-
+    text-transform: uppercase;
     color: #718279;
 }
 
-.baja-item .val {
+.pr-dato .val {
     font-family: 'Inter', sans-serif;
-
     font-size: 11.5px;
-
+    font-weight: 600;
     color: #34483d;
-
     word-break: break-word;
-}
-
-.estado-modal-activo {
-    color: #1b7a4a !important;
-
-    font-weight: 600;
-}
-
-
-/* ============================================================
-   ACCIONES DE BAJA
-   ============================================================ */
-
-.baja-actions {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-end;
-
-    gap: 9px;
-
-    padding: 16px 22px;
-
-    border-top: 1px solid #e1e9e4;
-}
-
-.btn-baja-cancel,
-.btn-baja-confirm,
-.btn-cancel,
-.btn-save {
-    min-height: 35px;
-
-    padding: 0 17px;
-
-    box-sizing: border-box;
-
-    border-radius: 8px;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 11px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        background-color .18s ease,
-        border-color .18s ease,
-        transform .18s ease;
-}
-
-.btn-baja-cancel,
-.btn-cancel {
-    border: 1px solid #dce5df;
-
-    background: #ffffff;
-
-    color: #31483c;
-}
-
-.btn-baja-cancel:hover,
-.btn-cancel:hover {
-    background: #f4f7f5;
-
-    border-color: #c9d9d0;
-}
-
-.btn-baja-confirm {
-    border: 1px solid #b91c1c;
-
-    background: #b91c1c;
-
-    color: #ffffff;
-}
-
-.btn-baja-confirm:hover {
-    background: #991b1b;
-
-    border-color: #991b1b;
-}
-
-.btn-save {
-    border: 1px solid #185a38;
-
-    background: #185a38;
-
-    color: #ffffff;
-}
-
-.btn-save:hover {
-    background: #134a2e;
-
-    border-color: #134a2e;
-}
-
-
-/* ============================================================
-   CUERPO DE MODALES
-   ============================================================ */
-
-.modal-body {
-    padding: 22px 22px 8px;
-}
-
-.form-group {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 7px;
-
-    margin-bottom: 17px;
-}
-
-.form-group label {
-    font-family: 'Inter', sans-serif;
-
-    font-size: 11.5px;
-
-    font-weight: 600;
-
-    color: #2d4638;
-}
-
-.form-input {
-    width: 100%;
-
-    height: 39px;
-
-    padding: 0 12px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #dce5df;
-
-    border-radius: 8px;
-
-    outline: none;
-
-    background: #ffffff;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 12.5px;
-
-    color: #263b30;
-}
-
-.form-input:focus {
-    border-color: #6da982;
-
-    box-shadow:
-        0 0 0 3px rgba(24, 90, 56, .10);
-}
-
-.form-input[readonly] {
-    background: #f7f9f8;
-
-    color: #718279;
-}
-
-
-/* ============================================================
-   ESTADO ACTIVO DEL MODAL
-   ============================================================ */
-
-.estado-activo-box {
-    width: 100%;
-
-    height: 39px;
-
-    display: flex;
-
-    align-items: center;
-
-    padding: 0 12px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #b8dfc5;
-
-    border-radius: 8px;
-
-    background: #edf8f1;
-
-    color: #17643b;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 12px;
-
-    font-weight: 600;
-}
-
-
-/* ============================================================
-   FOOTER MODAL
-   ============================================================ */
-
-.modal-footer {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-end;
-
-    gap: 9px;
-
-    padding: 16px 22px;
-
-    border-top: 1px solid #e1e9e4;
-}
-
-
-/* ============================================================
-   ANIMACIÓN MODAL
-   ============================================================ */
-
-@keyframes modalEntrada {
-
-    from {
-        opacity: 0;
-
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0);
-    }
 }
 
 
@@ -1395,135 +723,52 @@ form:has(.search-box) {
    RESPONSIVE
    ============================================================ */
 
-@media (max-width: 1000px) {
-
-    .card-details {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-}
-
-
 @media (max-width: 800px) {
 
-    .header {
+    .pr-header {
         align-items: flex-start;
-
         flex-direction: column;
     }
 
-    .btn-nuevo {
-        width: auto;
-    }
-
-    .card-header {
-        align-items: flex-start;
-
+    .pr-filtros {
         flex-direction: column;
+        align-items: stretch;
     }
 
-    .card-actions {
+    .pr-select {
         width: 100%;
-
-        justify-content: flex-start;
-    }
-
-    .card-details {
-        grid-template-columns: 1fr;
     }
 }
 
+@media (max-width: 600px) {
 
-@media (max-width: 700px) {
-
-    .title {
+    .pr-title {
         font-size: 24px;
     }
 
-    .search-box {
-        height: 44px;
-    }
-
-    .card-header {
-        padding: 14px;
-    }
-
-    .card-actions {
-        gap: 6px;
-    }
-
-    .products-section {
-        grid-column: auto;
-    }
-
-    .modal {
-        padding: 12px;
-    }
-
-    .modal-content,
-    .modal-baja-container {
-        max-height: 94vh;
-    }
-}
-
-
-@media (max-width: 500px) {
-
-    .btn-nuevo {
-        width: 100%;
-    }
-
-    .card-left {
-        width: 100%;
-    }
-
-    .card-actions {
-        flex-direction: column;
-
-        align-items: stretch;
-    }
-
-    .card-actions .btn-action,
-    .card-actions .btn-arrow,
-    .card-actions .form-estado {
-        width: 100%;
-    }
-
-    .card-actions .form-estado .btn-action {
-        width: 100%;
-    }
-
-    .btn-arrow {
-        width: 100%;
-    }
-
-    .baja-grid {
+    .pr-grid,
+    .pr-resumen-grid {
         grid-template-columns: 1fr;
     }
 
-    .baja-actions,
-    .modal-footer {
-        flex-direction: column-reverse;
+    .pr-modal {
+        padding: 12px;
+    }
 
+    .pr-modal-pie {
+        flex-direction: column-reverse;
         align-items: stretch;
     }
 
-    .baja-actions button,
-    .modal-footer button {
-        width: 100%;
-    }
-
-    .toast-container {
+    .pr-toasts {
         right: 12px;
         left: 12px;
         bottom: 12px;
     }
 
-    .toast {
+    .pr-toast {
         min-width: 0;
-
         width: 100%;
-
         max-width: none;
     }
 }

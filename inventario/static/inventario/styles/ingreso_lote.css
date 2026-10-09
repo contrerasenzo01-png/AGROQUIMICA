@@ -1,31 +1,49 @@
 /* ============================================================
-   GESTIÓN DE LOTES  ·  Agroquímicos del Valle
-   Todas las clases empiezan con "lt-" para no pisar los estilos de base.css.
-   Ubicación: inventario/static/inventario/styles/ingreso_lote.css
+   LOTES · Agroquímica del Valle
+   Estilos de registrar_ingreso_lote.html
+   Archivo: inventario/static/inventario/styles/ingreso_lote.css
    ============================================================ */
 
-/* IMPORTANTE: las variables se declaran para la página Y para el modal,
-   porque el modal está fuera del contenedor .lt-page. */
+
+/* ============================================================
+   VARIABLES Y ESTILOS GENERALES
+   ============================================================ */
+
 .lt-page,
 .lt-modal {
-    --lt-verde:        #185a38;
-    --lt-verde-hover:  #134a2e;
-    --lt-titulo:       #0f3a24;
-    --lt-borde:        #e3eae6;
-    --lt-borde-campo:  #dde7e0;
-    --lt-fondo-campo:  #f7faf8;
-    --lt-texto:        #1c2a23;
-    --lt-suave:        #6b7c73;
-    --lt-rojo:         #b91c1c;
-    --lt-ambar:        #b45309;
+    --lt-verde: #185a38;
+    --lt-verde-hover: #134a2e;
+    --lt-titulo: #0f3a24;
+    --lt-borde: #e3eae6;
+    --lt-borde-campo: #dde7e0;
+    --lt-texto: #1c2a23;
+    --lt-suave: #6b7c73;
+    --lt-rojo: #b91c1c;
 
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--lt-texto);
 }
 
+.lt-page,
+.lt-page *,
+.lt-page *::before,
+.lt-page *::after,
+.lt-modal,
+.lt-modal *,
+.lt-modal *::before,
+.lt-modal *::after {
+    box-sizing: border-box;
+}
+
+.lt-page {
+    width: 100%;
+    min-width: 0;
+}
+
 .lt-icon {
-    width: 18px;
-    height: 18px;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
     fill: none;
     stroke: currentColor;
@@ -35,126 +53,234 @@
 }
 
 
-/* ---------- ENCABEZADO ---------- */
+/* ============================================================
+   ENCABEZADO
+   ============================================================ */
+
 .lt-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 16px;
-    margin-bottom: 24px;
-}
-
-.lt-eyebrow {
-    font-size: 10px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--lt-suave);
-    margin-bottom: 8px;
+    margin-bottom: 20px;
 }
 
 .lt-title {
+    margin: 0 0 6px;
     font-family: 'Poppins', 'Inter', sans-serif;
     font-size: 30px;
     font-weight: 700;
+    line-height: 1.25;
     letter-spacing: -.02em;
-    margin: 0 0 6px;
-}
-
-.lt-sub {
-    font-size: 13px;
-    color: var(--lt-suave);
-    margin: 0;
+    color: var(--lt-texto);
 }
 
 
-/* ---------- BOTONES ---------- */
+/* ============================================================
+   BOTONES PRINCIPALES
+   ============================================================ */
+
 .lt-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    min-height: 38px;
     padding: 11px 20px;
-    border-radius: 8px;
     border: 1px solid transparent;
+    border-radius: 8px;
     font-family: inherit;
     font-size: 12.5px;
     font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
-    transition: background-color .15s, border-color .15s;
+    transition:
+        background-color .15s,
+        border-color .15s,
+        color .15s;
 }
 
-.lt-btn-primary       { background: var(--lt-verde); color: #fff; }
-.lt-btn-primary:hover { background: var(--lt-verde-hover); }
+.lt-btn-primary {
+    background: var(--lt-verde);
+    color: #fff;
+}
 
-.lt-btn-claro         { background: #fff; color: var(--lt-texto); border-color: var(--lt-borde-campo); }
-.lt-btn-claro:hover   { background: #f4f7f5; }
+.lt-btn-primary:hover {
+    background: var(--lt-verde-hover);
+    color: #fff;
+}
+
+.lt-btn-claro {
+    background: #fff;
+    color: var(--lt-texto);
+    border-color: var(--lt-borde-campo);
+}
+
+.lt-btn-claro:hover {
+    background: #f4f7f5;
+}
+
+.lt-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.lt-btn:focus-visible,
+.lt-btn-accion:focus-visible,
+.lt-modal-x:focus-visible {
+    outline: 3px solid rgba(24, 90, 56, .25);
+    outline-offset: 2px;
+}
 
 
-/* ---------- MENSAJES ---------- */
-.lt-messages { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+/* ============================================================
+   MENSAJES DE DJANGO
+   ============================================================ */
+
+.lt-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
 
 .lt-message {
-    padding: 11px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--lt-borde);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
     background: #fff;
+    border: 1px solid var(--lt-borde);
+    border-left: 4px solid var(--lt-verde);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .05);
     font-size: 12.5px;
 }
-.lt-message.success { background: #f0fdf4; border-color: #86efac; color: #166534; }
-.lt-message.error   { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+
+.lt-message.success {
+    border-left-color: #15803d;
+}
+
+.lt-message.warning {
+    border-left-color: #f59f00;
+}
+
+.lt-message.error,
+.lt-message.danger {
+    border-left-color: var(--lt-rojo);
+}
+
+.lt-message-cerrar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 5px;
+    border: none;
+    background: transparent;
+    color: #8a9e93;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.lt-message-cerrar:hover {
+    color: var(--lt-texto);
+}
 
 
-/* ---------- BÚSQUEDA ---------- */
+/* ============================================================
+   BÚSQUEDA Y FILTROS
+   ============================================================ */
+
 .lt-toolbar {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    align-items: stretch;
+    gap: 10px;
     margin-bottom: 16px;
 }
 
 .lt-search {
-    flex: 1;
     display: flex;
+    flex: 1;
+    min-width: 0;
     align-items: center;
     gap: 10px;
+    padding: 0 14px;
     background: #fff;
     border: 1px solid var(--lt-borde);
     border-radius: 10px;
-    padding: 0 14px;
     color: var(--lt-suave);
 }
 
-.lt-search:focus-within { border-color: #86c5a1; box-shadow: 0 0 0 3px rgba(24, 90, 56, .12); }
+.lt-search:focus-within {
+    border-color: #86c5a1;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .12);
+}
 
 .lt-search input {
     flex: 1;
+    width: 100%;
+    min-width: 0;
+    padding: 13px 0;
     border: none;
     outline: none;
     background: transparent;
-    padding: 13px 0;
     font-family: inherit;
     font-size: 13px;
     color: var(--lt-texto);
 }
 
-.lt-count { font-size: 11px; color: var(--lt-suave); white-space: nowrap; }
+.lt-search input::placeholder {
+    color: #8a9e93;
+}
+
+.lt-select {
+    min-width: 170px;
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--lt-borde);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--lt-texto);
+    font-family: inherit;
+    font-size: 12.5px;
+    outline: none;
+    cursor: pointer;
+}
+
+.lt-select:focus {
+    border-color: #86c5a1;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .12);
+}
 
 
-/* ---------- TABLA ---------- */
+/* ============================================================
+   TARJETA Y TABLA DE LOTES
+   ============================================================ */
+
 .lt-card {
+    width: 100%;
     background: #fff;
     border: 1px solid var(--lt-borde);
     border-radius: 12px;
     overflow: hidden;
 }
 
-.lt-table-wrap { overflow-x: auto; }
+.lt-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
 
-.lt-table { width: 100%; border-collapse: collapse; }
+.lt-table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
 .lt-table th {
-    text-align: left;
     padding: 14px 16px;
+    text-align: left;
     font-size: 11px;
     font-weight: 500;
     color: var(--lt-suave);
@@ -164,28 +290,189 @@
 }
 
 .lt-table td {
-    padding: 16px;
+    padding: 14px 16px;
     font-size: 12.5px;
+    color: var(--lt-texto);
     border-bottom: 1px solid #eef3f0;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
-.lt-table tbody tr:last-child td { border-bottom: none; }
-.lt-table tbody tr:hover         { background: #f9fbfa; }
+.lt-table tbody tr:last-child td {
+    border-bottom: none;
+}
 
-.lt-num   { font-weight: 600; }
-.lt-muted { color: var(--lt-suave); }
-.lt-cant  { font-weight: 700; }
+.lt-table tbody tr:hover {
+    background: #f9fbfa;
+}
 
-.lt-fecha       { font-weight: 600; }
-.lt-vencido     { color: var(--lt-rojo); }
-.lt-por-vencer  { color: var(--lt-ambar); }
+.lt-col-acciones {
+    text-align: right !important;
+}
 
-.lt-vacio { text-align: center; padding: 40px 16px !important; color: var(--lt-suave); }
+.lt-num {
+    font-weight: 700;
+    color: var(--lt-titulo);
+}
+
+.lt-muted {
+    color: var(--lt-suave) !important;
+}
+
+.lt-cant {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--lt-texto);
+}
+
+.lt-vacio {
+    padding: 40px 16px !important;
+    text-align: center;
+    color: var(--lt-suave) !important;
+    white-space: normal !important;
+}
+
+
+/* ============================================================
+   FECHAS DE VENCIMIENTO
+   ============================================================ */
+
+.lt-fecha {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.lt-vencido {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.lt-por-vencer {
+    background: #fff7e6;
+    color: #a16207;
+}
+
+
+/* ============================================================
+   ESTADO DEL LOTE
+   ============================================================ */
+
+.lt-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.lt-estado::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.lt-estado-activo {
+    background: #e8f5ee;
+    color: #1b7a4a;
+}
+
+.lt-estado-inactivo {
+    background: #eef1ef;
+    color: #7b8a82;
+}
+
+
+/* ============================================================
+   BOTONES DE ACCIONES DE LA TABLA
+   ============================================================ */
+
+.lt-acciones {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.lt-form-estado {
+    display: inline-flex;
+    margin: 0;
+}
+
+.lt-btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 32px;
+    padding: 6px 9px;
+    border: 1px solid var(--lt-borde-campo);
+    border-radius: 8px;
+    background: #fff;
+    color: #3f5a4c;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color .15s,
+        border-color .15s,
+        color .15s;
+}
+
+.lt-btn-accion .lt-icon {
+    width: 15px;
+    height: 15px;
+}
+
+.lt-btn-editar:hover {
+    background: #f1f5f3;
+    border-color: #c8d9ce;
+}
+
+.lt-btn-baja {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.lt-btn-baja:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+.lt-btn-activar {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.lt-btn-activar:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+
+/* ============================================================
+   PIE DE TABLA
+   ============================================================ */
 
 .lt-pie {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     padding: 12px 16px;
     font-size: 11px;
     color: var(--lt-suave);
@@ -195,154 +482,451 @@
 
 
 /* ============================================================
-   MODAL  (mismo tamaño y estilo que "Registrar producto")
+   MODALES
    ============================================================ */
-
-/* Clave: sin esto, el padding de los campos los hacía salirse del modal */
-.lt-modal,
-.lt-modal *,
-.lt-modal *::before,
-.lt-modal *::after {
-    box-sizing: border-box;
-}
 
 .lt-modal {
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 9999;               /* por encima del menú lateral y la barra superior */
+    z-index: 9999;
     align-items: center;
     justify-content: center;
     padding: 20px;
     background: rgba(16, 40, 28, .45);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
-.lt-modal.abierto { display: flex; }
+.lt-modal.abierto {
+    display: flex;
+}
 
 .lt-modal-box {
     width: 100%;
-    max-width: 500px;
-    max-height: 94vh;
+    max-width: 540px;
+    max-height: 92vh;
     overflow-x: hidden;
     overflow-y: auto;
     background: #fff;
     border-radius: 14px;
-    padding: 26px 26px 22px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
+    animation: lt-entrada .22s ease-out;
 }
+
+@keyframes lt-entrada {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ============================================================
+   CABECERA DEL MODAL
+   ============================================================ */
 
 .lt-modal-head {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 14px;
-    margin-bottom: 18px;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--lt-borde);
 }
 
 .lt-modal-eyebrow {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: #4b6b5a;
     margin-bottom: 5px;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--lt-suave);
 }
 
 .lt-modal-head h2 {
-    font-family: 'Poppins', 'Inter', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -.01em;
-    color: var(--lt-titulo);
-    margin: 0 0 6px;
-}
-
-.lt-modal-sub {
-    font-size: 12px;
-    line-height: 1.45;
-    color: var(--lt-suave);
     margin: 0;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--lt-texto);
 }
 
 .lt-modal-x {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    background: #eef2ef;
+    width: 30px;
+    height: 30px;
+    padding: 4px;
     border: none;
-    border-radius: 8px;
-    color: #4b6b5a;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--lt-suave);
     cursor: pointer;
 }
-.lt-modal-x:hover { background: #e2e9e4; color: var(--lt-texto); }
 
-/* Campos */
-.lt-campo { margin-bottom: 14px; flex: 1; min-width: 0; }
+.lt-modal-x:hover {
+    background: #f1f5f3;
+    color: var(--lt-texto);
+}
+
+
+/* ============================================================
+   FORMULARIOS DE LOS MODALES
+   ============================================================ */
+
+.lt-modal-body {
+    padding: 20px 22px 6px;
+}
+
+.lt-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    margin-bottom: 16px;
+}
 
 .lt-campo label {
-    display: block;
     font-size: 11.5px;
     font-weight: 600;
     color: #1f3a2c;
-    margin-bottom: 6px;
 }
 
 .lt-campo input,
 .lt-campo select {
     width: 100%;
-    height: 40px;
-    padding: 0 13px;
-    background: var(--lt-fondo-campo);
+    min-width: 0;
+    height: 38px;
+    padding: 0 12px;
     border: 1px solid var(--lt-borde-campo);
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 12px;
-    color: var(--lt-texto);
+    border-radius: 8px;
     outline: none;
-    transition: border-color .15s, box-shadow .15s, background-color .15s;
+    background: #fff;
+    font-family: inherit;
+    font-size: 12.5px;
+    color: var(--lt-texto);
+    transition:
+        border-color .15s,
+        box-shadow .15s;
 }
 
-.lt-campo input::placeholder { color: #a3b0a9; }
+.lt-campo input::placeholder {
+    color: #a3b0a9;
+}
 
 .lt-campo input:focus,
 .lt-campo select:focus {
-    background: #fff;
     border-color: #6fb28b;
     box-shadow: 0 0 0 3px rgba(24, 90, 56, .14);
 }
 
-.lt-fila { display: flex; gap: 16px; }
+.lt-campo input[readonly] {
+    background: #f3f6f4;
+    color: #5c7367;
+    cursor: default;
+}
 
-/* Pie con botones */
+.lt-campo input[readonly]:focus {
+    border-color: var(--lt-borde-campo);
+    box-shadow: none;
+}
+
+
+/* ============================================================
+   DOS CAMPOS EN UNA FILA
+   ============================================================ */
+
+.lt-fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+}
+
+
+/* ============================================================
+   TEXTO DE AYUDA DEL FORMULARIO
+   ============================================================ */
+
+.lt-ayuda {
+    margin: 0 0 16px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--lt-suave);
+}
+
+
+/* ============================================================
+   PIE Y BOTONES DE LOS MODALES
+   ============================================================ */
+
 .lt-modal-pie {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
-    margin-top: 6px;
-    padding-top: 18px;
+    padding: 16px 22px;
     border-top: 1px solid var(--lt-borde);
 }
 
-.lt-modal .lt-btn {
-    height: 36px;
+.lt-modal-pie .lt-btn {
+    min-height: 34px;
     padding: 0 18px;
-    font-size: 12px;
-    border-radius: 10px;
+    font-size: 12.5px;
 }
 
-.lt-modal .lt-btn-primary { box-shadow: 0 3px 9px rgba(24, 90, 56, .3); }
+
+/* ============================================================
+   MODAL DE CONFIRMACIÓN DE BAJA DEL LOTE
+   ============================================================ */
+
+/* Aviso sobre las consecuencias de dar de baja el lote */
+.lt-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 13px 15px;
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+    background: #fff7ed;
+    color: #9a3412;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.lt-aviso .lt-icon {
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #c2410c;
+}
+
+/* Tarjeta con el resumen del lote */
+.lt-resumen-baja {
+    margin-bottom: 18px;
+    overflow: hidden;
+    border: 1px solid var(--lt-borde);
+    border-radius: 12px;
+    background: #fff;
+}
+
+/* Cabecera del resumen */
+.lt-resumen-baja-cab {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 17px;
+    border-bottom: 1px solid var(--lt-borde);
+    background: #f7faf8;
+}
+
+/* Avatar del lote */
+.lt-avatar-baja {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border: 1px solid #cce8d7;
+    border-radius: 8px;
+    background: #fde8e8;
+    color: #e02424;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Número y título del lote: mismos tamaños que proveedores */
+.lt-resumen-baja-cab h3 {
+    margin: 0;
+    color: var(--lt-texto);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.lt-resumen-baja-cab p {
+    margin: 2px 0 0;
+    color: var(--lt-suave);
+    font-size: 11px;
+}
+
+/* Datos del lote */
+.lt-datos-baja {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px;
+}
+
+.lt-datos-baja > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid #eef3f0;
+    border-radius: 6px;
+    background: #fff;
+}
+
+/* Etiquetas: mismo tamaño que las etiquetas del resumen de proveedores */
+.lt-label-baja {
+    display: block;
+    margin-bottom: 2px;
+    color: #8a9e93;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Valores de producto, proveedor y cantidad */
+.lt-datos-baja strong,
+.lt-datos-baja .lt-valor-baja {
+    overflow-wrap: anywhere;
+    color: #2d4739;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* Botón rojo de confirmación */
+.lt-btn-peligro {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 0 18px;
+    border: 1px solid #b91c1c;
+    border-radius: 8px;
+    background: #b91c1c;
+    color: #fff;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color .15s,
+        border-color .15s;
+}
+
+.lt-btn-peligro:hover {
+    border-color: #991b1b;
+    background: #991b1b;
+}
+
+.lt-btn-peligro:focus-visible {
+    outline: 3px solid rgba(185, 28, 28, .22);
+    outline-offset: 2px;
+}
+
+.lt-btn-peligro .lt-icon {
+    width: 15px;
+    height: 15px;
+}
 
 
-/* ---------- RESPONSIVE ---------- */
+/* ============================================================
+   RESPONSIVE: TABLETS Y PANTALLAS MEDIANAS
+   ============================================================ */
+
+@media (max-width: 800px) {
+    .lt-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .lt-search {
+        flex-basis: 100%;
+    }
+
+    .lt-toolbar .lt-btn {
+        align-self: flex-start;
+    }
+
+    .lt-acciones {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .lt-select {
+        min-height: 38px;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE: CELULARES
+   ============================================================ */
+
 @media (max-width: 700px) {
-    .lt-header  { flex-direction: column; }
-    .lt-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
-    .lt-fila    { flex-direction: column; gap: 0; }
-    .lt-modal-box { padding: 22px 18px; }
-    .lt-modal-pie { flex-direction: column-reverse; }
+    .lt-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .lt-header > .lt-btn {
+        align-self: flex-start;
+    }
+
+    .lt-title {
+        font-size: 26px;
+    }
+
+    .lt-fila {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .lt-modal {
+        padding: 12px;
+    }
+
+    .lt-modal-box {
+        max-height: 95vh;
+    }
+
+    .lt-modal-head {
+        padding: 16px;
+    }
+
+    .lt-modal-body {
+        padding: 18px 16px 6px;
+    }
+
+    .lt-modal-pie {
+        padding: 14px 16px;
+    }
+
+    .lt-pie {
+        flex-wrap: wrap;
+    }
+
+    .lt-btn-accion {
+        padding: 6px 8px;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE: MODAL DE BAJA EN CELULARES
+   ============================================================ */
+
+@media (max-width: 500px) {
+    .lt-datos-baja {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .lt-resumen-baja-cab {
+        padding: 14px;
+    }
 }

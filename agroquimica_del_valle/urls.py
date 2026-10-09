@@ -53,9 +53,13 @@ urlpatterns = [
     path('productos/cambiar-estado/<int:pk>/', views.cambiar_estado_producto, name='cambiar_estado_producto'),
 
 
-    # Registrar ingreso de lote
-    path('ingreso-lote/', views.registrar_ingreso_lote, name='registrar_ingreso_lote'),
+    # ============================================================
+    # GESTIÓN DE LOTES
+    # ============================================================
 
+    path('ingreso-lote/', views.registrar_ingreso_lote, name='registrar_ingreso_lote'),
+    path('ingreso-lote/editar/<int:id>/', views.editar_lote, name='editar_lote'),
+    path('ingreso-lote/cambiar-estado/<int:id>/', views.cambiar_estado_lote, name='cambiar_estado_lote'),
 
     # Movimientos de stock
     path('movimientos-stock/', views.gestion_movimientos_stock, name='gestion_movimientos_stock'),
