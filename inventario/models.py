@@ -257,15 +257,6 @@ class Productos(models.Model):
         db_column='ID_Tipo_producto'
     )
 
-    ID_Subtipo = models.ForeignKey(
-        Subtipos,
-        on_delete=models.SET_NULL,
-        db_column='ID_Subtipo',
-        related_name='productos',
-        null=True,
-        blank=True
-    )
-
     Marca = models.CharField(
         max_length=50,
         null=True,

@@ -5,9 +5,10 @@ import unicodedata
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+
 from .forms import ProveedorForm
 
 from .models import (
@@ -23,7 +24,7 @@ from .models import (
     Lotes,
     Stock,
     Alertas,
-    MovimientosStock
+    MovimientosStock,
 )
 
 
@@ -31,13 +32,11 @@ from .models import (
 # CONTROL DE ACCESO
 # ============================================================
 
-# Perfiles que pueden entrar a las pantallas de administración.
-# Si renombrás el perfil en la base, agregá el nombre nuevo acá.
 PERFILES_ADMIN = ('Administrador', 'Jefe')
 
 
 def usuario_autenticado(request):
-    """Devuelve el usuario logueado si está activo y con perfil activo."""
+    """Devuelve el usuario logueado si está activo y tiene perfil activo."""
 
     usuario_id = request.session.get('usuario_id')
 
@@ -66,7 +65,7 @@ def usuario_autenticado(request):
 
 
 def usuario_es_administrador(request):
-    """Igual que usuario_autenticado, pero solo para perfiles de administración."""
+    """Verifica que el usuario tenga un perfil administrativo."""
 
     usuario = usuario_autenticado(request)
 
@@ -93,7 +92,6 @@ def login_view(request):
         password_input = request.POST.get('password', '')
 
         try:
-
             usuario = Usuarios.objects.select_related(
                 'ID_Perfil'
             ).get(
@@ -112,12 +110,17 @@ def login_view(request):
 
                 error_message = 'El perfil del usuario se encuentra inactivo.'
 
-            elif check_password(password_input, usuario.Contrasena):
+            elif check_password(
+                password_input,
+                usuario.Contrasena
+            ):
 
                 request.session['usuario_id'] = usuario.ID_Usuario
                 request.session['usuario_nombre'] = usuario.Usuario
                 request.session['perfil_id'] = usuario.ID_Perfil.ID_Perfil
-                request.session['perfil_nombre'] = usuario.ID_Perfil.Nombre_perfil
+                request.session['perfil_nombre'] = (
+                    usuario.ID_Perfil.Nombre_perfil
+                )
 
                 if usuario.Cambiar_contrasena:
                     return redirect('cambiar_contrasena')
@@ -125,11 +128,9 @@ def login_view(request):
                 return redirect('panel_principal')
 
             else:
-
                 error_message = 'Usuario o contraseña incorrectos.'
 
         except Usuarios.DoesNotExist:
-
             error_message = 'Usuario o contraseña incorrectos.'
 
     return render(
@@ -161,7 +162,6 @@ def panel_principal(request):
 
     alertas_vencimiento = generar_alertas_vencimiento()
 
-
     return render(
         request,
         'inventario/panel_principal.html',
@@ -180,9 +180,15 @@ def _proveedor_duplicado(form, excluir_pk=None):
     """Busca otro proveedor que coincida en nombre, teléfono, email o dirección."""
 
     nombre = form.cleaned_data['nombre_proveedor'].strip()
-    telefono = (form.cleaned_data.get('telefono_proveedor') or '').strip()
-    email = (form.cleaned_data.get('email_proveedor') or '').strip()
-    direccion = (form.cleaned_data.get('direccion_proveedor') or '').strip()
+    telefono = (
+        form.cleaned_data.get('telefono_proveedor') or ''
+    ).strip()
+    email = (
+        form.cleaned_data.get('email_proveedor') or ''
+    ).strip()
+    direccion = (
+        form.cleaned_data.get('direccion_proveedor') or ''
+    ).strip()
 
     filtros = Q(nombre_proveedor__iexact=nombre)
 
@@ -198,7 +204,9 @@ def _proveedor_duplicado(form, excluir_pk=None):
     proveedores = Proveedores.objects.filter(filtros)
 
     if excluir_pk is not None:
-        proveedores = proveedores.exclude(ID_Proveedor=excluir_pk)
+        proveedores = proveedores.exclude(
+            ID_Proveedor=excluir_pk
+        )
 
     return proveedores.first()
 
@@ -215,7 +223,6 @@ def gestion_proveedores(request):
     proveedores = Proveedores.objects.all()
 
     if busqueda:
-
         proveedores = proveedores.filter(
             Q(nombre_proveedor__icontains=busqueda) |
             Q(email_proveedor__icontains=busqueda) |
@@ -231,8 +238,15 @@ def gestion_proveedores(request):
 
     form = ProveedorForm()
 
-    error_duplicado_id = request.session.pop('error_duplicado_id', None)
-    proveedor_conflicto = request.session.pop('proveedor_conflicto', None)
+    error_duplicado_id = request.session.pop(
+        'error_duplicado_id',
+        None
+    )
+
+    proveedor_conflicto = request.session.pop(
+        'proveedor_conflicto',
+        None
+    )
 
     return render(
         request,
@@ -247,7 +261,6 @@ def gestion_proveedores(request):
             'proveedor_conflicto': proveedor_conflicto,
         }
     )
-
 
 
 def crear_proveedor(request):
@@ -316,7 +329,6 @@ def editar_proveedor(request, pk):
         ID_Proveedor=pk
     )
 
-    # Conservar el estado original del proveedor.
     estado_original = proveedor.estado_proveedor
 
     if request.method != 'POST':
@@ -344,7 +356,6 @@ def editar_proveedor(request, pk):
 
         return redirect('gestion_proveedores')
 
-    # Verificar si los datos pertenecen a otro proveedor.
     existente = _proveedor_duplicado(
         form,
         excluir_pk=pk
@@ -363,11 +374,8 @@ def editar_proveedor(request, pk):
 
         return redirect('gestion_proveedores')
 
-    # Guardar los datos editados sin modificar el estado.
     proveedor_actualizado = form.save(commit=False)
-
     proveedor_actualizado.estado_proveedor = estado_original
-
     proveedor_actualizado.save()
 
     messages.success(
@@ -376,7 +384,6 @@ def editar_proveedor(request, pk):
     )
 
     return redirect('gestion_proveedores')
-
 
 
 def cambiar_estado_proveedor(request, pk):
@@ -394,12 +401,11 @@ def cambiar_estado_proveedor(request, pk):
     if request.method != 'POST':
         return redirect('gestion_proveedores')
 
-    # Obtener el estado solicitado desde el formulario.
     estado_solicitado = request.POST.get(
-        'estado', ''
+        'estado',
+        ''
     ).strip().lower()
 
-    # Dar de baja al proveedor.
     if estado_solicitado == 'inactivo':
 
         proveedor.estado_proveedor = False
@@ -409,7 +415,6 @@ def cambiar_estado_proveedor(request, pk):
             'fue dado de baja correctamente.'
         )
 
-    # Activar al proveedor.
     elif estado_solicitado == 'activo':
 
         proveedor.estado_proveedor = True
@@ -424,9 +429,9 @@ def cambiar_estado_proveedor(request, pk):
             request,
             'El estado solicitado no es válido.'
         )
+
         return redirect('gestion_proveedores')
 
-    # Guardar únicamente el campo del estado.
     proveedor.save(
         update_fields=['estado_proveedor']
     )
@@ -434,7 +439,6 @@ def cambiar_estado_proveedor(request, pk):
     messages.success(request, mensaje)
 
     return redirect('gestion_proveedores')
-
 
 
 # ============================================================
@@ -453,7 +457,9 @@ def gestion_tipos_productos(request):
     tipos = TiposProductos.objects.all()
 
     if busqueda:
-        tipos = tipos.filter(Nombre_tipo_producto__icontains=busqueda)
+        tipos = tipos.filter(
+            Nombre_tipo_producto__icontains=busqueda
+        )
 
     return render(
         request,
@@ -477,11 +483,16 @@ def crear_tipo_producto(request):
 
     if request.method == 'POST':
 
-        nombre = request.POST.get('Nombre_tipo_producto', '').strip()
+        nombre = request.POST.get(
+            'Nombre_tipo_producto',
+            ''
+        ).strip()
 
         if not nombre:
-
-            messages.error(request, 'Debe ingresar el nombre del tipo de producto.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del tipo de producto.'
+            )
 
             return redirect('gestion_tipos_productos')
 
@@ -490,14 +501,21 @@ def crear_tipo_producto(request):
         ).exists()
 
         if existe:
-
-            messages.error(request, 'Ya existe un tipo de producto con ese nombre.')
+            messages.error(
+                request,
+                'Ya existe un tipo de producto con ese nombre.'
+            )
 
             return redirect('gestion_tipos_productos')
 
-        TiposProductos.objects.create(Nombre_tipo_producto=nombre)
+        TiposProductos.objects.create(
+            Nombre_tipo_producto=nombre
+        )
 
-        messages.success(request, 'Tipo de producto registrado correctamente.')
+        messages.success(
+            request,
+            'Tipo de producto registrado correctamente.'
+        )
 
     return redirect('gestion_tipos_productos')
 
@@ -509,15 +527,23 @@ def editar_tipo_producto(request, pk):
     if not usuario:
         return redirect('login')
 
-    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=pk)
+    tipo = get_object_or_404(
+        TiposProductos,
+        ID_Tipo_producto=pk
+    )
 
     if request.method == 'POST':
 
-        nombre = request.POST.get('Nombre_tipo_producto', '').strip()
+        nombre = request.POST.get(
+            'Nombre_tipo_producto',
+            ''
+        ).strip()
 
         if not nombre:
-
-            messages.error(request, 'Debe ingresar el nombre del tipo de producto.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del tipo de producto.'
+            )
 
             return redirect('gestion_tipos_productos')
 
@@ -528,15 +554,20 @@ def editar_tipo_producto(request, pk):
         ).exists()
 
         if existe:
-
-            messages.error(request, 'Ya existe otro tipo de producto con ese nombre.')
+            messages.error(
+                request,
+                'Ya existe otro tipo de producto con ese nombre.'
+            )
 
             return redirect('gestion_tipos_productos')
 
         tipo.Nombre_tipo_producto = nombre
         tipo.save()
 
-        messages.success(request, 'Tipo de producto actualizado correctamente.')
+        messages.success(
+            request,
+            'Tipo de producto actualizado correctamente.'
+        )
 
     return redirect('gestion_tipos_productos')
 
@@ -548,7 +579,10 @@ def dar_baja_tipo_producto(request, pk):
     if not usuario:
         return redirect('login')
 
-    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=pk)
+    tipo = get_object_or_404(
+        TiposProductos,
+        ID_Tipo_producto=pk
+    )
 
     if request.method == 'POST':
 
@@ -558,13 +592,27 @@ def dar_baja_tipo_producto(request, pk):
 
             tipo.Estado_tipo_producto = True
 
-            messages.success(request, 'Tipo de producto activado correctamente.')
+            messages.success(
+                request,
+                'Tipo de producto activado correctamente.'
+            )
 
         elif estado == 'inactivo':
 
             tipo.Estado_tipo_producto = False
 
-            messages.success(request, 'Tipo de producto dado de baja correctamente.')
+            messages.success(
+                request,
+                'Tipo de producto dado de baja correctamente.'
+            )
+
+        else:
+            messages.error(
+                request,
+                'El estado solicitado no es válido.'
+            )
+
+            return redirect('gestion_tipos_productos')
 
         tipo.save()
 
@@ -576,15 +624,16 @@ def dar_baja_tipo_producto(request, pk):
 # ============================================================
 
 def _subtipo_tiene_descripcion():
-    """True si el modelo Subtipos tiene el campo Descripcion_subtipo (como en el DER)."""
+    """Comprueba si Subtipos tiene el campo Descripcion_subtipo."""
 
-    return any(f.name == 'Descripcion_subtipo' for f in Subtipos._meta.get_fields())
+    return any(
+        campo.name == 'Descripcion_subtipo'
+        for campo in Subtipos._meta.get_fields()
+    )
 
 
 def gestion_subtipos(request):
 
-    # CORREGIDO: antes usaba usuario_autenticado, pero el menú de Subtipos
-    # es solo de administración y crear/editar ya exigían ser administrador.
     usuario = usuario_es_administrador(request)
 
     if not usuario:
@@ -592,10 +641,14 @@ def gestion_subtipos(request):
 
     busqueda = request.GET.get('q', '').strip()
 
-    subtipos = Subtipos.objects.select_related('ID_Tipo_producto').all()
+    subtipos = Subtipos.objects.select_related(
+        'ID_Tipo_producto'
+    ).all()
 
     if busqueda:
-        subtipos = subtipos.filter(Nombre_subtipo__icontains=busqueda)
+        subtipos = subtipos.filter(
+            Nombre_subtipo__icontains=busqueda
+        )
 
     tipos_productos = TiposProductos.objects.filter(
         Estado_tipo_producto=True
@@ -626,18 +679,26 @@ def crear_subtipo(request):
 
     if request.method == 'POST':
 
-        nombre = request.POST.get('Nombre_subtipo', '').strip()
+        nombre = request.POST.get(
+            'Nombre_subtipo',
+            ''
+        ).strip()
+
         tipo_id = request.POST.get('ID_Tipo_producto')
 
         if not nombre:
-
-            messages.error(request, 'Debe ingresar el nombre del subtipo.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del subtipo.'
+            )
 
             return redirect('gestion_subtipos')
 
         if not tipo_id:
-
-            messages.error(request, 'Debe seleccionar un tipo de producto.')
+            messages.error(
+                request,
+                'Debe seleccionar un tipo de producto.'
+            )
 
             return redirect('gestion_subtipos')
 
@@ -653,10 +714,10 @@ def crear_subtipo(request):
         ).exists()
 
         if existe:
-
             messages.error(
                 request,
-                'Ya existe un subtipo con ese nombre para el tipo seleccionado.'
+                'Ya existe un subtipo con ese nombre '
+                'para el tipo seleccionado.'
             )
 
             return redirect('gestion_subtipos')
@@ -669,12 +730,18 @@ def crear_subtipo(request):
 
         if _subtipo_tiene_descripcion():
             datos_subtipo['Descripcion_subtipo'] = (
-                request.POST.get('Descripcion_subtipo', '').strip() or None
+                request.POST.get(
+                    'Descripcion_subtipo',
+                    ''
+                ).strip() or None
             )
 
         Subtipos.objects.create(**datos_subtipo)
 
-        messages.success(request, 'Subtipo creado correctamente.')
+        messages.success(
+            request,
+            'Subtipo creado correctamente.'
+        )
 
     return redirect('gestion_subtipos')
 
@@ -686,22 +753,33 @@ def editar_subtipo(request, pk):
     if not usuario:
         return redirect('panel_principal')
 
-    subtipo = get_object_or_404(Subtipos, ID_Subtipo=pk)
+    subtipo = get_object_or_404(
+        Subtipos,
+        ID_Subtipo=pk
+    )
 
     if request.method == 'POST':
 
-        nombre = request.POST.get('Nombre_subtipo', '').strip()
+        nombre = request.POST.get(
+            'Nombre_subtipo',
+            ''
+        ).strip()
+
         tipo_id = request.POST.get('ID_Tipo_producto')
 
         if not nombre:
-
-            messages.error(request, 'Debe ingresar el nombre del subtipo.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del subtipo.'
+            )
 
             return redirect('gestion_subtipos')
 
         if not tipo_id:
-
-            messages.error(request, 'Debe seleccionar un tipo de producto.')
+            messages.error(
+                request,
+                'Debe seleccionar un tipo de producto.'
+            )
 
             return redirect('gestion_subtipos')
 
@@ -719,10 +797,10 @@ def editar_subtipo(request, pk):
         ).exists()
 
         if existe:
-
             messages.error(
                 request,
-                'Ya existe un subtipo con ese nombre para el tipo seleccionado.'
+                'Ya existe un subtipo con ese nombre '
+                'para el tipo seleccionado.'
             )
 
             return redirect('gestion_subtipos')
@@ -732,26 +810,33 @@ def editar_subtipo(request, pk):
 
         if _subtipo_tiene_descripcion():
             subtipo.Descripcion_subtipo = (
-                request.POST.get('Descripcion_subtipo', '').strip() or None
+                request.POST.get(
+                    'Descripcion_subtipo',
+                    ''
+                ).strip() or None
             )
 
         subtipo.save()
 
-        messages.success(request, 'Subtipo modificado correctamente.')
+        messages.success(
+            request,
+            'Subtipo modificado correctamente.'
+        )
 
     return redirect('gestion_subtipos')
 
 
 def cambiar_estado_subtipo(request, pk):
 
-    # CORREGIDO: antes cualquier usuario logueado (incluido Vendedor)
-    # podía activar o dar de baja subtipos.
     usuario = usuario_es_administrador(request)
 
     if not usuario:
         return redirect('panel_principal')
 
-    subtipo = get_object_or_404(Subtipos, ID_Subtipo=pk)
+    subtipo = get_object_or_404(
+        Subtipos,
+        ID_Subtipo=pk
+    )
 
     if request.method == 'POST':
 
@@ -759,15 +844,21 @@ def cambiar_estado_subtipo(request, pk):
         subtipo.save()
 
         if subtipo.Estado_subtipo:
-            messages.success(request, 'Subtipo activado correctamente.')
+            messages.success(
+                request,
+                'Subtipo activado correctamente.'
+            )
         else:
-            messages.success(request, 'Subtipo dado de baja correctamente.')
+            messages.success(
+                request,
+                'Subtipo dado de baja correctamente.'
+            )
 
     return redirect('gestion_subtipos')
 
 
 # ============================================================
-# GESTIONAR USUARIOS
+# GESTIÓN DE USUARIOS
 # ============================================================
 
 def gestion_usuarios(request):
@@ -779,7 +870,9 @@ def gestion_usuarios(request):
 
     busqueda = request.GET.get('q', '').strip()
 
-    usuarios = Usuarios.objects.select_related('ID_Perfil').all()
+    usuarios = Usuarios.objects.select_related(
+        'ID_Perfil'
+    ).all()
 
     if busqueda:
 
@@ -805,7 +898,6 @@ def gestion_usuarios(request):
             'perfiles': perfiles,
             'busqueda': busqueda,
             'usuario_actual': usuario,
-            # CORREGIDO: el menú lateral (_sidebar.html) lee 'usuario'
             'usuario': usuario
         }
     )
@@ -823,70 +915,109 @@ def crear_usuario(request):
         perfil_id = request.POST.get('ID_Perfil')
 
         if not perfil_id:
-
-            messages.error(request, 'Debe seleccionar un perfil.')
+            messages.error(
+                request,
+                'Debe seleccionar un perfil.'
+            )
 
             return redirect('gestion_usuarios')
 
-        perfil = get_object_or_404(Perfiles, ID_Perfil=perfil_id)
+        perfil = get_object_or_404(
+            Perfiles,
+            ID_Perfil=perfil_id
+        )
 
         dni = request.POST.get('DNI', '').strip()
-        apellido = request.POST.get('Apellido_usuario', '').strip()
-        nombre = request.POST.get('Nombre_usuario', '').strip()
-        email = request.POST.get('Email_usuario', '').strip()
-        contrasena = request.POST.get('Contrasena', '').strip()
+        apellido = request.POST.get(
+            'Apellido_usuario',
+            ''
+        ).strip()
+        nombre = request.POST.get(
+            'Nombre_usuario',
+            ''
+        ).strip()
+        email = request.POST.get(
+            'Email_usuario',
+            ''
+        ).strip()
+        contrasena = request.POST.get(
+            'Contrasena',
+            ''
+        ).strip()
 
         if not dni or not dni.isdigit():
-
-            messages.error(request, 'Debe ingresar un DNI válido.')
+            messages.error(
+                request,
+                'Debe ingresar un DNI válido.'
+            )
 
             return redirect('gestion_usuarios')
 
         if not nombre:
-
-            messages.error(request, 'Debe ingresar el nombre del usuario.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del usuario.'
+            )
 
             return redirect('gestion_usuarios')
 
         if not apellido:
-
-            messages.error(request, 'Debe ingresar el apellido del usuario.')
+            messages.error(
+                request,
+                'Debe ingresar el apellido del usuario.'
+            )
 
             return redirect('gestion_usuarios')
 
         if not email:
-
-            messages.error(request, 'Debe ingresar el correo electrónico.')
+            messages.error(
+                request,
+                'Debe ingresar el correo electrónico.'
+            )
 
             return redirect('gestion_usuarios')
 
         if len(contrasena) < 8:
-
-            messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
 
             return redirect('gestion_usuarios')
 
         if Usuarios.objects.filter(DNI=int(dni)).exists():
-
-            messages.error(request, 'Ya existe un usuario con ese DNI.')
+            messages.error(
+                request,
+                'Ya existe un usuario con ese DNI.'
+            )
 
             return redirect('gestion_usuarios')
 
-        if Usuarios.objects.filter(Email_usuario__iexact=email).exists():
-
-            messages.error(request, 'Ya existe un usuario con ese correo electrónico.')
+        if Usuarios.objects.filter(
+            Email_usuario__iexact=email
+        ).exists():
+            messages.error(
+                request,
+                'Ya existe un usuario con ese correo electrónico.'
+            )
 
             return redirect('gestion_usuarios')
 
         apellido_sin_tildes = ''.join(
             caracter
-            for caracter in unicodedata.normalize('NFD', apellido)
+            for caracter in unicodedata.normalize(
+                'NFD',
+                apellido
+            )
             if unicodedata.category(caracter) != 'Mn'
         )
 
         nombre_sin_tildes = ''.join(
             caracter
-            for caracter in unicodedata.normalize('NFD', nombre)
+            for caracter in unicodedata.normalize(
+                'NFD',
+                nombre
+            )
             if unicodedata.category(caracter) != 'Mn'
         )
 
@@ -894,9 +1025,13 @@ def crear_usuario(request):
             apellido_sin_tildes + nombre_sin_tildes[0]
         ).lower()
 
-        if Usuarios.objects.filter(Usuario=usuario_generado).exists():
-
-            messages.error(request, f'El usuario {usuario_generado} ya existe.')
+        if Usuarios.objects.filter(
+            Usuario=usuario_generado
+        ).exists():
+            messages.error(
+                request,
+                f'El usuario {usuario_generado} ya existe.'
+            )
 
             return redirect('gestion_usuarios')
 
@@ -915,9 +1050,9 @@ def crear_usuario(request):
         messages.success(
             request,
             f'El usuario {nuevo.Usuario} '
-            f'ha sido registrado correctamente. '
-            f'Deberá cambiar su contraseña '
-            f'en el próximo inicio de sesión.'
+            'ha sido registrado correctamente. '
+            'Deberá cambiar su contraseña '
+            'en el próximo inicio de sesión.'
         )
 
     return redirect('gestion_usuarios')
@@ -930,15 +1065,23 @@ def editar_usuario(request, pk):
     if not usuario_admin:
         return redirect('panel_principal')
 
-    usuario = get_object_or_404(Usuarios, ID_Usuario=pk)
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=pk
+    )
 
     if request.method == 'POST':
 
-        nuevo_email = request.POST.get('Email_usuario', '').strip()
+        nuevo_email = request.POST.get(
+            'Email_usuario',
+            ''
+        ).strip()
 
         if not nuevo_email:
-
-            messages.error(request, 'El correo electrónico es obligatorio.')
+            messages.error(
+                request,
+                'El correo electrónico es obligatorio.'
+            )
 
             return render(
                 request,
@@ -953,8 +1096,10 @@ def editar_usuario(request, pk):
         ).exists()
 
         if email_existente:
-
-            messages.error(request, 'Ya existe otro usuario con ese correo electrónico.')
+            messages.error(
+                request,
+                'Ya existe otro usuario con ese correo electrónico.'
+            )
 
             return render(
                 request,
@@ -968,7 +1113,7 @@ def editar_usuario(request, pk):
         messages.success(
             request,
             f'El usuario {usuario.Usuario} '
-            f'ha sido modificado correctamente.'
+            'ha sido modificado correctamente.'
         )
 
         return redirect('gestion_usuarios')
@@ -987,11 +1132,16 @@ def dar_baja_usuario(request, pk):
     if not usuario_admin:
         return redirect('panel_principal')
 
-    usuario = get_object_or_404(Usuarios, ID_Usuario=pk)
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=pk
+    )
 
     if usuario.ID_Usuario == usuario_admin.ID_Usuario:
-
-        messages.error(request, 'No puede darse de baja a sí mismo.')
+        messages.error(
+            request,
+            'No puede darse de baja a sí mismo.'
+        )
 
         return redirect('gestion_usuarios')
 
@@ -1001,7 +1151,10 @@ def dar_baja_usuario(request, pk):
         usuario.Fecha_Baja = timezone.now().date()
         usuario.save()
 
-        messages.success(request, 'Usuario dado de baja correctamente.')
+        messages.success(
+            request,
+            'Usuario dado de baja correctamente.'
+        )
 
     return redirect('gestion_usuarios')
 
@@ -1013,7 +1166,10 @@ def activar_usuario(request, id):
     if not usuario_admin:
         return redirect('panel_principal')
 
-    usuario = get_object_or_404(Usuarios, ID_Usuario=id)
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=id
+    )
 
     if request.method == 'POST':
 
@@ -1023,7 +1179,8 @@ def activar_usuario(request, id):
 
         messages.success(
             request,
-            f'El usuario {usuario.Usuario} fue activado correctamente.'
+            f'El usuario {usuario.Usuario} '
+            'fue activado correctamente.'
         )
 
     return redirect('gestion_usuarios')
@@ -1036,16 +1193,27 @@ def restablecer_contrasena(request, pk):
     if not usuario_admin:
         return redirect('panel_principal')
 
-    usuario = get_object_or_404(Usuarios, ID_Usuario=pk)
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=pk
+    )
 
     if request.method == 'POST':
 
-        nueva_contrasena = request.POST.get('nueva_contrasena', '')
-        confirmar_contrasena = request.POST.get('confirmar_contrasena', '')
+        nueva_contrasena = request.POST.get(
+            'nueva_contrasena',
+            ''
+        )
+        confirmar_contrasena = request.POST.get(
+            'confirmar_contrasena',
+            ''
+        )
 
         if nueva_contrasena != confirmar_contrasena:
-
-            messages.error(request, 'Las contraseñas no coinciden.')
+            messages.error(
+                request,
+                'Las contraseñas no coinciden.'
+            )
 
             return render(
                 request,
@@ -1054,8 +1222,10 @@ def restablecer_contrasena(request, pk):
             )
 
         if len(nueva_contrasena) < 8:
-
-            messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
 
             return render(
                 request,
@@ -1090,34 +1260,62 @@ def cambiar_contrasena(request):
     if not usuario_id:
         return redirect('login')
 
-    usuario = get_object_or_404(Usuarios, ID_Usuario=usuario_id)
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=usuario_id
+    )
 
     if request.method == 'POST':
 
-        nueva_contrasena = request.POST.get('nueva_contrasena', '')
-        confirmar_contrasena = request.POST.get('confirmar_contrasena', '')
+        nueva_contrasena = request.POST.get(
+            'nueva_contrasena',
+            ''
+        )
+        confirmar_contrasena = request.POST.get(
+            'confirmar_contrasena',
+            ''
+        )
 
         if nueva_contrasena != confirmar_contrasena:
+            messages.error(
+                request,
+                'Las contraseñas no coinciden.'
+            )
 
-            messages.error(request, 'Las contraseñas no coinciden.')
-
-            return render(request, 'inventario/cambiar_contrasena.html')
+            return render(
+                request,
+                'inventario/cambiar_contrasena.html',
+                {'usuario': usuario}
+            )
 
         if len(nueva_contrasena) < 8:
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
 
-            messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
-
-            return render(request, 'inventario/cambiar_contrasena.html')
+            return render(
+                request,
+                'inventario/cambiar_contrasena.html',
+                {'usuario': usuario}
+            )
 
         usuario.Contrasena = make_password(nueva_contrasena)
         usuario.Cambiar_contrasena = False
         usuario.save()
 
-        messages.success(request, 'Contraseña cambiada correctamente.')
+        messages.success(
+            request,
+            'Contraseña cambiada correctamente.'
+        )
 
         return redirect('panel_principal')
 
-    return render(request, 'inventario/cambiar_contrasena.html')
+    return render(
+        request,
+        'inventario/cambiar_contrasena.html',
+        {'usuario': usuario}
+    )
 
 
 # ============================================================
@@ -1133,10 +1331,14 @@ def gestion_perfiles(request):
 
     busqueda = request.GET.get('q', '').strip()
 
-    perfiles = Perfiles.objects.prefetch_related('permisos').all()
+    perfiles = Perfiles.objects.prefetch_related(
+        'permisos'
+    ).all()
 
     if busqueda:
-        perfiles = perfiles.filter(Nombre_perfil__icontains=busqueda)
+        perfiles = perfiles.filter(
+            Nombre_perfil__icontains=busqueda
+        )
 
     permisos = Permisos.objects.all()
 
@@ -1161,38 +1363,53 @@ def crear_perfil(request):
 
     if request.method == 'POST':
 
-        nombre_perfil = request.POST.get('Nombre_perfil', '').strip()
+        nombre_perfil = request.POST.get(
+            'Nombre_perfil',
+            ''
+        ).strip()
 
         if not nombre_perfil:
-
-            messages.error(request, 'Debe ingresar el nombre del perfil.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del perfil.'
+            )
 
             return redirect('gestion_perfiles')
 
-        if Perfiles.objects.filter(Nombre_perfil__iexact=nombre_perfil).exists():
-
-            messages.error(request, 'Ya existe un perfil con ese nombre.')
+        if Perfiles.objects.filter(
+            Nombre_perfil__iexact=nombre_perfil
+        ).exists():
+            messages.error(
+                request,
+                'Ya existe un perfil con ese nombre.'
+            )
 
             return redirect('gestion_perfiles')
 
         permisos_ids = request.POST.getlist('permisos')
 
-        # CORREGIDO: perfil y permisos se guardan juntos; si un permiso
-        # no existe, no queda un perfil a medio crear.
         with transaction.atomic():
 
-            perfil = Perfiles.objects.create(Nombre_perfil=nombre_perfil)
+            perfil = Perfiles.objects.create(
+                Nombre_perfil=nombre_perfil
+            )
 
             for permiso_id in permisos_ids:
 
-                permiso = get_object_or_404(Permisos, ID_Permiso=permiso_id)
+                permiso = get_object_or_404(
+                    Permisos,
+                    ID_Permiso=permiso_id
+                )
 
                 PerfilesXPermisos.objects.create(
                     ID_Perfil=perfil,
                     ID_Permiso=permiso
                 )
 
-        messages.success(request, 'Perfil creado correctamente.')
+        messages.success(
+            request,
+            'Perfil creado correctamente.'
+        )
 
     return redirect('gestion_perfiles')
 
@@ -1204,15 +1421,23 @@ def editar_perfil(request, pk):
     if not usuario:
         return redirect('panel_principal')
 
-    perfil = get_object_or_404(Perfiles, ID_Perfil=pk)
+    perfil = get_object_or_404(
+        Perfiles,
+        ID_Perfil=pk
+    )
 
     if request.method == 'POST':
 
-        nombre_perfil = request.POST.get('Nombre_perfil', '').strip()
+        nombre_perfil = request.POST.get(
+            'Nombre_perfil',
+            ''
+        ).strip()
 
         if not nombre_perfil:
-
-            messages.error(request, 'Debe ingresar el nombre del perfil.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del perfil.'
+            )
 
             return redirect('gestion_perfiles')
 
@@ -1223,32 +1448,40 @@ def editar_perfil(request, pk):
         ).exists()
 
         if existe:
-
-            messages.error(request, 'Ya existe otro perfil con ese nombre.')
+            messages.error(
+                request,
+                'Ya existe otro perfil con ese nombre.'
+            )
 
             return redirect('gestion_perfiles')
 
         permisos_ids = request.POST.getlist('permisos')
 
-        # CORREGIDO: antes se borraban los permisos y, si algo fallaba
-        # después, el perfil quedaba sin permisos. Ahora es todo o nada.
         with transaction.atomic():
 
             perfil.Nombre_perfil = nombre_perfil
             perfil.save()
 
-            PerfilesXPermisos.objects.filter(ID_Perfil=perfil).delete()
+            PerfilesXPermisos.objects.filter(
+                ID_Perfil=perfil
+            ).delete()
 
             for permiso_id in permisos_ids:
 
-                permiso = get_object_or_404(Permisos, ID_Permiso=permiso_id)
+                permiso = get_object_or_404(
+                    Permisos,
+                    ID_Permiso=permiso_id
+                )
 
                 PerfilesXPermisos.objects.create(
                     ID_Perfil=perfil,
                     ID_Permiso=permiso
                 )
 
-        messages.success(request, 'Perfil actualizado correctamente.')
+        messages.success(
+            request,
+            'Perfil actualizado correctamente.'
+        )
 
     return redirect('gestion_perfiles')
 
@@ -1260,33 +1493,40 @@ def cambiar_estado_perfil(request, id):
     if not usuario:
         return redirect('panel_principal')
 
-    perfil = get_object_or_404(Perfiles, ID_Perfil=id)
+    perfil = get_object_or_404(
+        Perfiles,
+        ID_Perfil=id
+    )
 
     if request.method == 'POST':
 
-        # CORREGIDO: evita que el administrador dé de baja su propio perfil
-        # y se deje sin acceso al sistema.
-        if perfil.ID_Perfil == usuario.ID_Perfil.ID_Perfil and perfil.Estado_perfil:
-
-            messages.error(request, 'No puede dar de baja el perfil con el que inició sesión.')
+        if (
+            perfil.ID_Perfil == usuario.ID_Perfil.ID_Perfil
+            and perfil.Estado_perfil
+        ):
+            messages.error(
+                request,
+                'No puede dar de baja el perfil con el que inició sesión.'
+            )
 
             return redirect('gestion_perfiles')
 
         perfil.Estado_perfil = not perfil.Estado_perfil
-        perfil.save(update_fields=['Estado_perfil'])
+        perfil.save(
+            update_fields=['Estado_perfil']
+        )
 
         if perfil.Estado_perfil:
-
             messages.success(
                 request,
-                f'El perfil "{perfil.Nombre_perfil}" fue activado correctamente.'
+                f'El perfil "{perfil.Nombre_perfil}" '
+                'fue activado correctamente.'
             )
-
         else:
-
             messages.success(
                 request,
-                f'El perfil "{perfil.Nombre_perfil}" fue dado de baja correctamente.'
+                f'El perfil "{perfil.Nombre_perfil}" '
+                'fue dado de baja correctamente.'
             )
 
     return redirect('gestion_perfiles')
@@ -1305,10 +1545,11 @@ def gestion_permisos(request):
 
     busqueda = request.GET.get('q', '').strip()
 
-    permisos = Permisos.objects.prefetch_related('perfiles').all()
+    permisos = Permisos.objects.prefetch_related(
+        'perfiles'
+    ).all()
 
     if busqueda:
-
         permisos = permisos.filter(
             Q(Nombre_permiso__icontains=busqueda) |
             Q(Descripcion_permiso__icontains=busqueda)
@@ -1334,18 +1575,31 @@ def crear_permiso(request):
 
     if request.method == 'POST':
 
-        nombre_permiso = request.POST.get('Nombre_permiso', '').strip()
-        descripcion_permiso = request.POST.get('Descripcion_permiso', '').strip()
+        nombre_permiso = request.POST.get(
+            'Nombre_permiso',
+            ''
+        ).strip()
+
+        descripcion_permiso = request.POST.get(
+            'Descripcion_permiso',
+            ''
+        ).strip()
 
         if not nombre_permiso:
-
-            messages.error(request, 'Debe ingresar el nombre del permiso.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del permiso.'
+            )
 
             return redirect('gestion_permisos')
 
-        if Permisos.objects.filter(Nombre_permiso__iexact=nombre_permiso).exists():
-
-            messages.error(request, 'Ya existe un permiso con ese nombre.')
+        if Permisos.objects.filter(
+            Nombre_permiso__iexact=nombre_permiso
+        ).exists():
+            messages.error(
+                request,
+                'Ya existe un permiso con ese nombre.'
+            )
 
             return redirect('gestion_permisos')
 
@@ -1354,7 +1608,10 @@ def crear_permiso(request):
             Descripcion_permiso=descripcion_permiso
         )
 
-        messages.success(request, 'Permiso creado correctamente.')
+        messages.success(
+            request,
+            'Permiso creado correctamente.'
+        )
 
     return redirect('gestion_permisos')
 
@@ -1366,16 +1623,28 @@ def editar_permiso(request, pk):
     if not usuario:
         return redirect('panel_principal')
 
-    permiso = get_object_or_404(Permisos, ID_Permiso=pk)
+    permiso = get_object_or_404(
+        Permisos,
+        ID_Permiso=pk
+    )
 
     if request.method == 'POST':
 
-        nombre_permiso = request.POST.get('Nombre_permiso', '').strip()
-        descripcion_permiso = request.POST.get('Descripcion_permiso', '').strip()
+        nombre_permiso = request.POST.get(
+            'Nombre_permiso',
+            ''
+        ).strip()
+
+        descripcion_permiso = request.POST.get(
+            'Descripcion_permiso',
+            ''
+        ).strip()
 
         if not nombre_permiso:
-
-            messages.error(request, 'Debe ingresar el nombre del permiso.')
+            messages.error(
+                request,
+                'Debe ingresar el nombre del permiso.'
+            )
 
             return redirect('gestion_permisos')
 
@@ -1386,8 +1655,10 @@ def editar_permiso(request, pk):
         ).exists()
 
         if existe:
-
-            messages.error(request, 'Ya existe otro permiso con ese nombre.')
+            messages.error(
+                request,
+                'Ya existe otro permiso con ese nombre.'
+            )
 
             return redirect('gestion_permisos')
 
@@ -1395,7 +1666,10 @@ def editar_permiso(request, pk):
         permiso.Descripcion_permiso = descripcion_permiso
         permiso.save()
 
-        messages.success(request, 'Permiso modificado correctamente.')
+        messages.success(
+            request,
+            'Permiso modificado correctamente.'
+        )
 
     return redirect('gestion_permisos')
 
@@ -1407,7 +1681,10 @@ def eliminar_permiso(request, pk):
     if not usuario:
         return redirect('panel_principal')
 
-    permiso = get_object_or_404(Permisos, ID_Permiso=pk)
+    permiso = get_object_or_404(
+        Permisos,
+        ID_Permiso=pk
+    )
 
     if request.method == 'POST':
 
@@ -1415,14 +1692,16 @@ def eliminar_permiso(request, pk):
 
         with transaction.atomic():
 
-            PerfilesXPermisos.objects.filter(ID_Permiso=permiso).delete()
+            PerfilesXPermisos.objects.filter(
+                ID_Permiso=permiso
+            ).delete()
 
             permiso.delete()
 
         messages.success(
             request,
             f'El permiso "{nombre_permiso}" '
-            f'fue eliminado correctamente.'
+            'fue eliminado correctamente.'
         )
 
     return redirect('gestion_permisos')
@@ -1453,32 +1732,48 @@ def mis_permisos(request):
         }
     )
 
+
 # ============================================================
 # PRODUCTOS
 # ============================================================
 
 def _leer_datos_producto(request, estado_por_defecto):
-    """
-    Lee y valida el formulario de producto (se usa al crear y al editar).
-    Devuelve (datos, None) si está todo bien o (None, mensaje_de_error).
-    """
+    """Lee y valida los datos de un producto."""
 
-    tipo_id = request.POST.get('ID_Tipo_producto')
-    subtipo_id = request.POST.get('ID_Subtipo')
+    tipo_id = request.POST.get(
+        'ID_Tipo_producto',
+        ''
+    ).strip()
 
     marca = request.POST.get('Marca', '').strip()
     nombre = request.POST.get('Nombre_producto', '').strip()
-    descripcion = request.POST.get('Descripcion_producto', '').strip()
-    precio = request.POST.get('Precio', '').strip()
-    cantidad_presentacion = request.POST.get('Cantidad_presentacion', '').strip()
-    unidad_medida = request.POST.get('Unidad_medida_producto', '').strip()
+    descripcion = request.POST.get(
+        'Descripcion_producto',
+        ''
+    ).strip()
+
+    precio_input = request.POST.get(
+        'Precio',
+        ''
+    ).strip()
+
+    cantidad_input = request.POST.get(
+        'Cantidad_presentacion',
+        ''
+    ).strip()
+
+    unidad_medida = request.POST.get(
+        'Unidad_medida_producto',
+        ''
+    ).strip()
+
     estado_producto = request.POST.get(
         'Estado_producto',
         estado_por_defecto
-    )
+    ).strip()
 
     # --------------------------------------------------------
-    # VALIDAR TIPO
+    # VALIDAR TIPO DE PRODUCTO
     # --------------------------------------------------------
 
     if not tipo_id:
@@ -1491,26 +1786,6 @@ def _leer_datos_producto(request, estado_por_defecto):
     )
 
     # --------------------------------------------------------
-    # VALIDAR SUBTIPO
-    # --------------------------------------------------------
-
-    subtipo = None
-
-    if subtipo_id:
-        subtipo = get_object_or_404(
-            Subtipos,
-            ID_Subtipo=subtipo_id,
-            Estado_subtipo=True
-        )
-
-        # El subtipo debe pertenecer al tipo seleccionado
-        if subtipo.ID_Tipo_producto_id != tipo.ID_Tipo_producto:
-            return None, (
-                'El subtipo seleccionado no corresponde '
-                'al tipo de producto.'
-            )
-
-    # --------------------------------------------------------
     # VALIDAR NOMBRE
     # --------------------------------------------------------
 
@@ -1521,29 +1796,32 @@ def _leer_datos_producto(request, estado_por_defecto):
     # VALIDAR PRECIO
     # --------------------------------------------------------
 
-    if not precio:
+    if not precio_input:
         return None, 'Debe ingresar el precio del producto.'
 
     try:
-        precio = Decimal(precio)
-    except (InvalidOperation, TypeError):
+        precio = Decimal(precio_input)
+    except (InvalidOperation, TypeError, ValueError):
         return None, 'El precio ingresado no es válido.'
 
-    if precio <= 0:
+    if not precio.is_finite() or precio <= 0:
         return None, 'El precio debe ser mayor a cero.'
 
     # --------------------------------------------------------
     # VALIDAR CANTIDAD DE PRESENTACIÓN
     # --------------------------------------------------------
 
-    if cantidad_presentacion:
+    if cantidad_input:
 
         try:
-            cantidad_presentacion = Decimal(cantidad_presentacion)
-        except (InvalidOperation, TypeError):
+            cantidad_presentacion = Decimal(cantidad_input)
+        except (InvalidOperation, TypeError, ValueError):
             return None, 'La cantidad de presentación no es válida.'
 
-        if cantidad_presentacion <= 0:
+        if (
+            not cantidad_presentacion.is_finite()
+            or cantidad_presentacion <= 0
+        ):
             return None, (
                 'La cantidad de presentación debe ser mayor a cero.'
             )
@@ -1555,12 +1833,15 @@ def _leer_datos_producto(request, estado_por_defecto):
     # VALIDAR STOCK MÍNIMO
     # --------------------------------------------------------
 
-    stock_minimo = request.POST.get('Stock_minimo', '').strip()
+    stock_minimo_input = request.POST.get(
+        'Stock_minimo',
+        ''
+    ).strip()
 
-    if stock_minimo:
+    if stock_minimo_input:
 
         try:
-            stock_minimo = int(stock_minimo)
+            stock_minimo = int(stock_minimo_input)
         except (ValueError, TypeError):
             return None, 'El stock mínimo ingresado no es válido.'
 
@@ -1571,13 +1852,19 @@ def _leer_datos_producto(request, estado_por_defecto):
         stock_minimo = None
 
     # --------------------------------------------------------
+    # VALIDAR ESTADO
+    # --------------------------------------------------------
+
+    if estado_producto not in ('Activo', 'Inactivo'):
+        return None, 'El estado del producto no es válido.'
+
+    # --------------------------------------------------------
     # DATOS VALIDADOS
     # --------------------------------------------------------
 
     datos = {
         'stock_minimo': stock_minimo,
         'tipo': tipo,
-        'subtipo': subtipo,
         'marca': marca or None,
         'nombre': nombre,
         'descripcion': descripcion or None,
@@ -1587,24 +1874,32 @@ def _leer_datos_producto(request, estado_por_defecto):
         'estado_producto': estado_producto,
     }
 
+    # Productos no tiene una FK directa a Subtipos.
+    # Por eso no guardamos un ID_Subtipo individual.
+
     return datos, None
 
 
 def _producto_duplicado(nombre, marca, excluir_pk=None):
+    """Comprueba si existe otro producto con el mismo nombre y marca."""
+
+    productos = Productos.objects.filter(
+        Nombre_producto__iexact=nombre
+    )
 
     if marca:
-        productos = Productos.objects.filter(
-            Nombre_producto__iexact=nombre,
+        productos = productos.filter(
             Marca__iexact=marca
         )
     else:
-        productos = Productos.objects.filter(
-            Nombre_producto__iexact=nombre,
-            Marca__isnull=True
+        productos = productos.filter(
+            Q(Marca__isnull=True) | Q(Marca='')
         )
 
     if excluir_pk is not None:
-        productos = productos.exclude(ID_Producto=excluir_pk)
+        productos = productos.exclude(
+            ID_Producto=excluir_pk
+        )
 
     return productos.exists()
 
@@ -1619,36 +1914,81 @@ def gestion_productos(request):
     busqueda = request.GET.get('q', '').strip()
     tipo_id = request.GET.get('tipo', '').strip()
 
+    # ========================================================
+    # SUBTIPOS ACTIVOS
+    # ========================================================
+
+    subtipos_activos = Subtipos.objects.filter(
+        Estado_subtipo=True,
+        ID_Tipo_producto__Estado_tipo_producto=True
+    ).order_by(
+        'Nombre_subtipo'
+    )
+
+    # ========================================================
+    # PRODUCTOS
+    # Los productos se relacionan con su tipo.
+    # Los subtipos se obtienen desde el tipo relacionado.
+    #
+    # IMPORTANTE:
+    # El modelo Subtipos tiene related_name='subtipos'.
+    # Por eso se usa ID_Tipo_producto__subtipos.
+    # ========================================================
+
     productos = Productos.objects.select_related(
         'ID_Tipo_producto',
-        'ID_Subtipo',
         'stock'
+    ).prefetch_related(
+        Prefetch(
+            'ID_Tipo_producto__subtipos',
+            queryset=subtipos_activos
+        )
     ).all()
 
-    if busqueda:
+    # ========================================================
+    # BÚSQUEDA
+    # ========================================================
 
+    if busqueda:
         productos = productos.filter(
             Q(Nombre_producto__icontains=busqueda) |
             Q(Descripcion_producto__icontains=busqueda) |
-            Q(Marca__icontains=busqueda)
-        )
+            Q(Marca__icontains=busqueda) |
+            Q(
+                ID_Tipo_producto__subtipos__Nombre_subtipo__icontains=busqueda
+            )
+        ).distinct()
+
+    # ========================================================
+    # FILTRO POR TIPO
+    # ========================================================
 
     if tipo_id:
         productos = productos.filter(
             ID_Tipo_producto_id=tipo_id
         )
 
+    # ========================================================
+    # TIPOS ACTIVOS PARA LOS FORMULARIOS
+    # ========================================================
+
     tipos_productos = TiposProductos.objects.filter(
         Estado_tipo_producto=True
+    ).order_by(
+        'Nombre_tipo_producto'
     )
 
-    subtipos = Subtipos.objects.filter(
-        Estado_subtipo=True
-    ).select_related(
+    # ========================================================
+    # SUBTIPOS ACTIVOS PARA LOS FORMULARIOS
+    # ========================================================
+
+    subtipos = subtipos_activos.select_related(
         'ID_Tipo_producto'
-    ).order_by(
-        'Nombre_subtipo'
     )
+
+    # ========================================================
+    # MOSTRAR PRODUCTOS
+    # ========================================================
 
     return render(
         request,
@@ -1662,7 +2002,7 @@ def gestion_productos(request):
             'total_activos': Productos.objects.filter(
                 Estado_producto='Activo'
             ).count(),
-            'total_tipos': tipos_productos.count()
+            'total_tipos': tipos_productos.count(),
         }
     )
 
@@ -1674,59 +2014,56 @@ def crear_producto(request):
     if not usuario:
         return redirect('login')
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('gestion_productos')
 
-        datos, error = _leer_datos_producto(
+    datos, error = _leer_datos_producto(
+        request,
+        'Activo'
+    )
+
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_productos')
+
+    if _producto_duplicado(
+        datos['nombre'],
+        datos['marca']
+    ):
+        messages.error(
             request,
-            'Activo'
+            'Ya existe un producto con esos datos.'
         )
 
-        if error:
+        return redirect('gestion_productos')
 
-            messages.error(request, error)
+    with transaction.atomic():
 
-            return redirect('gestion_productos')
-
-        if _producto_duplicado(
-            datos['nombre'],
-            datos['marca']
-        ):
-
-            messages.error(
-                request,
-                'Ya existe un producto con esos datos.'
-            )
-
-            return redirect('gestion_productos')
-
-        with transaction.atomic():
-
-            producto = Productos.objects.create(
-                ID_Tipo_producto=datos['tipo'],
-                ID_Subtipo=datos['subtipo'],
-                Marca=datos['marca'],
-                Nombre_producto=datos['nombre'],
-                Descripcion_producto=datos['descripcion'],
-                Precio=datos['precio'],
-                Cantidad_presentacion=datos['cantidad_presentacion'],
-                Unidad_medida_producto=datos['unidad_medida'],
-                Estado_producto=datos['estado_producto']
-            )
-
-            # Stock inicial en 0;
-            # los ingresos se registran desde Lotes
-            Stock.objects.get_or_create(
-                ID_Producto=producto,
-                defaults={
-                    'Cantidad_stock': 0,
-                    'Stock_minimo': datos['stock_minimo'] or 0
-                }
-            )
-
-        messages.success(
-            request,
-            'Producto registrado correctamente.'
+        producto = Productos.objects.create(
+            ID_Tipo_producto=datos['tipo'],
+            Marca=datos['marca'],
+            Nombre_producto=datos['nombre'],
+            Descripcion_producto=datos['descripcion'],
+            Precio=datos['precio'],
+            Cantidad_presentacion=datos['cantidad_presentacion'],
+            Unidad_medida_producto=datos['unidad_medida'],
+            Estado_producto=datos['estado_producto'],
         )
+
+        # El stock inicial es cero.
+        # Las entradas se registran mediante Lotes.
+        Stock.objects.get_or_create(
+            ID_Producto=producto,
+            defaults={
+                'Cantidad_stock': 0,
+                'Stock_minimo': datos['stock_minimo'] or 0,
+            }
+        )
+
+    messages.success(
+        request,
+        'Producto registrado correctamente.'
+    )
 
     return redirect('gestion_productos')
 
@@ -1743,34 +2080,33 @@ def editar_producto(request, pk):
         ID_Producto=pk
     )
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('gestion_productos')
 
-        datos, error = _leer_datos_producto(
+    datos, error = _leer_datos_producto(
+        request,
+        producto.Estado_producto
+    )
+
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_productos')
+
+    if _producto_duplicado(
+        datos['nombre'],
+        datos['marca'],
+        excluir_pk=pk
+    ):
+        messages.error(
             request,
-            producto.Estado_producto
+            'Ya existe otro producto con esos datos.'
         )
 
-        if error:
+        return redirect('gestion_productos')
 
-            messages.error(request, error)
-
-            return redirect('gestion_productos')
-
-        if _producto_duplicado(
-            datos['nombre'],
-            datos['marca'],
-            excluir_pk=pk
-        ):
-
-            messages.error(
-                request,
-                'Ya existe otro producto con esos datos.'
-            )
-
-            return redirect('gestion_productos')
+    with transaction.atomic():
 
         producto.ID_Tipo_producto = datos['tipo']
-        producto.ID_Subtipo = datos['subtipo']
         producto.Marca = datos['marca']
         producto.Nombre_producto = datos['nombre']
         producto.Descripcion_producto = datos['descripcion']
@@ -1779,30 +2115,30 @@ def editar_producto(request, pk):
         producto.Unidad_medida_producto = datos['unidad_medida']
         producto.Estado_producto = datos['estado_producto']
 
-        with transaction.atomic():
+        producto.save()
 
-            producto.save()
+        # Actualizar el stock mínimo sin modificar el stock actual.
 
-            if datos['stock_minimo'] is not None:
+        if datos['stock_minimo'] is not None:
 
-                stock, creado = Stock.objects.get_or_create(
-                    ID_Producto=producto,
-                    defaults={
-                        'Cantidad_stock': 0,
-                        'Stock_minimo': datos['stock_minimo']
-                    }
+            stock, creado = Stock.objects.get_or_create(
+                ID_Producto=producto,
+                defaults={
+                    'Cantidad_stock': 0,
+                    'Stock_minimo': datos['stock_minimo'],
+                }
+            )
+
+            if not creado:
+                stock.Stock_minimo = datos['stock_minimo']
+                stock.save(
+                    update_fields=['Stock_minimo']
                 )
 
-                if not creado:
-
-                    stock.Stock_minimo = datos['stock_minimo']
-
-                    stock.save()
-
-        messages.success(
-            request,
-            'Producto actualizado correctamente.'
-        )
+    messages.success(
+        request,
+        'Producto actualizado correctamente.'
+    )
 
     return redirect('gestion_productos')
 
@@ -1819,29 +2155,30 @@ def cambiar_estado_producto(request, pk):
         ID_Producto=pk
     )
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('gestion_productos')
 
-        if producto.Estado_producto == 'Activo':
+    if producto.Estado_producto == 'Activo':
 
-            producto.Estado_producto = 'Inactivo'
+        producto.Estado_producto = 'Inactivo'
+        mensaje = 'Producto dado de baja correctamente.'
 
-            messages.success(
-                request,
-                'Producto dado de baja correctamente.'
-            )
+    else:
 
-        else:
+        producto.Estado_producto = 'Activo'
+        mensaje = 'Producto activado correctamente.'
 
-            producto.Estado_producto = 'Activo'
+    producto.save(
+        update_fields=['Estado_producto']
+    )
 
-            messages.success(
-                request,
-                'Producto activado correctamente.'
-            )
-
-        producto.save()
+    messages.success(
+        request,
+        mensaje
+    )
 
     return redirect('gestion_productos')
+
 
 # ============================================================
 # GESTIÓN DE LOTES
@@ -1861,12 +2198,29 @@ def registrar_ingreso_lote(request):
 
     if request.method == 'POST':
 
-        proveedor_id = request.POST.get('ID_Proveedor', '').strip()
-        producto_id = request.POST.get('ID_Producto', '').strip()
-        numero_lote = request.POST.get('Numero_lote', '').strip()
-        cantidad_input = request.POST.get('Cantidad_ingresada', '').strip()
+        proveedor_id = request.POST.get(
+            'ID_Proveedor',
+            ''
+        ).strip()
+
+        producto_id = request.POST.get(
+            'ID_Producto',
+            ''
+        ).strip()
+
+        numero_lote = request.POST.get(
+            'Numero_lote',
+            ''
+        ).strip()
+
+        cantidad_input = request.POST.get(
+            'Cantidad_ingresada',
+            ''
+        ).strip()
+
         fecha_vencimiento_input = request.POST.get(
-            'Fecha_vencimiento', ''
+            'Fecha_vencimiento',
+            ''
         ).strip()
 
         fecha_ingreso = timezone.localdate()
@@ -1880,6 +2234,7 @@ def registrar_ingreso_lote(request):
                 request,
                 'Debe seleccionar el proveedor y el producto.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         if not numero_lote:
@@ -1887,6 +2242,7 @@ def registrar_ingreso_lote(request):
                 request,
                 'Debe ingresar el número de lote.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         try:
@@ -1896,6 +2252,7 @@ def registrar_ingreso_lote(request):
                 request,
                 'La cantidad ingresada no es válida.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         if cantidad <= 0:
@@ -1903,6 +2260,7 @@ def registrar_ingreso_lote(request):
                 request,
                 'La cantidad debe ser mayor a cero.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         # ----------------------------------------------------
@@ -1914,22 +2272,22 @@ def registrar_ingreso_lote(request):
                 request,
                 'La fecha de vencimiento es obligatoria.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         try:
             fecha_vencimiento = date.fromisoformat(
                 fecha_vencimiento_input
             )
-            
         except ValueError:
             messages.error(
                 request,
                 'La fecha de vencimiento no es válida.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         if fecha_vencimiento < fecha_ingreso:
-
             messages.error(
                 request,
                 'La fecha de vencimiento no puede ser anterior '
@@ -1970,6 +2328,7 @@ def registrar_ingreso_lote(request):
                 'Ya existe un lote con ese número para el '
                 'producto y proveedor seleccionados.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         # ----------------------------------------------------
@@ -1987,6 +2346,7 @@ def registrar_ingreso_lote(request):
                 '"Entrada de lote". Debe crearlo antes de '
                 'registrar ingresos.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         # ----------------------------------------------------
@@ -1996,7 +2356,6 @@ def registrar_ingreso_lote(request):
         try:
             with transaction.atomic():
 
-                # Crear el lote inicialmente activo.
                 lote = Lotes.objects.create(
                     ID_Proveedor=proveedor,
                     ID_Producto=producto,
@@ -2008,7 +2367,6 @@ def registrar_ingreso_lote(request):
                     Estado_lote='Activo'
                 )
 
-                # Obtener el stock del producto o inicializarlo.
                 stock, _ = (
                     Stock.objects.select_for_update().get_or_create(
                         ID_Producto=producto,
@@ -2019,11 +2377,11 @@ def registrar_ingreso_lote(request):
                     )
                 )
 
-                # Sumar la cantidad recibida al stock general.
                 stock.Cantidad_stock += cantidad
-                stock.save(update_fields=['Cantidad_stock'])
+                stock.save(
+                    update_fields=['Cantidad_stock']
+                )
 
-                # Registrar el movimiento de entrada.
                 MovimientosStock.objects.create(
                     ID_Usuario=usuario,
                     ID_Tipo_movimiento=tipo_entrada,
@@ -2038,6 +2396,7 @@ def registrar_ingreso_lote(request):
                 'No se pudo registrar el lote. Verifique los datos '
                 'y vuelva a intentarlo.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         messages.success(
@@ -2062,15 +2421,13 @@ def registrar_ingreso_lote(request):
         '-ID_Lote'
     )
 
-    # Buscar por número de lote, producto o proveedor.
     if busqueda:
         lotes = lotes.filter(
-            Q(Numero_lote__icontains=busqueda)
-            | Q(ID_Producto__Nombre_producto__icontains=busqueda)
-            | Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
+            Q(Numero_lote__icontains=busqueda) |
+            Q(ID_Producto__Nombre_producto__icontains=busqueda) |
+            Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
         )
 
-    # Filtro opcional por estado.
     if estado_filtro in ('Activo', 'Inactivo'):
         lotes = lotes.filter(
             Estado_lote=estado_filtro
@@ -2078,7 +2435,6 @@ def registrar_ingreso_lote(request):
     else:
         estado_filtro = ''
 
-    # Productos y proveedores disponibles para registrar un lote.
     productos = Productos.objects.filter(
         Estado_producto='Activo'
     ).order_by(
@@ -2133,15 +2489,18 @@ def editar_lote(request, id):
         return redirect('registrar_ingreso_lote')
 
     numero_lote = request.POST.get(
-        'Numero_lote', ''
+        'Numero_lote',
+        ''
     ).strip()
 
     proveedor_id = request.POST.get(
-        'ID_Proveedor', ''
+        'ID_Proveedor',
+        ''
     ).strip()
 
     fecha_vencimiento_input = request.POST.get(
-        'Fecha_vencimiento', ''
+        'Fecha_vencimiento',
+        ''
     ).strip()
 
     # --------------------------------------------------------
@@ -2153,11 +2512,14 @@ def editar_lote(request, id):
             request,
             'Debe ingresar el número de lote.'
         )
+
         return redirect('registrar_ingreso_lote')
 
     # No permitir cambiar el producto de un lote existente.
-    # Así se conserva la relación con sus movimientos históricos.
-    producto_id_recibido = request.POST.get('ID_Producto', '').strip()
+    producto_id_recibido = request.POST.get(
+        'ID_Producto',
+        ''
+    ).strip()
 
     if (
         producto_id_recibido
@@ -2167,6 +2529,7 @@ def editar_lote(request, id):
             request,
             'No se puede cambiar el producto de un lote existente.'
         )
+
         return redirect('registrar_ingreso_lote')
 
     if not proveedor_id:
@@ -2174,6 +2537,7 @@ def editar_lote(request, id):
             request,
             'Debe seleccionar un proveedor.'
         )
+
         return redirect('registrar_ingreso_lote')
 
     # --------------------------------------------------------
@@ -2185,6 +2549,7 @@ def editar_lote(request, id):
             request,
             'La fecha de vencimiento es obligatoria.'
         )
+
         return redirect('registrar_ingreso_lote')
 
     try:
@@ -2196,6 +2561,7 @@ def editar_lote(request, id):
             request,
             'La fecha de vencimiento no es válida.'
         )
+
         return redirect('registrar_ingreso_lote')
 
     if fecha_vencimiento < lote.Fecha_ingreso:
@@ -2204,8 +2570,8 @@ def editar_lote(request, id):
             'La fecha de vencimiento no puede ser anterior '
             'a la fecha de ingreso.'
         )
+
         return redirect('registrar_ingreso_lote')
-    
 
     # --------------------------------------------------------
     # VALIDAR PROVEEDOR
@@ -2235,6 +2601,7 @@ def editar_lote(request, id):
             'Ya existe un lote con ese número para el producto '
             'y proveedor seleccionados.'
         )
+
         return redirect('registrar_ingreso_lote')
 
     # --------------------------------------------------------
@@ -2282,7 +2649,8 @@ def cambiar_estado_lote(request, id):
         return redirect('registrar_ingreso_lote')
 
     estado_solicitado = request.POST.get(
-        'estado', ''
+        'estado',
+        ''
     ).strip().lower()
 
     # --------------------------------------------------------
@@ -2291,7 +2659,6 @@ def cambiar_estado_lote(request, id):
 
     if estado_solicitado == 'inactivo':
 
-        # No desactivar un lote que todavía tiene unidades.
         if lote.Cantidad_actual > 0:
             messages.error(
                 request,
@@ -2299,12 +2666,14 @@ def cambiar_estado_lote(request, id):
                 'unidades disponibles. Registre primero la salida '
                 'correspondiente.'
             )
+
             return redirect('registrar_ingreso_lote')
 
         lote.Estado_lote = 'Inactivo'
 
         mensaje = (
-            f'El lote {lote.Numero_lote} fue dado de baja correctamente.'
+            f'El lote {lote.Numero_lote} '
+            'fue dado de baja correctamente.'
         )
 
     # --------------------------------------------------------
@@ -2316,7 +2685,8 @@ def cambiar_estado_lote(request, id):
         lote.Estado_lote = 'Activo'
 
         mensaje = (
-            f'El lote {lote.Numero_lote} fue activado correctamente.'
+            f'El lote {lote.Numero_lote} '
+            'fue activado correctamente.'
         )
 
     else:
@@ -2324,13 +2694,17 @@ def cambiar_estado_lote(request, id):
             request,
             'El estado solicitado no es válido.'
         )
+
         return redirect('registrar_ingreso_lote')
 
     lote.save(
         update_fields=['Estado_lote']
     )
 
-    messages.success(request, mensaje)
+    messages.success(
+        request,
+        mensaje
+    )
 
     return redirect('registrar_ingreso_lote')
 
@@ -2360,24 +2734,22 @@ def gestion_movimientos_stock(request):
     )
 
     if busqueda:
-
         movimientos = movimientos.filter(
-            Q(ID_Lote__ID_Producto__Nombre_producto__icontains=busqueda) |
+            Q(
+                ID_Lote__ID_Producto__Nombre_producto__icontains=busqueda
+            ) |
             Q(ID_Lote__Numero_lote__icontains=busqueda) |
             Q(Observaciones__icontains=busqueda)
         )
 
     if tipo_sel:
-
         movimientos = movimientos.filter(
             ID_Tipo_movimiento_id=tipo_sel
         )
 
-    # Para el filtro de la tabla: se muestran todos los tipos.
     todos_tipos = TiposMovimientos.objects.all()
 
-    # Para "Registrar egreso" no se muestra "Entrada de lote",
-    # porque las entradas se registran desde Ingreso de Lote.
+    # Las entradas se registran desde Ingreso de Lote.
     tipos_movimientos = TiposMovimientos.objects.exclude(
         Nombre_tipo_movimiento__iexact='Entrada de lote'
     )
@@ -2418,7 +2790,6 @@ def crear_movimiento_stock(request):
     lote_id = request.POST.get('ID_Lote')
 
     if not tipo_id or not lote_id:
-
         messages.error(
             request,
             'Debe seleccionar el lote y el tipo de movimiento.'
@@ -2432,24 +2803,20 @@ def crear_movimiento_stock(request):
     )
 
     nombre_movimiento = (
-        tipo_movimiento.Nombre_tipo_movimiento
-        .strip()
-        .lower()
+        tipo_movimiento.Nombre_tipo_movimiento.strip().lower()
     )
 
-    # La entrada de lote NO se registra desde esta pantalla.
+    # Las entradas se registran desde Ingreso de Lote.
     if nombre_movimiento == 'entrada de lote':
-
         messages.error(
             request,
-            'Los movimientos de entrada se registran mediante el ingreso de lote.'
+            'Los movimientos de entrada se registran '
+            'mediante el ingreso de lote.'
         )
 
         return redirect('gestion_movimientos_stock')
 
-    # Solo se permiten estos dos tipos de egreso.
     if nombre_movimiento != 'salida por vencimiento de producto':
-
         messages.error(
             request,
             'El tipo de movimiento no es válido.'
@@ -2458,16 +2825,13 @@ def crear_movimiento_stock(request):
         return redirect('gestion_movimientos_stock')
 
     try:
-
         cantidad = int(
             request.POST.get(
                 'Cantidad_movimiento_stock',
                 request.POST.get('Cantidad', 0)
             )
         )
-
     except (TypeError, ValueError):
-
         messages.error(
             request,
             'La cantidad ingresada no es válida.'
@@ -2476,7 +2840,6 @@ def crear_movimiento_stock(request):
         return redirect('gestion_movimientos_stock')
 
     if cantidad <= 0:
-
         messages.error(
             request,
             'La cantidad debe ser mayor a cero.'
@@ -2489,8 +2852,7 @@ def crear_movimiento_stock(request):
         ''
     ).strip()
 
-    # El usuario del movimiento es el usuario
-    # que tiene la sesión iniciada.
+    # El usuario del movimiento es quien inició sesión.
     with transaction.atomic():
 
         lote = get_object_or_404(
@@ -2506,16 +2868,15 @@ def crear_movimiento_stock(request):
         )
 
         if cantidad > lote.Cantidad_actual:
-
             messages.error(
                 request,
-                'No hay suficiente cantidad disponible en el lote seleccionado.'
+                'No hay suficiente cantidad disponible '
+                'en el lote seleccionado.'
             )
 
             return redirect('gestion_movimientos_stock')
 
         if cantidad > stock.Cantidad_stock:
-
             messages.error(
                 request,
                 'No hay suficiente stock disponible.'
@@ -2526,10 +2887,14 @@ def crear_movimiento_stock(request):
         cantidad_anterior = stock.Cantidad_stock
 
         stock.Cantidad_stock -= cantidad
-        stock.save()
+        stock.save(
+            update_fields=['Cantidad_stock']
+        )
 
         lote.Cantidad_actual -= cantidad
-        lote.save()
+        lote.save(
+            update_fields=['Cantidad_actual']
+        )
 
         MovimientosStock.objects.create(
             ID_Usuario=usuario_admin,
@@ -2543,17 +2908,14 @@ def crear_movimiento_stock(request):
         # o queda por debajo del mínimo.
         if (
             cantidad_anterior > stock.Stock_minimo
-            and
-            stock.Cantidad_stock <= stock.Stock_minimo
+            and stock.Cantidad_stock <= stock.Stock_minimo
         ):
-
             Alertas.objects.create(
                 ID_Stock=stock,
                 Tipo_alerta='Stock mínimo',
                 Mensaje=(
-                    f'El producto '
-                    f'{producto.Nombre_producto} '
-                    f'alcanzó el stock mínimo.'
+                    f'El producto {producto.Nombre_producto} '
+                    'alcanzó el stock mínimo.'
                 ),
                 Cantidad_al_generar=stock.Cantidad_stock,
                 Stock_minimo_al_generar=stock.Stock_minimo,
@@ -2566,7 +2928,6 @@ def crear_movimiento_stock(request):
     )
 
     return redirect('gestion_movimientos_stock')
-
 
 
 # ============================================================
@@ -2599,18 +2960,15 @@ def generar_alertas_vencimiento():
 
         if dias_restantes == 0:
             mensaje = (
-                f'El producto '
-                f'{lote.ID_Producto.Nombre_producto} '
-                f'del lote {lote.Numero_lote} '
-                f'vence hoy '
+                f'El producto {lote.ID_Producto.Nombre_producto} '
+                f'del lote {lote.Numero_lote} vence hoy '
                 f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
             )
         else:
             mensaje = (
-                f'El producto '
-                f'{lote.ID_Producto.Nombre_producto} '
-                f'del lote {lote.Numero_lote} '
-                f'vence en {dias_restantes} días '
+                f'El producto {lote.ID_Producto.Nombre_producto} '
+                f'del lote {lote.Numero_lote} vence en '
+                f'{dias_restantes} días '
                 f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
             )
 
@@ -2679,7 +3037,6 @@ def gestion_alertas(request):
     alertas = []
 
     for alerta in alertas_stock:
-
         alertas.append({
             'tipo': 'Stock mínimo',
             'producto': alerta.ID_Stock.ID_Producto,
@@ -2731,19 +3088,15 @@ def gestion_alertas(request):
 
             if dias_restantes == 0:
                 mensaje = (
-                    f'El producto '
-                    f'{lote.ID_Producto.Nombre_producto} '
-                    f'del lote {lote.Numero_lote} '
-                    f'vence hoy '
+                    f'El producto {lote.ID_Producto.Nombre_producto} '
+                    f'del lote {lote.Numero_lote} vence hoy '
                     f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
                 )
-
             else:
                 mensaje = (
-                    f'El producto '
-                    f'{lote.ID_Producto.Nombre_producto} '
-                    f'del lote {lote.Numero_lote} '
-                    f'vence en {dias_restantes} días '
+                    f'El producto {lote.ID_Producto.Nombre_producto} '
+                    f'del lote {lote.Numero_lote} vence en '
+                    f'{dias_restantes} días '
                     f'({lote.Fecha_vencimiento.strftime("%d/%m/%Y")}).'
                 )
 

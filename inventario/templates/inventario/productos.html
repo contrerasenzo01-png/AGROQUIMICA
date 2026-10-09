@@ -181,7 +181,7 @@
                             class="producto-card {% if producto.Estado_producto != 'Activo' %}inactivo{% endif %}"
                             data-tipo="{{ producto.ID_Tipo_producto.ID_Tipo_producto }}"
                             data-estado="{{ producto.Estado_producto }}"
-                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {{ producto.Marca|default:''|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %}">
+                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {{ producto.Marca|default:''|lower }} {% for subtipo in producto.ID_Tipo_producto.subtipos_set.all %}{{ subtipo.Nombre_subtipo|lower }} {% endfor %}">
 
                             <!-- ===================== PRODUCTO ===================== -->
 
@@ -235,21 +235,25 @@
                             </td>
 
 
-                            <!-- ===================== SUBTIPO ===================== -->
+                            <!-- ===================== SUBTIPOS DEL TIPO ===================== -->
 
                             <td>
 
                                 <span class="pr-subtipos">
 
-                                    {% if producto.ID_Subtipo %}
+                                    {% with subtipos_tipo=producto.ID_Tipo_producto.subtipos_set.all %}
 
-                                        {{ producto.ID_Subtipo.Nombre_subtipo }}
+                                        {% for subtipo in subtipos_tipo %}
 
-                                    {% else %}
+                                            {{ subtipo.Nombre_subtipo }}{% if not forloop.last %}, {% endif %}
 
-                                        Sin subtipo
+                                        {% empty %}
 
-                                    {% endif %}
+                                            Sin subtipo
+
+                                        {% endfor %}
+
+                                    {% endwith %}
 
                                 </span>
 
@@ -292,7 +296,6 @@
                                     <span class="pr-stock {% if producto.stock.Cantidad_stock <= producto.stock.Stock_minimo %}pr-bajo{% endif %}">
                                         {{ producto.stock.Cantidad_stock }}
                                     </span>
-
 
                                 {% else %}
 
@@ -365,8 +368,7 @@
                                                 '{{ producto.Cantidad_presentacion|default_if_none:''|unlocalize }}',
                                                 '{{ producto.Unidad_medida_producto|default:''|escapejs }}',
                                                 '{{ producto.Estado_producto }}',
-                                                '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}',
-                                                '{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}'
+                                                '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}'
                                             )">
 
                                         <svg class="pr-icon" viewBox="0 0 24 24">
@@ -622,7 +624,7 @@
                         </select>
 
                         <span class="pr-hint">
-                            Los productos que no correspondan a un subtipo pueden quedar como "Sin subtipo".
+                            Los subtipos disponibles dependen del tipo de producto seleccionado.
                         </span>
 
                     </div>
@@ -843,7 +845,7 @@
                     <div class="pr-grupo">
 
                         <label>
-                            Nombre del producto 
+                            Nombre del producto
                         </label>
 
                         <input type="text"
@@ -889,7 +891,7 @@
                     <div class="pr-grupo pr-full">
 
                         <label>
-                            Tipo de producto 
+                            Tipo de producto
                         </label>
 
                         <select id="edit_tipo"
@@ -937,6 +939,10 @@
                             {% endfor %}
 
                         </select>
+
+                        <span class="pr-hint">
+                            Los subtipos disponibles dependen del tipo de producto seleccionado.
+                        </span>
 
                     </div>
 
@@ -1393,8 +1399,7 @@
         cantidad,
         unidad,
         estado,
-        stockMinimo,
-        subtipoId
+        stockMinimo
     ) {
 
         document.getElementById(
@@ -1492,7 +1497,7 @@
             unidad;
 
 
-        /* SUBTIPO */
+        /* SUBTIPOS SEGÚN EL TIPO DEL PRODUCTO */
 
         actualizarSubtipos(
             'edit_tipo',
@@ -1500,10 +1505,15 @@
         );
 
 
+        /*
+         * El producto no tiene un subtipo propio.
+         * Se limpia la selección anterior y se muestran
+         * solamente las opciones del tipo seleccionado.
+         */
+
         document.getElementById(
             'edit_subtipo'
-        ).value =
-            subtipoId || '';
+        ).value = '';
 
 
         document.getElementById(
