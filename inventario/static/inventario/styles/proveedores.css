@@ -580,3 +580,80 @@
 @media (max-width: 700px) {
     .pv-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   BOTONES DE ACCIÓN SOLO CON ÍCONOS
+   Mismos colores y tamaños que Productos
+   ============================================================ */
+
+.pv-acciones {
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.pv-acciones form {
+    display: inline-flex;
+    margin: 0;
+}
+
+/* Botones de íconos: mismo tamaño que .pr-icon-btn */
+.pv-accion-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 33px;
+    height: 33px;
+    padding: 0;
+    background: #fff;
+    border: 1px solid var(--pv-borde-campo);
+    border-radius: 8px;
+    color: #3f5a4c;
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+}
+
+/* Tamaño de los SVG */
+.pv-accion-icono .pv-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+/* Hover general: botón de editar */
+.pv-accion-icono:hover {
+    background: #f1f5f3;
+}
+
+/* Dar de baja: rojo */
+.pv-accion-icono.pv-baja {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.pv-accion-icono.pv-baja:hover {
+    background: #fee2e2;
+}
+
+/* Volver a activar: verde */
+.pv-accion-icono.pv-activar {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.pv-accion-icono.pv-activar:hover {
+    background: #dcfce7;
+}
+
+/* Accesibilidad con teclado */
+.pv-accion-icono:focus-visible {
+    outline: 3px solid rgba(24, 90, 56, .25);
+    outline-offset: 2px;
+}
+
+/* Estado mientras se procesa la solicitud */
+.pv-accion-icono:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}

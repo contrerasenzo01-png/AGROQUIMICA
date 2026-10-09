@@ -112,7 +112,9 @@
                                 <div class="pv-acciones">
 
                                     <!-- EDITAR -->
-                                    <button type="button" class="pv-accion"
+                                    <button type="button" class="pv-accion pv-accion-icono"
+                                        aria-label="Editar proveedor"
+
                                         onclick="abrirModalEditar(
                                             '{{ p.pk }}',
                                             '{{ p.nombre_proveedor|escapejs }}',
@@ -121,8 +123,10 @@
                                             '{{ p.direccion_proveedor|default:''|escapejs }}',
                                             '{{ p.estado_proveedor|lower }}'
                                         )">
-                                        <svg class="pv-icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
-                                        Modificar
+                                        <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 20h9"/>
+                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
+                                        </svg>
                                     </button>
 
 
@@ -130,7 +134,7 @@
                                     <form id="form-estado-{{ p.pk }}"
                                           method="POST"
                                           action="{% url 'cambiar_estado_proveedor' p.pk %}"
-                                          onsubmit="procesarSolicitudEstado(
+                                          onsubmit="return procesarSolicitudEstado(
                                               event,
                                               '{{ p.pk }}',
                                               '{{ p.nombre_proveedor|escapejs }}',
@@ -145,23 +149,45 @@
                                         <input type="hidden" name="estado" id="estado-{{ p.pk }}"
                                                value="{% if p.estado_proveedor %}inactivo{% else %}activo{% endif %}">
 
-                                        <button type="submit" id="btn-estado-{{ p.pk }}"
-                                                class="pv-accion {% if p.estado_proveedor %}pv-baja{% else %}pv-activar{% endif %}">
-                                            {% if p.estado_proveedor %}Desactivar{% else %}Activar{% endif %}
-                                        </button>
+                                        <button type="submit"
+                                            id="btn-estado-{{ p.pk }}"
+                                            class="pv-accion pv-accion-icono {% if p.estado_proveedor %}pv-baja{% else %}pv-activar{% endif %}"
+                                            aria-label="{% if p.estado_proveedor %}Dar de baja proveedor{% else %}Activar proveedor{% endif %}">
 
-                                    </form>
+                                        {% if p.estado_proveedor %}
 
-                                </div>
-                            </td>
+                                         <!-- Papelera -->
+                                            <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M3 6h18"/>
+                                                <path d="M8 6V4h8v2"/>
+                                                <path d="m19 6-1 14H6L5 6"/>
+                                                <path d="M10 11v5M14 11v5"/>
+                                            </svg>
 
-                        </tr>
+                                        {% else %}
+
+                                        <!-- Activar: mismo ícono que Productos -->
+                                            <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M21.801 10A10 10 0 1 1 17 3.335"/>
+                                                <path d="m9 11 3 3L22 4"/>
+                                            </svg>
+
+                                        {% endif %}
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+                        </td>
+
+                    </tr>
 
                     {% empty %}
 
-                        <tr>
-                            <td colspan="6" class="pv-vacio">No se encontraron proveedores.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="6" class="pv-vacio">No se encontraron proveedores.</td>
+                    </tr>
 
                     {% endfor %}
 
@@ -184,28 +210,48 @@
 
 
 <!-- ===================== MODAL CONFIRMAR BAJA ===================== -->
+
 <div class="pv-modal" id="modalConfirmarBaja">
 
-    <div class="pv-modal-box">
+    <div class="pv-modal-box"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloConfirmarBaja">
 
         <div class="pv-modal-head">
-            <h2>Confirmar baja</h2>
-            <button type="button" class="pv-modal-x" onclick="cerrarModal('modalConfirmarBaja')" aria-label="Cerrar">
-                <svg class="pv-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <h2 id="tituloConfirmarBaja">Confirmar baja</h2>
+
+            <button type="button"
+                    class="pv-modal-x"
+                    onclick="cancelarBajaProveedor()"
+                    aria-label="Cerrar">
+
+                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
             </button>
         </div>
 
         <div class="pv-modal-body">
 
             <div class="pv-aviso">
-                <svg class="pv-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                Verificá que sea el proveedor correcto antes de confirmar la baja.
+                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                    <path d="M12 9v4"/>
+                    <path d="M12 17h.01"/>
+                </svg>
+
+                <span>
+                    Verificá que sea el proveedor correcto antes de
+                    confirmar la baja.
+                </span>
             </div>
 
             <div class="pv-resumen">
 
                 <div class="pv-resumen-cab">
                     <div class="pv-avatar" id="baja_avatar">PV</div>
+
                     <div>
                         <h4 id="baja_nombre">Nombre proveedor</h4>
                         <p>Proveedor registrado</p>
@@ -241,8 +287,19 @@
         </div>
 
         <div class="pv-modal-pie">
-            <button type="button" class="pv-btn pv-btn-claro" onclick="cerrarModal('modalConfirmarBaja')">Cancelar</button>
-            <button type="button" class="pv-btn pv-btn-peligro" id="btnConfirmarBajaEjecutar">Confirmar baja</button>
+
+            <button type="button"
+                    class="pv-btn pv-btn-claro"
+                    onclick="cancelarBajaProveedor()">
+                Cancelar
+            </button>
+
+            <button type="button"
+                    class="pv-btn pv-btn-peligro"
+                    id="btnConfirmarBajaEjecutar">
+                Confirmar baja
+            </button>
+
         </div>
 
     </div>
@@ -250,50 +307,85 @@
 </div>
 
 
-<!-- ===================== MODAL EDITAR ===================== -->
+<!-- ===================== MODAL EDITAR PROVEEDOR ===================== -->
+
 <div class="pv-modal" id="modalEditarProveedor">
 
-    <div class="pv-modal-box">
+    <div class="pv-modal-box"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloEditarProveedor">
 
         <div class="pv-modal-head">
-            <h2>Modificar proveedor</h2>
-            <button type="button" class="pv-modal-x" onclick="cerrarModal('modalEditarProveedor')" aria-label="Cerrar">
-                <svg class="pv-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <h2 id="tituloEditarProveedor">Modificar proveedor</h2>
+
+            <button type="button"
+                    class="pv-modal-x"
+                    onclick="cerrarModal('modalEditarProveedor')"
+                    aria-label="Cerrar">
+
+                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
             </button>
         </div>
 
-        <form id="formEditarProveedor" method="POST" action="">
+        <form id="formEditarProveedor"
+              method="POST"
+              action="">
 
             {% csrf_token %}
 
             <div class="pv-modal-body pv-grid">
 
                 <div class="pv-grupo pv-full">
-                    <label>Nombre del proveedor</label>
-                    <input type="text" id="edit_nombre" name="nombre_proveedor" required>
+                    <label for="edit_nombre">Nombre del proveedor</label>
+                    <input type="text"
+                           id="edit_nombre"
+                           name="nombre_proveedor"
+                           required>
                 </div>
 
                 <div class="pv-grupo">
-                    <label>Teléfono</label>
-                    <input type="text" id="edit_telefono" name="telefono_proveedor">
-                    <input type="hidden" id="edit_estado" name="estado_proveedor">
+                    <label for="edit_telefono">Teléfono</label>
+                    <input type="text"
+                           id="edit_telefono"
+                           name="telefono_proveedor">
+
+                    <input type="hidden"
+                           id="edit_estado"
+                           name="estado_proveedor">
                 </div>
 
                 <div class="pv-grupo">
-                    <label>Email</label>
-                    <input type="email" id="edit_email" name="email_proveedor">
+                    <label for="edit_email">Email</label>
+                    <input type="email"
+                           id="edit_email"
+                           name="email_proveedor">
                 </div>
 
                 <div class="pv-grupo pv-full">
-                    <label>Dirección</label>
-                    <input type="text" id="edit_direccion" name="direccion_proveedor">
+                    <label for="edit_direccion">Dirección</label>
+                    <input type="text"
+                           id="edit_direccion"
+                           name="direccion_proveedor">
                 </div>
 
             </div>
 
             <div class="pv-modal-pie">
-                <button type="button" class="pv-btn pv-btn-claro" onclick="cerrarModal('modalEditarProveedor')">Cancelar</button>
-                <button type="submit" class="pv-btn pv-btn-primary">Guardar</button>
+
+                <button type="button"
+                        class="pv-btn pv-btn-claro"
+                        onclick="cerrarModal('modalEditarProveedor')">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        class="pv-btn pv-btn-primary">
+                    Guardar
+                </button>
+
             </div>
 
         </form>
@@ -304,14 +396,27 @@
 
 
 <!-- ===================== MODAL NUEVO PROVEEDOR ===================== -->
-<div class="pv-modal" id="modalCrearProveedor" {% if proveedor_conflicto %}style="display: flex;"{% endif %}>
 
-    <div class="pv-modal-box">
+<div class="pv-modal"
+     id="modalCrearProveedor"
+     {% if proveedor_conflicto %}style="display: flex;"{% endif %}>
+
+    <div class="pv-modal-box"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloCrearProveedor">
 
         <div class="pv-modal-head">
-            <h2>Registrar proveedor</h2>
-            <button type="button" class="pv-modal-x" onclick="cerrarModal('modalCrearProveedor')" aria-label="Cerrar">
-                <svg class="pv-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <h2 id="tituloCrearProveedor">Registrar proveedor</h2>
+
+            <button type="button"
+                    class="pv-modal-x"
+                    onclick="cerrarModal('modalCrearProveedor')"
+                    aria-label="Cerrar">
+
+                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
             </button>
         </div>
 
@@ -325,16 +430,30 @@
 
                     <div class="pv-conflicto">
 
-                        <div class="pv-conflicto-t">El proveedor ya se encuentra registrado</div>
+                        <div class="pv-conflicto-t">
+                            El proveedor ya se encuentra registrado
+                        </div>
 
                         {% for p in proveedores %}
                             {% if p.pk == error_duplicado_id %}
+
                                 <div class="pv-conflicto-d">
-                                    <div><strong>Código:</strong> SUP-0{{ p.pk }}</div>
-                                    <div><strong>Nombre:</strong> {{ p.nombre_proveedor }}</div>
-                                    <div><strong>Teléfono:</strong> {{ p.telefono_proveedor|default:"--" }}</div>
-                                    <div><strong>Email:</strong> {{ p.email_proveedor|default:"--" }}</div>
+                                    <div>
+                                        <strong>Nombre:</strong>
+                                        {{ p.nombre_proveedor }}
+                                    </div>
+
+                                    <div>
+                                        <strong>Teléfono:</strong>
+                                        {{ p.telefono_proveedor|default:"--" }}
+                                    </div>
+
+                                    <div>
+                                        <strong>Email:</strong>
+                                        {{ p.email_proveedor|default:"--" }}
+                                    </div>
                                 </div>
+                                
                             {% endif %}
                         {% endfor %}
 
@@ -345,38 +464,63 @@
                 <div class="pv-grid">
 
                     <div class="pv-grupo pv-full">
-                        <label>Nombre del proveedor</label>
-                        <input type="text" name="nombre_proveedor"
-                               value="{{ request.POST.nombre_proveedor|default:'' }}" required>
+                        <label for="nuevo_nombre">Nombre del proveedor</label>
+
+                        <input type="text"
+                               id="nuevo_nombre"
+                               name="nombre_proveedor"
+                               value="{{ request.POST.nombre_proveedor|default:'' }}"
+                               required>
                     </div>
 
                     <div class="pv-grupo">
-                        <label>Teléfono</label>
-                        <input type="text" name="telefono_proveedor"
+                        <label for="nuevo_telefono">Teléfono</label>
+
+                        <input type="text"
+                               id="nuevo_telefono"
+                               name="telefono_proveedor"
                                value="{{ request.POST.telefono_proveedor|default:'' }}">
                     </div>
 
                     <div class="pv-grupo">
-                        <label>Email</label>
-                        <input type="email" name="email_proveedor"
+                        <label for="nuevo_email">Email</label>
+
+                        <input type="email"
+                               id="nuevo_email"
+                               name="email_proveedor"
                                value="{{ request.POST.email_proveedor|default:'' }}">
                     </div>
 
                     <div class="pv-grupo pv-full">
-                        <label>Dirección</label>
-                        <input type="text" name="direccion_proveedor"
+                        <label for="nuevo_direccion">Dirección</label>
+
+                        <input type="text"
+                               id="nuevo_direccion"
+                               name="direccion_proveedor"
                                value="{{ request.POST.direccion_proveedor|default:'' }}">
                     </div>
 
-                    <input type="hidden" name="estado_proveedor" value="True">
+                    <input type="hidden"
+                           name="estado_proveedor"
+                           value="True">
 
                 </div>
 
             </div>
 
             <div class="pv-modal-pie">
-                <button type="button" class="pv-btn pv-btn-claro" onclick="cerrarModal('modalCrearProveedor')">Cancelar</button>
-                <button type="submit" class="pv-btn pv-btn-primary">Guardar</button>
+
+                <button type="button"
+                        class="pv-btn pv-btn-claro"
+                        onclick="cerrarModal('modalCrearProveedor')">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        class="pv-btn pv-btn-primary">
+                    Guardar
+                </button>
+
             </div>
 
         </form>
@@ -386,40 +530,61 @@
 </div>
 
 
-<script>
+<!-- ===================== JAVASCRIPT DE PROVEEDORES ===================== -->
 
+<script>
     let formPendingState = null;
     let idPendingState = null;
     let namePendingState = null;
 
 
-    /* TOASTS */
+    /* =====================================================
+       NOTIFICACIONES
+    ===================================================== */
 
     document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.pv-toast').forEach(function (toast) { autocerrarToast(toast); });
+        document.querySelectorAll('.pv-toast').forEach(function (toast) {
+            autocerrarToast(toast);
+        });
     });
 
 
     function autocerrarToast(toast) {
         setTimeout(function () {
+            if (!toast.isConnected) {
+                return;
+            }
+
             toast.style.animation = 'pv-fadeout 0.5s ease-out forwards';
-            setTimeout(function () { toast.remove(); }, 500);
+
+            setTimeout(function () {
+                toast.remove();
+            }, 500);
+
         }, 4000);
     }
 
 
     function cerrarToast(id) {
         const toast = document.getElementById(id);
+
         if (toast) {
             toast.style.animation = 'pv-fadeout 0.3s ease-out forwards';
-            setTimeout(function () { toast.remove(); }, 300);
+
+            setTimeout(function () {
+                toast.remove();
+            }, 300);
         }
     }
 
 
     function mostrarToast(mensaje, tipo) {
-
         const container = document.getElementById('toastContainer');
+
+        if (!container) {
+            return;
+        }
+
         const toast = document.createElement('div');
         const id = 'toast-' + Date.now();
 
@@ -432,187 +597,376 @@
         const cerrar = document.createElement('span');
         cerrar.className = 'pv-toast-x';
         cerrar.textContent = '✕';
-        cerrar.onclick = function () { cerrarToast(id); };
+        cerrar.setAttribute('role', 'button');
+        cerrar.setAttribute('tabindex', '0');
+        cerrar.setAttribute('aria-label', 'Cerrar notificación');
+
+        cerrar.addEventListener('click', function () {
+            cerrarToast(id);
+        });
+
+        cerrar.addEventListener('keydown', function (evento) {
+            if (evento.key === 'Enter' || evento.key === ' ') {
+                evento.preventDefault();
+                cerrarToast(id);
+            }
+        });
 
         toast.appendChild(texto);
         toast.appendChild(cerrar);
         container.appendChild(toast);
 
         autocerrarToast(toast);
-
     }
 
 
-    /* BUSCADOR */
+    /* =====================================================
+       BUSCADOR DE PROVEEDORES
+    ===================================================== */
 
     function filtrarProveedores() {
+        const campo = document.getElementById('searchInput');
+        const contador = document.getElementById('contadorProveedores');
 
-        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        if (!campo || !contador) {
+            return;
+        }
+
+        const query = campo.value.toLowerCase().trim();
         let visibles = 0;
 
         document.querySelectorAll('.supplier-card').forEach(function (fila) {
-
-            const coincide = fila.getAttribute('data-search').includes(query);
+            const texto = fila.getAttribute('data-search') || '';
+            const coincide = texto.includes(query);
 
             fila.style.display = coincide ? '' : 'none';
 
-            if (coincide) { visibles++; }
-
+            if (coincide) {
+                visibles++;
+            }
         });
 
-        document.getElementById('contadorProveedores').textContent =
+        contador.textContent =
             visibles + ' registro' + (visibles === 1 ? '' : 's') +
             ' encontrado' + (visibles === 1 ? '' : 's');
-
     }
 
 
-    /* NUEVO / EDITAR / CERRAR */
+    /* =====================================================
+       ABRIR, EDITAR Y CERRAR MODALES
+    ===================================================== */
 
     function abrirModalCrear() {
-        document.getElementById('modalCrearProveedor').style.display = 'flex';
+        const modal = document.getElementById('modalCrearProveedor');
+
+        if (modal) {
+            modal.style.display = 'flex';
+        }
     }
 
 
     function abrirModalEditar(id, nombre, telefono, email, direccion, estado) {
+        const formulario = document.getElementById('formEditarProveedor');
 
-        document.getElementById('formEditarProveedor').action = '/proveedores/editar/' + id + '/';
+        if (!formulario) {
+            return;
+        }
 
-        document.getElementById('edit_nombre').value = nombre;
-        document.getElementById('edit_telefono').value = telefono;
-        document.getElementById('edit_email').value = email;
-        document.getElementById('edit_direccion').value = direccion;
-        document.getElementById('edit_estado').value = estado;
+        formulario.action = '/proveedores/editar/' + id + '/';
+
+        document.getElementById('edit_nombre').value = nombre || '';
+        document.getElementById('edit_telefono').value = telefono || '';
+        document.getElementById('edit_email').value = email || '';
+        document.getElementById('edit_direccion').value = direccion || '';
+        document.getElementById('edit_estado').value = 
+        (estado === 'true' || 
+        estado === 'True' ||
+        estado === '1' || 
+        estado === 'verdadero')
+            ? 'True'
+            : 'False';
 
         document.getElementById('modalEditarProveedor').style.display = 'flex';
-
     }
 
 
     function cerrarModal(idModal) {
-        document.getElementById(idModal).style.display = 'none';
+        const modal = document.getElementById(idModal);
+
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
 
-    ['modalConfirmarBaja', 'modalEditarProveedor', 'modalCrearProveedor'].forEach(function (id) {
-        document.getElementById(id).addEventListener('click', function (e) {
-            if (e.target === this) { cerrarModal(id); }
+    /* Cancelar también elimina la solicitud de baja pendiente. */
+    function cancelarBajaProveedor() {
+        cerrarModal('modalConfirmarBaja');
+
+        formPendingState = null;
+        idPendingState = null;
+        namePendingState = null;
+    }
+
+
+    [
+        'modalConfirmarBaja',
+        'modalEditarProveedor',
+        'modalCrearProveedor'
+    ].forEach(function (id) {
+
+        const modal = document.getElementById(id);
+
+        if (!modal) {
+            return;
+        }
+
+        modal.addEventListener('click', function (evento) {
+            if (evento.target !== modal) {
+                return;
+            }
+
+            if (id === 'modalConfirmarBaja') {
+                cancelarBajaProveedor();
+            } else {
+                cerrarModal(id);
+            }
         });
     });
 
 
-    /* SOLICITUD DE BAJA / ACTIVACIÓN */
-
-    function procesarSolicitudEstado(event, id, nombre, code, telefono, email, direccion) {
-
-        event.preventDefault();
-
-        const form = event.target;
-        const btn = document.getElementById('btn-estado-' + id);
-        const esActivo = btn.classList.contains('pv-baja');
-
-        if (esActivo) {
-
-            formPendingState = form;
-            idPendingState = id;
-            namePendingState = nombre;
-
-            document.getElementById('baja_avatar').innerText = nombre.substring(0, 2).toUpperCase();
-            document.getElementById('baja_nombre').innerText = nombre;
-            document.getElementById('baja_id').innerText = code;
-            document.getElementById('baja_telefono').innerText = telefono;
-            document.getElementById('baja_email').innerText = email;
-            document.getElementById('baja_direccion').innerText = direccion;
-
-            document.getElementById('modalConfirmarBaja').style.display = 'flex';
-
-        } else {
-
-            ejecutarCambioEstado(form, id, nombre, false);
-
+    document.addEventListener('keydown', function (evento) {
+        if (evento.key === 'Escape') {
+            cancelarBajaProveedor();
+            cerrarModal('modalEditarProveedor');
+            cerrarModal('modalCrearProveedor');
         }
-
-    }
-
-
-    document.getElementById('btnConfirmarBajaEjecutar').addEventListener('click', function () {
-
-        if (formPendingState) {
-
-            cerrarModal('modalConfirmarBaja');
-
-            ejecutarCambioEstado(formPendingState, idPendingState, namePendingState, true);
-
-        }
-
     });
 
 
-    /* CAMBIAR ESTADO (fetch; si falla, envía el formulario normalmente) */
+    /* =====================================================
+       SOLICITUD DE BAJA O ACTIVACIÓN
+    ===================================================== */
 
-    function ejecutarCambioEstado(form, id, nombreProveedor, esBaja) {
+    function procesarSolicitudEstado(
+        evento,
+        id,
+        nombre,
+        codigo,
+        telefono,
+        email,
+        direccion
+    ) {
+        evento.preventDefault();
 
-        const btn = document.getElementById('btn-estado-' + id);
+        const formulario = evento.currentTarget;
+        const boton = document.getElementById('btn-estado-' + id);
+
+        if (!formulario || !boton) {
+            mostrarToast(
+                'No se pudo identificar el proveedor seleccionado.',
+                'warning'
+            );
+            return false;
+        }
+
+        const estaActivo = boton.classList.contains('pv-baja');
+
+        if (estaActivo) {
+            /* Solicitar confirmación antes de dar de baja. */
+            formPendingState = formulario;
+            idPendingState = id;
+            namePendingState = nombre;
+
+            document.getElementById('baja_avatar').textContent =
+                (nombre || 'PV').substring(0, 2).toUpperCase();
+
+            document.getElementById('baja_nombre').textContent =
+                nombre || 'Sin nombre';
+
+            document.getElementById('baja_id').textContent =
+                codigo || '--';
+
+            document.getElementById('baja_telefono').textContent =
+                telefono || '--';
+
+            document.getElementById('baja_email').textContent =
+                email || '--';
+
+            document.getElementById('baja_direccion').textContent =
+                direccion || '--';
+
+            document.getElementById('modalConfirmarBaja').style.display =
+                'flex';
+
+        } else {
+            /* Un proveedor inactivo se puede volver a activar. */
+            ejecutarCambioEstado(formulario, id, nombre, false);
+        }
+
+        return false;
+    }
+
+
+    /* =====================================================
+       CONFIRMAR BAJA
+    ===================================================== */
+
+    document
+        .getElementById('btnConfirmarBajaEjecutar')
+        .addEventListener('click', function () {
+
+            if (!formPendingState) {
+                return;
+            }
+
+            const formulario = formPendingState;
+            const id = idPendingState;
+            const nombre = namePendingState;
+
+            /* Limpiar la solicitud pendiente antes de enviarla. */
+            formPendingState = null;
+            idPendingState = null;
+            namePendingState = null;
+
+            cerrarModal('modalConfirmarBaja');
+
+            ejecutarCambioEstado(formulario, id, nombre, true);
+        });
+
+
+    /* =====================================================
+       ICONOS DE LOS BOTONES
+    ===================================================== */
+
+    function iconoPapelera() {
+        return `
+            <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18"/>
+                <path d="M8 6V4h8v2"/>
+                <path d="m19 6-1 14H6L5 6"/>
+                <path d="M10 11v5M14 11v5"/>
+            </svg>
+        `;
+    }
+
+
+    function iconoActivar() {
+        return `
+            <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21.801 10A10 10 0 1 1 17 3.335"/>
+                <path d="m9 11 3 3L22 4"/>
+            </svg>
+        `;
+    }
+
+
+    /* =====================================================
+       CAMBIAR ESTADO DEL PROVEEDOR
+    ===================================================== */
+
+    async function ejecutarCambioEstado(
+        formulario,
+        id,
+        nombreProveedor,
+        esBaja
+    ) {
+        const boton = document.getElementById('btn-estado-' + id);
         const badge = document.getElementById('badge-estado-' + id);
         const fila = document.getElementById('card-' + id);
-        const estado = document.getElementById('estado-' + id);
+        const campoEstado = document.getElementById('estado-' + id);
 
-        estado.value = esBaja ? 'inactivo' : 'activo';
+        if (!boton || !badge || !fila || !campoEstado) {
+            mostrarToast(
+                'No se pudo actualizar el estado del proveedor.',
+                'warning'
+            );
+            return;
+        }
 
-        fetch(form.action, {
+        /*
+         * Establecer el estado que se enviará al servidor.
+         * El formulario conserva su token CSRF.
+         */
+        campoEstado.value = esBaja ? 'inactivo' : 'activo';
+        boton.disabled = true;
 
-            method: 'POST',
-            body: new FormData(form),
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        try {
+            const respuesta = await fetch(formulario.action, {
+                method: 'POST',
+                body: new FormData(formulario),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
 
-        })
-
-        .then(function (response) {
-
-            if (!response.ok) {
+            if (!respuesta.ok) {
                 throw new Error('Error al cambiar el estado');
             }
 
             if (esBaja) {
-
-                btn.classList.remove('pv-baja');
-                btn.classList.add('pv-activar');
-                btn.innerText = 'Activar';
+                /* Proveedor dado de baja: mostrar la tilde verde. */
+                boton.classList.remove('pv-baja');
+                boton.classList.add('pv-activar');
+                boton.innerHTML = iconoActivar();
+                boton.setAttribute('aria-label', 'Activar proveedor');
 
                 badge.classList.remove('pv-activo');
                 badge.classList.add('pv-inactivo');
-                badge.innerText = 'Inactivo';
+                badge.textContent = 'Inactivo';
 
                 fila.classList.add('inactivo');
 
-                mostrarToast('El proveedor "' + nombreProveedor + '" ha sido dado de baja.', 'warning');
+                /* Preparar el valor para la próxima operación. */
+                campoEstado.value = 'activo';
+
+                mostrarToast(
+                    'El proveedor "' + nombreProveedor +
+                    '" ha sido dado de baja.',
+                    'warning'
+                );
 
             } else {
-
-                btn.classList.remove('pv-activar');
-                btn.classList.add('pv-baja');
-                btn.innerText = 'Desactivar';
+                /* Proveedor activado: mostrar la papelera roja. */
+                boton.classList.remove('pv-activar');
+                boton.classList.add('pv-baja');
+                boton.innerHTML = iconoPapelera();
+                boton.setAttribute('aria-label', 'Dar de baja proveedor');
 
                 badge.classList.remove('pv-inactivo');
                 badge.classList.add('pv-activo');
-                badge.innerText = 'Activo';
+                badge.textContent = 'Activo';
 
                 fila.classList.remove('inactivo');
 
-                mostrarToast('El proveedor "' + nombreProveedor + '" ha sido activado.', 'success');
+                /* Preparar el valor para la próxima operación. */
+                campoEstado.value = 'inactivo';
 
+                mostrarToast(
+                    'El proveedor "' + nombreProveedor +
+                    '" ha sido activado.',
+                    'success'
+                );
             }
 
-        })
+        } catch (error) {
+            console.error('Error al cambiar el estado:', error);
 
-        .catch(function (error) {
+            /*
+             * El campo oculto ya contiene el estado solicitado.
+             * Si falla fetch, enviar el formulario normalmente.
+             */
+            mostrarToast(
+                'No se pudo verificar el cambio. Se recargará la página.',
+                'warning'
+            );
 
-            console.error(error);
+            formulario.submit();
 
-            form.submit();
-
-        });
-
+        } finally {
+            boton.disabled = false;
+        }
     }
 
 </script>

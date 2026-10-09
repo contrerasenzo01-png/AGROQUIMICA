@@ -249,6 +249,7 @@ def gestion_proveedores(request):
     )
 
 
+
 def crear_proveedor(request):
 
     usuario = usuario_es_administrador(request)
@@ -256,40 +257,51 @@ def crear_proveedor(request):
     if not usuario:
         return redirect('panel_principal')
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('gestion_proveedores')
 
-        form = ProveedorForm(request.POST)
+    form = ProveedorForm(request.POST)
 
-        if form.is_valid():
+    if not form.is_valid():
 
-            existente = _proveedor_duplicado(form)
+        for campo, errores in form.errors.items():
 
-            if existente:
+            if campo in form.fields:
+                etiqueta = form.fields[campo].label or campo
+            else:
+                etiqueta = 'Datos del proveedor'
 
-                request.session['error_duplicado_id'] = existente.ID_Proveedor
-                request.session['proveedor_conflicto'] = (
-                    'Ya existe un proveedor con alguno '
-                    'de los datos ingresados.'
+            for error in errores:
+                messages.error(
+                    request,
+                    f'{etiqueta}: {error}'
                 )
 
-                return redirect('gestion_proveedores')
+        return redirect('gestion_proveedores')
 
-            form.save()
+    existente = _proveedor_duplicado(form)
 
-            return redirect('gestion_proveedores')
+    if existente:
 
-    else:
+        request.session['error_duplicado_id'] = (
+            existente.ID_Proveedor
+        )
 
-        form = ProveedorForm()
+        request.session['proveedor_conflicto'] = (
+            'Ya existe un proveedor con alguno '
+            'de los datos ingresados.'
+        )
 
-    return render(
+        return redirect('gestion_proveedores')
+
+    form.save()
+
+    messages.success(
         request,
-        'inventario/crear_proveedor.html',
-        {
-            'usuario': usuario,
-            'form': form
-        }
+        'Proveedor registrado correctamente.'
     )
+
+    return redirect('gestion_proveedores')
 
 
 def editar_proveedor(request, pk):
@@ -299,43 +311,72 @@ def editar_proveedor(request, pk):
     if not usuario:
         return redirect('panel_principal')
 
-    proveedor = get_object_or_404(Proveedores, ID_Proveedor=pk)
+    proveedor = get_object_or_404(
+        Proveedores,
+        ID_Proveedor=pk
+    )
 
-    if request.method == 'POST':
+    # Conservar el estado original del proveedor.
+    estado_original = proveedor.estado_proveedor
 
-        form = ProveedorForm(request.POST, instance=proveedor)
+    if request.method != 'POST':
+        return redirect('gestion_proveedores')
 
-        if form.is_valid():
+    form = ProveedorForm(
+        request.POST,
+        instance=proveedor
+    )
 
-            existente = _proveedor_duplicado(form, excluir_pk=pk)
+    if not form.is_valid():
 
-            if existente:
+        for campo, errores in form.errors.items():
 
-                request.session['error_duplicado_id'] = existente.ID_Proveedor
-                request.session['proveedor_conflicto'] = (
-                    'Ya existe otro proveedor con alguno '
-                    'de los datos ingresados.'
+            if campo in form.fields:
+                etiqueta = form.fields[campo].label or campo
+            else:
+                etiqueta = 'Datos del proveedor'
+
+            for error in errores:
+                messages.error(
+                    request,
+                    f'{etiqueta}: {error}'
                 )
 
-                return redirect('gestion_proveedores')
+        return redirect('gestion_proveedores')
 
-            form.save()
-
-            return redirect('gestion_proveedores')
-
-    else:
-
-        form = ProveedorForm(instance=proveedor)
-
-    return render(
-        request,
-        'inventario/editar_proveedor.html',
-        {
-            'usuario': usuario,
-            'form': form,
-            'proveedor': proveedor
-        }
+    # Verificar si los datos pertenecen a otro proveedor.
+    existente = _proveedor_duplicado(
+        form,
+        excluir_pk=pk
     )
+
+    if existente:
+
+        request.session['error_duplicado_id'] = (
+            existente.ID_Proveedor
+        )
+
+        request.session['proveedor_conflicto'] = (
+            'Ya existe otro proveedor con alguno '
+            'de los datos ingresados.'
+        )
+
+        return redirect('gestion_proveedores')
+
+    # Guardar los datos editados sin modificar el estado.
+    proveedor_actualizado = form.save(commit=False)
+
+    proveedor_actualizado.estado_proveedor = estado_original
+
+    proveedor_actualizado.save()
+
+    messages.success(
+        request,
+        'Proveedor actualizado correctamente.'
+    )
+
+    return redirect('gestion_proveedores')
+
 
 
 def cambiar_estado_proveedor(request, pk):
@@ -345,14 +386,55 @@ def cambiar_estado_proveedor(request, pk):
     if not usuario:
         return redirect('panel_principal')
 
-    proveedor = get_object_or_404(Proveedores, ID_Proveedor=pk)
+    proveedor = get_object_or_404(
+        Proveedores,
+        ID_Proveedor=pk
+    )
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('gestion_proveedores')
 
-        proveedor.estado_proveedor = not proveedor.estado_proveedor
-        proveedor.save()
+    # Obtener el estado solicitado desde el formulario.
+    estado_solicitado = request.POST.get(
+        'estado', ''
+    ).strip().lower()
+
+    # Dar de baja al proveedor.
+    if estado_solicitado == 'inactivo':
+
+        proveedor.estado_proveedor = False
+
+        mensaje = (
+            f'El proveedor "{proveedor.nombre_proveedor}" '
+            'fue dado de baja correctamente.'
+        )
+
+    # Activar al proveedor.
+    elif estado_solicitado == 'activo':
+
+        proveedor.estado_proveedor = True
+
+        mensaje = (
+            f'El proveedor "{proveedor.nombre_proveedor}" '
+            'fue activado correctamente.'
+        )
+
+    else:
+        messages.error(
+            request,
+            'El estado solicitado no es válido.'
+        )
+        return redirect('gestion_proveedores')
+
+    # Guardar únicamente el campo del estado.
+    proveedor.save(
+        update_fields=['estado_proveedor']
+    )
+
+    messages.success(request, mensaje)
 
     return redirect('gestion_proveedores')
+
 
 
 # ============================================================
