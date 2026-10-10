@@ -181,7 +181,7 @@
                             class="producto-card {% if producto.Estado_producto != 'Activo' %}inactivo{% endif %}"
                             data-tipo="{{ producto.ID_Tipo_producto.ID_Tipo_producto }}"
                             data-estado="{{ producto.Estado_producto }}"
-                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {{ producto.Marca|default:''|lower }} {% for subtipo in producto.ID_Tipo_producto.subtipos_set.all %}{{ subtipo.Nombre_subtipo|lower }} {% endfor %}">
+                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {{ producto.Marca|default:''|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %}">
 
                             <!-- ===================== PRODUCTO ===================== -->
 
@@ -241,19 +241,11 @@
 
                                 <span class="pr-subtipos">
 
-                                    {% with subtipos_tipo=producto.ID_Tipo_producto.subtipos_set.all %}
-
-                                        {% for subtipo in subtipos_tipo %}
-
-                                            {{ subtipo.Nombre_subtipo }}{% if not forloop.last %}, {% endif %}
-
-                                        {% empty %}
-
+                                    {% if producto.ID_Subtipo %}
+                                        {{ producto.ID_Subtipo.Nombre_subtipo }}
+                                    {% else %}
                                             Sin subtipo
-
-                                        {% endfor %}
-
-                                    {% endwith %}
+                                    {% endif %}
 
                                 </span>
 
@@ -368,7 +360,8 @@
                                                 '{{ producto.Cantidad_presentacion|default_if_none:''|unlocalize }}',
                                                 '{{ producto.Unidad_medida_producto|default:''|escapejs }}',
                                                 '{{ producto.Estado_producto }}',
-                                                '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}'
+                                                '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}',
+                                                '{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}'
                                             )">
 
                                         <svg class="pr-icon" viewBox="0 0 24 24">
@@ -1399,7 +1392,8 @@
         cantidad,
         unidad,
         estado,
-        stockMinimo
+        stockMinimo,
+        subtipo
     ) {
 
         document.getElementById(
@@ -1504,16 +1498,12 @@
             'edit_subtipo'
         );
 
+        /* MOSTRAR Y SELECCIONAR EL SUBTIPO DEL PRODUCTO */
 
-        /*
-         * El producto no tiene un subtipo propio.
-         * Se limpia la selección anterior y se muestran
-         * solamente las opciones del tipo seleccionado.
-         */
 
         document.getElementById(
             'edit_subtipo'
-        ).value = '';
+        ).value = subtipo || '';
 
 
         document.getElementById(

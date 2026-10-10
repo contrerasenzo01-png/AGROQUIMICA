@@ -361,7 +361,7 @@
                             </td>
 
 
-                            <!-- ESTADO -->
+                                                        <!-- ESTADO -->
                             <td>
 
                                 {% if alerta.atendida %}
@@ -375,6 +375,16 @@
                                     <span class="al-estado al-pendiente">
                                         Pendiente
                                     </span>
+
+                                    <form method="POST"
+                                          action="{% url 'atender_alerta' alerta.id %}">
+                                        {% csrf_token %}
+
+                                        <button type="submit"
+                                                class="al-btn al-btn-primary">
+                                            Atender alerta
+                                        </button>
+                                    </form>
 
                                 {% endif %}
 
