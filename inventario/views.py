@@ -1,14 +1,29 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from io import BytesIO
 import unicodedata
 
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import transaction
 from django.db.models import Q, Prefetch
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 from .forms import ProveedorForm
 
@@ -27,7 +42,6 @@ from .models import (
     Alertas,
     MovimientosStock,
 )
-
 
 # ============================================================
 # CONTROL DE ACCESO
@@ -2435,12 +2449,37 @@ def registrar_ingreso_lote(request):
             Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
         )
 
-    if estado_filtro in ('Activo', 'Inactivo'):
+    
+    hoy = timezone.localdate()
+
+    if estado_filtro == 'Vencido':
         lotes = lotes.filter(
-            Estado_lote=estado_filtro
+            Fecha_vencimiento__lte=hoy
         )
-    else:
+
+    elif estado_filtro == 'Agotado':
+        lotes = lotes.filter(
+            Fecha_vencimiento__gte=hoy,
+            Cantidad_actual__lte=0
+        )
+
+    elif estado_filtro == 'Inactivo':
+        lotes = lotes.filter(
+            Estado_lote='Inactivo',
+            Fecha_vencimiento__gte=hoy,
+            Cantidad_actual__gt=0
+        )
+
+    elif estado_filtro == 'Activo':
+        lotes = lotes.filter(
+            Estado_lote='Activo',
+            Fecha_vencimiento__gte=hoy,
+            Cantidad_actual__gt=0
+        )
+
+    elif estado_filtro:
         estado_filtro = ''
+
 
     productos = Productos.objects.filter(
         Estado_producto='Activo'
@@ -2454,7 +2493,6 @@ def registrar_ingreso_lote(request):
         'nombre_proveedor'
     )
 
-    hoy = timezone.localdate()
 
     return render(
         request,
@@ -2721,7 +2759,6 @@ def cambiar_estado_lote(request, id):
 # ============================================================
 
 def gestion_movimientos_stock(request):
-
     usuario = usuario_es_administrador(request)
 
     if not usuario:
@@ -2736,17 +2773,13 @@ def gestion_movimientos_stock(request):
         'ID_Lote',
         'ID_Lote__ID_Producto',
         'ID_Lote__ID_Proveedor'
-    ).order_by(
-        '-Fecha_hora_movimiento'
-    )
+    ).order_by('-Fecha_hora_movimiento')
 
     if busqueda:
         movimientos = movimientos.filter(
-            Q(
-                ID_Lote__ID_Producto__Nombre_producto__icontains=busqueda
-            ) |
-            Q(ID_Lote__Numero_lote__icontains=busqueda) |
-            Q(Observaciones__icontains=busqueda)
+            Q(ID_Lote__ID_Producto__Nombre_producto__icontains=busqueda)
+            | Q(ID_Lote__Numero_lote__icontains=busqueda)
+            | Q(Observaciones__icontains=busqueda)
         )
 
     if tipo_sel:
@@ -2764,9 +2797,7 @@ def gestion_movimientos_stock(request):
     lotes = Lotes.objects.select_related(
         'ID_Producto',
         'ID_Proveedor'
-    ).filter(
-        Cantidad_actual__gt=0
-    )
+    ).filter(Cantidad_actual__gt=0)
 
     return render(
         request,
@@ -2778,13 +2809,12 @@ def gestion_movimientos_stock(request):
             'lotes': lotes,
             'busqueda': busqueda,
             'tipo_sel': tipo_sel,
-            'usuario': usuario
+            'usuario': usuario,
         }
     )
 
 
 def crear_movimiento_stock(request):
-
     usuario_admin = usuario_es_administrador(request)
 
     if not usuario_admin:
@@ -2801,7 +2831,6 @@ def crear_movimiento_stock(request):
             request,
             'Debe seleccionar el lote y el tipo de movimiento.'
         )
-
         return redirect('gestion_movimientos_stock')
 
     tipo_movimiento = get_object_or_404(
@@ -2813,14 +2842,11 @@ def crear_movimiento_stock(request):
         tipo_movimiento.Nombre_tipo_movimiento.strip().lower()
     )
 
-    # Las entradas se registran desde Ingreso de Lote.
     if nombre_movimiento == 'entrada de lote':
         messages.error(
             request,
-            'Los movimientos de entrada se registran '
-            'mediante el ingreso de lote.'
+            'Los movimientos de entrada se registran mediante el ingreso de lote.'
         )
-
         return redirect('gestion_movimientos_stock')
 
     if nombre_movimiento != 'salida por vencimiento de producto':
@@ -2828,14 +2854,16 @@ def crear_movimiento_stock(request):
             request,
             'El tipo de movimiento no es válido.'
         )
-
         return redirect('gestion_movimientos_stock')
 
     try:
         cantidad = int(
             request.POST.get(
-                'Cantidad_movimiento_stock',
-                request.POST.get('Cantidad', 0)
+                'Cantidad_movimiento',
+                request.POST.get(
+                    'Cantidad_movimiento_stock',
+                    request.POST.get('Cantidad', '0')
+                )
             )
         )
     except (TypeError, ValueError):
@@ -2843,7 +2871,6 @@ def crear_movimiento_stock(request):
             request,
             'La cantidad ingresada no es válida.'
         )
-
         return redirect('gestion_movimientos_stock')
 
     if cantidad <= 0:
@@ -2851,17 +2878,13 @@ def crear_movimiento_stock(request):
             request,
             'La cantidad debe ser mayor a cero.'
         )
-
         return redirect('gestion_movimientos_stock')
 
     observaciones = request.POST.get(
-        'Observaciones',
-        ''
+        'Observaciones', ''
     ).strip()
 
-    # El usuario del movimiento es quien inició sesión.
     with transaction.atomic():
-
         lote = get_object_or_404(
             Lotes.objects.select_for_update(),
             ID_Lote=lote_id
@@ -2877,10 +2900,8 @@ def crear_movimiento_stock(request):
         if cantidad > lote.Cantidad_actual:
             messages.error(
                 request,
-                'No hay suficiente cantidad disponible '
-                'en el lote seleccionado.'
+                'No hay suficiente cantidad disponible en el lote seleccionado.'
             )
-
             return redirect('gestion_movimientos_stock')
 
         if cantidad > stock.Cantidad_stock:
@@ -2888,20 +2909,15 @@ def crear_movimiento_stock(request):
                 request,
                 'No hay suficiente stock disponible.'
             )
-
             return redirect('gestion_movimientos_stock')
 
         cantidad_anterior = stock.Cantidad_stock
 
         stock.Cantidad_stock -= cantidad
-        stock.save(
-            update_fields=['Cantidad_stock']
-        )
+        stock.save(update_fields=['Cantidad_stock'])
 
         lote.Cantidad_actual -= cantidad
-        lote.save(
-            update_fields=['Cantidad_actual']
-        )
+        lote.save(update_fields=['Cantidad_actual'])
 
         MovimientosStock.objects.create(
             ID_Usuario=usuario_admin,
@@ -2911,8 +2927,7 @@ def crear_movimiento_stock(request):
             Observaciones=observaciones or None
         )
 
-        # Generar alerta cuando el stock alcanza
-        # o queda por debajo del mínimo.
+        # Genera una alerta cuando el stock cruza el mínimo.
         if (
             cantidad_anterior > stock.Stock_minimo
             and stock.Cantidad_stock <= stock.Stock_minimo
@@ -2921,8 +2936,10 @@ def crear_movimiento_stock(request):
                 ID_Stock=stock,
                 Tipo_alerta='Stock mínimo',
                 Mensaje=(
-                    f'El producto {producto.Nombre_producto} '
-                    'alcanzó el stock mínimo.'
+                    f'El producto {producto.Nombre_producto} tiene '
+                    f'{stock.Cantidad_stock} unidades disponibles, '
+                    f'por debajo o igual al stock mínimo de '
+                    f'{stock.Stock_minimo}.'
                 ),
                 Cantidad_al_generar=stock.Cantidad_stock,
                 Stock_minimo_al_generar=stock.Stock_minimo,
@@ -2938,9 +2955,8 @@ def crear_movimiento_stock(request):
 
 
 # ============================================================
-# GENERAR ALERTAS DE VENCIMIENTO
+# ALERTAS DE VENCIMIENTO
 # ============================================================
-
 
 def generar_alertas_vencimiento():
     fecha_actual = timezone.localdate()
@@ -2950,7 +2966,6 @@ def generar_alertas_vencimiento():
         'ID_Producto'
     ).filter(
         Fecha_vencimiento__isnull=False,
-        Fecha_vencimiento__gte=fecha_actual,
         Fecha_vencimiento__lte=fecha_limite,
         Cantidad_actual__gt=0
     ).order_by('Fecha_vencimiento')
@@ -2962,7 +2977,13 @@ def generar_alertas_vencimiento():
             lote.Fecha_vencimiento - fecha_actual
         ).days
 
-        if dias_restantes == 0:
+        if dias_restantes < 0:
+            mensaje = (
+                f'El producto {lote.ID_Producto.Nombre_producto} '
+                f'del lote {lote.Numero_lote} está vencido desde '
+                f'el {lote.Fecha_vencimiento:%d/%m/%Y}.'
+            )
+        elif dias_restantes == 0:
             mensaje = (
                 f'El producto {lote.ID_Producto.Nombre_producto} '
                 f'del lote {lote.Numero_lote} vence hoy '
@@ -2976,13 +2997,10 @@ def generar_alertas_vencimiento():
                 f'({lote.Fecha_vencimiento:%d/%m/%Y}).'
             )
 
-        # Buscar el stock general del producto.
         stock = Stock.objects.filter(
             ID_Producto=lote.ID_Producto
         ).first()
 
-        # Sin stock asociado no se puede guardar la alerta,
-        # porque Alertas se relaciona con Stock.
         if stock:
             mensaje_guardado = (
                 f'El producto {lote.ID_Producto.Nombre_producto} '
@@ -2991,14 +3009,20 @@ def generar_alertas_vencimiento():
                 f'[LOTE_ID:{lote.ID_Lote}]'
             )
 
-            # Evitar duplicar la alerta en cada visita.
-            existe = Alertas.objects.filter(
+            alerta_existente = Alertas.objects.filter(
                 ID_Stock=stock,
                 Tipo_alerta='Vencimiento',
-                Mensaje=mensaje_guardado
-            ).exists()
+                Mensaje__contains=f'[LOTE_ID:{lote.ID_Lote}]'
+            ).order_by('ID_Historial_alerta').first()
 
-            if not existe:
+            if alerta_existente:
+                # Conserva la fecha de creación y el estado de atención.
+                if alerta_existente.Mensaje != mensaje_guardado:
+                    alerta_existente.Mensaje = mensaje_guardado
+                    alerta_existente.save(
+                        update_fields=['Mensaje']
+                    )
+            else:
                 Alertas.objects.create(
                     ID_Stock=stock,
                     Tipo_alerta='Vencimiento',
@@ -3008,16 +3032,26 @@ def generar_alertas_vencimiento():
                     Atendida=False
                 )
 
-        # Esta lista se sigue utilizando en el panel principal.
         alertas_vencimiento.append({
             'producto': lote.ID_Producto,
             'lote': lote,
             'dias_restantes': dias_restantes,
-            'mensaje': mensaje
+            'mensaje': mensaje,
         })
 
     return alertas_vencimiento
 
+
+def clave_fecha_alerta(item):
+    fecha = item['fecha']
+
+    if isinstance(fecha, datetime):
+        return fecha.date()
+
+    if isinstance(fecha, date):
+        return fecha
+
+    return date.min
 
 
 # ============================================================
@@ -3025,7 +3059,6 @@ def generar_alertas_vencimiento():
 # ============================================================
 
 def gestion_alertas(request):
-
     usuario = usuario_es_administrador(request)
 
     if not usuario:
@@ -3034,12 +3067,9 @@ def gestion_alertas(request):
     tipo_alerta = request.GET.get('tipo', '').strip()
     producto_id = request.GET.get('producto', '').strip()
     usuario_id = request.GET.get('usuario', '').strip()
-
-    # Coinciden con los nombres de los campos del HTML.
     fecha_desde = request.GET.get('fecha_desde', '').strip()
     fecha_hasta = request.GET.get('fecha_hasta', '').strip()
 
-    # Generar alertas de vencimiento antes de consultar el historial.
     generar_alertas_vencimiento()
 
     alertas_bd = Alertas.objects.select_related(
@@ -3048,25 +3078,21 @@ def gestion_alertas(request):
         'ID_Usuario'
     ).all()
 
-    # Filtro por tipo de alerta.
     if tipo_alerta:
         alertas_bd = alertas_bd.filter(
             Tipo_alerta=tipo_alerta
         )
 
-    # Filtro por producto.
     if producto_id:
         alertas_bd = alertas_bd.filter(
             ID_Stock__ID_Producto_id=producto_id
         )
 
-    # Filtro por usuario que atendió.
     if usuario_id:
         alertas_bd = alertas_bd.filter(
             ID_Usuario_id=usuario_id
         )
 
-    # Filtros por fecha de generación de la alerta.
     if fecha_desde:
         alertas_bd = alertas_bd.filter(
             Fecha_hora_historial_alerta__date__gte=fecha_desde
@@ -3080,16 +3106,11 @@ def gestion_alertas(request):
     alertas = []
 
     for alerta in alertas_bd:
-
         producto = alerta.ID_Stock.ID_Producto
         lote = None
         mensaje = alerta.Mensaje
-        fecha = alerta.Fecha_hora_historial_alerta
 
-        # Recuperar el lote usando el identificador
-        # guardado en el mensaje de la alerta.
         if alerta.Tipo_alerta == 'Vencimiento':
-
             try:
                 marcador = mensaje.rsplit('[LOTE_ID:', 1)[1]
                 lote_id = int(marcador.split(']', 1)[0])
@@ -3101,12 +3122,8 @@ def gestion_alertas(request):
             except (IndexError, ValueError):
                 lote = None
 
-            # Quitar el identificador interno del mensaje.
+            # Quita el identificador técnico del mensaje visible.
             mensaje = mensaje.split(' [LOTE_ID:', 1)[0]
-
-            # Para vencimientos, mostrar la fecha de vencimiento.
-            if lote:
-                fecha = lote.Fecha_vencimiento
 
         alertas.append({
             'id': alerta.ID_Historial_alerta,
@@ -3114,7 +3131,7 @@ def gestion_alertas(request):
             'producto': producto,
             'lote': lote,
             'mensaje': mensaje,
-            'fecha': fecha,
+            'fecha': alerta.Fecha_hora_historial_alerta,
             'cantidad': alerta.Cantidad_al_generar,
             'stock_minimo': alerta.Stock_minimo_al_generar,
             'atendida': alerta.Atendida,
@@ -3122,13 +3139,11 @@ def gestion_alertas(request):
             'fecha_atencion': alerta.Fecha_hora_atencion,
         })
 
-    # Ordenar por fecha descendente.
     alertas.sort(
-        key=lambda item: item['fecha'],
+        key=clave_fecha_alerta,
         reverse=True
     )
 
-    # Datos para los filtros.
     productos = Productos.objects.filter(
         Estado_producto='Activo'
     ).order_by('Nombre_producto')
@@ -3156,6 +3171,11 @@ def gestion_alertas(request):
         }
     )
 
+
+# ============================================================
+# ATENDER ALERTAS
+# ============================================================
+
 @require_POST
 def atender_alerta(request, id_alerta):
     usuario = usuario_es_administrador(request)
@@ -3176,7 +3196,135 @@ def atender_alerta(request, id_alerta):
         alerta.save(update_fields=[
             'Atendida',
             'ID_Usuario',
-            'Fecha_hora_atencion'
+            'Fecha_hora_atencion',
         ])
 
     return redirect('historial_alertas')
+
+
+# ============================================================
+# COMPROBANTE PDF DE MOVIMIENTO
+# ============================================================
+
+def comprobante_movimiento_pdf(request, id_movimiento):
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
+    movimiento = get_object_or_404(
+        MovimientosStock.objects.select_related(
+            'ID_Usuario',
+            'ID_Tipo_movimiento',
+            'ID_Lote',
+            'ID_Lote__ID_Producto',
+            'ID_Lote__ID_Proveedor',
+        ),
+        ID_Movimiento_stock=id_movimiento
+    )
+
+    buffer = BytesIO()
+
+    documento = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2 * cm,
+        leftMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm,
+    )
+
+    estilos = getSampleStyleSheet()
+
+    titulo = ParagraphStyle(
+        'TituloComprobante',
+        parent=estilos['Title'],
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#0b311e'),
+        spaceAfter=18,
+    )
+
+    contenido = [
+        Paragraph('AGROQUÍMICA DEL VALLE', titulo),
+        Paragraph(
+            'COMPROBANTE DE MOVIMIENTO DE STOCK',
+            estilos['Heading2']
+        ),
+        Spacer(1, 15),
+    ]
+
+    datos = [
+        ['N.º de movimiento:', str(movimiento.ID_Movimiento_stock)],
+        ['Fecha y hora:', str(movimiento.Fecha_hora_movimiento)],
+        [
+            'Tipo de movimiento:',
+            movimiento.ID_Tipo_movimiento.Nombre_tipo_movimiento,
+        ],
+        [
+            'Usuario responsable:',
+            str(movimiento.ID_Usuario.Usuario)
+            if movimiento.ID_Usuario else 'No disponible',
+        ],
+        ['Cantidad:', str(movimiento.Cantidad_movimiento_stock)],
+        [
+            'Observaciones:',
+            movimiento.Observaciones or 'Sin observaciones',
+        ],
+    ]
+
+    lote = movimiento.ID_Lote
+
+    if lote:
+        producto = lote.ID_Producto
+
+        datos.extend([
+            ['Producto:', producto.Nombre_producto],
+            ['Marca:', producto.Marca or 'No especificada'],
+            ['Número de lote:', str(lote.Numero_lote)],
+            [
+                'Proveedor:',
+                str(lote.ID_Proveedor.nombre_proveedor)
+                if lote.ID_Proveedor else 'No disponible',
+            ],
+        ])
+
+    tabla = Table(
+        datos,
+        colWidths=[5 * cm, 10 * cm]
+    )
+
+    tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e5eee8')),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#0b311e')),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 9),
+    ]))
+
+    contenido.append(tabla)
+    contenido.append(Spacer(1, 25))
+    contenido.append(Paragraph(
+        'Documento generado por el Sistema de Gestión de Productos.',
+        estilos['Normal']
+    ))
+
+    documento.build(contenido)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    respuesta = HttpResponse(
+        pdf,
+        content_type='application/pdf'
+    )
+    respuesta['Content-Disposition'] = (
+        f'inline; filename="comprobante_movimiento_{id_movimiento}.pdf"'
+    )
+
+    return respuesta

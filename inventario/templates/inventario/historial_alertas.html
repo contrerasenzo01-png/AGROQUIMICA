@@ -269,13 +269,7 @@
                                 </span>
 
                                 <span class="al-hora">
-
-                                    {% if alerta.tipo == 'Vencimiento' %}
-                                        —
-                                    {% else %}
-                                        {{ alerta.fecha|date:"H:i" }}
-                                    {% endif %}
-
+                                    {{ alerta.fecha|date:"H:i" }}
                                 </span>
 
                             </td>

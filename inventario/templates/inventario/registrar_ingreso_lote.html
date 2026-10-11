@@ -95,6 +95,16 @@
                     {% if estado_filtro == 'Inactivo' %}selected{% endif %}>
                 Inactivos
             </option>
+            
+            <option value="Agotado"
+                    {% if estado_filtro == 'Agotado' %}selected{% endif %}>
+                Agotados
+            </option>
+
+            <option value="Vencido"
+                    {% if estado_filtro == 'Vencido' %}selected{% endif %}>
+                Vencidos
+            </option>
 
         </select>
 
@@ -216,18 +226,23 @@
                             </span>
                         </td>
 
+                        
                         <!-- ESTADO -->
-
                         <td>
                             <span class="lt-estado
-                                {% if l.Estado_lote == 'Activo' %}
+                                {% if l.estado_actual == 'Activo' %}
                                     lt-estado-activo
-                                {% else %}
+                                {% elif l.estado_actual == 'Inactivo' %}
                                     lt-estado-inactivo
+                                {% elif l.estado_actual == 'Agotado' %}
+                                    lt-estado-agotado
+                                {% elif l.estado_actual == 'Vencido' %}
+                                    lt-estado-vencido
                                 {% endif %}">
-                                {{ l.Estado_lote }}
+                                {{ l.estado_actual }}
                             </span>
                         </td>
+
 
                         <!-- ACCIONES -->
                         <td>

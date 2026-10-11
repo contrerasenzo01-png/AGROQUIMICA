@@ -137,6 +137,10 @@
                         Observaciones
                     </th>
 
+                    <th>
+                        Comprobante
+                    </th>
+
                 </tr>
 
             </thead>
@@ -234,13 +238,13 @@
                                 {% if tipo == "Entrada de lote" %}
 
                                     <span class="mov-cantidad pos">
-                                        +{{ m.Cantidad_movimiento }}
+                                        +{{ m.Cantidad_movimiento_stock }}
                                     </span>
 
                                 {% else %}
 
                                     <span class="mov-cantidad neg">
-                                        -{{ m.Cantidad_movimiento }}
+                                        -{{ m.Cantidad_movimiento_stock }}
                                     </span>
 
                                 {% endif %}
@@ -276,6 +280,21 @@
 
                             </td>
 
+                            
+                            <!-- COMPROBANTE PDF -->    
+                            <td>
+                                <a
+                                    href="{% url 'comprobante_movimiento_pdf' m.ID_Movimiento_stock %}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="btn-comprobante"
+                                    title="Generar comprobante PDF"
+                                >
+                                    📄 Generar PDF
+                                </a>
+                            </td>
+
+
                         </tr>
 
                     {% endwith %}
@@ -286,7 +305,7 @@
                     <tr>
 
                         <td
-                            colspan="7"
+                            colspan="8"
                             class="tabla-vacia"
                         >
 

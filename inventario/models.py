@@ -359,6 +359,25 @@ class Lotes(models.Model):
         db_table = 'LOTES'
         verbose_name_plural = "Lotes"
 
+        
+    @property
+    def estado_actual(self):
+        from django.utils import timezone
+
+        hoy = timezone.localdate()
+
+        if self.Fecha_vencimiento < hoy:
+            return 'Vencido'
+
+        if self.Cantidad_actual <= 0:
+            return 'Agotado'
+
+        if self.Estado_lote == 'Inactivo':
+            return 'Inactivo'
+
+        return 'Activo'
+
+
     def __str__(self):
         return self.Numero_lote
 

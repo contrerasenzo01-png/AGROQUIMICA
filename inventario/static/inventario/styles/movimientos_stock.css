@@ -555,3 +555,21 @@ body {
         padding: 20px;
     }
 }
+
+.btn-comprobante {
+    display: inline-block;
+    padding: 7px 10px;
+    background-color: #0b311e;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+}
+
+.btn-comprobante:hover {
+    background-color: #174d32;
+    color: #ffffff;
+}
