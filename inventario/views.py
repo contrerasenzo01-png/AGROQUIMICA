@@ -2,11 +2,10 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import unicodedata
-
+from django.db.models import Count, Q, Prefetch
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import transaction
-from django.db.models import Q, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -942,6 +941,13 @@ def crear_usuario(request):
             ID_Perfil=perfil_id
         )
 
+        if not perfil.Estado_perfil:
+            messages.error(
+                request,
+                'No se pueden registrar usuarios con un perfil inactivo.'
+            )
+            return redirect('gestion_usuarios')
+
         dni = request.POST.get('DNI', '').strip()
         apellido = request.POST.get(
             'Apellido_usuario',
@@ -1187,6 +1193,13 @@ def activar_usuario(request, id):
     )
 
     if request.method == 'POST':
+        # Verificar que el perfil del usuario esté activo.
+        if not usuario.ID_Perfil.Estado_perfil:
+            messages.error(
+                request,
+                'No se puede activar el usuario porque su perfil está inactivo.'
+            )
+            return redirect('gestion_usuarios')
 
         usuario.Estado_usuario = True
         usuario.Fecha_Baja = None
@@ -1348,7 +1361,13 @@ def gestion_perfiles(request):
 
     perfiles = Perfiles.objects.prefetch_related(
         'permisos'
-    ).all()
+    ).annotate(
+        usuarios_activos=Count(
+            'usuarios',
+            filter=Q(usuarios__Estado_usuario=True),
+            distinct=True
+        )
+    ).order_by('ID_Perfil')
 
     if busqueda:
         perfiles = perfiles.filter(
@@ -1364,7 +1383,8 @@ def gestion_perfiles(request):
             'perfiles': perfiles,
             'permisos': permisos,
             'busqueda': busqueda,
-            'usuario': usuario
+            'usuario': usuario,
+            'perfiles_admin': PERFILES_ADMIN,
         }
     )
 
@@ -1501,6 +1521,10 @@ def editar_perfil(request, pk):
     return redirect('gestion_perfiles')
 
 
+# ============================================================
+# CAMBIAR ESTADO DEL PERFIL
+# ============================================================
+
 def cambiar_estado_perfil(request, id):
 
     usuario = usuario_es_administrador(request)
@@ -1508,41 +1532,72 @@ def cambiar_estado_perfil(request, id):
     if not usuario:
         return redirect('panel_principal')
 
+    if request.method != 'POST':
+        return redirect('gestion_perfiles')
+
     perfil = get_object_or_404(
         Perfiles,
         ID_Perfil=id
     )
 
-    if request.method == 'POST':
+        # No permitir dar de baja perfiles de sistema.
+    if (
+        perfil.Estado_perfil
+        and perfil.Nombre_perfil in PERFILES_ADMIN
+    ):
+        messages.error(
+            request,
+            'No se puede dar de baja un perfil de sistema.'
+        )
+        return redirect('gestion_perfiles')
 
-        if (
-            perfil.ID_Perfil == usuario.ID_Perfil.ID_Perfil
-            and perfil.Estado_perfil
-        ):
+    # No permitir dar de baja el perfil del usuario actual.
+    if (
+        perfil.ID_Perfil == usuario.ID_Perfil.ID_Perfil
+        and perfil.Estado_perfil
+    ):
+        messages.error(
+            request,
+            'No puede dar de baja el perfil con el que inició sesión.'
+        )
+        return redirect('gestion_perfiles')
+
+    # Si está activo, se intenta dar de baja.
+    if perfil.Estado_perfil:
+
+        usuarios_activos = Usuarios.objects.filter(
+            ID_Perfil=perfil,
+            Estado_usuario=True
+        ).exists()
+
+        if usuarios_activos:
             messages.error(
                 request,
-                'No puede dar de baja el perfil con el que inició sesión.'
+                'No se puede dar de baja el perfil porque tiene '
+                'usuarios activos asignados. Primero debe '
+                'desactivar esos usuarios o asignarles otro perfil.'
             )
-
             return redirect('gestion_perfiles')
 
-        perfil.Estado_perfil = not perfil.Estado_perfil
-        perfil.save(
-            update_fields=['Estado_perfil']
+        perfil.Estado_perfil = False
+        perfil.save(update_fields=['Estado_perfil'])
+
+        messages.success(
+            request,
+            f'El perfil "{perfil.Nombre_perfil}" '
+            'fue dado de baja correctamente.'
         )
 
-        if perfil.Estado_perfil:
-            messages.success(
-                request,
-                f'El perfil "{perfil.Nombre_perfil}" '
-                'fue activado correctamente.'
-            )
-        else:
-            messages.success(
-                request,
-                f'El perfil "{perfil.Nombre_perfil}" '
-                'fue dado de baja correctamente.'
-            )
+    else:
+        # Si está inactivo, se intenta activar.
+        perfil.Estado_perfil = True
+        perfil.save(update_fields=['Estado_perfil'])
+
+        messages.success(
+            request,
+            f'El perfil "{perfil.Nombre_perfil}" '
+            'fue activado correctamente.'
+        )
 
     return redirect('gestion_perfiles')
 
@@ -2466,8 +2521,6 @@ def registrar_ingreso_lote(request):
     elif estado_filtro == 'Inactivo':
         lotes = lotes.filter(
             Estado_lote='Inactivo',
-            Fecha_vencimiento__gte=hoy,
-            Cantidad_actual__gt=0
         )
 
     elif estado_filtro == 'Activo':
@@ -2685,18 +2738,20 @@ def cambiar_estado_lote(request, id):
     if not usuario:
         return redirect('panel_principal')
 
+    if request.method != 'POST':
+        return redirect('registrar_ingreso_lote')
+
     lote = get_object_or_404(
         Lotes,
         ID_Lote=id
     )
 
-    if request.method != 'POST':
-        return redirect('registrar_ingreso_lote')
-
     estado_solicitado = request.POST.get(
         'estado',
         ''
     ).strip().lower()
+
+    hoy = timezone.localdate()
 
     # --------------------------------------------------------
     # DAR DE BAJA
@@ -2704,21 +2759,13 @@ def cambiar_estado_lote(request, id):
 
     if estado_solicitado == 'inactivo':
 
-        if lote.Cantidad_actual > 0:
-            messages.error(
-                request,
-                'No puede dar de baja el lote porque todavía tiene '
-                'unidades disponibles. Registre primero la salida '
-                'correspondiente.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-
         lote.Estado_lote = 'Inactivo'
+        lote.save(update_fields=['Estado_lote'])
 
-        mensaje = (
-            f'El lote {lote.Numero_lote} '
-            'fue dado de baja correctamente.'
+        messages.success(
+            request,
+            f'El lote {lote.Numero_lote} fue dado de baja. '
+            f'Cantidad conservada: {lote.Cantidad_actual}.'
         )
 
     # --------------------------------------------------------
@@ -2727,11 +2774,30 @@ def cambiar_estado_lote(request, id):
 
     elif estado_solicitado == 'activo':
 
-        lote.Estado_lote = 'Activo'
+        if (
+            not lote.Fecha_vencimiento
+            or lote.Fecha_vencimiento <= hoy
+        ):
+            messages.error(
+                request,
+                'No se puede activar un lote vencido '
+                'o sin fecha de vencimiento.'
+            )
+            return redirect('registrar_ingreso_lote')
 
-        mensaje = (
-            f'El lote {lote.Numero_lote} '
-            'fue activado correctamente.'
+        if lote.Cantidad_actual <= 0:
+            messages.error(
+                request,
+                'No se puede activar un lote agotado.'
+            )
+            return redirect('registrar_ingreso_lote')
+
+        lote.Estado_lote = 'Activo'
+        lote.save(update_fields=['Estado_lote'])
+
+        messages.success(
+            request,
+            f'El lote {lote.Numero_lote} fue activado correctamente.'
         )
 
     else:
@@ -2740,18 +2806,11 @@ def cambiar_estado_lote(request, id):
             'El estado solicitado no es válido.'
         )
 
-        return redirect('registrar_ingreso_lote')
-
-    lote.save(
-        update_fields=['Estado_lote']
-    )
-
-    messages.success(
-        request,
-        mensaje
-    )
-
     return redirect('registrar_ingreso_lote')
+
+
+   
+
 
 
 # ============================================================

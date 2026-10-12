@@ -267,21 +267,23 @@
                     </svg>
                 </button>
 
+        
+                        
         <!-- FORMULARIO DE ESTADO -->
-                <form id="formEstado-{{ l.ID_Lote }}"
-                        method="POST"
-                        action="{% url 'cambiar_estado_lote' l.ID_Lote %}"
-                        class="lt-form-estado">
+        <form id="formEstado-{{ l.ID_Lote }}"
+            method="POST"
+            action="{% url 'cambiar_estado_lote' l.ID_Lote %}"
+            class="lt-form-estado">
 
-                {% csrf_token %}
+            {% csrf_token %}
 
-                        <input type="hidden"
-                            name="estado"
-                            value="{% if l.Estado_lote == 'Activo' %}inactivo{% else %}activo{% endif %}">
+            <input type="hidden"
+                    name="estado"
+                    value="{% if l.estado_actual == 'Activo' or l.estado_actual == 'Vencido' %}inactivo{% else %}activo{% endif %}">
 
-                {% if l.Estado_lote == 'Activo' %}
+            {% if l.estado_actual == 'Activo' or l.estado_actual == 'Vencido' %}
 
-                <!-- BOTÓN BAJA: ABRE LA ADVERTENCIA -->
+        <!-- DAR DE BAJA: LOTES ACTIVOS O VENCIDOS -->
                 <button type="button"
                         class="lt-btn-accion lt-btn-baja"
                         title="Dar de baja"
@@ -300,9 +302,9 @@
                     </svg>
                 </button>
 
-            {% else %}
+            {% elif l.estado_actual == 'Inactivo' and l.Cantidad_actual > 0 and l.Fecha_vencimiento and l.Fecha_vencimiento > hoy %}
 
-                <!-- BOTÓN ACTIVAR: SOLO ÍCONO -->
+        <!-- ACTIVAR SOLO LOTES INACTIVOS Y VIGENTES -->
                 <button type="submit"
                         class="lt-btn-accion lt-btn-activar"
                         title="Activar lote"
@@ -313,12 +315,11 @@
                     </svg>
                 </button>
 
-            {% endif %}
+                {% endif %}
 
-        </form>
-
-    </div>
-</td>
+            </form>
+            </div>
+            </td>
 
                     </tr>
 

@@ -9,7 +9,8 @@
    (los modales están fuera del contenedor .pf-page). */
 .pf-page,
 .pf-modal,
-.pf-toasts {
+.pf-toasts,
+.pf-popover {
     --pf-verde:        #185a38;
     --pf-verde-hover:  #134a2e;
     --pf-titulo:       #0f3a24;
@@ -102,6 +103,12 @@
 .pf-btn-peligro       { background: var(--pf-rojo); color: #fff; }
 .pf-btn-peligro:hover { background: #991b1b; }
 
+.pf-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+.pf-btn-peligro:disabled:hover { background: var(--pf-rojo); }
+
 
 /* ---------- PESTAÑAS (Tipos de producto | Subtipos) ---------- */
 .pf-tabs {
@@ -172,6 +179,16 @@
     color: var(--pf-texto);
 }
 
+/* Buscador con botón "Limpiar" */
+.pf-limpiar {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--pf-suave);
+    text-decoration: none;
+    white-space: nowrap;
+}
+.pf-limpiar:hover { color: var(--pf-texto); }
+
 
 /* ---------- TABLA ---------- */
 .pf-card {
@@ -207,9 +224,17 @@
 .pf-table tbody tr:hover         { background: #f9fbfa; }
 
 .pf-table tr.inactivo .pf-nombre { color: var(--pf-suave); }
+.pf-table tr.inactivo .pf-chip   { opacity: .6; }
 
 .pf-nombre { font-weight: 700; color: var(--pf-titulo); }
 .pf-muted  { color: var(--pf-suave); }
+
+.pf-codigo {
+    display: block;
+    margin-top: 2px;
+    font-size: 10.5px;
+    color: var(--pf-suave);
+}
 
 .pf-vacio {
     text-align: center;
@@ -251,7 +276,129 @@
 .pf-inactivo { background: #eef1ef; color: #7b8a82; }
 
 
-/* ---------- ACCIONES DE LA TABLA ---------- */
+/* ---------- PERMISOS EN LA TABLA: CHIPS ---------- */
+.pf-table td.pf-permisos { max-width: 520px; }
+
+.pf-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.pf-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #e8f2ec;
+    border: 1px solid #cfe3d7;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #1b5e3a;
+    white-space: nowrap;
+}
+
+/* Chip "+N más" (es un botón que abre el popover) */
+.pf-chip-mas {
+    background: #fff;
+    border: 1px dashed #9db3a8;
+    color: #4a6358;
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+}
+
+.pf-chip-mas:hover,
+.pf-chip-mas[aria-expanded="true"] {
+    background: #e3ece7;
+    border-style: solid;
+}
+
+.pf-chip-mas:focus-visible {
+    outline: 2px solid var(--pf-verde);
+    outline-offset: 2px;
+}
+
+/* Chip de advertencia: perfil sin permisos */
+.pf-chip-aviso {
+    background: #fff3d6;
+    border-color: #f3dca0;
+    color: #7a5200;
+}
+
+.pf-sin { font-size: 12px; color: var(--pf-suave); }
+
+
+/* ---------- POPOVER DE PERMISOS ----------
+   position: fixed para que el scroll de la tabla no lo recorte.
+   Lo posiciona el JavaScript (togglePopover).
+   z-index alto para quedar por encima del layout de base.css. */
+.pf-popover {
+    position: fixed;
+    z-index: 2000;
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid #d5ded9;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(20, 40, 31, .18);
+}
+
+.pf-popover[hidden] { display: none; }
+
+.pf-popover-titulo {
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pf-texto);
+}
+
+.pf-popover-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pf-popover-lista li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 12.5px;
+    color: #2d4739;
+}
+
+.pf-popover-lista .pf-icon {
+    width: 16px;
+    height: 16px;
+    color: #1b7a4a;
+}
+
+/* Pie del popover: "Editar permisos →" */
+.pf-popover-pie {
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--pf-borde);
+}
+
+.pf-popover-link {
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--pf-verde);
+    cursor: pointer;
+}
+.pf-popover-link:hover { text-decoration: underline; }
+
+
+/* ---------- ACCIONES DE LA TABLA (botones de ícono) ---------- */
 .pf-acciones {
     display: flex;
     align-items: center;
@@ -263,26 +410,67 @@
 .pf-accion {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 13px;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
     background: #fff;
     border: 1px solid var(--pf-borde-campo);
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    color: #2d4739;
+    border-radius: 10px;
+    color: #4a6358;
     cursor: pointer;
-    transition: background-color .15s;
+    transition: background-color .15s, border-color .15s;
+}
+
+.pf-accion .pf-icon {
+    width: 18px;
+    height: 18px;
 }
 
 .pf-accion:hover { background: #f1f5f3; }
 
-.pf-baja         { color: #3f5a4c; }
-.pf-baja:hover   { background: #fef2f2; border-color: #fecaca; color: var(--pf-rojo); }
+.pf-accion:focus-visible {
+    outline: 2px solid var(--pf-verde);
+    outline-offset: 2px;
+}
 
-.pf-activar        { color: #15803d; border-color: #bbf7d0; background: #f0fdf4; }
-.pf-activar:hover  { background: #dcfce7; }
+.pf-accion:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* Modificar */
+.pf-btn-editar       { color: #4a6358; }
+.pf-btn-editar:hover { background: #e8f2ec; border-color: #cfe3d7; }
+
+/* Dar de baja: rojo suave */
+.pf-baja {
+    background: #fdeceb;
+    border-color: #f6c9c5;
+    color: #d92d20;
+}
+.pf-baja:hover {
+    background: #fbdad7;
+    border-color: #f1b1ab;
+    color: #b42318;
+}
+.pf-baja:disabled:hover {
+    background: #fdeceb;
+    border-color: #f6c9c5;
+    color: #d92d20;
+}
+
+/* Activar: verde suave */
+.pf-activar {
+    background: #e9f8ef;
+    border-color: #bfe8cf;
+    color: #1b9a55;
+}
+.pf-activar:hover {
+    background: #d6f1e1;
+    border-color: #a4dcbb;
+    color: #15803d;
+}
 
 
 /* ---------- NOTIFICACIONES ---------- */
@@ -432,6 +620,9 @@
 }
 .pf-grupo input[readonly]:focus { border-color: var(--pf-borde-campo); box-shadow: none; }
 
+/* Los checkbox no deben heredar el alto/ancho de los campos de texto */
+.pf-grupo input[type="checkbox"] { width: 15px; height: 15px; padding: 0; }
+
 .pf-modal-pie {
     display: flex;
     justify-content: flex-end;
@@ -447,7 +638,47 @@
 }
 
 
-/* ---------- MODAL DE CONFIRMAR BAJA ---------- */
+/* ---------- LISTA DE PERMISOS CON CASILLAS (modales) ---------- */
+.pf-permisos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.pf-permiso {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #f8faf9;
+    border: 1px solid var(--pf-borde);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+}
+
+.pf-permiso:hover { background: #f0f7f3; border-color: #cbd9d1; }
+
+.pf-permiso input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    margin-top: 2px;
+    accent-color: #185a38;
+    cursor: pointer;
+}
+
+.pf-permiso-info { display: flex; flex-direction: column; gap: 2px; }
+.pf-permiso-info strong { font-size: 12px; color: var(--pf-texto); }
+.pf-permiso-info small  { font-size: 11px; line-height: 1.4; color: var(--pf-suave); }
+
+
+/* ---------- MODALES DE BAJA (confirmar y bloqueada) ---------- */
+
+/* Aviso del modal "No se puede dar de baja" */
 .pf-aviso {
     display: flex;
     align-items: center;
@@ -461,6 +692,22 @@
     font-weight: 600;
     color: #991b1b;
 }
+
+/* Aviso rojo del modal "Confirmar baja" */
+.pf-aviso-peligro {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: #fdecec;
+    border: 1px solid #f5c2c2;
+    border-radius: 10px;
+    color: #a61b1b;
+    font-weight: 600;
+    font-size: 13px;
+}
+.pf-aviso-peligro .pf-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
 .pf-resumen {
     margin-bottom: 16px;
@@ -518,88 +765,46 @@
     word-break: break-word;
 }
 
+/* Estado "Activo" en verde */
+.pf-dato .val.val-ok { color: #1f8a4c; }
+
 
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 700px) {
-    .pf-header { flex-direction: column; }
-    .pf-resumen-grid { grid-template-columns: 1fr; }
+    .pf-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pf-title {
+        font-size: 25px;
+    }
+
+    .pf-resumen-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pf-table th,
+    .pf-table td {
+        padding: 10px 12px;
+    }
+
+    .pf-acciones {
+        gap: 5px;
+    }
+
+    .pf-pie {
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .pf-toasts {
+        left: 12px;
+        right: 12px;
+    }
+
+    .pf-toast {
+        min-width: 0;
+        width: 100%;
+    }
 }
-
-
-/* ---------- ESPECÍFICO DE PERFILES ---------- */
-.pf-codigo {
-    display: block;
-    margin-top: 2px;
-    font-size: 10.5px;
-    color: var(--pf-suave);
-}
-
-.pf-table td.pf-permisos { max-width: 520px; }
-
-.pf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.pf-chip {
-    display: inline-block;
-    padding: 3px 9px;
-    background: #e8f2ec;
-    border: 1px solid #cfe3d7;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #1b5e3a;
-    white-space: nowrap;
-}
-
-.pf-chip-mas { background: #eef1ef; border-color: #e0e6e2; color: var(--pf-suave); }
-
-.pf-sin { font-size: 12px; color: var(--pf-suave); }
-
-/* Buscador con botón "Limpiar" */
-.pf-limpiar {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--pf-suave);
-    text-decoration: none;
-    white-space: nowrap;
-}
-.pf-limpiar:hover { color: var(--pf-texto); }
-
-/* Lista de permisos con casillas */
-.pf-permisos-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-
-.pf-permiso {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 12px;
-    background: #f8faf9;
-    border: 1px solid var(--pf-borde);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color .15s, border-color .15s;
-}
-
-.pf-permiso:hover { background: #f0f7f3; border-color: #cbd9d1; }
-
-.pf-permiso input[type="checkbox"] {
-    flex-shrink: 0;
-    width: 15px;
-    height: 15px;
-    margin-top: 2px;
-    accent-color: #185a38;
-    cursor: pointer;
-}
-
-.pf-permiso-info { display: flex; flex-direction: column; gap: 2px; }
-.pf-permiso-info strong { font-size: 12px; color: var(--pf-texto); }
-.pf-permiso-info small  { font-size: 11px; line-height: 1.4; color: var(--pf-suave); }
-
-/* Los checkbox no deben heredar el alto/ancho de los campos de texto */
-.pf-grupo input[type="checkbox"] { width: 15px; height: 15px; padding: 0; }
