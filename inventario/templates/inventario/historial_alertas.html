@@ -213,7 +213,11 @@
                     <tr>
 
                         <th>
-                            Fecha y hora
+                            Fecha
+                        </th>
+
+                        <th>
+                            Hora
                         </th>
 
                         <th>
@@ -248,6 +252,14 @@
                             Atendida por
                         </th>
 
+                        <th>
+                            Fecha de atención
+                        </th>
+
+                        <th>
+                            Hora de atención
+                        </th>
+
                     </tr>
 
                 </thead>
@@ -260,20 +272,8 @@
                         <tr>
 
                             <!-- FECHA Y HORA -->
-                            <td>
-
-                                <span class="al-fecha">
-
-                                    {{ alerta.fecha|date:"d/m/Y" }}
-
-                                </span>
-
-                                <span class="al-hora">
-                                    {{ alerta.fecha|date:"H:i" }}
-                                </span>
-
-                            </td>
-
+                         <td>{{ alerta.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ alerta.fecha|date:"H:i" }}</td>
 
                             <!-- TIPO -->
                             <td>
@@ -355,7 +355,7 @@
                             </td>
 
 
-                                                        <!-- ESTADO -->
+                              <!-- ESTADO -->
                             <td>
 
                                 {% if alerta.atendida %}
@@ -385,31 +385,41 @@
                             </td>
 
 
+                            
                             <!-- ATENDIDA POR -->
                             <td class="al-muted">
 
                                 {% if alerta.atendida and alerta.usuario %}
 
-                                    {{ alerta.usuario.Apellido_usuario }}
-                                    {{ alerta.usuario.Nombre_usuario }}
+                                {{ alerta.usuario.Apellido_usuario }}
+                                {{ alerta.usuario.Nombre_usuario }}
 
-                                    {% if alerta.fecha_atencion %}
+                            {% else %}
 
-                                        <span class="al-hora">
+                                —
 
-                                            {{ alerta.fecha_atencion|date:"d/m/Y H:i" }}
-
-                                        </span>
-
-                                    {% endif %}
-
-                                {% else %}
-
-                                    —
-
-                                {% endif %}
+                            {% endif %}
 
                             </td>
+
+                        <!-- FECHA DE ATENCIÓN -->
+                            <td>
+                                {% if alerta.atendida and alerta.fecha_atencion %}
+                                {{ alerta.fecha_atencion|date:"d/m/Y" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                            </td>
+
+                        <!-- HORA DE ATENCIÓN -->
+                            <td>
+                        {% if alerta.atendida and alerta.fecha_atencion %}
+                                {{ alerta.fecha_atencion|date:"H:i" }}
+                        {% else %}
+                               —
+                        {% endif %}
+                            </td>
+
 
                         </tr>
 
@@ -419,7 +429,7 @@
                         <tr>
 
                             <td
-                                colspan="9"
+                                colspan="12"
                                 class="al-vacio"
                             >
 

@@ -148,9 +148,30 @@
     overflow: hidden;
 }
 
-.al-table-wrap { overflow-x: auto; }
 
-.al-table { width: 100%; min-width: 980px; border-collapse: collapse; }
+.al-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.al-table {
+    width: 100%;
+    min-width: 1400px;
+    border-collapse: collapse;
+}
+
+.al-table th,
+.al-table td {
+    white-space: nowrap;
+}
+
+.al-table .al-mensaje {
+    min-width: 260px;
+    max-width: 380px;
+    white-space: normal;
+    line-height: 1.45;
+}
+
 
 .al-table th {
     text-align: left;
@@ -178,7 +199,6 @@
 
 .al-producto { font-weight: 700; color: var(--al-titulo); }
 .al-muted    { color: var(--al-suave); }
-.al-mensaje  { min-width: 260px; max-width: 380px; line-height: 1.45; }
 .al-num      { font-weight: 600; text-align: right; white-space: nowrap; }
 
 .al-vacio {

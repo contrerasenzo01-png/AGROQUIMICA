@@ -189,10 +189,27 @@
 
                                     {% else %}
 
-                                        <a href="{% url 'activar_usuario' usuario.ID_Usuario %}"
-                                           class="us-icon-btn us-activar" title="Activar usuario" aria-label="Activar usuario">
-                                            <svg class="us-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
-                                        </a>
+                                        <form method="POST"
+                                                action="{% url 'activar_usuario' usuario.ID_Usuario %}"
+                                                style="display: inline;">
+
+                                            {% csrf_token %}
+
+                                            <button type="submit"
+                                                    class="us-icon-btn us-activar"
+                                                    title="Activar usuario"
+                                                    aria-label="Activar usuario">
+
+                                                <svg class="us-icon" viewBox="0 0 24 24">
+                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                                    <circle cx="9" cy="7" r="4"/>
+                                                    <polyline points="16 11 18 13 22 9"/>
+                                                </svg>
+
+                                            </button>
+
+                                        </form>
+
 
                                     {% endif %}
 
@@ -283,11 +300,8 @@
                 </div>
 
                 <div class="us-grupo us-full">
-<<<<<<< HEAD
-                    <label>Correo electrónico</label>
-=======
                     <label>Email</label>
->>>>>>> 6c62bbd13975e5fb10aa32f86d180075ca958a3f
+
                     <input type="email" name="Email_usuario" placeholder="usuario@agrovalle.com" required>
                 </div>
 

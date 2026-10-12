@@ -3002,13 +3002,33 @@ def generar_alertas_vencimiento():
         ).first()
 
         if stock:
+            nombre_producto = lote.ID_Producto.Nombre_producto
+
+            # Arma el mensaje según el estado del vencimiento.
+            if dias_restantes < 0:
+                texto_vencimiento = (
+                    f'está vencido desde el '
+                    f'{lote.Fecha_vencimiento:%d/%m/%Y}.'
+                )
+            elif dias_restantes == 0:
+                texto_vencimiento = (
+                    f'vence hoy '
+                    f'({lote.Fecha_vencimiento:%d/%m/%Y}).'
+                )
+            else:
+                texto_vencimiento = (
+                    f'vence en {dias_restantes} días '
+                    f'({lote.Fecha_vencimiento:%d/%m/%Y}).'
+                )
+
             mensaje_guardado = (
-                f'El producto {lote.ID_Producto.Nombre_producto} '
-                f'del lote {lote.Numero_lote} vence el '
-                f'{lote.Fecha_vencimiento:%d/%m/%Y}. '
+                f'El producto {nombre_producto} '
+                f'del lote {lote.Numero_lote} '
+                f'{texto_vencimiento} '
                 f'[LOTE_ID:{lote.ID_Lote}]'
             )
 
+            # Busca si ya existe una alerta para ese lote.
             alerta_existente = Alertas.objects.filter(
                 ID_Stock=stock,
                 Tipo_alerta='Vencimiento',
@@ -3016,18 +3036,20 @@ def generar_alertas_vencimiento():
             ).order_by('ID_Historial_alerta').first()
 
             if alerta_existente:
-                # Conserva la fecha de creación y el estado de atención.
+                # Actualiza el mensaje sin cambiar la fecha
+                # de creación ni el estado de atención.
                 if alerta_existente.Mensaje != mensaje_guardado:
                     alerta_existente.Mensaje = mensaje_guardado
                     alerta_existente.save(
                         update_fields=['Mensaje']
                     )
             else:
+                # Registra una nueva alerta de vencimiento.
                 Alertas.objects.create(
                     ID_Stock=stock,
                     Tipo_alerta='Vencimiento',
                     Mensaje=mensaje_guardado,
-                    Cantidad_al_generar=stock.Cantidad_stock,
+                    Cantidad_al_generar=lote.Cantidad_actual,
                     Stock_minimo_al_generar=stock.Stock_minimo,
                     Atendida=False
                 )
