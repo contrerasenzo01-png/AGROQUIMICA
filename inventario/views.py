@@ -3433,13 +3433,15 @@ def comprobante_movimiento_pdf(request, id_movimiento):
 
     pdf = buffer.getvalue()
     buffer.close()
-
+    
     respuesta = HttpResponse(
         pdf,
         content_type='application/pdf'
     )
     respuesta['Content-Disposition'] = (
-        f'inline; filename="comprobante_movimiento_{id_movimiento}.pdf"'
+        f'attachment; filename="comprobante_movimiento_{id_movimiento}.pdf"'
     )
+
+    respuesta['Content-Length'] = str(len(pdf))
 
     return respuesta

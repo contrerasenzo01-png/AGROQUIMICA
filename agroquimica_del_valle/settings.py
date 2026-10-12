@@ -32,10 +32,17 @@ ALLOWED_HOSTS = [
     '192.168.1.8',
     '192.168.100.5',
     'program-processes-elections-piece.trycloudflare.com',
+    'feeding-longitude-aluminum-ingredients.trycloudflare.com',
+    'but-laptops-patrol-tent.trycloudflare.com',
+
+
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://program-processes-elections-piece.trycloudflare.com',
+    'https://feeding-longitude-aluminum-ingredients.trycloudflare.com',
+    'https://but-laptops-patrol-tent.trycloudflare.com',
+
 ]
 
 
