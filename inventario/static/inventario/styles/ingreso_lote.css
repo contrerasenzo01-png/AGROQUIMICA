@@ -391,6 +391,18 @@
     color: #7b8a82;
 }
 
+/* Sin existencias: ámbar */
+.lt-estado-agotado {
+    background: #fff7e6;
+    color: #a16207;
+}
+
+/* Fecha de vencimiento superada: rojo */
+.lt-estado-vencido {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
 
 /* ============================================================
    BOTONES DE ACCIONES DE LA TABLA

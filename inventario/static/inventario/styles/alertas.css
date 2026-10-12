@@ -54,12 +54,6 @@
     margin: 0 0 6px;
 }
 
-.al-sub {
-    font-size: 13px;
-    color: var(--al-suave);
-    margin: 0;
-}
-
 
 /* ---------- FILTROS ---------- */
 .al-filtros {
@@ -245,6 +239,76 @@
 
 .al-atendida  { background: #e8f5ee; color: #1b7a4a; }
 .al-pendiente { background: #eef1ef; color: #7b8a82; }
+
+
+/* ---------- ESTADO Y ACCIONES ---------- */
+
+/* Resalta las alertas pendientes con una marca a la izquierda */
+.al-fila-pendiente td:first-child {
+    border-left: 3px solid #f59f00;
+}
+
+/* Quién y cuándo atendió la alerta, debajo del badge de estado */
+.al-sub {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--al-suave);
+    white-space: nowrap;
+}
+
+/* Fechas y horas centradas */
+.al-table .al-centro {
+    text-align: center;
+}
+
+/* La columna de acciones va centrada */
+.al-table .al-col-acciones {
+    text-align: center;
+}
+
+.al-form-atender {
+    display: inline-flex;
+    margin: 0;
+}
+
+.al-btn-atender {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 5px 12px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #15803d;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+}
+
+.al-btn-atender:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.al-btn-atender:focus-visible {
+    outline: 3px solid rgba(24, 90, 56, .25);
+    outline-offset: 2px;
+}
+
+.al-btn-atender .al-icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Check gris en las alertas que ya fueron atendidas */
+.al-hecho {
+    display: inline-flex;
+    color: #8a9e93;
+}
 
 
 /* ---------- RESPONSIVE ---------- */

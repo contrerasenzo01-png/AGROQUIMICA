@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import unicodedata
-from django.db.models import Count, Q, Prefetch
+from django.db.models import Count, Q
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import transaction
@@ -2509,19 +2509,21 @@ def registrar_ingreso_lote(request):
 
     if estado_filtro == 'Vencido':
         lotes = lotes.filter(
-            Fecha_vencimiento__lte=hoy
+            Fecha_vencimiento__lt=hoy          # antes: __lte
         )
 
     elif estado_filtro == 'Agotado':
         lotes = lotes.filter(
-            Fecha_vencimiento__gte=hoy,
-            Cantidad_actual__lte=0
-        )
+        Estado_lote='Activo',
+        Fecha_vencimiento__gte=hoy,
+        Cantidad_actual__lte=0
+    )
 
     elif estado_filtro == 'Inactivo':
         lotes = lotes.filter(
-            Estado_lote='Inactivo',
-        )
+        Estado_lote='Inactivo',
+        Fecha_vencimiento__gte=hoy
+    )
 
     elif estado_filtro == 'Activo':
         lotes = lotes.filter(
@@ -2585,6 +2587,7 @@ def editar_lote(request, id):
 
     if request.method != 'POST':
         return redirect('registrar_ingreso_lote')
+    
 
     numero_lote = request.POST.get(
         'Numero_lote',
@@ -2600,6 +2603,19 @@ def editar_lote(request, id):
         'Fecha_vencimiento',
         ''
     ).strip()
+
+    if request.method != 'POST':
+        return redirect('registrar_ingreso_lote')
+
+    if (
+        lote.Estado_lote == 'Inactivo'
+        and lote.Fecha_vencimiento < timezone.localdate()
+    ):
+        messages.error(
+            request,
+            'No se puede editar un lote vencido y dado de baja.'
+        )
+        return redirect('registrar_ingreso_lote')
 
     # --------------------------------------------------------
     # VALIDAR NÚMERO DE LOTE
@@ -2741,77 +2757,95 @@ def cambiar_estado_lote(request, id):
     if request.method != 'POST':
         return redirect('registrar_ingreso_lote')
 
-    lote = get_object_or_404(
-        Lotes,
-        ID_Lote=id
-    )
+    with transaction.atomic():
 
-    estado_solicitado = request.POST.get(
-        'estado',
-        ''
-    ).strip().lower()
-
-    hoy = timezone.localdate()
-
-    # --------------------------------------------------------
-    # DAR DE BAJA
-    # --------------------------------------------------------
-
-    if estado_solicitado == 'inactivo':
-
-        lote.Estado_lote = 'Inactivo'
-        lote.save(update_fields=['Estado_lote'])
-
-        messages.success(
-            request,
-            f'El lote {lote.Numero_lote} fue dado de baja. '
-            f'Cantidad conservada: {lote.Cantidad_actual}.'
+        # Se bloquea la fila para evitar bajas duplicadas por doble clic.
+        lote = get_object_or_404(
+            Lotes.objects.select_for_update(),
+            ID_Lote=id
         )
 
-    # --------------------------------------------------------
-    # ACTIVAR
-    # --------------------------------------------------------
+        estado_solicitado = request.POST.get(
+            'estado', ''
+        ).strip().lower()
 
-    elif estado_solicitado == 'activo':
+        hoy = timezone.localdate()
 
-        if (
-            not lote.Fecha_vencimiento
-            or lote.Fecha_vencimiento <= hoy
-        ):
+        # ----------------------------------------------------
+        # DAR DE BAJA
+        # ----------------------------------------------------
+        if estado_solicitado == 'inactivo':
+
+            if lote.Estado_lote == 'Inactivo':
+                messages.error(
+                    request,
+                    f'El lote {lote.Numero_lote} ya fue dado de baja.'
+                )
+                return redirect('registrar_ingreso_lote')
+
+            if lote.Cantidad_actual > 0:
+                messages.error(
+                    request,
+                    'No se puede dar de baja un lote con existencias. '
+                    'Registre primero su salida.'
+                )
+                return redirect('registrar_ingreso_lote')
+
+            lote.Estado_lote = 'Inactivo'
+            lote.save(update_fields=['Estado_lote'])
+
+            messages.success(
+                request,
+                f'El lote {lote.Numero_lote} fue dado de baja.'
+            )
+
+        # ----------------------------------------------------
+        # ACTIVAR
+        # ----------------------------------------------------
+        elif estado_solicitado == 'activo':
+
+            if lote.Estado_lote == 'Activo':
+                messages.error(
+                    request,
+                    f'El lote {lote.Numero_lote} ya está activo.'
+                )
+                return redirect('registrar_ingreso_lote')
+
+            if (
+                not lote.Fecha_vencimiento
+                or lote.Fecha_vencimiento <= hoy
+            ):
+                messages.error(
+                    request,
+                    'No se puede activar un lote vencido '
+                    'o sin fecha de vencimiento.'
+                )
+                return redirect('registrar_ingreso_lote')
+
+            if lote.Cantidad_actual <= 0:
+                messages.error(
+                    request,
+                    'No se puede activar un lote agotado.'
+                )
+                return redirect('registrar_ingreso_lote')
+
+            lote.Estado_lote = 'Activo'
+            lote.save(update_fields=['Estado_lote'])
+
+            messages.success(
+                request,
+                f'El lote {lote.Numero_lote} fue activado correctamente.'
+            )
+
+        else:
             messages.error(
                 request,
-                'No se puede activar un lote vencido '
-                'o sin fecha de vencimiento.'
+                'El estado solicitado no es válido.'
             )
-            return redirect('registrar_ingreso_lote')
-
-        if lote.Cantidad_actual <= 0:
-            messages.error(
-                request,
-                'No se puede activar un lote agotado.'
-            )
-            return redirect('registrar_ingreso_lote')
-
-        lote.Estado_lote = 'Activo'
-        lote.save(update_fields=['Estado_lote'])
-
-        messages.success(
-            request,
-            f'El lote {lote.Numero_lote} fue activado correctamente.'
-        )
-
-    else:
-        messages.error(
-            request,
-            'El estado solicitado no es válido.'
-        )
 
     return redirect('registrar_ingreso_lote')
 
-
    
-
-
 
 # ============================================================
 # MOVIMIENTOS DE STOCK

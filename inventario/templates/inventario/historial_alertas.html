@@ -211,55 +211,19 @@
                 <thead>
 
                     <tr>
-
-                        <th>
-                            Fecha
-                        </th>
-
-                        <th>
-                            Hora
-                        </th>
-
-                        <th>
-                            Tipo
-                        </th>
-
-                        <th>
-                            Producto
-                        </th>
-
-                        <th>
-                            Lote
-                        </th>
-
-                        <th>
-                            Mensaje
-                        </th>
-
-                        <th>
-                            Cantidad
-                        </th>
-
-                        <th>
-                            Stock mínimo
-                        </th>
-
-                        <th>
-                            Estado
-                        </th>
-
-                        <th>
-                            Atendida por
-                        </th>
-
-                        <th>
-                            Fecha de atención
-                        </th>
-
-                        <th>
-                            Hora de atención
-                        </th>
-
+                        <th class="al-centro">Fecha</th>
+                        <th class="al-centro">Hora</th>
+                        <th>Tipo</th>
+                        <th>Producto</th>
+                        <th>Lote</th>
+                        <th>Mensaje</th>
+                        <th>Cantidad</th>
+                        <th>Stock mínimo</th>
+                        <th>Estado</th>
+                        <th>Atendida por</th>
+                        <th class="al-centro">Fecha de atención</th>
+                        <th class="al-centro">Hora de atención</th>
+                        <th class="al-col-acciones">Acciones</th>
                     </tr>
 
                 </thead>
@@ -269,11 +233,11 @@
 
                     {% for alerta in alertas %}
 
-                        <tr>
+                        <tr class="{% if not alerta.atendida %}al-fila-pendiente{% endif %}">
 
                             <!-- FECHA Y HORA -->
-                         <td>{{ alerta.fecha|date:"d/m/Y" }}</td>
-                            <td>{{ alerta.fecha|date:"H:i" }}</td>
+                            <td class="al-centro">{{ alerta.fecha|date:"d/m/Y" }}</td>
+                            <td class="al-centro">{{ alerta.fecha|date:"H:i" }}</td>
 
                             <!-- TIPO -->
                             <td>
@@ -324,7 +288,7 @@
 
                                 {% else %}
 
-                                    —
+                                    Sin lote asociado
 
                                 {% endif %}
 
@@ -342,7 +306,7 @@
                             <!-- CANTIDAD -->
                             <td class="al-num">
 
-                                {{ alerta.cantidad|default:"—" }}
+                                {{ alerta.cantidad|default_if_none:"—" }}
 
                             </td>
 
@@ -350,12 +314,12 @@
                             <!-- STOCK MÍNIMO -->
                             <td class="al-num al-muted">
 
-                                {{ alerta.stock_minimo|default:"—" }}
+                                {{ alerta.stock_minimo|default_if_none:"—" }}
 
                             </td>
 
 
-                              <!-- ESTADO -->
+                            <!-- ESTADO -->
                             <td>
 
                                 {% if alerta.atendida %}
@@ -370,56 +334,87 @@
                                         Pendiente
                                     </span>
 
-                                    <form method="POST"
-                                          action="{% url 'atender_alerta' alerta.id %}">
-                                        {% csrf_token %}
-
-                                        <button type="submit"
-                                                class="al-btn al-btn-primary">
-                                            Atender alerta
-                                        </button>
-                                    </form>
-
                                 {% endif %}
 
                             </td>
 
 
-                            
                             <!-- ATENDIDA POR -->
                             <td class="al-muted">
 
                                 {% if alerta.atendida and alerta.usuario %}
-
-                                {{ alerta.usuario.Apellido_usuario }}
-                                {{ alerta.usuario.Nombre_usuario }}
-
-                            {% else %}
-
-                                —
-
-                            {% endif %}
+                                    {{ alerta.usuario.Apellido_usuario }}
+                                    {{ alerta.usuario.Nombre_usuario }}
+                                {% else %}
+                                    Pendiente de atención
+                                {% endif %}
 
                             </td>
 
-                        <!-- FECHA DE ATENCIÓN -->
-                            <td>
+
+                            <!-- FECHA DE ATENCIÓN -->
+                            <td class="al-centro">
+
                                 {% if alerta.atendida and alerta.fecha_atencion %}
-                                {{ alerta.fecha_atencion|date:"d/m/Y" }}
-                            {% else %}
-                                —
-                            {% endif %}
+                                    {{ alerta.fecha_atencion|date:"d/m/Y" }}
+                                {% else %}
+                                    <span class="al-muted">Sin atender</span>
+                                {% endif %}
+
                             </td>
 
-                        <!-- HORA DE ATENCIÓN -->
-                            <td>
-                        {% if alerta.atendida and alerta.fecha_atencion %}
-                                {{ alerta.fecha_atencion|date:"H:i" }}
-                        {% else %}
-                               —
-                        {% endif %}
+
+                            <!-- HORA DE ATENCIÓN -->
+                            <td class="al-centro">
+
+                                {% if alerta.atendida and alerta.fecha_atencion %}
+                                    {{ alerta.fecha_atencion|date:"H:i" }}
+                                {% else %}
+                                    <span class="al-muted">Sin atender</span>
+                                {% endif %}
+
                             </td>
 
+
+                            <!-- ACCIONES -->
+                            <td class="al-col-acciones">
+
+                                {% if alerta.atendida %}
+
+                                    <span class="al-hecho"
+                                          title="Alerta atendida">
+
+                                        <svg class="al-icon"
+                                             viewBox="0 0 24 24">
+                                            <path d="m5 12 4 4L19 6"/>
+                                        </svg>
+
+                                    </span>
+
+                                {% else %}
+
+                                    <form method="POST"
+                                          action="{% url 'atender_alerta' alerta.id %}"
+                                          class="al-form-atender">
+
+                                        {% csrf_token %}
+
+                                        <button type="submit"
+                                                class="al-btn-atender">
+
+                                            <svg class="al-icon"
+                                                 viewBox="0 0 24 24">
+                                                <path d="m5 12 4 4L19 6"/>
+                                            </svg>
+
+                                            Atender
+                                        </button>
+
+                                    </form>
+
+                                {% endif %}
+
+                            </td>
 
                         </tr>
 
@@ -429,7 +424,7 @@
                         <tr>
 
                             <td
-                                colspan="12"
+                                colspan="13"
                                 class="al-vacio"
                             >
 

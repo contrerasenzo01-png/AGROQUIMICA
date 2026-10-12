@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import timezone
 
 class TiposProductos(models.Model):
     ID_Tipo_producto = models.AutoField(primary_key=True)
@@ -362,19 +362,14 @@ class Lotes(models.Model):
         
     @property
     def estado_actual(self):
-        from django.utils import timezone
-
         hoy = timezone.localdate()
 
         if self.Fecha_vencimiento < hoy:
             return 'Vencido'
-
-        if self.Cantidad_actual <= 0:
-            return 'Agotado'
-
         if self.Estado_lote == 'Inactivo':
             return 'Inactivo'
-
+        if self.Cantidad_actual <= 0:
+            return 'Agotado'
         return 'Activo'
 
 
