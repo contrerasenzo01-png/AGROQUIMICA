@@ -10,7 +10,9 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-
+from django.contrib.staticfiles import finders
+from reportlab.lib.utils import ImageReader, simpleSplit
+from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -3321,7 +3323,306 @@ def atender_alerta(request, id_alerta):
 # COMPROBANTE PDF DE MOVIMIENTO
 # ============================================================
 
+# ============================================================
+# COMPROBANTE PDF DE MOVIMIENTO  ·  pegar en views.py
+# ============================================================
+#
+# 1) Agregá estos imports arriba de views.py (los que no tengas):
+#
+#    from django.contrib.staticfiles import finders
+#    from reportlab.lib.utils import ImageReader, simpleSplit
+#    from reportlab.pdfgen import canvas
+#
+# 2) Borrá la función comprobante_movimiento_pdf anterior y pegá
+#    TODO lo que sigue (las dos funciones).
+#
+# 3) Si tenés el logo en static, ajustá LOGO_STATIC a su ruta.
+#    Si no lo encuentra, dibuja un logo vectorial de reemplazo
+#    (sol, hoja y monograma AV), así que funciona sin archivo.
+#
+# Ya no hacen falta Paragraph, Spacer, Table, TableStyle,
+# SimpleDocTemplate, getSampleStyleSheet, ParagraphStyle ni
+# TA_CENTER si no los usás en otra parte.
+# ============================================================
+
+LOGO_STATIC = 'inventario/images/logo.png'
+
+
+def _dibujar_logo(c, x, y, tam):
+    """Logo vectorial de reemplazo: sol, hoja y monograma AV."""
+
+    from math import cos, sin, radians
+
+    c.saveState()
+
+    # Sol con rayos (arriba a la derecha).
+    cx = x + tam * 0.64
+    cy = y + tam * 0.90
+
+    c.setStrokeColor(colors.HexColor('#ffd54f'))
+    c.setLineWidth(1.3)
+
+    for grados in range(20, 181, 20):
+        angulo = radians(grados)
+        c.line(
+            cx + cos(angulo) * tam * 0.15,
+            cy + sin(angulo) * tam * 0.15,
+            cx + cos(angulo) * tam * 0.24,
+            cy + sin(angulo) * tam * 0.24,
+        )
+
+    c.setFillColor(colors.HexColor('#ffd54f'))
+    c.circle(cx, cy, tam * 0.11, stroke=0, fill=1)
+
+    # Hoja detrás de la V.
+    hoja = c.beginPath()
+    hoja.moveTo(x + tam * 0.42, y + tam * 0.02)
+    hoja.curveTo(
+        x + tam * 0.40, y + tam * 0.50,
+        x + tam * 0.72, y + tam * 0.78,
+        x + tam * 1.02, y + tam * 0.74
+    )
+    hoja.curveTo(
+        x + tam * 1.04, y + tam * 0.36,
+        x + tam * 0.80, y + tam * 0.06,
+        x + tam * 0.42, y + tam * 0.02
+    )
+    hoja.close()
+
+    c.setFillColor(colors.HexColor('#8bc34a'))
+    c.drawPath(hoja, stroke=0, fill=1)
+
+    # Monograma.
+    c.setFillColor(colors.white)
+    c.setFont('Times-BoldItalic', tam * 0.78)
+    c.drawCentredString(x + tam * 0.48, y + tam * 0.18, 'AV')
+
+    c.restoreState()
+
+
+def _dibujar_comprobante(buffer, filas, logo_path=None, generado=''):
+    """Dibuja el comprobante en un PDF A4 y lo escribe en buffer."""
+
+    ancho, alto = A4
+
+    verde_oscuro = colors.HexColor('#1b5e20')
+    verde_claro = colors.HexColor('#4caf50')
+    verde_medio = colors.HexColor('#2e7d32')
+    fondo_etiqueta = colors.HexColor('#eaf4e6')
+    fondo_fila_alt = colors.HexColor('#f6fbf4')
+    linea = colors.HexColor('#dcebd9')
+    borde = colors.HexColor('#c9e2c5')
+    texto = colors.HexColor('#333333')
+
+    c = canvas.Canvas(buffer, pagesize=A4)
+    c.setTitle('Comprobante de movimiento de stock')
+    c.setAuthor('Agroquímica del Valle')
+
+    # --------------------------------------------------------
+    # ENCABEZADO CON DEGRADADO
+    # --------------------------------------------------------
+
+    alto_enc = 3.6 * cm
+    y_enc = alto - alto_enc
+
+    c.saveState()
+
+    ruta = c.beginPath()
+    ruta.rect(0, y_enc, ancho, alto_enc)
+    c.clipPath(ruta, stroke=0, fill=0)
+
+    c.linearGradient(
+        0, y_enc, ancho, alto,
+        (verde_medio, verde_claro)
+    )
+
+    # Círculos decorativos translúcidos.
+    c.setFillColor(colors.white)
+    c.setFillAlpha(0.07)
+    c.circle(ancho * 0.30, y_enc + alto_enc * 0.35, 2.4 * cm, stroke=0, fill=1)
+    c.circle(ancho * 0.72, y_enc + alto_enc * 0.20, 2.8 * cm, stroke=0, fill=1)
+
+    c.restoreState()
+
+    # Logo.
+    x_logo = 2 * cm
+    y_logo = y_enc + (alto_enc - 2.1 * cm) / 2
+
+    logo_dibujado = False
+
+    if logo_path:
+        try:
+            c.drawImage(
+                ImageReader(logo_path),
+                x_logo, y_logo,
+                width=2.1 * cm, height=2.1 * cm,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
+            logo_dibujado = True
+        except Exception:
+            logo_dibujado = False
+
+    if not logo_dibujado:
+        _dibujar_logo(c, x_logo, y_logo, 2.1 * cm)
+
+    # Nombre de la empresa.
+    x_texto = x_logo + 2.5 * cm
+
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 15)
+    c.drawString(x_texto, y_enc + alto_enc / 2 + 0.55 * cm, 'AGROQUÍMICA DEL')
+    c.drawString(x_texto, y_enc + alto_enc / 2 - 0.05 * cm, 'VALLE')
+
+    c.setFillColor(colors.HexColor('#e3f3e0'))
+    c.setFont('Helvetica', 7.5)
+    c.drawString(
+        x_texto,
+        y_enc + alto_enc / 2 - 0.62 * cm,
+        'SISTEMA DE GESTIÓN DE STOCK'
+    )
+
+    # Título del documento (alineado a la derecha).
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 13)
+    c.drawRightString(
+        ancho - 2 * cm,
+        y_enc + alto_enc / 2 + 0.3 * cm,
+        'COMPROBANTE DE MOVIMIENTO DE'
+    )
+    c.drawRightString(
+        ancho - 2 * cm,
+        y_enc + alto_enc / 2 - 0.35 * cm,
+        'STOCK'
+    )
+
+    # --------------------------------------------------------
+    # TABLA DE DATOS
+    # --------------------------------------------------------
+
+    margen = 2 * cm
+    ancho_tabla = ancho - 2 * margen
+    ancho_col1 = ancho_tabla * 0.30
+    ancho_col2 = ancho_tabla - ancho_col1
+
+    tam_fuente = 9.5
+    interlineado = 13
+    padding = 12
+
+    # Altura de cada fila según el texto (se parte en renglones).
+    filas_calculadas = []
+
+    for etiqueta, valor in filas:
+        renglones = simpleSplit(
+            str(valor),
+            'Helvetica',
+            tam_fuente,
+            ancho_col2 - 2 * padding
+        ) or ['']
+
+        alto_fila = max(
+            1.05 * cm,
+            len(renglones) * interlineado + 2 * padding * 0.8
+        )
+
+        filas_calculadas.append((etiqueta, renglones, alto_fila))
+
+    alto_total = sum(f[2] for f in filas_calculadas)
+
+    y_tabla_top = y_enc - 1.5 * cm
+    y_tabla_bottom = y_tabla_top - alto_total
+
+    # Recorte con esquinas redondeadas.
+    c.saveState()
+
+    recorte = c.beginPath()
+    recorte.roundRect(
+        margen, y_tabla_bottom,
+        ancho_tabla, alto_total,
+        8
+    )
+    c.clipPath(recorte, stroke=0, fill=0)
+
+    y = y_tabla_top
+
+    for indice, (etiqueta, renglones, alto_fila) in enumerate(filas_calculadas):
+
+        y_base = y - alto_fila
+
+        # Fondo de la columna de etiquetas.
+        c.setFillColor(fondo_etiqueta)
+        c.rect(margen, y_base, ancho_col1, alto_fila, stroke=0, fill=1)
+
+        # Fondo de la columna de valores (filas alternadas).
+        c.setFillColor(fondo_fila_alt if indice % 2 else colors.white)
+        c.rect(
+            margen + ancho_col1, y_base,
+            ancho_col2, alto_fila,
+            stroke=0, fill=1
+        )
+
+        # Línea separadora.
+        if indice < len(filas_calculadas) - 1:
+            c.setStrokeColor(linea)
+            c.setLineWidth(0.6)
+            c.line(margen, y_base, margen + ancho_tabla, y_base)
+
+        # Etiqueta.
+        alto_texto = len(renglones) * interlineado
+        primer_renglon = y - (alto_fila - alto_texto) / 2 - 9
+
+        c.setFillColor(verde_oscuro)
+        c.setFont('Helvetica-Bold', tam_fuente)
+        c.drawString(margen + padding, primer_renglon, etiqueta)
+
+        # Valor.
+        c.setFillColor(texto)
+        c.setFont('Helvetica', tam_fuente)
+
+        for numero, renglon in enumerate(renglones):
+            c.drawString(
+                margen + ancho_col1 + padding,
+                primer_renglon - numero * interlineado,
+                renglon
+            )
+
+        y = y_base
+
+    c.restoreState()
+
+    # Borde exterior redondeado.
+    c.setStrokeColor(borde)
+    c.setLineWidth(0.9)
+    c.roundRect(
+        margen, y_tabla_bottom,
+        ancho_tabla, alto_total,
+        8, stroke=1, fill=0
+    )
+
+    # --------------------------------------------------------
+    # PIE
+    # --------------------------------------------------------
+
+    c.setFillColor(colors.HexColor('#7a8a7a'))
+    c.setFont('Helvetica', 8)
+    c.drawCentredString(
+        ancho / 2,
+        y_tabla_bottom - 1.0 * cm,
+        'Documento generado por el Sistema de Gestión de Stock.'
+    )
+
+    if generado:
+        c.drawCentredString(
+            ancho / 2,
+            y_tabla_bottom - 1.45 * cm,
+            f'Emitido el {generado}'
+        )
+
+    c.showPage()
+    c.save()
+
 def comprobante_movimiento_pdf(request, id_movimiento):
+
     usuario = usuario_es_administrador(request)
 
     if not usuario:
@@ -3333,115 +3634,113 @@ def comprobante_movimiento_pdf(request, id_movimiento):
             'ID_Tipo_movimiento',
             'ID_Lote',
             'ID_Lote__ID_Producto',
+            'ID_Lote__ID_Producto__ID_Tipo_producto',
+            'ID_Lote__ID_Producto__ID_Subtipo',
             'ID_Lote__ID_Proveedor',
         ),
         ID_Movimiento_stock=id_movimiento
     )
 
-    buffer = BytesIO()
+    # Pasar la fecha a la hora local (settings.TIME_ZONE) y darle
+    # formato legible, sin microsegundos ni zona horaria.
+    fecha_hora = movimiento.Fecha_hora_movimiento
 
-    documento = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=2 * cm,
-        leftMargin=2 * cm,
-        topMargin=2 * cm,
-        bottomMargin=2 * cm,
-    )
+    if timezone.is_aware(fecha_hora):
+        fecha_hora = timezone.localtime(fecha_hora)
 
-    estilos = getSampleStyleSheet()
-
-    titulo = ParagraphStyle(
-        'TituloComprobante',
-        parent=estilos['Title'],
-        alignment=TA_CENTER,
-        textColor=colors.HexColor('#0b311e'),
-        spaceAfter=18,
-    )
-
-    contenido = [
-        Paragraph('AGROQUÍMICA DEL VALLE', titulo),
-        Paragraph(
-            'COMPROBANTE DE MOVIMIENTO DE STOCK',
-            estilos['Heading2']
-        ),
-        Spacer(1, 15),
-    ]
-
-    datos = [
-        ['N.º de movimiento:', str(movimiento.ID_Movimiento_stock)],
-        ['Fecha y hora:', str(movimiento.Fecha_hora_movimiento)],
-        [
+    filas = [
+        ('N.º de movimiento:', str(movimiento.ID_Movimiento_stock)),
+        (
             'Tipo de movimiento:',
-            movimiento.ID_Tipo_movimiento.Nombre_tipo_movimiento,
-        ],
-        [
-            'Usuario responsable:',
-            str(movimiento.ID_Usuario.Usuario)
-            if movimiento.ID_Usuario else 'No disponible',
-        ],
-        ['Cantidad:', str(movimiento.Cantidad_movimiento_stock)],
-        [
-            'Observaciones:',
-            movimiento.Observaciones or 'Sin observaciones',
-        ],
+            movimiento.ID_Tipo_movimiento.Nombre_tipo_movimiento
+        ),
+        ('Fecha:', fecha_hora.strftime('%d/%m/%Y')),
+        ('Hora:', fecha_hora.strftime('%H:%M')),
     ]
 
     lote = movimiento.ID_Lote
+    cantidad = movimiento.Cantidad_movimiento_stock
 
     if lote:
         producto = lote.ID_Producto
 
-        datos.extend([
-            ['Producto:', producto.Nombre_producto],
-            ['Marca:', producto.Marca or 'No especificada'],
-            ['Número de lote:', str(lote.Numero_lote)],
-            [
-                'Proveedor:',
-                str(lote.ID_Proveedor.nombre_proveedor)
-                if lote.ID_Proveedor else 'No disponible',
-            ],
+        filas.extend([
+            ('Producto:', producto.Nombre_producto),
+            ('Marca:', producto.Marca or 'No especificada'),
         ])
 
-    tabla = Table(
-        datos,
-        colWidths=[5 * cm, 10 * cm]
-    )
+        if producto.ID_Tipo_producto:
+            filas.append((
+                'Tipo de producto:',
+                producto.ID_Tipo_producto.Nombre_tipo_producto
+            ))
 
-    tabla.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e5eee8')),
-        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#0b311e')),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 9),
-    ]))
+        if producto.ID_Subtipo:
+            filas.append((
+                'Subtipo:',
+                producto.ID_Subtipo.Nombre_subtipo
+            ))
 
-    contenido.append(tabla)
-    contenido.append(Spacer(1, 25))
-    contenido.append(Paragraph(
-        'Documento generado por el Sistema de Gestión de Productos.',
-        estilos['Normal']
+        filas.extend([
+            ('Número de lote:', str(lote.Numero_lote)),
+            (
+                'Proveedor:',
+                lote.ID_Proveedor.nombre_proveedor
+                if lote.ID_Proveedor else 'No disponible'
+            ),
+        ])
+
+        if lote.Fecha_vencimiento:
+            filas.append((
+                'Fecha de vencimiento:',
+                lote.Fecha_vencimiento.strftime('%d/%m/%Y')
+            ))
+
+    filas.append((
+        'Cantidad:',
+        f'{cantidad} unidad' if cantidad == 1 else f'{cantidad} unidades'
     ))
 
-    documento.build(contenido)
+    if (
+        lote
+        and producto.Cantidad_presentacion
+        and producto.Unidad_medida_producto
+    ):
+        filas.append((
+            'Presentación:',
+            f'{producto.Cantidad_presentacion.normalize():f} '
+            f'{producto.Unidad_medida_producto}'
+        ))
+
+    filas.extend([
+        ('Observaciones:', movimiento.Observaciones or 'Sin observaciones'),
+        (
+            'Usuario responsable:',
+            movimiento.ID_Usuario.Usuario
+            if movimiento.ID_Usuario else 'No disponible'
+        ),
+    ])
+
+    buffer = BytesIO()
+
+    _dibujar_comprobante(
+        buffer,
+        filas,
+        logo_path=finders.find(LOGO_STATIC),
+        generado=timezone.localtime().strftime('%d/%m/%Y %H:%M')
+    )
 
     pdf = buffer.getvalue()
     buffer.close()
-    
+
     respuesta = HttpResponse(
         pdf,
         content_type='application/pdf'
     )
-    respuesta['Content-Disposition'] = (
-        f'attachment; filename="comprobante_movimiento_{id_movimiento}.pdf"'
-    )
 
-    respuesta['Content-Length'] = str(len(pdf))
+    respuesta['Content-Disposition'] = (
+        f'inline; filename="comprobante_movimiento_{id_movimiento}.pdf"'
+    )
+    respuesta['Content-Length'] = len(pdf)
 
     return respuesta
