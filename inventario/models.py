@@ -333,8 +333,10 @@ class Lotes(models.Model):
         related_name='lotes'
     )
 
-    Numero_lote = models.CharField(max_length=50)
-
+    Numero_lote = models.CharField(
+        max_length=50,
+        unique=True
+    )   
     Cantidad_ingresada = models.IntegerField()
 
     Cantidad_actual = models.IntegerField()

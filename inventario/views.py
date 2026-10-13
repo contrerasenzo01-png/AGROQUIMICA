@@ -5,8 +5,8 @@ import unicodedata
 from django.db.models import Count, Q
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
-from django.db import transaction
 from django.http import HttpResponse
+from django.db import DatabaseError, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -2262,6 +2262,30 @@ def cambiar_estado_producto(request, pk):
 # GESTIÓN DE LOTES
 # ============================================================
 
+
+def generar_siguiente_numero_lote():
+    """Genera el siguiente número correlativo de lote."""
+
+    numeros = Lotes.objects.values_list(
+        'Numero_lote',
+        flat=True
+    )
+
+    mayor_numero = 0
+
+    for numero in numeros:
+        if numero and numero.upper().startswith('LOTE-'):
+            sufijo = numero[5:]
+
+            if sufijo.isdigit():
+                mayor_numero = max(
+                    mayor_numero,
+                    int(sufijo)
+                )
+
+    return f'LOTE-{mayor_numero + 1:04d}'
+
+
 def registrar_ingreso_lote(request):
     """Registra lotes nuevos y muestra el listado de lotes."""
 
@@ -2286,10 +2310,6 @@ def registrar_ingreso_lote(request):
             ''
         ).strip()
 
-        numero_lote = request.POST.get(
-            'Numero_lote',
-            ''
-        ).strip()
 
         cantidad_input = request.POST.get(
             'Cantidad_ingresada',
@@ -2314,14 +2334,9 @@ def registrar_ingreso_lote(request):
             )
 
             return redirect('registrar_ingreso_lote')
+        
 
-        if not numero_lote:
-            messages.error(
-                request,
-                'Debe ingresar el número de lote.'
-            )
 
-            return redirect('registrar_ingreso_lote')
 
         try:
             cantidad = int(cantidad_input)
@@ -2390,25 +2405,10 @@ def registrar_ingreso_lote(request):
             Estado_producto='Activo'
         )
 
-        # ----------------------------------------------------
-        # VALIDAR NÚMERO DE LOTE DUPLICADO
-        # ----------------------------------------------------
+        numero_lote = generar_siguiente_numero_lote()
+    
 
-        lote_existente = Lotes.objects.filter(
-            ID_Proveedor=proveedor,
-            ID_Producto=producto,
-            Numero_lote__iexact=numero_lote
-        ).exists()
-
-        if lote_existente:
-            messages.error(
-                request,
-                'Ya existe un lote con ese número para el '
-                'producto y proveedor seleccionados.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-
+    
         # ----------------------------------------------------
         # BUSCAR TIPO DE MOVIMIENTO DE ENTRADA
         # ----------------------------------------------------
@@ -2468,11 +2468,11 @@ def registrar_ingreso_lote(request):
                     Observaciones='Entrada de lote'
                 )
 
-        except Exception:
+        except DatabaseError:
             messages.error(
                 request,
-                'No se pudo registrar el lote. Verifique los datos '
-                'y vuelva a intentarlo.'
+                'No se pudo registrar el lote por un problema '
+                'con la base de datos.'
             )
 
             return redirect('registrar_ingreso_lote')
@@ -2550,6 +2550,18 @@ def registrar_ingreso_lote(request):
         'nombre_proveedor'
     )
 
+    # MARCAS PARA FILTRAR LOS PRODUCTOS
+    marcas = (
+        Productos.objects
+        .filter(Estado_producto='Activo')
+        .exclude(Marca__isnull=True)
+        .exclude(Marca__exact='')
+        .values_list('Marca', flat=True)
+        .distinct()
+        .order_by('Marca')
+    )
+
+
 
     return render(
         request,
@@ -2557,8 +2569,10 @@ def registrar_ingreso_lote(request):
         {
             'usuario': usuario,
             'lotes': lotes,
+            'marcas': marcas,
             'productos': productos,
             'proveedores': proveedores,
+            'siguiente_numero_lote': generar_siguiente_numero_lote(),
             'busqueda': busqueda,
             'estado_filtro': estado_filtro,
             'hoy': hoy,
@@ -2572,7 +2586,7 @@ def registrar_ingreso_lote(request):
 # ============================================================
 
 def editar_lote(request, id):
-    """Permite editar el número, proveedor y vencimiento de un lote."""
+    """Permite editar el proveedor y vencimiento de un lote."""
 
     usuario = usuario_es_administrador(request)
 
@@ -2591,11 +2605,7 @@ def editar_lote(request, id):
         return redirect('registrar_ingreso_lote')
     
 
-    numero_lote = request.POST.get(
-        'Numero_lote',
-        ''
-    ).strip()
-
+   
     proveedor_id = request.POST.get(
         'ID_Proveedor',
         ''
@@ -2606,8 +2616,7 @@ def editar_lote(request, id):
         ''
     ).strip()
 
-    if request.method != 'POST':
-        return redirect('registrar_ingreso_lote')
+
 
     if (
         lote.Estado_lote == 'Inactivo'
@@ -2619,17 +2628,6 @@ def editar_lote(request, id):
         )
         return redirect('registrar_ingreso_lote')
 
-    # --------------------------------------------------------
-    # VALIDAR NÚMERO DE LOTE
-    # --------------------------------------------------------
-
-    if not numero_lote:
-        messages.error(
-            request,
-            'Debe ingresar el número de lote.'
-        )
-
-        return redirect('registrar_ingreso_lote')
 
     # No permitir cambiar el producto de un lote existente.
     producto_id_recibido = request.POST.get(
@@ -2699,38 +2697,16 @@ def editar_lote(request, id):
         estado_proveedor=True
     )
 
-    # --------------------------------------------------------
-    # EVITAR DUPLICADOS
-    # --------------------------------------------------------
-
-    duplicado = Lotes.objects.filter(
-        Numero_lote__iexact=numero_lote,
-        ID_Producto=lote.ID_Producto,
-        ID_Proveedor=proveedor
-    ).exclude(
-        ID_Lote=lote.ID_Lote
-    ).exists()
-
-    if duplicado:
-        messages.error(
-            request,
-            'Ya existe un lote con ese número para el producto '
-            'y proveedor seleccionados.'
-        )
-
-        return redirect('registrar_ingreso_lote')
 
     # --------------------------------------------------------
     # GUARDAR CAMBIOS
     # --------------------------------------------------------
 
-    lote.Numero_lote = numero_lote
     lote.ID_Proveedor = proveedor
     lote.Fecha_vencimiento = fecha_vencimiento
 
     lote.save(
         update_fields=[
-            'Numero_lote',
             'ID_Proveedor',
             'Fecha_vencimiento'
         ]
@@ -2883,6 +2859,7 @@ def gestion_movimientos_stock(request):
         )
 
     todos_tipos = TiposMovimientos.objects.all()
+
 
     # Las entradas se registran desde Ingreso de Lote.
     tipos_movimientos = TiposMovimientos.objects.exclude(
@@ -3620,6 +3597,7 @@ def _dibujar_comprobante(buffer, filas, logo_path=None, generado=''):
 
     c.showPage()
     c.save()
+
 
 def comprobante_movimiento_pdf(request, id_movimiento):
 
