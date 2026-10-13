@@ -34,6 +34,8 @@ ALLOWED_HOSTS = [
     'program-processes-elections-piece.trycloudflare.com',
     'feeding-longitude-aluminum-ingredients.trycloudflare.com',
     'but-laptops-patrol-tent.trycloudflare.com',
+    'kinase-rpg-tropical-merchants.trycloudflare.com',
+    
 
 
 ]
@@ -42,6 +44,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://program-processes-elections-piece.trycloudflare.com',
     'https://feeding-longitude-aluminum-ingredients.trycloudflare.com',
     'https://but-laptops-patrol-tent.trycloudflare.com',
+    'https://kinase-rpg-tropical-merchants.trycloudflare.com',
 
 ]
 
