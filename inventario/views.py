@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.staticfiles import finders
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
+import re
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -89,6 +90,19 @@ def usuario_es_administrador(request):
         return None
 
     if usuario.ID_Perfil.Nombre_perfil not in PERFILES_ADMIN:
+        return None
+
+    return usuario
+
+def usuario_es_vendedor(request):
+    """Verifica que el usuario tenga el perfil Vendedor 1."""
+
+    usuario = usuario_autenticado(request)
+
+    if not usuario:
+        return None
+
+    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor 1':
         return None
 
     return usuario
@@ -1779,20 +1793,22 @@ def eliminar_permiso(request, pk):
     return redirect('gestion_permisos')
 
 
+
 # ============================================================
 # MIS PERMISOS
 # ============================================================
 
 def mis_permisos(request):
-
     usuario = usuario_autenticado(request)
 
     if not usuario:
         return redirect('login')
 
-    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor':
+    # Solo permite acceder a Vendedor 1.
+    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor 1':
         return redirect('panel_principal')
 
+    # Obtiene los permisos asignados al perfil del usuario.
     permisos = usuario.ID_Perfil.permisos.all()
 
     return render(
@@ -1801,9 +1817,9 @@ def mis_permisos(request):
         {
             'usuario': usuario,
             'permisos': permisos,
+            'activo': 'mis_permisos',
         }
     )
-
 
 
 # ============================================================
@@ -2264,26 +2280,19 @@ def cambiar_estado_producto(request, pk):
 
 
 def generar_siguiente_numero_lote():
-    """Genera el siguiente número correlativo de lote."""
+    """Genera el siguiente número de lote con el formato AV-0006-006."""
 
-    numeros = Lotes.objects.values_list(
-        'Numero_lote',
-        flat=True
-    )
+    mayor = 0
 
-    mayor_numero = 0
+    for numero in Lotes.objects.filter(
+        Numero_lote__startswith='AV-'
+    ).values_list('Numero_lote', flat=True):
+        coincidencia = re.match(r'^AV-(\d+)-\d+$', numero)
 
-    for numero in numeros:
-        if numero and numero.upper().startswith('LOTE-'):
-            sufijo = numero[5:]
+        if coincidencia:
+            mayor = max(mayor, int(coincidencia.group(1)))
 
-            if sufijo.isdigit():
-                mayor_numero = max(
-                    mayor_numero,
-                    int(sufijo)
-                )
-
-    return f'LOTE-{mayor_numero + 1:04d}'
+    return f'AV-{mayor + 1:04d}-{mayor + 1:03d}'
 
 
 def registrar_ingreso_lote(request):
@@ -2405,7 +2414,6 @@ def registrar_ingreso_lote(request):
             Estado_producto='Activo'
         )
 
-        numero_lote = generar_siguiente_numero_lote()
     
 
     
@@ -2433,6 +2441,8 @@ def registrar_ingreso_lote(request):
 
         try:
             with transaction.atomic():
+                numero_lote = generar_siguiente_numero_lote()
+
 
                 lote = Lotes.objects.create(
                     ID_Proveedor=proveedor,
@@ -2478,8 +2488,11 @@ def registrar_ingreso_lote(request):
             return redirect('registrar_ingreso_lote')
 
         messages.success(
+            
             request,
-            'Ingreso de lote registrado correctamente.'
+            f'Ingreso de lote registrado correctamente.'
+            f'Número asignado: {numero_lote}.'
+
         )
 
         return redirect('registrar_ingreso_lote')
@@ -2490,6 +2503,7 @@ def registrar_ingreso_lote(request):
 
     busqueda = request.GET.get('q', '').strip()
     estado_filtro = request.GET.get('estado', '').strip()
+    marca_filtro = request.GET.get('marca', '').strip()
 
     lotes = Lotes.objects.select_related(
         'ID_Producto',
@@ -2504,6 +2518,11 @@ def registrar_ingreso_lote(request):
             Q(Numero_lote__icontains=busqueda) |
             Q(ID_Producto__Nombre_producto__icontains=busqueda) |
             Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
+        )
+   
+    if marca_filtro:
+        lotes = lotes.filter(
+            ID_Producto__Marca=marca_filtro
         )
 
     
@@ -2575,6 +2594,7 @@ def registrar_ingreso_lote(request):
             'siguiente_numero_lote': generar_siguiente_numero_lote(),
             'busqueda': busqueda,
             'estado_filtro': estado_filtro,
+            'marca_filtro': marca_filtro,
             'hoy': hoy,
             'limite': hoy + timedelta(days=30),
         }
@@ -2829,8 +2849,13 @@ def cambiar_estado_lote(request, id):
 # MOVIMIENTOS DE STOCK
 # ============================================================
 
+
 def gestion_movimientos_stock(request):
     usuario = usuario_es_administrador(request)
+
+    # Si no es administrador, comprobar si es Vendedor 1.
+    if not usuario:
+        usuario = usuario_es_vendedor(request)
 
     if not usuario:
         return redirect('panel_principal')
@@ -2860,8 +2885,6 @@ def gestion_movimientos_stock(request):
 
     todos_tipos = TiposMovimientos.objects.all()
 
-
-    # Las entradas se registran desde Ingreso de Lote.
     tipos_movimientos = TiposMovimientos.objects.exclude(
         Nombre_tipo_movimiento__iexact='Entrada de lote'
     )
@@ -2882,8 +2905,10 @@ def gestion_movimientos_stock(request):
             'busqueda': busqueda,
             'tipo_sel': tipo_sel,
             'usuario': usuario,
+            'activo': 'movimientos',
         }
     )
+
 
 
 def crear_movimiento_stock(request):

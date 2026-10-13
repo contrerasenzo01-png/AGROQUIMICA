@@ -332,12 +332,11 @@
                 <div class="lt-campo">
                     <label for="Numero_lote">Número de lote</label>
                     <input type="text"
-                        name="Numero_lote"
                         id="Numero_lote"
                         value="{{ siguiente_numero_lote }}"
-                        readonly
-                        required>
+                        readonly>
                 </div>
+
 
                 <div class="lt-campo">
                     <label for="Cantidad_ingresada">Cantidad ingresada</label>
@@ -582,6 +581,7 @@
             ? 'Seleccionar producto'
             : 'Primero seleccioná una marca';
     }
+    
 
     selectorMarca.addEventListener('change', filtrarProductosPorMarca);
 

@@ -106,25 +106,18 @@
 
 <aside class="sidebar" id="sidebar">
 
-
     <!-- LOGO -->
-
     <div class="sidebar-logo">
 
         <div class="logo-icon">
-
             <svg class="logo-svg">
                 <use href="#i-leaf"></use>
             </svg>
-
         </div>
 
         <div class="logo-text">
-
             <strong>Agroquímica</strong>
-
             <span>del Valle</span>
-
         </div>
 
     </div>
@@ -136,11 +129,8 @@
 
     <nav class="sidebar-nav">
 
-
-        <!-- PANEL PRINCIPAL -->
-
+        <!-- PANEL PRINCIPAL: AMBOS PERFILES -->
         <div class="nav-item">
-
             <a href="{% url 'panel_principal' %}"
                class="nav-link {% if activo == 'panel' %}active{% endif %}">
 
@@ -149,30 +139,22 @@
                 </svg>
 
                 <span>Panel Principal</span>
-
             </a>
-
         </div>
 
 
-        <!-- ==========================================
-             MENÚ PARA VENDEDOR
-             ========================================== -->
+        {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor 1' %}
 
-        {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor' %}
-
-
-            <!-- SECCIÓN GESTIÓN -->
+            <!-- ==========================================
+                 MENÚ PARA VENDEDOR
+                 ========================================== -->
 
             <div class="nav-section">
                 <span class="nav-section-title">GESTIÓN</span>
             </div>
 
-
             <!-- PRODUCTOS -->
-
             <div class="nav-item">
-
                 <a href="{% url 'gestion_productos' %}"
                    class="nav-link {% if activo == 'productos' %}active{% endif %}">
 
@@ -181,174 +163,10 @@
                     </svg>
 
                     <span>Productos</span>
-
                 </a>
-
             </div>
-
-
-            <!-- TIPOS DE PRODUCTOS -->
 
             <div class="nav-item">
-
-                <a href="{% url 'gestion_tipos_productos' %}"
-                   class="nav-link {% if activo == 'tipos' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-layers"></use>
-                    </svg>
-
-                    <span>Tipos de Productos</span>
-
-                </a>
-
-            </div>
-
-
-            <!-- MIS PERMISOS -->
-
-            <div class="nav-item">
-
-                <a href="{% url 'mis_permisos' %}"
-                   class="nav-link {% if activo == 'mis_permisos' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-key"></use>
-                    </svg>
-
-                    <span>Mis permisos</span>
-
-                </a>
-
-            </div>
-
-
-        {% else %}
-
-
-            <!-- ==========================================
-                 MENÚ PARA ADMINISTRADOR
-                 ========================================== -->
-
-            <!-- SECCIÓN ADMINISTRACIÓN -->
-
-            <div class="nav-section">
-                <span class="nav-section-title">ADMINISTRACIÓN</span>
-            </div>
-
-
-            <!-- USUARIOS -->
-
-            <div class="nav-item">
-
-                <a href="{% url 'gestion_usuarios' %}"
-                   class="nav-link {% if activo == 'usuarios' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-users"></use>
-                    </svg>
-
-                    <span>Usuarios del sistema</span>
-
-                </a>
-
-            </div>
-
-
-            <!-- PRODUCTOS -->
-
-            <div class="nav-item">
-
-                <a href="{% url 'gestion_productos' %}"
-                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-
-                    <span>Productos</span>
-
-                </a>
-
-            </div>
-
-
-            <!-- TIPOS DE PRODUCTOS -->
-
-            <div class="nav-item">
-
-                <a href="{% url 'gestion_tipos_productos' %}"
-                   class="nav-link {% if activo == 'tipos' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-layers"></use>
-                    </svg>
-
-                    <span>Tipos de Productos</span>
-
-                </a>
-
-            </div>
-
-
-            <!-- SUBTIPOS -->
-
-            <div class="nav-item">
-
-                <a href="{% url 'gestion_subtipos' %}"
-                   class="nav-link {% if activo == 'subtipos' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-tags"></use>
-                    </svg>
-
-                    <span>Subtipos</span>
-
-                </a>
-
-            </div>
-
-
-            <!-- PROVEEDORES -->
-
-            <div class="nav-item">
-
-                <a href="{% url 'gestion_proveedores' %}"
-                   class="nav-link {% if activo == 'proveedores' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-truck"></use>
-                    </svg>
-
-                    <span>Proveedores</span>
-
-                </a>
-
-            </div>
-
-
-            <!-- INGRESO DE LOTE -->
-
-            <div class="nav-item">
-
-                <a href="{% url 'registrar_ingreso_lote' %}"
-                   class="nav-link {% if activo == 'lotes' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-inbox"></use>
-                    </svg>
-
-                    <span>Lotes</span>
-
-                </a>
-
-            </div>
-
-
-            <!-- MOVIMIENTOS DE STOCK -->
-
-            <div class="nav-item">
-
                 <a href="{% url 'gestion_movimientos_stock' %}"
                    class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
 
@@ -357,16 +175,113 @@
                     </svg>
 
                     <span>Movimientos de stock</span>
-
                 </a>
-
             </div>
 
 
-            <!-- HISTORIAL DE ALERTAS -->
+        {% else %}
 
+            <!-- ==========================================
+                 MENÚ PARA ADMINISTRADOR
+                 ========================================== -->
+
+            <div class="nav-section">
+                <span class="nav-section-title">ADMINISTRACIÓN</span>
+            </div>
+
+            <!-- USUARIOS -->
             <div class="nav-item">
+                <a href="{% url 'gestion_usuarios' %}"
+                   class="nav-link {% if activo == 'usuarios' %}active{% endif %}">
 
+                    <svg class="nav-icon">
+                        <use href="#i-users"></use>
+                    </svg>
+
+                    <span>Usuarios del sistema</span>
+                </a>
+            </div>
+
+            <!-- PRODUCTOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_productos' %}"
+                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-package"></use>
+                    </svg>
+
+                    <span>Productos</span>
+                </a>
+            </div>
+
+            <!-- TIPOS DE PRODUCTOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_tipos_productos' %}"
+                   class="nav-link {% if activo == 'tipos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-layers"></use>
+                    </svg>
+
+                    <span>Tipos de Productos</span>
+                </a>
+            </div>
+
+            <!-- SUBTIPOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_subtipos' %}"
+                   class="nav-link {% if activo == 'subtipos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-tags"></use>
+                    </svg>
+
+                    <span>Subtipos</span>
+                </a>
+            </div>
+
+            <!-- PROVEEDORES -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_proveedores' %}"
+                   class="nav-link {% if activo == 'proveedores' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-truck"></use>
+                    </svg>
+
+                    <span>Proveedores</span>
+                </a>
+            </div>
+
+            <!-- LOTES -->
+            <div class="nav-item">
+                <a href="{% url 'registrar_ingreso_lote' %}"
+                   class="nav-link {% if activo == 'lotes' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-inbox"></use>
+                    </svg>
+
+                    <span>Lotes</span>
+                </a>
+            </div>
+
+            <!-- MOVIMIENTOS DE STOCK -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_movimientos_stock' %}"
+                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-swap"></use>
+                    </svg>
+
+                    <span>Movimientos de stock</span>
+                </a>
+            </div>
+
+            <!-- HISTORIAL DE ALERTAS -->
+            <div class="nav-item">
                 <a href="{% url 'historial_alertas' %}"
                    class="nav-link {% if activo == 'alertas' %}active{% endif %}">
 
@@ -375,25 +290,17 @@
                     </svg>
 
                     <span>Historial de Alertas</span>
-
                 </a>
-
             </div>
 
 
-            <!-- ==========================================
-                 SECCIÓN SEGURIDAD
-                 ========================================== -->
-
+            <!-- SECCIÓN SEGURIDAD -->
             <div class="nav-section">
                 <span class="nav-section-title">SEGURIDAD</span>
             </div>
 
-
             <!-- PERFILES -->
-
             <div class="nav-item">
-
                 <a href="{% url 'gestion_perfiles' %}"
                    class="nav-link {% if activo == 'perfiles' %}active{% endif %}">
 
@@ -402,16 +309,11 @@
                     </svg>
 
                     <span>Perfiles de acceso</span>
-
                 </a>
-
             </div>
 
-
             <!-- PERMISOS -->
-
             <div class="nav-item">
-
                 <a href="{% url 'gestion_permisos' %}"
                    class="nav-link {% if activo == 'permisos' %}active{% endif %}">
 
@@ -420,11 +322,8 @@
                     </svg>
 
                     <span>Permisos del sistema</span>
-
                 </a>
-
             </div>
-
 
         {% endif %}
 
@@ -437,9 +336,7 @@
 
     <div class="sidebar-footer">
 
-
         <!-- INFORMACIÓN DEL USUARIO -->
-
         <div class="sidebar-user">
 
             <div class="sidebar-user-avatar">
@@ -457,12 +354,9 @@
                 </span>
 
             </div>
-
         </div>
 
-
         <!-- CERRAR SESIÓN -->
-
         <a href="{% url 'cerrar_sesion' %}"
            class="logout-link">
 
@@ -471,7 +365,6 @@
             </svg>
 
             <span>Cerrar sesión</span>
-
         </a>
 
     </div>

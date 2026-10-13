@@ -76,5 +76,7 @@ urlpatterns = [
     path('permisos/crear/', views.crear_permiso, name='crear_permiso'),
     path('permisos/editar/<int:pk>/', views.editar_permiso, name='editar_permiso'),
     path('permisos/eliminar/<int:pk>/', views.eliminar_permiso, name='eliminar_permiso'),
+
+    path('mis-permisos/', views.mis_permisos, name='mis_permisos'),
     
 ]
