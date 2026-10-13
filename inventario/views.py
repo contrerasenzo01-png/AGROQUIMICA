@@ -3629,8 +3629,11 @@ def comprobante_movimiento_pdf(request, id_movimiento):
     usuario = usuario_es_administrador(request)
 
     if not usuario:
-        return redirect('panel_principal')
+        usuario = usuario_es_vendedor(request)
 
+    if not usuario:
+        return redirect('panel_principal')
+    
     movimiento = get_object_or_404(
         MovimientosStock.objects.select_related(
             'ID_Usuario',

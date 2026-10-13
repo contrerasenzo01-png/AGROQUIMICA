@@ -178,6 +178,18 @@
                 </a>
             </div>
 
+            <div class="nav-item">
+                <a href="{% url 'mis_permisos' %}"
+                class="nav-link {% if activo == 'mis_permisos' %}active{% endif %}">
+
+                    <svg class="nav-icon">
+                        <use href="#i-key"></use>
+                    </svg>
+
+                    <span>Mis permisos</span>
+                </a>
+            </div>
+
 
         {% else %}
 
