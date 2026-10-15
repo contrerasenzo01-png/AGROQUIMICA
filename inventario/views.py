@@ -471,6 +471,7 @@ def cambiar_estado_proveedor(request, pk):
     return redirect('gestion_proveedores')
 
 
+
 # ============================================================
 # TIPOS DE PRODUCTOS
 # ============================================================
@@ -490,6 +491,12 @@ def gestion_tipos_productos(request):
         tipos = tipos.filter(
             Nombre_tipo_producto__icontains=busqueda
         )
+
+    # Contar los productos asociados a cada tipo
+    for tipo in tipos:
+        tipo.cantidad_productos = Productos.objects.filter(
+            ID_Tipo_producto=tipo
+        ).count()
 
     return render(
         request,
@@ -602,49 +609,39 @@ def editar_tipo_producto(request, pk):
     return redirect('gestion_tipos_productos')
 
 
-def dar_baja_tipo_producto(request, pk):
 
+def eliminar_tipo_producto(request, pk):
     usuario = usuario_autenticado(request)
 
     if not usuario:
         return redirect('login')
+
+    # Solo permitir la eliminación mediante POST
+    if request.method != 'POST':
+        return redirect('gestion_tipos_productos')
 
     tipo = get_object_or_404(
         TiposProductos,
         ID_Tipo_producto=pk
     )
 
-    if request.method == 'POST':
+    # Verificar cuántos productos están asociados al tipo
+    cantidad_productos = Productos.objects.filter(
+        ID_Tipo_producto=tipo
+    ).count()
 
-        estado = request.POST.get('estado')
+    if cantidad_productos > 0:
+        messages.error(
+            request,
+            'No se puede eliminar este tipo de producto porque tiene productos asociados.'
+        )
+    else:
+        tipo.delete()
 
-        if estado == 'activo':
-
-            tipo.Estado_tipo_producto = True
-
-            messages.success(
-                request,
-                'Tipo de producto activado correctamente.'
-            )
-
-        elif estado == 'inactivo':
-
-            tipo.Estado_tipo_producto = False
-
-            messages.success(
-                request,
-                'Tipo de producto dado de baja correctamente.'
-            )
-
-        else:
-            messages.error(
-                request,
-                'El estado solicitado no es válido.'
-            )
-
-            return redirect('gestion_tipos_productos')
-
-        tipo.save()
+        messages.success(
+            request,
+            'Tipo de producto eliminado correctamente.'
+        )
 
     return redirect('gestion_tipos_productos')
 

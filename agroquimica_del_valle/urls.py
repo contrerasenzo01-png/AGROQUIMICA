@@ -20,7 +20,7 @@ urlpatterns = [
     path('tipos-productos/', views.gestion_tipos_productos, name='gestion_tipos_productos'),
     path('tipos-productos/crear/', views.crear_tipo_producto, name='crear_tipo_producto'),
     path('tipos-productos/editar/<int:pk>/', views.editar_tipo_producto, name='editar_tipo_producto'),
-    path('tipos-productos/baja/<int:pk>/', views.dar_baja_tipo_producto, name='dar_baja_tipo_producto'),
+    path('tipos-productos/eliminar/<int:pk>/', views.eliminar_tipo_producto, name='eliminar_tipo_producto'),
 
     # Subtipos
     path('subtipos/', views.gestion_subtipos, name='gestion_subtipos'),
