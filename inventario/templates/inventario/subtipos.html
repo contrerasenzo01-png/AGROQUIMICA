@@ -77,7 +77,6 @@
                         <th>Nombre</th>
                         <th>Tipo de producto</th>
                         <th>Descripción</th>
-                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -86,7 +85,8 @@
 
                     {% for subtipo in subtipos %}
 
-                        <tr class="{% if not subtipo.Estado_subtipo %}inactivo{% endif %}">
+                        <tr>
+
 
                             <td><span class="ts-nombre">{{ subtipo.Nombre_subtipo }}</span></td>
 
@@ -94,13 +94,7 @@
 
                             <td class="ts-muted">{{ subtipo.Descripcion_subtipo|default:"—" }}</td>
 
-                            <td>
-                                {% if subtipo.Estado_subtipo %}
-                                    <span class="ts-badge ts-activo">Activo</span>
-                                {% else %}
-                                    <span class="ts-badge ts-inactivo">Inactivo</span>
-                                {% endif %}
-                            </td>
+                        
 
                             <td>
                                 <div class="ts-acciones">
@@ -115,31 +109,7 @@
                                         )">
                                         <svg class="ts-icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
                                     </button>
-
-                                    {% if subtipo.Estado_subtipo %}
-
-                                        <!-- DAR DE BAJA (papelera): abre el modal -->
-                                        <button type="button" class="ts-icon-btn ts-peligro" title="Dar de baja" aria-label="Dar de baja"
-                                            onclick="abrirModalBaja(
-                                                '{{ subtipo.Nombre_subtipo|escapejs }}',
-                                                '{{ subtipo.ID_Tipo_producto.Nombre_tipo_producto|escapejs }}',
-                                                '{{ subtipo.Descripcion_subtipo|default:''|escapejs }}',
-                                                '{% url 'cambiar_estado_subtipo' subtipo.ID_Subtipo %}'
-                                            )">
-                                            <svg class="ts-icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                        </button>
-
-                                    {% else %}
-
-                                        <!-- ACTIVAR (tilde): se envía directo -->
-                                        <form method="POST" action="{% url 'cambiar_estado_subtipo' subtipo.ID_Subtipo %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="ts-icon-btn ts-activar" title="Activar subtipo" aria-label="Activar subtipo">
-                                                <svg class="ts-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-                                            </button>
-                                        </form>
-
-                                    {% endif %}
+ 
                                 </div>
                             </td>
 
@@ -148,7 +118,7 @@
                     {% empty %}
 
                         <tr>
-                            <td colspan="5" class="ts-vacio">No hay subtipos registrados.</td>
+                            <td colspan="4" class="ts-vacio">No hay subtipos registrados.</td>
                         </tr>
 
                     {% endfor %}
@@ -163,7 +133,7 @@
             <span>
                 {{ subtipos|length }} registro{{ subtipos|length|pluralize }} encontrado{{ subtipos|length|pluralize }}
             </span>
-            <span>Agroquímicos del Valle</span>
+            <span>Agroquímica del Valle</span>
         </div>
 
     </section>
@@ -222,64 +192,6 @@
 
 </div>
 
-<!-- ===================== MODAL DAR DE BAJA SUBTIPO ===================== -->
-<div class="ts-modal" id="modalBaja">
-
-    <div class="ts-modal-box ts-modal-ancho">
-
-        <div class="ts-modal-head">
-            <h2>Dar de baja subtipo</h2>
-            <button type="button" class="ts-modal-x" onclick="cerrarModalBaja()" aria-label="Cerrar">
-                <svg class="ts-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
-        </div>
-
-        <form method="POST" id="formBaja" action="">
-
-            {% csrf_token %}
-
-            <div class="ts-conf-body">
-
-                <div class="ts-conf-icono">
-                    <svg class="ts-icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </div>
-
-                <h3 class="ts-conf-pregunta">¿Está seguro de que quiere dar de baja este subtipo?</h3>
-
-                <div class="ts-conf-item">
-                    <div class="ts-conf-item-icono">
-                        <svg class="ts-icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><path d="M7 7h.01"/></svg>
-                    </div>
-                    <div>
-                        <p class="ts-conf-item-nombre" id="bajaNombre"></p>
-                        <p class="ts-conf-item-detalle" id="bajaDetalle"></p>
-                    </div>
-                </div>
-
-                <div class="ts-conf-caja">
-                    <div>
-                        <span class="ts-conf-etiqueta">Tipo de producto</span>
-                        <strong id="bajaTipo"></strong>
-                    </div>
-                    <svg class="ts-icon" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
-                </div>
-
-                <p class="ts-conf-nota">
-                    El subtipo quedará inactivo, pero no se elimina. Podés volver a activarlo desde el listado de subtipos.
-                </p>
-
-            </div>
-
-            <div class="ts-modal-pie">
-                <button type="button" class="ts-btn ts-btn-claro" onclick="cerrarModalBaja()">Cancelar</button>
-                <button type="submit" class="ts-btn ts-btn-peligro">Confirmar baja</button>
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
 
 
 <script>
@@ -314,7 +226,7 @@
 
         document.getElementById('tituloModal').textContent = 'Modificar subtipo';
 
-        formSubtipo.action = '/subtipos/editar/' + id + '/';
+        formSubtipo.action = "{% url 'editar_subtipo' 0 %}".replace('/0/', '/' + id + '/');
 
         document.getElementById('tipo_producto').value = tipo;
         document.getElementById('nombre_subtipo').value = nombre;
@@ -335,29 +247,6 @@
     });
 
 
-    const modalBaja = document.getElementById('modalBaja');
-    const formBaja = document.getElementById('formBaja');
-
-
-    function abrirModalBaja(nombre, tipo, descripcion, urlBaja) {
-
-        document.getElementById('bajaNombre').textContent = nombre;
-        document.getElementById('bajaTipo').textContent = tipo;
-        document.getElementById('bajaDetalle').textContent = descripcion || 'Sin descripción';
-
-        formBaja.action = urlBaja;
-
-        modalBaja.style.display = 'flex';
-
-    }
-
-    function cerrarModalBaja() {
-        modalBaja.style.display = 'none';
-    }
-
-    modalBaja.addEventListener('click', function (e) {
-        if (e.target === modalBaja) { cerrarModalBaja(); }
-    });
 
 </script>
 

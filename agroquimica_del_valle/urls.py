@@ -23,13 +23,11 @@ urlpatterns = [
     path('tipos-productos/crear/', views.crear_tipo_producto, name='crear_tipo_producto'),
     path('tipos-productos/editar/<int:pk>/', views.editar_tipo_producto, name='editar_tipo_producto'),
     path('tipos-productos/eliminar/<int:pk>/', views.eliminar_tipo_producto, name='eliminar_tipo_producto'),
-    path('tipos-productos/baja/<int:pk>/', views.dar_baja_tipo_producto, name='dar_baja_tipo_producto'),
 
     # Subtipos
     path('subtipos/', views.gestion_subtipos, name='gestion_subtipos'),
     path('subtipos/crear/', views.crear_subtipo, name='crear_subtipo'),
     path('subtipos/editar/<int:pk>/', views.editar_subtipo, name='editar_subtipo'),
-    path('subtipos/cambiar-estado/<int:pk>/', views.cambiar_estado_subtipo, name='cambiar_estado_subtipo'),
     path('subtipos/eliminar/<int:pk>/', views.eliminar_subtipo, name='eliminar_subtipo'),
 
 
@@ -67,7 +65,6 @@ urlpatterns = [
 
     path('ingreso-lote/', views.registrar_ingreso_lote, name='registrar_ingreso_lote'),
     path('ingreso-lote/editar/<int:id>/', views.editar_lote, name='editar_lote'),
-    path('ingreso-lote/cambiar-estado/<int:id>/', views.cambiar_estado_lote, name='cambiar_estado_lote'),
 
     # Movimientos de stock
     path('movimientos-stock/', views.gestion_movimientos_stock, name='gestion_movimientos_stock'),

@@ -166,40 +166,9 @@
 
                                     </button>
 
-                                    <!-- DAR DE BAJA / ACTIVAR -->
-    <form method="POST"
-            action="{% url 'dar_baja_tipo_producto' tipo.ID_Tipo_producto %}"
-            class="pr-form-estado"
-            onsubmit="return confirm('{% if tipo.Estado_tipo_producto %}¿Dar de baja este tipo de producto?{% else %}¿Activar este tipo de producto?{% endif %}');">
-
-        {% csrf_token %}
-
-        <input type="hidden"
-                name="estado"
-                value="{% if tipo.Estado_tipo_producto %}inactivo{% else %}activo{% endif %}">
-
-        <button type="submit"
-                class="pr-icon-btn"
-                title="{% if tipo.Estado_tipo_producto %}Dar de baja{% else %}Activar{% endif %}"
-                aria-label="{% if tipo.Estado_tipo_producto %}Dar de baja{% else %}Activar{% endif %}">
-
-            {% if tipo.Estado_tipo_producto %}
-            <svg class="pr-icon" viewBox="0 0 24 24">
-                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
-                <path d="M12 2v10"/>
-            </svg>
-            {% else %}
-            <svg class="pr-icon" viewBox="0 0 24 24">
-                <path d="M20 6 9 17l-5-5"/>
-            </svg>
-            {% endif %}
-        </button>
-    </form>
-
                                     <!-- ELIMINAR TIPO DE PRODUCTO -->
                                     <form method="POST"
                                           action="{% url 'eliminar_tipo_producto' tipo.ID_Tipo_producto %}"
-                                          class="pr-form-estado"
                                           onsubmit="return confirmarEliminacionTipo(
                                               event,
                                               this,
@@ -399,10 +368,6 @@
 
                 </div>
 
-                <input type="hidden"
-                       id="edit_estado"
-                       name="Estado_tipo_producto">
-
             </div>
 
 
@@ -477,7 +442,7 @@
         event.preventDefault();
 
         mostrarToast(
-            'No se puede eliminar este tipo de producto porque tiene productos asociados. Puede darlo de baja.',
+            'No se puede eliminar este tipo de producto porque tiene productos asociados.',
             'warning'
         );
 
@@ -569,7 +534,7 @@
        ABRIR MODAL EDITAR
     ===================================================== */
 
-    function abrirModalEditar(id, nombre, estado) {
+    function abrirModalEditar(id, nombre) {
 
         const formulario = document.getElementById('formEditarTipo');
 
@@ -578,7 +543,6 @@
         formulario.action = urlEditar.replace('/0/', '/' + id + '/');
 
         document.getElementById('edit_nombre').value = nombre;
-        document.getElementById('edit_estado').value = estado;
 
         document.getElementById('modalEditarTipo').style.display = 'flex';
 

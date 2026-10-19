@@ -619,8 +619,8 @@ def eliminar_tipo_producto(request, pk):
     except ProtectedError:
         messages.error(
             request,
-            f'No se puede eliminar el tipo "{nombre}": tiene productos '
-            'asociados. Puede darlo de baja.'
+            f'No se puede eliminar el tipo "{nombre}": tiene '
+            'productos asociados.'
         )
         return redirect('gestion_tipos_productos')
 
@@ -636,33 +636,7 @@ def eliminar_tipo_producto(request, pk):
     return redirect('gestion_tipos_productos')
 
 
-def dar_baja_tipo_producto(request, pk):
 
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    if request.method != 'POST':
-        return redirect('gestion_tipos_productos')
-
-    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=pk)
-    estado = request.POST.get('estado', '').strip().lower()
-
-    if estado == 'inactivo':
-        tipo.Estado_tipo_producto = False
-        mensaje = 'Tipo de producto dado de baja correctamente.'
-    elif estado == 'activo':
-        tipo.Estado_tipo_producto = True
-        mensaje = 'Tipo de producto activado correctamente.'
-    else:
-        messages.error(request, 'El estado solicitado no es válido.')
-        return redirect('gestion_tipos_productos')
-
-    tipo.save(update_fields=['Estado_tipo_producto'])
-    messages.success(request, mensaje)
-
-    return redirect('gestion_tipos_productos')
 
 
 # ============================================================
@@ -677,7 +651,6 @@ def _subtipo_tiene_descripcion():
         for campo in Subtipos._meta.get_fields()
     )
 
-
 def gestion_subtipos(request):
 
     usuario = usuario_es_administrador(request)
@@ -689,16 +662,16 @@ def gestion_subtipos(request):
 
     subtipos = Subtipos.objects.select_related(
         'ID_Tipo_producto'
-    ).all()
+    ).order_by(
+        'Nombre_subtipo'
+    )
 
     if busqueda:
         subtipos = subtipos.filter(
             Nombre_subtipo__icontains=busqueda
         )
 
-    tipos_productos = TiposProductos.objects.filter(
-        Estado_tipo_producto=True
-    ).order_by(
+    tipos_productos = TiposProductos.objects.order_by(
         'Nombre_tipo_producto'
     )
 
@@ -751,12 +724,12 @@ def crear_subtipo(request):
         tipo = get_object_or_404(
             TiposProductos,
             ID_Tipo_producto=tipo_id,
-            Estado_tipo_producto=True
         )
 
         existe = Subtipos.objects.filter(
             ID_Tipo_producto=tipo,
             Nombre_subtipo__iexact=nombre
+
         ).exists()
 
         if existe:
@@ -771,7 +744,6 @@ def crear_subtipo(request):
         datos_subtipo = {
             'ID_Tipo_producto': tipo,
             'Nombre_subtipo': nombre,
-            'Estado_subtipo': True
         }
 
         if _subtipo_tiene_descripcion():
@@ -832,14 +804,8 @@ def editar_subtipo(request, pk):
         tipo = get_object_or_404(
             TiposProductos,
             ID_Tipo_producto=tipo_id,
-            Estado_tipo_producto=True
         )
 
-        tipo = get_object_or_404(
-            TiposProductos,
-            ID_Tipo_producto=tipo_id,
-            Estado_tipo_producto=True
-        )
 
         if (
             tipo.pk != subtipo.ID_Tipo_producto_id
@@ -852,13 +818,6 @@ def editar_subtipo(request, pk):
             )
 
             return redirect('gestion_subtipos')
-
-        existe = Subtipos.objects.filter(
-            ID_Tipo_producto=tipo,
-            Nombre_subtipo__iexact=nombre
-        ).exclude(
-            ID_Subtipo=pk
-        ).exists()
 
         existe = Subtipos.objects.filter(
             ID_Tipo_producto=tipo,
@@ -897,36 +856,6 @@ def editar_subtipo(request, pk):
     return redirect('gestion_subtipos')
 
 
-def cambiar_estado_subtipo(request, pk):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    subtipo = get_object_or_404(
-        Subtipos,
-        ID_Subtipo=pk
-    )
-
-    if request.method == 'POST':
-
-        subtipo.Estado_subtipo = not subtipo.Estado_subtipo
-        subtipo.save()
-
-        if subtipo.Estado_subtipo:
-            messages.success(
-                request,
-                'Subtipo activado correctamente.'
-            )
-        else:
-            messages.success(
-                request,
-                'Subtipo dado de baja correctamente.'
-            )
-
-    return redirect('gestion_subtipos')
-
 def eliminar_subtipo(request, pk):
     """Elimina un subtipo solo si no tiene productos asociados."""
 
@@ -949,7 +878,7 @@ def eliminar_subtipo(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el subtipo "{nombre}": tiene '
-            'productos asociados. Puede darlo de baja.'
+            'productos asociados.'
         )
         return redirect('gestion_subtipos')
 
@@ -960,7 +889,7 @@ def eliminar_subtipo(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el subtipo "{nombre}": tiene '
-            'registros asociados. Puede darlo de baja.'
+            'registros asociados.'
         )
         return redirect('gestion_subtipos')
 
@@ -1952,7 +1881,6 @@ def _leer_datos_producto(request, estado_por_defecto):
     tipo = get_object_or_404(
         TiposProductos,
         ID_Tipo_producto=tipo_id,
-        Estado_tipo_producto=True
     )
 
     # --------------------------------------------------------
@@ -1961,12 +1889,10 @@ def _leer_datos_producto(request, estado_por_defecto):
 
     subtipos_disponibles = Subtipos.objects.filter(
         ID_Tipo_producto=tipo,
-        Estado_subtipo=True
     )
 
     subtipo = None
 
-    # Si el tipo tiene subtipos activos, se debe seleccionar uno.
     if subtipos_disponibles.exists():
 
         if not subtipo_id:
@@ -1981,7 +1907,7 @@ def _leer_datos_producto(request, estado_por_defecto):
         if not subtipo:
             return None, (
                 'El subtipo seleccionado no pertenece al tipo '
-                'de producto elegido o está inactivo.'
+                'de producto elegido.'
             )
 
     elif subtipo_id:
@@ -2154,16 +2080,11 @@ def gestion_productos(request):
     # TIPOS Y SUBTIPOS PARA LOS FORMULARIOS
     # --------------------------------------------------------
 
-    tipos_productos = TiposProductos.objects.filter(
-        Estado_tipo_producto=True
-    ).order_by(
+    tipos_productos = TiposProductos.objects.order_by(
         'Nombre_tipo_producto'
     )
 
-    subtipos = Subtipos.objects.filter(
-        Estado_subtipo=True,
-        ID_Tipo_producto__Estado_tipo_producto=True
-    ).select_related(
+    subtipos = Subtipos.objects.select_related(
         'ID_Tipo_producto'
     ).order_by(
         'Nombre_subtipo'
@@ -2326,34 +2247,38 @@ def editar_producto(request, pk):
 
     return redirect('gestion_productos')
 
-
 def cambiar_estado_producto(request, pk):
     """Activa o da de baja un producto."""
 
-    usuario = usuario_autenticado(request)
+    usuario = usuario_es_administrador(request)
 
     if not usuario:
-        return redirect('login')
+        return redirect('panel_principal')
 
-    producto = get_object_or_404(
-        Productos,
-        ID_Producto=pk
-    )
+    producto = get_object_or_404(Productos, ID_Producto=pk)
 
     if request.method != 'POST':
         return redirect('gestion_productos')
 
     if producto.Estado_producto == 'Activo':
+
+        if Stock.objects.filter(
+            ID_Producto=producto, Cantidad_stock__gt=0
+        ).exists():
+            messages.error(
+                request,
+                'No se puede dar de baja un producto con stock. '
+                'Registre primero la salida de sus lotes.'
+            )
+            return redirect('gestion_productos')
+
         producto.Estado_producto = 'Inactivo'
         mensaje = 'Producto dado de baja correctamente.'
     else:
         producto.Estado_producto = 'Activo'
         mensaje = 'Producto activado correctamente.'
 
-    producto.save(
-        update_fields=['Estado_producto']
-    )
-
+    producto.save(update_fields=['Estado_producto'])
     messages.success(request, mensaje)
 
     return redirect('gestion_productos')
@@ -2581,7 +2506,6 @@ def registrar_ingreso_lote(request):
                         Cantidad_actual=cantidad,
                         Fecha_ingreso=fecha_ingreso,
                         Fecha_vencimiento=fecha_vencimiento,
-                        Estado_lote='Activo'
                     )
 
                     stock, creado = (
@@ -2661,25 +2585,17 @@ def registrar_ingreso_lote(request):
 
     if estado_filtro == 'Vencido':
         lotes = lotes.filter(
-            Fecha_vencimiento__lt=hoy          # antes: __lte
+            Fecha_vencimiento__lt=hoy
         )
 
     elif estado_filtro == 'Agotado':
         lotes = lotes.filter(
-        Estado_lote='Activo',
-        Fecha_vencimiento__gte=hoy,
-        Cantidad_actual__lte=0
-    )
-
-    elif estado_filtro == 'Inactivo':
-        lotes = lotes.filter(
-        Estado_lote='Inactivo',
-        Fecha_vencimiento__gte=hoy
-    )
+            Fecha_vencimiento__gte=hoy,
+            Cantidad_actual__lte=0
+        )
 
     elif estado_filtro == 'Activo':
         lotes = lotes.filter(
-            Estado_lote='Activo',
             Fecha_vencimiento__gte=hoy,
             Cantidad_actual__gt=0
         )
@@ -2770,13 +2686,10 @@ def editar_lote(request, id):
 
 
 
-    if (
-        lote.Estado_lote == 'Inactivo'
-        and lote.Fecha_vencimiento < timezone.localdate()
-    ):
+    if lote.Fecha_vencimiento < timezone.localdate():
         messages.error(
             request,
-            'No se puede editar un lote vencido y dado de baja.'
+            'No se puede editar un lote vencido.'
         )
         return redirect('registrar_ingreso_lote')
 
@@ -2877,110 +2790,6 @@ def editar_lote(request, id):
         request,
         'Lote actualizado correctamente.'
     )
-
-    return redirect('registrar_ingreso_lote')
-
-
-# ============================================================
-# CAMBIAR ESTADO DEL LOTE
-# ============================================================
-
-def cambiar_estado_lote(request, id):
-    """Activa o da de baja un lote sin eliminarlo de la base."""
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    if request.method != 'POST':
-        return redirect('registrar_ingreso_lote')
-
-    with transaction.atomic():
-
-        # Se bloquea la fila para evitar bajas duplicadas por doble clic.
-        lote = get_object_or_404(
-            Lotes.objects.select_for_update(),
-            ID_Lote=id
-        )
-
-        estado_solicitado = request.POST.get(
-            'estado', ''
-        ).strip().lower()
-
-        hoy = timezone.localdate()
-
-        # ----------------------------------------------------
-        # DAR DE BAJA
-        # ----------------------------------------------------
-        if estado_solicitado == 'inactivo':
-
-            if lote.Estado_lote == 'Inactivo':
-                messages.error(
-                    request,
-                    f'El lote {lote.Numero_lote} ya fue dado de baja.'
-                )
-                return redirect('registrar_ingreso_lote')
-
-            if lote.Cantidad_actual > 0:
-                messages.error(
-                    request,
-                    'No se puede dar de baja un lote con existencias. '
-                    'Registre primero su salida.'
-                )
-                return redirect('registrar_ingreso_lote')
-
-            lote.Estado_lote = 'Inactivo'
-            lote.save(update_fields=['Estado_lote'])
-
-            messages.success(
-                request,
-                f'El lote {lote.Numero_lote} fue dado de baja.'
-            )
-
-        # ----------------------------------------------------
-        # ACTIVAR
-        # ----------------------------------------------------
-        elif estado_solicitado == 'activo':
-
-            if lote.Estado_lote == 'Activo':
-                messages.error(
-                    request,
-                    f'El lote {lote.Numero_lote} ya está activo.'
-                )
-                return redirect('registrar_ingreso_lote')
-
-            if (
-                not lote.Fecha_vencimiento
-                or lote.Fecha_vencimiento <= hoy
-            ):
-                messages.error(
-                    request,
-                    'No se puede activar un lote vencido '
-                    'o sin fecha de vencimiento.'
-                )
-                return redirect('registrar_ingreso_lote')
-
-            if lote.Cantidad_actual <= 0:
-                messages.error(
-                    request,
-                    'No se puede activar un lote agotado.'
-                )
-                return redirect('registrar_ingreso_lote')
-
-            lote.Estado_lote = 'Activo'
-            lote.save(update_fields=['Estado_lote'])
-
-            messages.success(
-                request,
-                f'El lote {lote.Numero_lote} fue activado correctamente.'
-            )
-
-        else:
-            messages.error(
-                request,
-                'El estado solicitado no es válido.'
-            )
 
     return redirect('registrar_ingreso_lote')
 

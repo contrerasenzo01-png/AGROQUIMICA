@@ -5,15 +5,6 @@ class TiposProductos(models.Model):
     ID_Tipo_producto = models.AutoField(primary_key=True)
     Nombre_tipo_producto = models.CharField(max_length=50)
 
-    ESTADO_CHOICES = [
-        (True, 'Activo'),
-        (False, 'Inactivo'),
-    ]
-
-    Estado_tipo_producto = models.BooleanField(
-        default=True,
-        choices=ESTADO_CHOICES
-    )
 
     class Meta:
         db_table = 'TIPOS_PRODUCTOS'
@@ -41,16 +32,6 @@ class Subtipos(models.Model):
         null=True
     )
 
-
-    ESTADO_CHOICES = [
-        (True, 'Activo'),
-        (False, 'Inactivo'),
-    ]
-
-    Estado_subtipo = models.BooleanField(
-        default=True,
-        choices=ESTADO_CHOICES
-    )
 
     class Meta:
         db_table = 'SUBTIPOS'
@@ -253,14 +234,14 @@ class Productos(models.Model):
 
     ID_Tipo_producto = models.ForeignKey(
         TiposProductos,
-        on_delete=models.PROTECT,        # antes CASCADE
+        on_delete=models.PROTECT,       
         db_column='ID_Tipo_producto'
     )
 
     ID_Subtipo = models.ForeignKey(
         'Subtipos',
-        on_delete=models.PROTECT,        # antes SET_NULL
-        null=True,                       # se queda: hay productos sin subtipo
+        on_delete=models.PROTECT,        
+        null=True,                       
         blank=True,
         db_column='ID_Subtipo'
     )
@@ -328,7 +309,7 @@ class Lotes(models.Model):
 
     ID_Producto = models.ForeignKey(
         Productos,
-        on_delete=models.PROTECT,        # antes CASCADE
+        on_delete=models.PROTECT,        
         db_column='ID_Producto',
         related_name='lotes'
     )
@@ -343,35 +324,19 @@ class Lotes(models.Model):
 
     Fecha_vencimiento = models.DateField()
 
-    # Estado del lote
-    ESTADO_CHOICES = [
-        ('Activo', 'Activo'),
-        ('Inactivo', 'Inactivo'),
-    ]
-
-    Estado_lote = models.CharField(
-        max_length=10,
-        choices=ESTADO_CHOICES,
-        default='Activo'
-    )
-
     class Meta:
         db_table = 'LOTES'
         verbose_name_plural = "Lotes"
 
-        
     @property
     def estado_actual(self):
         hoy = timezone.localdate()
 
         if self.Fecha_vencimiento < hoy:
-            return 'Vencido'
-        if self.Estado_lote == 'Inactivo':
-            return 'Inactivo'
+               return 'Vencido'
         if self.Cantidad_actual <= 0:
-            return 'Agotado'
+               return 'Agotado'
         return 'Activo'
-
 
     def __str__(self):
         return self.Numero_lote
@@ -441,10 +406,10 @@ class Alertas(models.Model):
 
     ID_Usuario = models.ForeignKey(
         Usuarios,
-        on_delete=models.PROTECT,        # antes SET_NULL
+        on_delete=models.PROTECT,        
         db_column='ID_Usuario',
         related_name='alertas_atendidas',
-        null=True,                       # se queda: hay alertas sin atender
+        null=True,                       
         blank=True
     )
 
@@ -459,14 +424,12 @@ class MovimientosStock(models.Model):
     ID_Usuario = models.ForeignKey(
         Usuarios,
         on_delete=models.PROTECT,
-        null=True,
-        blank=True,
         db_column='ID_Usuario'
     )
 
     ID_Tipo_movimiento = models.ForeignKey(
         TiposMovimientos,
-        on_delete=models.PROTECT,        # antes CASCADE
+        on_delete=models.PROTECT,       
         db_column='ID_Tipo_movimiento'
     )
 
