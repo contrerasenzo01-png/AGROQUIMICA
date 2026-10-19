@@ -26,27 +26,19 @@ SECRET_KEY = 'django-insecure-sin%=ts&=rxqpd%rojsew7_bjv7$#_yd@p$50p2aja47*_$*a@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '192.168.1.8',
     '192.168.100.5',
-    'program-processes-elections-piece.trycloudflare.com',
-    'feeding-longitude-aluminum-ingredients.trycloudflare.com',
-    'but-laptops-patrol-tent.trycloudflare.com',
-    'kinase-rpg-tropical-merchants.trycloudflare.com',
-    
-
-
+    '.trycloudflare.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://program-processes-elections-piece.trycloudflare.com',
-    'https://feeding-longitude-aluminum-ingredients.trycloudflare.com',
-    'https://but-laptops-patrol-tent.trycloudflare.com',
-    'https://kinase-rpg-tropical-merchants.trycloudflare.com',
-
+    'https://*.trycloudflare.com',
 ]
+
 
 
 # Application definition
