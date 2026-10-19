@@ -15,18 +15,22 @@ urlpatterns = [
     path('proveedores/crear/', views.crear_proveedor, name='crear_proveedor'),
     path('proveedores/editar/<int:pk>/', views.editar_proveedor, name='editar_proveedor'),
     path('proveedores/estado/<int:pk>/', views.cambiar_estado_proveedor, name='cambiar_estado_proveedor'),
+    path('proveedores/eliminar/<int:pk>/', views.eliminar_proveedor, name='eliminar_proveedor'),
+
 
     # Tipos de productos
     path('tipos-productos/', views.gestion_tipos_productos, name='gestion_tipos_productos'),
     path('tipos-productos/crear/', views.crear_tipo_producto, name='crear_tipo_producto'),
     path('tipos-productos/editar/<int:pk>/', views.editar_tipo_producto, name='editar_tipo_producto'),
     path('tipos-productos/eliminar/<int:pk>/', views.eliminar_tipo_producto, name='eliminar_tipo_producto'),
+    path('tipos-productos/baja/<int:pk>/', views.dar_baja_tipo_producto, name='dar_baja_tipo_producto'),
 
     # Subtipos
     path('subtipos/', views.gestion_subtipos, name='gestion_subtipos'),
     path('subtipos/crear/', views.crear_subtipo, name='crear_subtipo'),
     path('subtipos/editar/<int:pk>/', views.editar_subtipo, name='editar_subtipo'),
     path('subtipos/cambiar-estado/<int:pk>/', views.cambiar_estado_subtipo, name='cambiar_estado_subtipo'),
+    path('subtipos/eliminar/<int:pk>/', views.eliminar_subtipo, name='eliminar_subtipo'),
 
 
     # Usuarios
@@ -37,6 +41,8 @@ urlpatterns = [
     path('usuarios/restablecer/<int:pk>/', views.restablecer_contrasena, name='restablecer_contrasena'),
     path('usuarios/cambiar-contrasena/', views.cambiar_contrasena, name='cambiar_contrasena'),
     path('usuarios/activar/<int:id>/', views.activar_usuario, name='activar_usuario'),
+    path('usuarios/eliminar/<int:pk>/', views.eliminar_usuario, name='eliminar_usuario'),
+
 
     # Perfiles
     path('perfiles/', views.gestion_perfiles, name='gestion_perfiles'),
@@ -44,6 +50,7 @@ urlpatterns = [
     path('perfiles/editar/<int:pk>/', views.editar_perfil, name='editar_perfil'),
     path('perfiles/cambiar-estado/<int:id>/', views.cambiar_estado_perfil, name='cambiar_estado_perfil'),
     path('mis-permisos/', views.mis_permisos, name='mis_permisos'),
+    path('perfiles/eliminar/<int:pk>/', views.eliminar_perfil, name='eliminar_perfil'),
 
 
     # Productos
@@ -51,6 +58,7 @@ urlpatterns = [
     path('productos/crear/', views.crear_producto, name='crear_producto'),
     path('productos/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
     path('productos/cambiar-estado/<int:pk>/', views.cambiar_estado_producto, name='cambiar_estado_producto'),
+    path('productos/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
 
 
     # ============================================================

@@ -86,6 +86,7 @@
                     <tr>
                         <th>Tipo de producto</th>
                         <th>Productos asociados</th>
+                        <th>Estado</th>
                         <th style="text-align:right;">Acciones</th>
                     </tr>
                 </thead>
@@ -134,6 +135,13 @@
 
                             </td>
 
+                            <!-- ESTADO -->
+                            <td>
+                                <span class="pr-badge">
+                                    {% if tipo.Estado_tipo_producto %}Activo{% else %}Inactivo{% endif %}
+                                </span>
+                            </td>
+
 
                             <!-- ACCIONES -->
                             <td>
@@ -158,6 +166,35 @@
 
                                     </button>
 
+                                    <!-- DAR DE BAJA / ACTIVAR -->
+    <form method="POST"
+            action="{% url 'dar_baja_tipo_producto' tipo.ID_Tipo_producto %}"
+            class="pr-form-estado"
+            onsubmit="return confirm('{% if tipo.Estado_tipo_producto %}¿Dar de baja este tipo de producto?{% else %}¿Activar este tipo de producto?{% endif %}');">
+
+        {% csrf_token %}
+
+        <input type="hidden"
+                name="estado"
+                value="{% if tipo.Estado_tipo_producto %}inactivo{% else %}activo{% endif %}">
+
+        <button type="submit"
+                class="pr-icon-btn"
+                title="{% if tipo.Estado_tipo_producto %}Dar de baja{% else %}Activar{% endif %}"
+                aria-label="{% if tipo.Estado_tipo_producto %}Dar de baja{% else %}Activar{% endif %}">
+
+            {% if tipo.Estado_tipo_producto %}
+            <svg class="pr-icon" viewBox="0 0 24 24">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                <path d="M12 2v10"/>
+            </svg>
+            {% else %}
+            <svg class="pr-icon" viewBox="0 0 24 24">
+                <path d="M20 6 9 17l-5-5"/>
+            </svg>
+            {% endif %}
+        </button>
+    </form>
 
                                     <!-- ELIMINAR TIPO DE PRODUCTO -->
                                     <form method="POST"
@@ -166,7 +203,9 @@
                                           onsubmit="return confirmarEliminacionTipo(
                                               event,
                                               this,
-                                              {{ tipo.cantidad_productos }}
+                                              {{ tipo.cantidad_productos }},
+                                            {{ tipo.cantidad_subtipos }}
+
                                           );">
 
                                         {% csrf_token %}
@@ -197,7 +236,7 @@
                     {% empty %}
 
                         <tr>
-                            <td colspan="3">
+                            <td colspan="4">
                                 No hay tipos de productos registrados.
                             </td>
                         </tr>
@@ -431,25 +470,29 @@
 
     }
 
-    function confirmarEliminacionTipo(event, formulario, cantidadProductos) {
+    function confirmarEliminacionTipo(event, formulario, cantidadProductos, cantidadSubtipos) {
 
-        // Si tiene productos asociados, no permite eliminar
-        if (cantidadProductos > 0) {
-            event.preventDefault();
+    // Si tiene productos asociados, no permite eliminar
+    if (cantidadProductos > 0) {
+        event.preventDefault();
 
-            mostrarToast(
-                'No se puede eliminar este tipo de producto porque tiene productos asociados.',
-                'warning'
-            );
-
-            return false;
-        }
-
-        // Si no tiene productos asociados, pide confirmación
-        return confirm(
-            'Este tipo de producto no tiene productos asociados. ¿Deseas eliminarlo definitivamente?'
+        mostrarToast(
+            'No se puede eliminar este tipo de producto porque tiene productos asociados. Puede darlo de baja.',
+            'warning'
         );
+
+        return false;
     }
+
+    let mensaje = '¿Deseas eliminar este tipo de producto definitivamente?';
+
+    if (cantidadSubtipos > 0) {
+        mensaje += ' También se eliminarán sus ' + cantidadSubtipos +
+                   ' subtipo' + (cantidadSubtipos === 1 ? '' : 's') + '.';
+    }
+
+    return confirm(mensaje);
+}
 
 
     /* =====================================================

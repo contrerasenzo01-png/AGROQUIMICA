@@ -253,14 +253,14 @@ class Productos(models.Model):
 
     ID_Tipo_producto = models.ForeignKey(
         TiposProductos,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,        # antes CASCADE
         db_column='ID_Tipo_producto'
     )
 
     ID_Subtipo = models.ForeignKey(
         'Subtipos',
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.PROTECT,        # antes SET_NULL
+        null=True,                       # se queda: hay productos sin subtipo
         blank=True,
         db_column='ID_Subtipo'
     )
@@ -328,15 +328,13 @@ class Lotes(models.Model):
 
     ID_Producto = models.ForeignKey(
         Productos,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,        # antes CASCADE
         db_column='ID_Producto',
         related_name='lotes'
     )
 
-    Numero_lote = models.CharField(
-        max_length=50,
-        unique=True
-    )   
+    Numero_lote = models.CharField(max_length=50, unique=True)
+ 
     Cantidad_ingresada = models.IntegerField()
 
     Cantidad_actual = models.IntegerField()
@@ -443,10 +441,10 @@ class Alertas(models.Model):
 
     ID_Usuario = models.ForeignKey(
         Usuarios,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,        # antes SET_NULL
         db_column='ID_Usuario',
         related_name='alertas_atendidas',
-        null=True,
+        null=True,                       # se queda: hay alertas sin atender
         blank=True
     )
 
@@ -460,13 +458,15 @@ class MovimientosStock(models.Model):
 
     ID_Usuario = models.ForeignKey(
         Usuarios,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         db_column='ID_Usuario'
     )
 
     ID_Tipo_movimiento = models.ForeignKey(
         TiposMovimientos,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,        # antes CASCADE
         db_column='ID_Tipo_movimiento'
     )
 

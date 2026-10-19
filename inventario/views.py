@@ -2,11 +2,11 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import unicodedata
-from django.db.models import Count, Q
 from django.contrib import messages
+from django.db import DatabaseError, IntegrityError, transaction
+from django.db.models import Count, ProtectedError, Q
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import HttpResponse
-from django.db import DatabaseError, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -15,17 +15,10 @@ from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
 import re
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
 from reportlab.lib.units import cm
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Table,
-    TableStyle,
-)
+
 
 from .forms import ProveedorForm
 
@@ -485,18 +478,15 @@ def gestion_tipos_productos(request):
 
     busqueda = request.GET.get('q', '').strip()
 
-    tipos = TiposProductos.objects.all()
+    tipos = TiposProductos.objects.annotate(
+        cantidad_productos=Count('productos', distinct=True),
+        cantidad_subtipos=Count('subtipos', distinct=True),
+    )
 
     if busqueda:
         tipos = tipos.filter(
             Nombre_tipo_producto__icontains=busqueda
         )
-
-    # Contar los productos asociados a cada tipo
-    for tipo in tipos:
-        tipo.cantidad_productos = Productos.objects.filter(
-            ID_Tipo_producto=tipo
-        ).count()
 
     return render(
         request,
@@ -609,39 +599,68 @@ def editar_tipo_producto(request, pk):
     return redirect('gestion_tipos_productos')
 
 
-
 def eliminar_tipo_producto(request, pk):
-    usuario = usuario_autenticado(request)
+
+    usuario = usuario_es_administrador(request)
 
     if not usuario:
-        return redirect('login')
+        return redirect('panel_principal')
 
-    # Solo permitir la eliminación mediante POST
     if request.method != 'POST':
         return redirect('gestion_tipos_productos')
 
-    tipo = get_object_or_404(
-        TiposProductos,
-        ID_Tipo_producto=pk
-    )
+    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=pk)
+    nombre = tipo.Nombre_tipo_producto
+    cantidad_subtipos = tipo.subtipos.count()
 
-    # Verificar cuántos productos están asociados al tipo
-    cantidad_productos = Productos.objects.filter(
-        ID_Tipo_producto=tipo
-    ).count()
-
-    if cantidad_productos > 0:
+    try:
+        with transaction.atomic():
+            tipo.delete()       # los subtipos se borran en cascada
+    except ProtectedError:
         messages.error(
             request,
-            'No se puede eliminar este tipo de producto porque tiene productos asociados.'
+            f'No se puede eliminar el tipo "{nombre}": tiene productos '
+            'asociados. Puede darlo de baja.'
         )
-    else:
-        tipo.delete()
+        return redirect('gestion_tipos_productos')
 
+    if cantidad_subtipos:
         messages.success(
             request,
-            'Tipo de producto eliminado correctamente.'
+            f'El tipo "{nombre}" y sus {cantidad_subtipos} '
+            f'subtipo{"s" if cantidad_subtipos != 1 else ""} fueron eliminados.'
         )
+    else:
+        messages.success(request, f'El tipo "{nombre}" fue eliminado.')
+
+    return redirect('gestion_tipos_productos')
+
+
+def dar_baja_tipo_producto(request, pk):
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
+    if request.method != 'POST':
+        return redirect('gestion_tipos_productos')
+
+    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=pk)
+    estado = request.POST.get('estado', '').strip().lower()
+
+    if estado == 'inactivo':
+        tipo.Estado_tipo_producto = False
+        mensaje = 'Tipo de producto dado de baja correctamente.'
+    elif estado == 'activo':
+        tipo.Estado_tipo_producto = True
+        mensaje = 'Tipo de producto activado correctamente.'
+    else:
+        messages.error(request, 'El estado solicitado no es válido.')
+        return redirect('gestion_tipos_productos')
+
+    tipo.save(update_fields=['Estado_tipo_producto'])
+    messages.success(request, mensaje)
 
     return redirect('gestion_tipos_productos')
 
@@ -816,6 +835,31 @@ def editar_subtipo(request, pk):
             Estado_tipo_producto=True
         )
 
+        tipo = get_object_or_404(
+            TiposProductos,
+            ID_Tipo_producto=tipo_id,
+            Estado_tipo_producto=True
+        )
+
+        if (
+            tipo.pk != subtipo.ID_Tipo_producto_id
+            and Productos.objects.filter(ID_Subtipo=subtipo).exists()
+        ):
+            messages.error(
+                request,
+                'No se puede cambiar el tipo de un subtipo que tiene '
+                'productos asociados.'
+            )
+
+            return redirect('gestion_subtipos')
+
+        existe = Subtipos.objects.filter(
+            ID_Tipo_producto=tipo,
+            Nombre_subtipo__iexact=nombre
+        ).exclude(
+            ID_Subtipo=pk
+        ).exists()
+
         existe = Subtipos.objects.filter(
             ID_Tipo_producto=tipo,
             Nombre_subtipo__iexact=nombre
@@ -880,6 +924,50 @@ def cambiar_estado_subtipo(request, pk):
                 request,
                 'Subtipo dado de baja correctamente.'
             )
+
+    return redirect('gestion_subtipos')
+
+def eliminar_subtipo(request, pk):
+    """Elimina un subtipo solo si no tiene productos asociados."""
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
+    if request.method != 'POST':
+        return redirect('gestion_subtipos')
+
+    subtipo = get_object_or_404(
+        Subtipos,
+        ID_Subtipo=pk
+    )
+
+    nombre = subtipo.Nombre_subtipo
+
+    if Productos.objects.filter(ID_Subtipo=subtipo).exists():
+        messages.error(
+            request,
+            f'No se puede eliminar el subtipo "{nombre}": tiene '
+            'productos asociados. Puede darlo de baja.'
+        )
+        return redirect('gestion_subtipos')
+
+    try:
+        with transaction.atomic():
+            subtipo.delete()
+    except ProtectedError:
+        messages.error(
+            request,
+            f'No se puede eliminar el subtipo "{nombre}": tiene '
+            'registros asociados. Puede darlo de baja.'
+        )
+        return redirect('gestion_subtipos')
+
+    messages.success(
+        request,
+        f'El subtipo "{nombre}" fue eliminado.'
+    )
 
     return redirect('gestion_subtipos')
 
@@ -2270,6 +2358,50 @@ def cambiar_estado_producto(request, pk):
 
     return redirect('gestion_productos')
 
+def eliminar_producto(request, pk):
+    """Elimina un producto solo si no tiene lotes asociados."""
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
+    if request.method != 'POST':
+        return redirect('gestion_productos')
+
+    producto = get_object_or_404(
+        Productos,
+        ID_Producto=pk
+    )
+
+    nombre = producto.Nombre_producto
+
+    if producto.lotes.exists():
+        messages.error(
+            request,
+            f'No se puede eliminar el producto "{nombre}": tiene '
+            'lotes asociados. Puede darlo de baja.'
+        )
+        return redirect('gestion_productos')
+
+    try:
+        with transaction.atomic():
+            producto.delete()       # su registro de stock se borra en cascada
+    except ProtectedError:
+        messages.error(
+            request,
+            f'No se puede eliminar el producto "{nombre}": tiene '
+            'registros asociados. Puede darlo de baja.'
+        )
+        return redirect('gestion_productos')
+
+    messages.success(
+        request,
+        f'El producto "{nombre}" fue eliminado.'
+    )
+
+    return redirect('gestion_productos')
+
 
 # ============================================================
 # GESTIÓN DE LOTES
@@ -2343,7 +2475,6 @@ def registrar_ingreso_lote(request):
         
 
 
-
         try:
             cantidad = int(cantidad_input)
         except (TypeError, ValueError):
@@ -2413,7 +2544,6 @@ def registrar_ingreso_lote(request):
 
     
 
-    
         # ----------------------------------------------------
         # BUSCAR TIPO DE MOVIMIENTO DE ENTRADA
         # ----------------------------------------------------
@@ -2436,60 +2566,64 @@ def registrar_ingreso_lote(request):
         # GUARDAR LOTE, STOCK Y MOVIMIENTO EN UNA TRANSACCIÓN
         # ----------------------------------------------------
 
-        try:
-            with transaction.atomic():
-                numero_lote = generar_siguiente_numero_lote()
+        numero_lote = None
 
+        for intento in range(3):
+            try:
+                with transaction.atomic():
+                    candidato = generar_siguiente_numero_lote()
 
-                lote = Lotes.objects.create(
-                    ID_Proveedor=proveedor,
-                    ID_Producto=producto,
-                    Numero_lote=numero_lote,
-                    Cantidad_ingresada=cantidad,
-                    Cantidad_actual=cantidad,
-                    Fecha_ingreso=fecha_ingreso,
-                    Fecha_vencimiento=fecha_vencimiento,
-                    Estado_lote='Activo'
-                )
-
-                stock, _ = (
-                    Stock.objects.select_for_update().get_or_create(
+                    lote = Lotes.objects.create(
+                        ID_Proveedor=proveedor,
                         ID_Producto=producto,
-                        defaults={
-                            'Cantidad_stock': 0,
-                            'Stock_minimo': 0
-                        }
+                        Numero_lote=candidato,
+                        Cantidad_ingresada=cantidad,
+                        Cantidad_actual=cantidad,
+                        Fecha_ingreso=fecha_ingreso,
+                        Fecha_vencimiento=fecha_vencimiento,
+                        Estado_lote='Activo'
                     )
-                )
 
-                stock.Cantidad_stock += cantidad
-                stock.save(
-                    update_fields=['Cantidad_stock']
-                )
+                    stock, creado = (
+                        Stock.objects.select_for_update().get_or_create(
+                            ID_Producto=producto,
+                            defaults={
+                                'Cantidad_stock': 0,
+                                'Stock_minimo': 0
+                            }
+                        )
+                    )
 
-                MovimientosStock.objects.create(
-                    ID_Usuario=usuario,
-                    ID_Tipo_movimiento=tipo_entrada,
-                    ID_Lote=lote,
-                    Cantidad_movimiento_stock=cantidad,
-                    Observaciones='Entrada de lote'
-                )
+                    stock.Cantidad_stock += cantidad
+                    stock.save(update_fields=['Cantidad_stock'])
 
-        except DatabaseError:
+                    MovimientosStock.objects.create(
+                        ID_Usuario=usuario,
+                        ID_Tipo_movimiento=tipo_entrada,
+                        ID_Lote=lote,
+                        Cantidad_movimiento_stock=cantidad,
+                        Observaciones='Entrada de lote'
+                    )
+
+                numero_lote = candidato
+                break
+
+            except IntegrityError:
+                continue        # otro ingreso tomó ese número: reintenta
+            except DatabaseError:
+                break
+
+        if not numero_lote:
             messages.error(
                 request,
-                'No se pudo registrar el lote por un problema '
-                'con la base de datos.'
+                'No se pudo registrar el lote. Intente nuevamente.'
             )
-
             return redirect('registrar_ingreso_lote')
 
         messages.success(
-            
             request,
-            f'Ingreso de lote registrado correctamente.'
+            f'Ingreso de lote registrado correctamente. '
             f'Número asignado: {numero_lote}.'
-
         )
 
         return redirect('registrar_ingreso_lote')
@@ -2588,6 +2722,7 @@ def registrar_ingreso_lote(request):
             'marcas': marcas,
             'productos': productos,
             'proveedores': proveedores,
+            'proveedores_edicion': Proveedores.objects.order_by('nombre_proveedor'),
             'siguiente_numero_lote': generar_siguiente_numero_lote(),
             'busqueda': busqueda,
             'estado_filtro': estado_filtro,
@@ -2708,11 +2843,20 @@ def editar_lote(request, id):
     # VALIDAR PROVEEDOR
     # --------------------------------------------------------
 
-    proveedor = get_object_or_404(
-        Proveedores,
-        ID_Proveedor=proveedor_id,
-        estado_proveedor=True
-    )
+    if proveedor_id == str(lote.ID_Proveedor_id):
+        proveedor = lote.ID_Proveedor       # el de siempre, aunque esté inactivo
+    else:
+        proveedor = Proveedores.objects.filter(
+            ID_Proveedor=proveedor_id,
+            estado_proveedor=True
+        ).first()
+
+        if not proveedor:
+            messages.error(
+                request,
+                'El proveedor seleccionado no existe o está inactivo.'
+            )
+            return redirect('registrar_ingreso_lote')
 
 
     # --------------------------------------------------------
@@ -3322,28 +3466,6 @@ def atender_alerta(request, id_alerta):
 # COMPROBANTE PDF DE MOVIMIENTO
 # ============================================================
 
-# ============================================================
-# COMPROBANTE PDF DE MOVIMIENTO  ·  pegar en views.py
-# ============================================================
-#
-# 1) Agregá estos imports arriba de views.py (los que no tengas):
-#
-#    from django.contrib.staticfiles import finders
-#    from reportlab.lib.utils import ImageReader, simpleSplit
-#    from reportlab.pdfgen import canvas
-#
-# 2) Borrá la función comprobante_movimiento_pdf anterior y pegá
-#    TODO lo que sigue (las dos funciones).
-#
-# 3) Si tenés el logo en static, ajustá LOGO_STATIC a su ruta.
-#    Si no lo encuentra, dibuja un logo vectorial de reemplazo
-#    (sol, hoja y monograma AV), así que funciona sin archivo.
-#
-# Ya no hacen falta Paragraph, Spacer, Table, TableStyle,
-# SimpleDocTemplate, getSampleStyleSheet, ParagraphStyle ni
-# TA_CENTER si no los usás en otra parte.
-# ============================================================
-
 LOGO_STATIC = 'inventario/images/logo.png'
 
 
@@ -3747,3 +3869,114 @@ def comprobante_movimiento_pdf(request, id_movimiento):
     respuesta['Content-Length'] = len(pdf)
 
     return respuesta
+
+
+# ============================================================
+# PEGAR AL FINAL DE views.py
+# No requiere imports nuevos: tu views.py ya tiene todo lo necesario
+# (ProtectedError, transaction, require_POST, messages, redirect,
+#  get_object_or_404, PERFILES_ADMIN y los modelos).
+# ============================================================
+
+
+# ============================================================
+# ELIMINAR PROVEEDOR / USUARIO / PERFIL
+# Solo se eliminan si no tienen registros relacionados.
+# ============================================================
+
+@require_POST
+def eliminar_proveedor(request, pk):
+
+    if not usuario_es_administrador(request):
+        return redirect('panel_principal')
+
+    proveedor = get_object_or_404(Proveedores, ID_Proveedor=pk)
+    nombre = proveedor.nombre_proveedor
+
+    try:
+        with transaction.atomic():
+            proveedor.delete()
+    except ProtectedError:
+        messages.error(
+            request,
+            f'No se puede eliminar el proveedor "{nombre}": '
+            'tiene lotes registrados.'
+        )
+        return redirect('gestion_proveedores')
+
+    messages.success(request, f'El proveedor "{nombre}" fue eliminado.')
+
+    return redirect('gestion_proveedores')
+
+
+@require_POST
+def eliminar_usuario(request, pk):
+
+    admin = usuario_es_administrador(request)
+
+    if not admin:
+        return redirect('panel_principal')
+
+    usuario = get_object_or_404(Usuarios, ID_Usuario=pk)
+
+    if usuario.ID_Usuario == admin.ID_Usuario:
+        messages.error(request, 'No puede eliminarse a sí mismo.')
+        return redirect('gestion_usuarios')
+
+    nombre = usuario.Usuario
+
+    try:
+        with transaction.atomic():
+            usuario.delete()
+    except ProtectedError:
+        messages.error(
+            request,
+            f'No se puede eliminar al usuario "{nombre}": tiene '
+            'movimientos o alertas registrados.'
+        )
+        return redirect('gestion_usuarios')
+
+    messages.success(request, f'El usuario "{nombre}" fue eliminado.')
+
+    return redirect('gestion_usuarios')
+
+
+@require_POST
+def eliminar_perfil(request, pk):
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return redirect('panel_principal')
+
+    perfil = get_object_or_404(Perfiles, ID_Perfil=pk)
+    nombre = perfil.Nombre_perfil
+
+    if nombre in PERFILES_ADMIN:
+        messages.error(
+            request,
+            'No se puede eliminar un perfil de sistema.'
+        )
+        return redirect('gestion_perfiles')
+
+    if perfil.ID_Perfil == usuario.ID_Perfil.ID_Perfil:
+        messages.error(
+            request,
+            'No puede eliminar el perfil con el que inició sesión.'
+        )
+        return redirect('gestion_perfiles')
+
+    try:
+        with transaction.atomic():
+            perfil.delete()     # sus permisos asignados se borran en cascada
+    except ProtectedError:
+        messages.error(
+            request,
+            f'No se puede eliminar el perfil "{nombre}": '
+            'hay usuarios asignados.'
+        )
+        return redirect('gestion_perfiles')
+
+    messages.success(request, f'El perfil "{nombre}" fue eliminado.')
+
+    return redirect('gestion_perfiles')

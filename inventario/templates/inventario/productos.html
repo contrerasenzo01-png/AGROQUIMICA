@@ -424,6 +424,32 @@
 
                                     </form>
 
+                                    <!-- ELIMINAR -->
+
+                                    <form method="POST"
+                                          action="{% url 'eliminar_producto' producto.ID_Producto %}"
+                                          class="pr-form-estado"
+                                          onsubmit="return confirm('¿Eliminar este producto definitivamente? Solo es posible si no tiene lotes asociados.');">
+
+                                        {% csrf_token %}
+
+                                        <button type="submit"
+                                                class="pr-icon-btn pr-baja"
+                                                title="Eliminar producto"
+                                                aria-label="Eliminar producto">
+
+                                            <svg class="pr-icon" viewBox="0 0 24 24">
+                                                <path d="M3 6h18"/>
+                                                <path d="M8 6V4h8v2"/>
+                                                <path d="M19 6l-1 14H6L5 6"/>
+                                                <path d="M10 11v5"/>
+                                                <path d="M14 11v5"/>
+                                            </svg>
+
+                                        </button>
+
+                                    </form>
+
                                 </div>
 
                             </td>

@@ -87,8 +87,6 @@
 
                 <tr>
 
-                    <th>ID_Permiso</th>
-
                     <th>Nombre</th>
 
                     <th>Descripción</th>
@@ -108,14 +106,7 @@
 
                     <tr>
 
-                        <!-- ID -->
-                        <td>
-
-                            <span class="perm-id">
-                                PERM{{ permiso.ID_Permiso|stringformat:"02d" }}
-                            </span>
-
-                        </td>
+                        
 
 
                         <!-- NOMBRE -->
@@ -217,7 +208,7 @@
                     <tr>
 
                         <td
-                            colspan="5"
+                            colspan="4"
                             class="tabla-vacia">
 
                             <span class="perm-desc">
@@ -365,20 +356,7 @@
             {% csrf_token %}
 
 
-            <!-- ID -->
-            <div class="form-group">
-
-                <label for="ID_Permiso_editar">
-                    ID_Permiso
-                </label>
-
-                <input
-                    type="text"
-                    id="ID_Permiso_editar"
-                    readonly
-                >
-
-            </div>
+            
 
 
             <!-- NOMBRE -->
@@ -532,31 +510,20 @@ function cerrarModal() {
 }
 
 
-function abrirEditarPermiso(
-    id_permiso,
-    nombre_permiso,
-    descripcion_permiso
-) {
+function abrirEditarPermiso(id_permiso, nombre_permiso, descripcion_permiso) {
 
-    document.getElementById("ID_Permiso_editar").value =
-        "PERM" + String(id_permiso).padStart(2, "0");
-
+    console.log("ID del permiso:", id_permiso);
 
     document.getElementById("Nombre_permiso_editar").value =
         nombre_permiso;
 
-
     document.getElementById("Descripcion_permiso_editar").value =
         descripcion_permiso;
-
 
     document.getElementById("formEditarPermiso").action =
         "/permisos/editar/" + id_permiso + "/";
 
-
-    document.getElementById("modalEditarPermiso").style.display =
-        "flex";
-
+    document.getElementById("modalEditarPermiso").style.display = "flex";
 }
 
 

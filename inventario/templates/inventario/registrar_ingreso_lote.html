@@ -422,11 +422,11 @@
             </div>
 
             <div class="lt-campo">
-                <label for="editar_ID_Proveedor">Proveedor activo</label>
+                <label for="editar_ID_Proveedor">Proveedor</label>
                 <select name="ID_Proveedor" id="editar_ID_Proveedor" required>
-                    {% for proveedor in proveedores %}
+                    {% for proveedor in proveedores_edicion %}
                     <option value="{{ proveedor.ID_Proveedor }}">
-                        {{ proveedor.nombre_proveedor }}
+                        {{ proveedor.nombre_proveedor }}{% if not proveedor.estado_proveedor %} (inactivo){% endif %}
                     </option>
                     {% endfor %}
                 </select>
