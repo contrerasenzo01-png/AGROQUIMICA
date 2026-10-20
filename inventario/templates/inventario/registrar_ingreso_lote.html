@@ -130,7 +130,11 @@
                         </td>
 
                         <td class="lt-muted">
-                            {{ l.ID_Proveedor.nombre_proveedor|default:"Sin atribuir" }}
+                            {% if l.ID_Remito and l.ID_Remito.ID_Proveedor %}
+                                {{ l.ID_Remito.ID_Proveedor.nombre_proveedor }}
+                            {% else %}
+                                Sin atribuir
+                            {% endif %}
                         </td>
 
                         <td class="lt-muted">
@@ -190,7 +194,7 @@
                                         data-url="{% url 'editar_lote' l.ID_Lote %}"
                                         data-numero="{{ l.Numero_lote }}"
                                         data-marca="{{ l.ID_Producto.Marca|default:'' }}"
-                                        data-proveedor="{{ l.ID_Proveedor.ID_Proveedor }}"
+                                        data-remito="{{ l.ID_Remito.ID_Remito|default:'' }}"
                                         data-fecha-ingreso="{{ l.Fecha_ingreso|date:'Y-m-d' }}"
                                         data-vencimiento="{{ l.Fecha_vencimiento|date:'Y-m-d' }}"
                                         onclick="abrirModalEditarLote(this)">
@@ -281,12 +285,13 @@
             </div>
 
             <div class="lt-campo">
-                <label for="ID_Proveedor">Proveedor activo</label>
-                <select name="ID_Proveedor" id="ID_Proveedor" required>
-                    <option value="">Seleccionar proveedor</option>
-                    {% for proveedor in proveedores %}
-                    <option value="{{ proveedor.ID_Proveedor }}">
-                        {{ proveedor.nombre_proveedor }}
+                <label for="ID_Remito">Remito</label>
+                <select name="ID_Remito" id="ID_Remito" required>
+                    <option value="">Seleccionar remito</option>
+                    {% for remito in remitos %}
+                    <option value="{{ remito.ID_Remito }}">
+                        {{ remito.Numero_remito }} -
+                        {{ remito.ID_Proveedor.nombre_proveedor }}
                     </option>
                     {% endfor %}
                 </select>
@@ -399,13 +404,14 @@
             </div>
 
             <div class="lt-campo">
-                <label for="editar_ID_Proveedor">Proveedor</label>
-                <select name="ID_Proveedor"
-                        id="editar_ID_Proveedor"
+                <label for="editar_ID_Remito">Remito</label>
+                <select name="ID_Remito"
+                        id="editar_ID_Remito"
                         required>
-                    {% for proveedor in proveedores_edicion %}
-                    <option value="{{ proveedor.ID_Proveedor }}">
-                        {{ proveedor.nombre_proveedor }}{% if not proveedor.estado_proveedor %} (inactivo){% endif %}
+                    {% for remito in remitos_edicion %}
+                    <option value="{{ remito.ID_Remito }}">
+                        {{ remito.Numero_remito }} -
+                        {{ remito.ID_Proveedor.nombre_proveedor }}
                     </option>
                     {% endfor %}
                 </select>
@@ -501,8 +507,8 @@
         document.getElementById('editar_Marca').value =
             boton.dataset.marca || '';
 
-        document.getElementById('editar_ID_Proveedor').value =
-            boton.dataset.proveedor || '';
+        document.getElementById('editar_ID_Remito').value =
+            boton.dataset.remito || '';
 
         document.getElementById('editar_Fecha_ingreso').value =
             boton.dataset.fechaIngreso || '';

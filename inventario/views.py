@@ -26,6 +26,7 @@ from .models import (
     TiposProductos,
     Subtipos,
     Proveedores,
+    Remitos,
     TiposMovimientos,
     Perfiles,
     Permisos,
@@ -2562,8 +2563,9 @@ def registrar_ingreso_lote(request):
 
     lotes = Lotes.objects.select_related(
         'ID_Producto',
-        'ID_Proveedor'
-    ).order_by(
+        'ID_Remito',
+        'ID_Remito__ID_Proveedor'
+     ).order_by(
         '-Fecha_ingreso',
         '-ID_Lote'
     )
@@ -2572,8 +2574,9 @@ def registrar_ingreso_lote(request):
         lotes = lotes.filter(
             Q(Numero_lote__icontains=busqueda) |
             Q(ID_Producto__Nombre_producto__icontains=busqueda) |
-            Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
-        )
+            Q(ID_Remito__ID_Proveedor__nombre_proveedor__icontains=busqueda) |
+            Q(ID_Remito__Numero_remito__icontains=busqueda)
+    )
    
     if marca_filtro:
         lotes = lotes.filter(
@@ -2664,7 +2667,8 @@ def editar_lote(request, id):
     lote = get_object_or_404(
         Lotes.objects.select_related(
             'ID_Producto',
-            'ID_Proveedor'
+            'ID_Remito',
+            'ID_Remito__ID_Proveedor'
         ),
         ID_Lote=id
     )
@@ -2818,9 +2822,11 @@ def gestion_movimientos_stock(request):
         'ID_Tipo_movimiento',
         'ID_Lote',
         'ID_Lote__ID_Producto',
-        'ID_Lote__ID_Proveedor'
-    ).order_by('-Fecha_hora_movimiento')
+        'ID_Lote__ID_Remito',
+        'ID_Lote__ID_Remito__ID_Proveedor'
 
+    ).order_by('-Fecha_hora_movimiento')
+    
     if busqueda:
         movimientos = movimientos.filter(
             Q(ID_Lote__ID_Producto__Nombre_producto__icontains=busqueda)
@@ -2841,7 +2847,8 @@ def gestion_movimientos_stock(request):
 
     lotes = Lotes.objects.select_related(
         'ID_Producto',
-        'ID_Proveedor'
+        'ID_Remito',
+        'ID_Remito__ID_Proveedor'
     ).filter(Cantidad_actual__gt=0)
 
     return render(
@@ -3570,7 +3577,8 @@ def comprobante_movimiento_pdf(request, id_movimiento):
             'ID_Lote__ID_Producto',
             'ID_Lote__ID_Producto__ID_Tipo_producto',
             'ID_Lote__ID_Producto__ID_Subtipo',
-            'ID_Lote__ID_Proveedor',
+            'ID_Lote__ID_Remito',
+            'ID_Lote__ID_Remito__ID_Proveedor',
         ),
         ID_Movimiento_stock=id_movimiento
     )
@@ -3619,8 +3627,15 @@ def comprobante_movimiento_pdf(request, id_movimiento):
             ('Número de lote:', str(lote.Numero_lote)),
             (
                 'Proveedor:',
-                lote.ID_Proveedor.nombre_proveedor
-                if lote.ID_Proveedor else 'No disponible'
+                lote.ID_Remito.ID_Proveedor.nombre_proveedor
+                if lote.ID_Remito and lote.ID_Remito.ID_Proveedor
+                else 'No disponible'
+            ),
+            (
+                'Número de remito:',
+                lote.ID_Remito.Numero_remito
+                if lote.ID_Remito
+                else 'No disponible'
             ),
         ])
 
@@ -3679,6 +3694,143 @@ def comprobante_movimiento_pdf(request, id_movimiento):
 
     return respuesta
 
+
+
+def gestion_remitos(request):
+    usuario = usuario_autenticado(request)
+
+    if not usuario:
+        return redirect('login')
+
+    perfiles_permitidos = ('Administrador', 'Jefe', 'Secretaria')
+
+    if usuario.ID_Perfil.Nombre_perfil not in perfiles_permitidos:
+        messages.error(request, 'No tenés permiso para gestionar remitos.')
+        return redirect('panel_principal')
+
+    if request.method == 'POST':
+        accion = request.POST.get('accion', '').strip()
+
+        if accion == 'crear_remito':
+            proveedor_id = request.POST.get('ID_Proveedor', '').strip()
+            numero_remito = request.POST.get('Numero_remito', '').strip()
+            fecha_texto = request.POST.get('Fecha_remito', '').strip()
+
+            if not proveedor_id or not numero_remito or not fecha_texto:
+                messages.error(request, 'Completá todos los campos del remito.')
+                return redirect('gestion_remitos')
+
+            try:
+                fecha_remito = date.fromisoformat(fecha_texto)
+            except ValueError:
+                messages.error(request, 'La fecha del remito no es válida.')
+                return redirect('gestion_remitos')
+
+            try:
+                proveedor = Proveedores.objects.get(
+                    ID_Proveedor=proveedor_id,
+                    estado_proveedor=True
+                )
+
+                Remitos.objects.create(
+                    ID_Proveedor=proveedor,
+                    Numero_remito=numero_remito,
+                    Fecha_remito=fecha_remito
+                )
+
+                messages.success(request, 'El remito se registró correctamente.')
+
+            except Proveedores.DoesNotExist:
+                messages.error(request, 'El proveedor seleccionado no existe o está inactivo.')
+
+            except IntegrityError:
+                messages.error(
+                    request,
+                    'Ese número de remito ya está registrado para este proveedor.'
+                )
+
+            return redirect('gestion_remitos')
+
+        elif accion == 'editar_remito':
+            remito_id = request.POST.get('ID_Remito', '').strip()
+            numero_remito = request.POST.get('Numero_remito', '').strip()
+            fecha_texto = request.POST.get('Fecha_remito', '').strip()
+
+            if not remito_id or not numero_remito or not fecha_texto:
+                messages.error(request, 'Completá todos los campos del remito.')
+                return redirect('gestion_remitos')
+
+            try:
+                fecha_remito = date.fromisoformat(fecha_texto)
+            except ValueError:
+                messages.error(request, 'La fecha del remito no es válida.')
+                return redirect('gestion_remitos')
+
+            try:
+                remito = Remitos.objects.get(ID_Remito=remito_id)
+
+                remito.Numero_remito = numero_remito
+                remito.Fecha_remito = fecha_remito
+                remito.save(update_fields=['Numero_remito', 'Fecha_remito'])
+
+                messages.success(request, 'El remito se actualizó correctamente.')
+
+            except Remitos.DoesNotExist:
+                messages.error(request, 'El remito seleccionado no existe.')
+
+            except IntegrityError:
+                messages.error(
+                    request,
+                    'Ya existe otro remito con ese número para el mismo proveedor.'
+                )
+
+            return redirect('gestion_remitos')
+
+        else:
+            messages.error(request, 'La operación solicitada no es válida.')
+            return redirect('gestion_remitos')
+
+    remitos = (
+        Remitos.objects
+        .select_related('ID_Proveedor')
+        .prefetch_related('lotes__ID_Producto')
+        .order_by('-Fecha_remito', '-ID_Remito')
+    )
+
+    busqueda = request.GET.get('q', '').strip()
+    proveedor_filtro = request.GET.get('proveedor', '').strip()
+
+    if busqueda:
+        remitos = remitos.filter(
+            Q(Numero_remito__icontains=busqueda)
+            | Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
+        )
+
+    if proveedor_filtro:
+        remitos = remitos.filter(ID_Proveedor__ID_Proveedor=proveedor_filtro)
+
+    proveedores = Proveedores.objects.filter(
+        estado_proveedor=True
+    ).order_by('nombre_proveedor')
+
+    contexto = {
+        'usuario': usuario,
+        'remitos': remitos,
+        'proveedores': proveedores,
+        'total_remitos': Remitos.objects.count(),
+        'total_proveedores': Remitos.objects.values(
+            'ID_Proveedor'
+        ).distinct().count(),
+        'total_lotes': Lotes.objects.count(),
+        'busqueda': busqueda,
+        'proveedor_filtro': proveedor_filtro,
+    }
+
+    return render(
+        request,
+        'inventario/gestion_remitos.html',
+        contexto
+    )
 
 # ============================================================
 # PEGAR AL FINAL DE views.py

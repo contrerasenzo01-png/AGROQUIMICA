@@ -1,10 +1,10 @@
 from django.db import models
 from django.utils import timezone
 
+
 class TiposProductos(models.Model):
     ID_Tipo_producto = models.AutoField(primary_key=True)
     Nombre_tipo_producto = models.CharField(max_length=50)
-
 
     class Meta:
         db_table = 'TIPOS_PRODUCTOS'
@@ -26,12 +26,11 @@ class Subtipos(models.Model):
 
     Nombre_subtipo = models.CharField(max_length=50)
 
-    Descripcion_subtipo = models.CharField(      # <- agregar estas 5 líneas
+    Descripcion_subtipo = models.CharField(
         max_length=200,
         blank=True,
         null=True
     )
-
 
     class Meta:
         db_table = 'SUBTIPOS'
@@ -99,6 +98,35 @@ class Proveedores(models.Model):
             return f"{palabras[0][0]}{palabras[1][0]}".upper()
 
         return self.nombre_proveedor[:2].upper()
+
+
+class Remitos(models.Model):
+    ID_Remito = models.AutoField(primary_key=True)
+
+    ID_Proveedor = models.ForeignKey(
+        Proveedores,
+        on_delete=models.PROTECT,
+        db_column='ID_Proveedor',
+        related_name='remitos'
+    )
+
+    Numero_remito = models.CharField(max_length=20)
+
+    Fecha_remito = models.DateField()
+
+    class Meta:
+        db_table = 'REMITO'
+        verbose_name = "Remito"
+        verbose_name_plural = "Remitos"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ID_Proveedor', 'Numero_remito'],
+                name='uq_remito_proveedor_numero'
+            )
+        ]
+
+    def __str__(self):
+        return f"Remito {self.Numero_remito}"
 
 
 class TiposMovimientos(models.Model):
@@ -226,7 +254,10 @@ class Usuarios(models.Model):
         verbose_name_plural = "Usuarios"
 
     def __str__(self):
-        return f"{self.Nombre_usuario} {self.Apellido_usuario} ({self.Usuario})"
+        return (
+            f"{self.Nombre_usuario} "
+            f"{self.Apellido_usuario} ({self.Usuario})"
+        )
 
 
 class Productos(models.Model):
@@ -234,14 +265,14 @@ class Productos(models.Model):
 
     ID_Tipo_producto = models.ForeignKey(
         TiposProductos,
-        on_delete=models.PROTECT,       
+        on_delete=models.PROTECT,
         db_column='ID_Tipo_producto'
     )
 
     ID_Subtipo = models.ForeignKey(
         'Subtipos',
-        on_delete=models.PROTECT,        
-        null=True,                       
+        on_delete=models.PROTECT,
+        null=True,
         blank=True,
         db_column='ID_Subtipo'
     )
@@ -300,22 +331,24 @@ class Productos(models.Model):
 class Lotes(models.Model):
     ID_Lote = models.AutoField(primary_key=True)
 
-    ID_Proveedor = models.ForeignKey(
-        Proveedores,
+    ID_Remito = models.ForeignKey(
+        Remitos,
         on_delete=models.PROTECT,
-        db_column='ID_Proveedor',
-        related_name='lotes'
+        db_column='ID_Remito',
+        related_name='lotes',
+        null=True,
+        blank=True
     )
 
     ID_Producto = models.ForeignKey(
         Productos,
-        on_delete=models.PROTECT,        
+        on_delete=models.PROTECT,
         db_column='ID_Producto',
         related_name='lotes'
     )
 
-    Numero_lote = models.CharField(max_length=50, unique=True)
- 
+    Numero_lote = models.CharField(max_length=50)
+
     Cantidad_ingresada = models.IntegerField()
 
     Cantidad_actual = models.IntegerField()
@@ -327,15 +360,23 @@ class Lotes(models.Model):
     class Meta:
         db_table = 'LOTES'
         verbose_name_plural = "Lotes"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ID_Producto', 'Numero_lote'],
+                name='uq_lote_producto_numero'
+            )
+        ]
 
     @property
     def estado_actual(self):
         hoy = timezone.localdate()
 
         if self.Fecha_vencimiento < hoy:
-               return 'Vencido'
+            return 'Vencido'
+
         if self.Cantidad_actual <= 0:
-               return 'Agotado'
+            return 'Agotado'
+
         return 'Activo'
 
     def __str__(self):
@@ -395,9 +436,7 @@ class Alertas(models.Model):
         blank=True
     )
 
-    Atendida = models.BooleanField(
-        default=False
-    )
+    Atendida = models.BooleanField(default=False)
 
     Fecha_hora_atencion = models.DateTimeField(
         null=True,
@@ -406,10 +445,10 @@ class Alertas(models.Model):
 
     ID_Usuario = models.ForeignKey(
         Usuarios,
-        on_delete=models.PROTECT,        
+        on_delete=models.PROTECT,
         db_column='ID_Usuario',
         related_name='alertas_atendidas',
-        null=True,                       
+        null=True,
         blank=True
     )
 
@@ -429,7 +468,7 @@ class MovimientosStock(models.Model):
 
     ID_Tipo_movimiento = models.ForeignKey(
         TiposMovimientos,
-        on_delete=models.PROTECT,       
+        on_delete=models.PROTECT,
         db_column='ID_Tipo_movimiento'
     )
 

@@ -17,6 +17,8 @@ urlpatterns = [
     path('proveedores/estado/<int:pk>/', views.cambiar_estado_proveedor, name='cambiar_estado_proveedor'),
     path('proveedores/eliminar/<int:pk>/', views.eliminar_proveedor, name='eliminar_proveedor'),
 
+    # Remitos
+    path('remitos/', views.gestion_remitos, name='gestion_remitos'),
 
     # Tipos de productos
     path('tipos-productos/', views.gestion_tipos_productos, name='gestion_tipos_productos'),

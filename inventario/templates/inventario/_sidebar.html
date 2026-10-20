@@ -56,7 +56,7 @@
         <circle cx="18.5" cy="18.5" r="2.5"/>
     </symbol>
 
-    <!-- Ingreso -->
+    <!-- Remitos -->
     <symbol id="i-inbox" viewBox="0 0 24 24">
         <path d="M3 4h18v16H3z"/>
         <path d="M3 14h5l2 3h4l2-3h5"/>
@@ -108,7 +108,6 @@
 
     <!-- LOGO -->
     <div class="sidebar-logo">
-
         <div class="logo-icon">
             <svg class="logo-svg">
                 <use href="#i-leaf"></use>
@@ -119,83 +118,31 @@
             <strong>Agroquímica</strong>
             <span>del Valle</span>
         </div>
-
     </div>
 
 
-    <!-- ==========================================
-         MENÚ
-         ========================================== -->
+    <!-- MENÚ SEGÚN PERFIL -->
+    {% with perfil=usuario.ID_Perfil.Nombre_perfil|default:""|lower %}
 
     <nav class="sidebar-nav">
 
-        <!-- PANEL PRINCIPAL: AMBOS PERFILES -->
+        <!-- PANEL PRINCIPAL: TODOS LOS PERFILES -->
         <div class="nav-item">
             <a href="{% url 'panel_principal' %}"
                class="nav-link {% if activo == 'panel' %}active{% endif %}">
-
                 <svg class="nav-icon">
                     <use href="#i-panel"></use>
                 </svg>
-
                 <span>Panel Principal</span>
             </a>
         </div>
 
 
-        {% if usuario.ID_Perfil.Nombre_perfil == 'Vendedor 1' %}
+        <!-- ==========================================
+             ADMINISTRADOR / JEFE
+             ========================================== -->
 
-            <!-- ==========================================
-                 MENÚ PARA VENDEDOR
-                 ========================================== -->
-
-            <div class="nav-section">
-                <span class="nav-section-title">GESTIÓN</span>
-            </div>
-
-            <!-- PRODUCTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_productos' %}"
-                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-
-                    <span>Productos</span>
-                </a>
-            </div>
-
-            <div class="nav-item">
-                <a href="{% url 'gestion_movimientos_stock' %}"
-                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-swap"></use>
-                    </svg>
-
-                    <span>Movimientos de stock</span>
-                </a>
-            </div>
-
-            <div class="nav-item">
-                <a href="{% url 'mis_permisos' %}"
-                class="nav-link {% if activo == 'mis_permisos' %}active{% endif %}">
-
-                    <svg class="nav-icon">
-                        <use href="#i-key"></use>
-                    </svg>
-
-                    <span>Mis permisos</span>
-                </a>
-            </div>
-
-
-        {% else %}
-
-            <!-- ==========================================
-                 MENÚ PARA ADMINISTRADOR
-                 ========================================== -->
+        {% if perfil == 'administrador' or perfil == 'jefe' %}
 
             <div class="nav-section">
                 <span class="nav-section-title">ADMINISTRACIÓN</span>
@@ -205,11 +152,9 @@
             <div class="nav-item">
                 <a href="{% url 'gestion_usuarios' %}"
                    class="nav-link {% if activo == 'usuarios' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-users"></use>
                     </svg>
-
                     <span>Usuarios del sistema</span>
                 </a>
             </div>
@@ -218,12 +163,10 @@
             <div class="nav-item">
                 <a href="{% url 'gestion_productos' %}"
                    class="nav-link {% if activo == 'productos' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-package"></use>
                     </svg>
-
-                    <span>Productos</span>
+                    <span>Productos y stock</span>
                 </a>
             </div>
 
@@ -231,12 +174,10 @@
             <div class="nav-item">
                 <a href="{% url 'gestion_tipos_productos' %}"
                    class="nav-link {% if activo == 'tipos' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-layers"></use>
                     </svg>
-
-                    <span>Tipos de Productos</span>
+                    <span>Tipos de productos</span>
                 </a>
             </div>
 
@@ -244,25 +185,37 @@
             <div class="nav-item">
                 <a href="{% url 'gestion_subtipos' %}"
                    class="nav-link {% if activo == 'subtipos' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-tags"></use>
                     </svg>
-
                     <span>Subtipos</span>
                 </a>
+            </div>
+
+
+            <div class="nav-section">
+                <span class="nav-section-title">INVENTARIO Y COMPRAS</span>
             </div>
 
             <!-- PROVEEDORES -->
             <div class="nav-item">
                 <a href="{% url 'gestion_proveedores' %}"
                    class="nav-link {% if activo == 'proveedores' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-truck"></use>
                     </svg>
-
                     <span>Proveedores</span>
+                </a>
+            </div>
+
+            <!-- REMITOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_remitos' %}"
+                   class="nav-link {% if activo == 'remitos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-inbox"></use>
+                    </svg>
+                    <span>Remitos y facturas</span>
                 </a>
             </div>
 
@@ -270,43 +223,36 @@
             <div class="nav-item">
                 <a href="{% url 'registrar_ingreso_lote' %}"
                    class="nav-link {% if activo == 'lotes' %}active{% endif %}">
-
                     <svg class="nav-icon">
-                        <use href="#i-inbox"></use>
+                        <use href="#i-package"></use>
                     </svg>
-
-                    <span>Lotes</span>
+                    <span>Lotes y vencimientos</span>
                 </a>
             </div>
 
-            <!-- MOVIMIENTOS DE STOCK -->
+            <!-- MOVIMIENTOS -->
             <div class="nav-item">
                 <a href="{% url 'gestion_movimientos_stock' %}"
                    class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-swap"></use>
                     </svg>
-
                     <span>Movimientos de stock</span>
                 </a>
             </div>
 
-            <!-- HISTORIAL DE ALERTAS -->
+            <!-- ALERTAS -->
             <div class="nav-item">
                 <a href="{% url 'historial_alertas' %}"
                    class="nav-link {% if activo == 'alertas' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-bell"></use>
                     </svg>
-
-                    <span>Historial de Alertas</span>
+                    <span>Historial de alertas</span>
                 </a>
             </div>
 
 
-            <!-- SECCIÓN SEGURIDAD -->
             <div class="nav-section">
                 <span class="nav-section-title">SEGURIDAD</span>
             </div>
@@ -315,11 +261,9 @@
             <div class="nav-item">
                 <a href="{% url 'gestion_perfiles' %}"
                    class="nav-link {% if activo == 'perfiles' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-shield"></use>
                     </svg>
-
                     <span>Perfiles de acceso</span>
                 </a>
             </div>
@@ -328,18 +272,166 @@
             <div class="nav-item">
                 <a href="{% url 'gestion_permisos' %}"
                    class="nav-link {% if activo == 'permisos' %}active{% endif %}">
-
                     <svg class="nav-icon">
                         <use href="#i-key"></use>
                     </svg>
-
                     <span>Permisos del sistema</span>
+                </a>
+            </div>
+
+
+        <!-- ==========================================
+             SECRETARIA
+             ========================================== -->
+
+        {% elif perfil == 'secretaria' %}
+
+            <div class="nav-section">
+                <span class="nav-section-title">ENTRADAS DE PRODUCTOS</span>
+            </div>
+
+            <!-- REMITOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_remitos' %}"
+                   class="nav-link {% if activo == 'remitos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-inbox"></use>
+                    </svg>
+                    <span>Remitos y facturas</span>
+                </a>
+            </div>
+
+            <!-- INGRESO DE LOTES -->
+            <div class="nav-item">
+                <a href="{% url 'registrar_ingreso_lote' %}"
+                   class="nav-link {% if activo == 'lotes' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-package"></use>
+                    </svg>
+                    <span>Registrar entrada y lotes</span>
+                </a>
+            </div>
+
+            <!-- PROVEEDORES -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_proveedores' %}"
+                   class="nav-link {% if activo == 'proveedores' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-truck"></use>
+                    </svg>
+                    <span>Consultar proveedores</span>
+                </a>
+            </div>
+
+
+            <div class="nav-section">
+                <span class="nav-section-title">CONSULTAS DE STOCK</span>
+            </div>
+
+            <!-- PRODUCTOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_productos' %}"
+                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-package"></use>
+                    </svg>
+                    <span>Consultar productos</span>
+                </a>
+            </div>
+
+            <!-- MOVIMIENTOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_movimientos_stock' %}"
+                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-swap"></use>
+                    </svg>
+                    <span>Movimientos de stock</span>
+                </a>
+            </div>
+
+
+        <!-- ==========================================
+             VENDEDOR 1
+             ========================================== -->
+
+        {% elif perfil == 'vendedor 1' %}
+
+            <div class="nav-section">
+                <span class="nav-section-title">VENTAS</span>
+            </div>
+
+            <!-- PRODUCTOS Y STOCK -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_productos' %}"
+                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-package"></use>
+                    </svg>
+                    <span>Productos y stock</span>
+                </a>
+            </div>
+
+            <!-- MOVIMIENTOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_movimientos_stock' %}"
+                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-swap"></use>
+                    </svg>
+                    <span>Movimientos de stock</span>
+                </a>
+            </div>
+
+            <!-- MIS PERMISOS -->
+            <div class="nav-item">
+                <a href="{% url 'mis_permisos' %}"
+                   class="nav-link {% if activo == 'mis_permisos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-key"></use>
+                    </svg>
+                    <span>Mis permisos</span>
+                </a>
+            </div>
+
+
+        <!-- ==========================================
+             VENDEDOR 2
+             ========================================== -->
+
+        {% elif perfil == 'vendedor 2' %}
+
+            <div class="nav-section">
+                <span class="nav-section-title">STOCK Y REPOSICIÓN</span>
+            </div>
+
+            <!-- CONSULTAR STOCK -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_productos' %}"
+                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-package"></use>
+                    </svg>
+                    <span>Consultar stock</span>
+                </a>
+            </div>
+
+            <!-- MOVIMIENTOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_movimientos_stock' %}"
+                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-swap"></use>
+                    </svg>
+                    <span>Movimientos de stock</span>
                 </a>
             </div>
 
         {% endif %}
 
     </nav>
+
+    {% endwith %}
 
 
     <!-- ==========================================
@@ -348,7 +440,7 @@
 
     <div class="sidebar-footer">
 
-        <!-- INFORMACIÓN DEL USUARIO -->
+        <!-- DATOS DEL USUARIO -->
         <div class="sidebar-user">
 
             <div class="sidebar-user-avatar">
