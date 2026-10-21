@@ -1775,6 +1775,7 @@ def editar_permiso(request, pk):
     return redirect('gestion_permisos')
 
 
+@require_POST
 def eliminar_permiso(request, pk):
 
     usuario = usuario_es_administrador(request)
@@ -1787,23 +1788,27 @@ def eliminar_permiso(request, pk):
         ID_Permiso=pk
     )
 
-    if request.method == 'POST':
+    nombre_permiso = permiso.Nombre_permiso
 
-        nombre_permiso = permiso.Nombre_permiso
+    perfiles_asignados = list(
+        permiso.perfiles.values_list('Nombre_perfil', flat=True)
+    )
 
-        with transaction.atomic():
-
-            PerfilesXPermisos.objects.filter(
-                ID_Permiso=permiso
-            ).delete()
-
-            permiso.delete()
-
-        messages.success(
+    if perfiles_asignados:
+        messages.error(
             request,
-            f'El permiso "{nombre_permiso}" '
-            'fue eliminado correctamente.'
+            f'No se puede eliminar el permiso "{nombre_permiso}": '
+            f'está asignado a {", ".join(perfiles_asignados)}. '
+            'Quítelo primero desde Editar perfil.'
         )
+        return redirect('gestion_permisos')
+
+    permiso.delete()
+
+    messages.success(
+        request,
+        f'El permiso "{nombre_permiso}" fue eliminado correctamente.'
+    )
 
     return redirect('gestion_permisos')
 
@@ -2049,7 +2054,9 @@ def gestion_productos(request):
         'ID_Tipo_producto',
         'ID_Subtipo',
         'stock'
-    ).all()
+    ).annotate(
+        num_lotes=Count('lotes')
+    )
 
     # --------------------------------------------------------
     # BÚSQUEDA
@@ -2306,7 +2313,7 @@ def eliminar_producto(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el producto "{nombre}": tiene '
-            'lotes asociados. Puede darlo de baja.'
+            'lotes asociados.'
         )
         return redirect('gestion_productos')
 
@@ -2317,7 +2324,7 @@ def eliminar_producto(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el producto "{nombre}": tiene '
-            'registros asociados. Puede darlo de baja.'
+            'registros asociados.'
         )
         return redirect('gestion_productos')
 
@@ -2365,7 +2372,7 @@ def registrar_ingreso_lote(request):
     if request.method == 'POST':
 
         proveedor_id = request.POST.get(
-            'ID_Proveedor',
+            'ID_Remito',
             ''
         ).strip()
 
@@ -3861,7 +3868,7 @@ def eliminar_proveedor(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el proveedor "{nombre}": '
-            'tiene lotes registrados.'
+            'tiene remitos registrados.'
         )
         return redirect('gestion_proveedores')
 
