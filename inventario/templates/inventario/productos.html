@@ -372,58 +372,6 @@
                                     </button>
 
 
-                                    <!-- CAMBIAR ESTADO -->
-
-                                    <form id="form-estado-{{ producto.ID_Producto }}"
-                                          method="POST"
-                                          action="{% url 'cambiar_estado_producto' producto.ID_Producto %}"
-                                          class="pr-form-estado"
-                                          onsubmit="procesarSolicitudEstado(
-                                              event,
-                                              '{{ producto.ID_Producto }}',
-                                              '{{ producto.Nombre_producto|escapejs }}',
-                                              '{{ producto.ID_Tipo_producto.Nombre_tipo_producto|escapejs }}',
-                                              '{{ producto.Marca|default:''|escapejs }}',
-                                              '{{ producto.Precio|unlocalize }}',
-                                              '{{ producto.Cantidad_presentacion|default_if_none:''|unlocalize }}',
-                                              '{{ producto.Unidad_medida_producto|default:''|escapejs }}'
-                                          )">
-
-                                        {% csrf_token %}
-
-                                        <input type="hidden"
-                                               name="estado"
-                                               id="estado-{{ producto.ID_Producto }}"
-                                               value="{% if producto.Estado_producto == 'Activo' %}inactivo{% else %}activo{% endif %}">
-
-
-                                        <button type="submit"
-                                                id="btn-estado-{{ producto.ID_Producto }}"
-                                                class="pr-icon-btn {% if producto.Estado_producto == 'Activo' %}pr-baja{% else %}pr-activar{% endif %}"
-                                                title="{% if producto.Estado_producto == 'Activo' %}Dar de baja{% else %}Activar producto{% endif %}"
-                                                aria-label="{% if producto.Estado_producto == 'Activo' %}Dar de baja{% else %}Activar producto{% endif %}">
-
-                                            {% if producto.Estado_producto == 'Activo' %}
-
-                                                <svg class="pr-icon" viewBox="0 0 24 24">
-                                                    <path d="M3 6h18"/>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
-                                                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                                </svg>
-
-                                            {% else %}
-
-                                                <svg class="pr-icon" viewBox="0 0 24 24">
-                                                    <path d="M21.801 10A10 10 0 1 1 17 3.335"/>
-                                                    <path d="m9 11 3 3L22 4"/>
-                                                </svg>
-
-                                            {% endif %}
-
-                                        </button>
-
-                                    </form>
-
                                     <!-- ELIMINAR -->
 
                                     <form method="POST"
@@ -1075,180 +1023,13 @@
 </div>
 
 
-<!-- =====================================================
-     MODAL CONFIRMAR BAJA
-===================================================== -->
-
-<div class="pr-modal"
-     id="modalConfirmarBaja">
-
-    <div class="pr-modal-box">
-
-        <div class="pr-modal-head">
-
-            <h2>
-                Confirmar baja
-            </h2>
-
-            <button type="button"
-                    class="pr-modal-x"
-                    onclick="cerrarModal('modalConfirmarBaja')"
-                    aria-label="Cerrar">
-
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-
-            </button>
-
-        </div>
 
 
-        <div class="pr-modal-body">
-
-            <div class="pr-aviso">
-
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
-                    <path d="M12 9v4"/>
-                    <path d="M12 17h.01"/>
-                </svg>
-
-                Verificá que sea el producto correcto antes de confirmar la baja.
-
-            </div>
-
-
-            <div class="pr-resumen">
-
-                <div class="pr-resumen-cab">
-
-                    <div class="pr-avatar"
-                         id="baja_avatar">
-                        PR
-                    </div>
-
-                    <div>
-
-                        <h4 id="baja_nombre">
-                            Producto
-                        </h4>
-
-                        <p>
-                            Producto registrado
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="pr-resumen-grid">
-
-                    <div class="pr-dato">
-                        <span class="lbl">Código</span>
-                        <span class="val" id="baja_id">PROD00</span>
-                    </div>
-
-                    <div class="pr-dato">
-                        <span class="lbl">Nombre</span>
-                        <span class="val" id="baja_nombre_detalle">--</span>
-                    </div>
-
-                    <div class="pr-dato">
-                        <span class="lbl">Tipo de producto</span>
-                        <span class="val" id="baja_tipo">--</span>
-                    </div>
-
-                    <div class="pr-dato">
-                        <span class="lbl">Marca</span>
-                        <span class="val" id="baja_marca">--</span>
-                    </div>
-
-                    <div class="pr-dato">
-                        <span class="lbl">Precio</span>
-                        <span class="val" id="baja_precio">--</span>
-                    </div>
-
-                    <div class="pr-dato">
-                        <span class="lbl">Presentación</span>
-                        <span class="val" id="baja_cantidad">--</span>
-                    </div>
-
-                    <div class="pr-dato">
-
-                        <span class="lbl">
-                            Estado
-                        </span>
-
-                        <span class="val"
-                              id="baja_estado"
-                              style="color:#15803d;">
-
-                            Activo
-
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="pr-modal-pie">
-
-            <button type="button"
-                    class="pr-btn pr-btn-claro"
-                    onclick="cerrarModal('modalConfirmarBaja')">
-
-                Cancelar
-
-            </button>
-
-
-            <button type="button"
-                    class="pr-btn pr-btn-peligro"
-                    id="btnConfirmarBajaEjecutar">
-
-                Confirmar baja
-
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-{% endblock %}
-
-
-{% block extra_js %}
+    {% block extra_js %}
 
 <script>
 
-    let formPendingState = null;
-    let idPendingState = null;
-    let namePendingState = null;
-
-
-    const ICONO_BAJA =
-        '<svg class="pr-icon" viewBox="0 0 24 24">' +
-        '<path d="M3 6h18"/>' +
-        '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>' +
-        '<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
-        '</svg>';
-
-
-    const ICONO_ACTIVAR =
-        '<svg class="pr-icon" viewBox="0 0 24 24">' +
-        '<path d="M21.801 10A10 10 0 1 1 17 3.335"/>' +
-        '<path d="m9 11 3 3L22 4"/>' +
-        '</svg>';
+    
 
 
     /* =====================================================
@@ -1382,6 +1163,19 @@
 
         }
 
+    }
+
+
+    /* =====================================================
+    CERRAR MODALES
+    ===================================================== */
+
+    function cerrarModal(idModal) {
+        const modal = document.getElementById(idModal);
+
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
 
@@ -1540,390 +1334,29 @@
     }
 
 
-    /* =====================================================
-       CERRAR MODALES
-    ===================================================== */
-
-    function cerrarModal(idModal) {
-
-        document.getElementById(
-            idModal
-        ).style.display =
-            'none';
-
-    }
-
+        /* =====================================================
+         CERRAR MODALES AL HACER CLIC FUERA
+        ===================================================== */
 
     [
         'modalCrearProducto',
-        'modalEditarProducto',
-        'modalConfirmarBaja'
+        'modalEditarProducto'
     ].forEach(function (id) {
 
-        document.getElementById(id)
-            .addEventListener(
-                'click',
-                function (e) {
+        const modal = document.getElementById(id);
 
-                    if (e.target === this) {
-                        cerrarModal(id);
-                    }
+        if (modal) {
+            modal.addEventListener('click', function (e) {
 
+                if (e.target === this) {
+                    cerrarModal(id);
                 }
-            );
+
+            });
+        }
 
     });
-
-
-    /* =====================================================
-       SOLICITUD DE CAMBIO DE ESTADO
-    ===================================================== */
-
-    function procesarSolicitudEstado(
-        event,
-        id,
-        nombre,
-        tipo,
-        marca,
-        precio,
-        cantidad,
-        unidad
-    ) {
-
-        event.preventDefault();
-
-
-        const form =
-            event.target;
-
-
-        const btn =
-            document.getElementById(
-                'btn-estado-' + id
-            );
-
-
-        const esActivo =
-            btn.classList.contains(
-                'pr-baja'
-            );
-
-
-        if (esActivo) {
-
-            formPendingState =
-                form;
-
-            idPendingState =
-                id;
-
-            namePendingState =
-                nombre;
-
-
-            document.getElementById(
-                'baja_nombre'
-            ).innerText =
-                nombre;
-
-
-            document.getElementById(
-                'baja_id'
-            ).innerText =
-                'PROD' + id;
-
-
-            document.getElementById(
-                'baja_nombre_detalle'
-            ).innerText =
-                nombre;
-
-
-            document.getElementById(
-                'baja_tipo'
-            ).innerText =
-                tipo;
-
-
-            document.getElementById(
-                'baja_marca'
-            ).innerText =
-                marca || '—';
-
-
-            document.getElementById(
-                'baja_precio'
-            ).innerText =
-                '$' + precio;
-
-
-            document.getElementById(
-                'baja_cantidad'
-            ).innerText =
-                (cantidad + ' ' + unidad).trim();
-
-
-            document.getElementById(
-                'baja_estado'
-            ).innerText =
-                'Activo';
-
-
-            document.getElementById(
-                'modalConfirmarBaja'
-            ).style.display =
-                'flex';
-
-
-            return;
-
-        }
-
-
-        ejecutarCambioEstado(
-            form,
-            id,
-            nombre,
-            false
-        );
-
-    }
-
-
-    /* =====================================================
-       CONFIRMAR BAJA
-    ===================================================== */
-
-    document.getElementById(
-        'btnConfirmarBajaEjecutar'
-    ).addEventListener(
-        'click',
-        function () {
-
-            if (!formPendingState) {
-                return;
-            }
-
-
-            cerrarModal(
-                'modalConfirmarBaja'
-            );
-
-
-            ejecutarCambioEstado(
-                formPendingState,
-                idPendingState,
-                namePendingState,
-                true
-            );
-
-
-            formPendingState = null;
-            idPendingState = null;
-            namePendingState = null;
-
-        }
-    );
-
-
-    /* =====================================================
-       CAMBIAR ESTADO
-    ===================================================== */
-
-    function ejecutarCambioEstado(
-        form,
-        id,
-        nombre,
-        esBaja
-    ) {
-
-        const btn =
-            document.getElementById(
-                'btn-estado-' + id
-            );
-
-
-        const badge =
-            document.getElementById(
-                'badge-estado-' + id
-            );
-
-
-        const fila =
-            document.getElementById(
-                'card-' + id
-            );
-
-
-        const estado =
-            document.getElementById(
-                'estado-' + id
-            );
-
-
-        const totalActivos =
-            document.getElementById(
-                'totalActivos'
-            );
-
-
-        estado.value =
-            esBaja
-                ? 'inactivo'
-                : 'activo';
-
-
-        fetch(
-            form.action,
-            {
-
-                method: 'POST',
-
-                body: new FormData(form),
-
-                headers: {
-                    'X-Requested-With':
-                        'XMLHttpRequest'
-                }
-
-            }
-        )
-
-        .then(function (response) {
-
-            if (!response.ok) {
-
-                throw new Error(
-                    'Error al cambiar el estado'
-                );
-
-            }
-
-
-            if (esBaja) {
-
-                btn.classList.remove(
-                    'pr-baja'
-                );
-
-                btn.classList.add(
-                    'pr-activar'
-                );
-
-                btn.innerHTML =
-                    ICONO_ACTIVAR;
-
-                btn.title =
-                    'Activar producto';
-
-
-                badge.classList.remove(
-                    'pr-activo'
-                );
-
-                badge.classList.add(
-                    'pr-inactivo'
-                );
-
-                badge.innerText =
-                    'Inactivo';
-
-
-                fila.classList.add(
-                    'inactivo'
-                );
-
-                fila.dataset.estado =
-                    'Inactivo';
-
-
-                totalActivos.innerText =
-                    Math.max(
-                        0,
-                        parseInt(
-                            totalActivos.innerText,
-                            10
-                        ) - 1
-                    );
-
-
-                mostrarToast(
-                    'El producto "' +
-                    nombre +
-                    '" ha sido dado de baja.',
-                    'warning'
-                );
-
-
-            } else {
-
-                btn.classList.remove(
-                    'pr-activar'
-                );
-
-                btn.classList.add(
-                    'pr-baja'
-                );
-
-                btn.innerHTML =
-                    ICONO_BAJA;
-
-                btn.title =
-                    'Dar de baja';
-
-
-                badge.classList.remove(
-                    'pr-inactivo'
-                );
-
-                badge.classList.add(
-                    'pr-activo'
-                );
-
-                badge.innerText =
-                    'Activo';
-
-
-                fila.classList.remove(
-                    'inactivo'
-                );
-
-                fila.dataset.estado =
-                    'Activo';
-
-
-                totalActivos.innerText =
-                    parseInt(
-                        totalActivos.innerText,
-                        10
-                    ) + 1;
-
-
-                mostrarToast(
-                    'El producto "' +
-                    nombre +
-                    '" ha sido activado.',
-                    'success'
-                );
-
-            }
-
-
-            filtrarProductos();
-
-        })
-
-
-        .catch(function (error) {
-
-            console.error(error);
-
-            form.submit();
-
-        });
-
-    }
-
+    
 
     /* =====================================================
        TOASTS
@@ -2032,4 +1465,6 @@
 
 </script>
 
-{% endblock %}
+{% endblock extra_js %}
+
+{% endblock contenido %}

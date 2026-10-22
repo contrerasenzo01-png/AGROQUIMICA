@@ -4,11 +4,23 @@ from django.utils import timezone
 
 class TiposProductos(models.Model):
     ID_Tipo_producto = models.AutoField(primary_key=True)
+
     Nombre_tipo_producto = models.CharField(max_length=50)
+
+    ESTADO_CHOICES = [
+        (True, 'Activo'),
+        (False, 'Inactivo'),
+    ]
+
+    Estado_tipo_producto = models.BooleanField(
+        default=True,
+        choices=ESTADO_CHOICES,
+        verbose_name='Estado'
+    )
 
     class Meta:
         db_table = 'TIPOS_PRODUCTOS'
-        verbose_name_plural = "Tipos de Productos"
+        verbose_name_plural = 'Tipos de Productos'
 
     def __str__(self):
         return self.Nombre_tipo_producto

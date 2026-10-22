@@ -92,7 +92,6 @@
 
                             <td>
                                 <span class="pv-nombre">{{ p.nombre_proveedor }}</span>
-                                <span class="pv-codigo">SUP-0{{ p.pk }}</span>
                             </td>
 
                             <td class="pv-muted">{{ p.telefono_proveedor|default:"—" }}</td>
@@ -138,7 +137,6 @@
                                               event,
                                               '{{ p.pk }}',
                                               '{{ p.nombre_proveedor|escapejs }}',
-                                              'SUP-0{{ p.pk }}',
                                               '{{ p.telefono_proveedor|default:'--'|escapejs }}',
                                               '{{ p.email_proveedor|default:'--'|escapejs }}',
                                               '{{ p.direccion_proveedor|default:'--'|escapejs }}'
@@ -259,11 +257,6 @@
                 </div>
 
                 <div class="pv-resumen-grid">
-
-                    <div class="pv-dato">
-                        <span class="lbl">Código</span>
-                        <span class="val" id="baja_id">SUP-00</span>
-                    </div>
 
                     <div class="pv-dato">
                         <span class="lbl">Teléfono</span>

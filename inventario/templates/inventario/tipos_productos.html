@@ -1,4 +1,3 @@
-
 {% extends 'inventario/base.html' %}
 {% load static %}
 
@@ -7,14 +6,13 @@
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/styles/tipos_productos.css' %}">
+<link rel="stylesheet" href="{% static 'inventario/styles/tipos_productos.css' %}">
 {% endblock %}
 
 {% block contenido %}
 
-<!-- ===================== MENSAJES ===================== -->
+<!-- MENSAJES -->
 <div class="pr-toasts" id="toastContainer">
-
     {% if messages %}
         {% for message in messages %}
             <div class="pr-toast {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}">
@@ -24,15 +22,12 @@
             </div>
         {% endfor %}
     {% endif %}
-
 </div>
-
 
 <div class="pr-page">
 
-    <!-- ===================== ENCABEZADO ===================== -->
+    <!-- ENCABEZADO -->
     <header class="pr-header">
-
         <div>
             <h1 class="pr-title">Gestión de tipos de producto</h1>
         </div>
@@ -40,24 +35,16 @@
         <button type="button"
                 class="pr-btn pr-btn-primary"
                 onclick="abrirModalCrear()">
-
             <svg class="pr-icon" viewBox="0 0 24 24">
                 <path d="M12 5v14M5 12h14"/>
             </svg>
-
             Nuevo tipo
         </button>
-
     </header>
 
-
-    <!-- ===================== BÚSQUEDA ===================== -->
-    <form method="GET"
-          onsubmit="return false;"
-          class="pr-filtros">
-
+    <!-- BÚSQUEDA -->
+    <form method="GET" onsubmit="return false;" class="pr-filtros">
         <div class="pr-search">
-
             <svg class="pr-icon" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7"/>
                 <path d="m21 21-4.3-4.3"/>
@@ -66,22 +53,16 @@
             <input type="text"
                    id="searchInput"
                    name="q"
-                   value="{{ busqueda }}"
+                   value="{{ busqueda|default:'' }}"
                    oninput="filtrarTipos()"
                    placeholder="Buscar por nombre...">
-
         </div>
-
     </form>
 
-
-    <!-- ===================== TABLA ===================== -->
+    <!-- TABLA -->
     <section class="pr-card">
-
         <div class="pr-table-wrap">
-
             <table class="pr-table">
-
                 <thead>
                     <tr>
                         <th>Tipo de producto</th>
@@ -92,27 +73,21 @@
                 </thead>
 
                 <tbody id="listaTipos">
-
                     {% for tipo in tipos_productos %}
-
                         <tr id="card-{{ tipo.ID_Tipo_producto }}"
                             class="tipo-card"
                             data-search="{{ tipo.Nombre_tipo_producto|lower }}">
 
-                            <!-- TIPO DE PRODUCTO -->
+                            <!-- NOMBRE -->
                             <td>
-
                                 <div class="pr-prod">
-
                                     <span class="pr-prod-icono">
-
                                         <svg class="pr-icon" viewBox="0 0 24 24">
                                             <path d="m7.5 4.27 9 5.15"/>
                                             <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
                                             <path d="m3.3 7 8.7 5 8.7-5"/>
                                             <path d="M12 22V12"/>
                                         </svg>
-
                                     </span>
 
                                     <div>
@@ -120,35 +95,34 @@
                                             {{ tipo.Nombre_tipo_producto }}
                                         </span>
                                     </div>
-
                                 </div>
-
                             </td>
 
-
-                            <!-- CANTIDAD DE PRODUCTOS ASOCIADOS -->
+                            <!-- PRODUCTOS ASOCIADOS -->
                             <td>
-
                                 <span class="pr-badge">
                                     {{ tipo.cantidad_productos }}
                                 </span>
-
                             </td>
 
                             <!-- ESTADO -->
                             <td>
-                                <span class="pr-badge">
-                                    {% if tipo.Estado_tipo_producto %}Activo{% else %}Inactivo{% endif %}
-                                </span>
+                                {% if tipo.Estado_tipo_producto %}
+                                    <span class="pr-estado pr-estado-activo">
+                                        Activo
+                                    </span>
+                                {% else %}
+                                    <span class="pr-estado pr-estado-inactivo">
+                                        Inactivo
+                                    </span>
+                                {% endif %}
                             </td>
-
 
                             <!-- ACCIONES -->
                             <td>
-
                                 <div class="pr-acciones">
 
-                                    <!-- EDITAR TIPO DE PRODUCTO -->
+                                    <!-- EDITAR -->
                                     <button type="button"
                                             class="pr-icon-btn"
                                             title="Editar tipo de producto"
@@ -158,70 +132,49 @@
                                                 '{{ tipo.Nombre_tipo_producto|escapejs }}',
                                                 '{{ tipo.Estado_tipo_producto|yesno:"True,False" }}'
                                             )">
-
                                         <svg class="pr-icon" viewBox="0 0 24 24">
                                             <path d="M12 20h9"/>
                                             <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>
                                         </svg>
-
                                     </button>
 
-                                    <!-- ELIMINAR TIPO DE PRODUCTO -->
-                                    <form method="POST"
-                                          action="{% url 'eliminar_tipo_producto' tipo.ID_Tipo_producto %}"
-                                          onsubmit="return confirmarEliminacionTipo(
-                                              event,
-                                              this,
-                                              {{ tipo.cantidad_productos }},
-                                            {{ tipo.cantidad_subtipos }}
-
-                                          );">
-
-                                        {% csrf_token %}
-
-                                        <button type="submit"
-                                                class="pr-icon-btn pr-baja"
-                                                title="Eliminar tipo de producto"
-                                                aria-label="Eliminar tipo de producto">
-
-                                            <svg class="pr-icon" viewBox="0 0 24 24">
-                                                <path d="M3 6h18"/>
-                                                <path d="M8 6V4h8v2"/>
-                                                <path d="M19 6l-1 14H6L5 6"/>
-                                                <path d="M10 11v5"/>
-                                                <path d="M14 11v5"/>
-                                            </svg>
-
-                                        </button>
-
-                                    </form>
+                                    <!-- ELIMINAR: ABRE EL MODAL -->
+                                    <button type="button"
+                                            class="pr-icon-btn pr-baja"
+                                            title="Eliminar tipo de producto"
+                                            aria-label="Eliminar tipo de producto"
+                                            onclick="abrirModalEliminarTipo(
+                                                '{{ tipo.ID_Tipo_producto }}',
+                                                '{{ tipo.Nombre_tipo_producto|escapejs }}',
+                                                {{ tipo.cantidad_productos }},
+                                                {{ tipo.cantidad_subtipos }}
+                                            )">
+                                        <svg class="pr-icon" viewBox="0 0 24 24">
+                                            <path d="M3 6h18"/>
+                                            <path d="M8 6V4h8v2"/>
+                                            <path d="M19 6l-1 14H6L5 6"/>
+                                            <path d="M10 11v5"/>
+                                            <path d="M14 11v5"/>
+                                        </svg>
+                                    </button>
 
                                 </div>
-
                             </td>
-
                         </tr>
 
                     {% empty %}
-
                         <tr>
                             <td colspan="4">
                                 No hay tipos de productos registrados.
                             </td>
                         </tr>
-
                     {% endfor %}
-
                 </tbody>
-
             </table>
-
         </div>
 
-
-        <!-- ===================== PIE DE TABLA ===================== -->
+        <!-- PIE DE TABLA -->
         <div class="pr-pie">
-
             <span id="contadorTipos">
                 {{ tipos_productos|length }}
                 tipo{{ tipos_productos|length|pluralize }}
@@ -229,47 +182,36 @@
             </span>
 
             <span>Agroquímica del Valle</span>
-
         </div>
-
     </section>
-
 </div>
 
-
-<!-- ===================== MODAL NUEVO TIPO ===================== -->
+<!-- =====================================================
+     MODAL CREAR
+===================================================== -->
 <div class="pr-modal" id="modalCrearTipo">
-
     <div class="pr-modal-box">
 
         <div class="pr-modal-head">
-
             <h2>Nuevo tipo de producto</h2>
 
             <button type="button"
                     class="pr-modal-x"
                     onclick="cerrarModal('modalCrearTipo')"
                     aria-label="Cerrar">
-
                 <svg class="pr-icon" viewBox="0 0 24 24">
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
-
             </button>
-
         </div>
 
-
         <form method="POST" action="{% url 'crear_tipo_producto' %}">
-
             {% csrf_token %}
 
             <div class="pr-modal-body">
-
                 <div class="pr-grid">
 
                     <div class="pr-grupo pr-full">
-
                         <label for="nuevo_nombre">
                             Nombre del tipo de producto
                         </label>
@@ -280,20 +222,17 @@
                                placeholder="Ingrese el tipo de producto"
                                maxlength="50"
                                required>
-
                     </div>
 
+                    <!-- LOS NUEVOS TIPOS SE CREAN ACTIVOS -->
+                    <input type="hidden"
+                           name="Estado_tipo_producto"
+                           value="True">
+
                 </div>
-
-                <input type="hidden"
-                       name="Estado_tipo_producto"
-                       value="True">
-
             </div>
 
-
             <div class="pr-modal-pie">
-
                 <button type="button"
                         class="pr-btn pr-btn-claro"
                         onclick="cerrarModal('modalCrearTipo')">
@@ -301,59 +240,44 @@
                 </button>
 
                 <button type="submit" class="pr-btn pr-btn-primary">
-
                     <svg class="pr-icon" viewBox="0 0 24 24">
                         <path d="M20 6 9 17l-5-5"/>
                     </svg>
-
                     Registrar
-
                 </button>
-
             </div>
-
         </form>
-
     </div>
-
 </div>
 
-
-<!-- ===================== MODAL EDITAR TIPO ===================== -->
+<!-- =====================================================
+     MODAL EDITAR
+===================================================== -->
 <div class="pr-modal" id="modalEditarTipo">
-
     <div class="pr-modal-box">
 
         <div class="pr-modal-head">
-
             <h2>Editar tipo de producto</h2>
 
             <button type="button"
                     class="pr-modal-x"
                     onclick="cerrarModal('modalEditarTipo')"
                     aria-label="Cerrar">
-
                 <svg class="pr-icon" viewBox="0 0 24 24">
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
-
             </button>
-
         </div>
-
 
         <form id="formEditarTipo"
               method="POST"
               action="">
-
             {% csrf_token %}
 
             <div class="pr-modal-body">
-
                 <div class="pr-grid">
 
                     <div class="pr-grupo pr-full">
-
                         <label for="edit_nombre">
                             Nombre del tipo de producto
                         </label>
@@ -363,16 +287,24 @@
                                name="Nombre_tipo_producto"
                                maxlength="50"
                                required>
+                    </div>
 
+                    <!-- ESTADO -->
+                    <div class="pr-grupo pr-full">
+                        <label for="edit_estado">Estado</label>
+
+                        <select id="edit_estado"
+                                name="Estado_tipo_producto"
+                                required>
+                            <option value="True">Activo</option>
+                            <option value="False">Inactivo</option>
+                        </select>
                     </div>
 
                 </div>
-
             </div>
 
-
             <div class="pr-modal-pie">
-
                 <button type="button"
                         class="pr-btn pr-btn-claro"
                         onclick="cerrarModal('modalEditarTipo')">
@@ -382,36 +314,85 @@
                 <button type="submit" class="pr-btn pr-btn-primary">
                     Guardar cambios
                 </button>
+            </div>
+        </form>
+    </div>
+</div>
 
+<!-- =====================================================
+     MODAL ELIMINAR
+===================================================== -->
+<div class="pr-modal" id="modalEliminarTipo">
+    <div class="pr-modal-box pr-modal-eliminar-box">
+
+        <div class="pr-modal-head">
+            <h2>Eliminar tipo de producto</h2>
+
+            <button type="button"
+                    class="pr-modal-x"
+                    onclick="cerrarModal('modalEliminarTipo')"
+                    aria-label="Cerrar">
+                <svg class="pr-icon" viewBox="0 0 24 24">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="pr-modal-body pr-eliminar-body">
+
+            <div class="pr-eliminar-icono">
+                <svg class="pr-icon" viewBox="0 0 24 24">
+                    <path d="M12 9v4"/>
+                    <path d="M12 17h.01"/>
+                    <circle cx="12" cy="12" r="10"/>
+                </svg>
             </div>
 
+            <p id="mensajeEliminarTipo" class="pr-eliminar-mensaje">
+                ¿Deseas eliminar este tipo de producto definitivamente?
+            </p>
+
+            <p class="pr-eliminar-advertencia">
+                Esta acción no se puede deshacer.
+            </p>
+
+        </div>
+
+        <!-- EL FORMULARIO SE ENVÍA SOLO AL CONFIRMAR -->
+        <form id="formEliminarTipo"
+              method="POST"
+              action="">
+            {% csrf_token %}
+
+            <div class="pr-modal-pie">
+                <button type="button"
+                        class="pr-btn pr-btn-claro"
+                        onclick="cerrarModal('modalEliminarTipo')">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        class="pr-btn pr-btn-eliminar">
+                    Sí, eliminar
+                </button>
+            </div>
         </form>
 
     </div>
-
 </div>
 
-{% endblock %}
-
+{% endblock contenido %}
 
 {% block extra_js %}
-
 <script>
-
     /* =====================================================
        MENSAJES
     ===================================================== */
-
     function mostrarToast(mensaje, tipo) {
-
         const container = document.getElementById('toastContainer');
-
-        if (!container) {
-            return;
-        }
+        if (!container) return;
 
         const toast = document.createElement('div');
-
         toast.className = 'pr-toast ' + (tipo || 'warning');
 
         const texto = document.createElement('span');
@@ -432,162 +413,135 @@
         setTimeout(function () {
             toast.remove();
         }, 4000);
-
     }
-
-    function confirmarEliminacionTipo(event, formulario, cantidadProductos, cantidadSubtipos) {
-
-    // Si tiene productos asociados, no permite eliminar
-    if (cantidadProductos > 0) {
-        event.preventDefault();
-
-        mostrarToast(
-            'No se puede eliminar este tipo de producto porque tiene productos asociados.',
-            'warning'
-        );
-
-        return false;
-    }
-
-    let mensaje = '¿Deseas eliminar este tipo de producto definitivamente?';
-
-    if (cantidadSubtipos > 0) {
-        mensaje += ' También se eliminarán sus ' + cantidadSubtipos +
-                   ' subtipo' + (cantidadSubtipos === 1 ? '' : 's') + '.';
-    }
-
-    return confirm(mensaje);
-}
-
 
     /* =====================================================
-       OCULTAR MENSAJES AUTOMÁTICAMENTE
+       PREPARAR PÁGINA Y CERRAR MODALES AL HACER CLIC FUERA
     ===================================================== */
-
     document.addEventListener('DOMContentLoaded', function () {
-
         document.querySelectorAll('.pr-toast').forEach(function (toast) {
-
             setTimeout(function () {
                 toast.remove();
             }, 4000);
-
         });
 
         filtrarTipos();
 
+        [
+            'modalCrearTipo',
+            'modalEditarTipo',
+            'modalEliminarTipo'
+        ].forEach(function (id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+
+            modal.addEventListener('click', function (event) {
+                if (event.target === modal) {
+                    cerrarModal(id);
+                }
+            });
+        });
     });
 
-
     /* =====================================================
-       BUSCAR TIPOS DE PRODUCTO
+       BUSCAR TIPOS
     ===================================================== */
-
     function filtrarTipos() {
-
         const input = document.getElementById('searchInput');
         const contador = document.getElementById('contadorTipos');
 
-        if (!input || !contador) {
-            return;
-        }
+        if (!input || !contador) return;
 
         const query = input.value.toLowerCase().trim();
-
         const filas = document.querySelectorAll('.tipo-card');
-
         let visibles = 0;
 
         filas.forEach(function (fila) {
-
             const nombre = (fila.dataset.search || '').toLowerCase();
-
             const coincide = nombre.includes(query);
 
             fila.style.display = coincide ? '' : 'none';
 
-            if (coincide) {
-                visibles++;
-            }
-
+            if (coincide) visibles++;
         });
 
         contador.textContent =
             visibles + ' tipo' + (visibles === 1 ? '' : 's') +
             ' encontrado' + (visibles === 1 ? '' : 's');
-
     }
-
 
     /* =====================================================
        ABRIR MODAL CREAR
     ===================================================== */
-
     function abrirModalCrear() {
-
         document.getElementById('modalCrearTipo').style.display = 'flex';
-
     }
-
 
     /* =====================================================
        ABRIR MODAL EDITAR
     ===================================================== */
-
-    function abrirModalEditar(id, nombre) {
-
+    function abrirModalEditar(id, nombre, estado) {
         const formulario = document.getElementById('formEditarTipo');
-
         const urlEditar = "{% url 'editar_tipo_producto' 0 %}";
 
         formulario.action = urlEditar.replace('/0/', '/' + id + '/');
 
         document.getElementById('edit_nombre').value = nombre;
+        document.getElementById('edit_estado').value = estado;
 
         document.getElementById('modalEditarTipo').style.display = 'flex';
-
     }
 
+    /* =====================================================
+       ABRIR MODAL ELIMINAR
+    ===================================================== */
+    function abrirModalEliminarTipo(
+        id,
+        nombre,
+        cantidadProductos,
+        cantidadSubtipos
+    ) {
+        if (cantidadProductos > 0) {
+            mostrarToast(
+                'No se puede eliminar este tipo porque tiene productos asociados.',
+                'warning'
+            );
+            return;
+        }
+
+        if (cantidadSubtipos > 0) {
+            mostrarToast(
+                'No se puede eliminar este tipo porque tiene subtipos asociados.',
+                'warning'
+            );
+            return;
+        }
+
+        const modal = document.getElementById('modalEliminarTipo');
+        const formulario = document.getElementById('formEliminarTipo');
+        const mensaje = document.getElementById('mensajeEliminarTipo');
+
+        const urlEliminar = "{% url 'eliminar_tipo_producto' 0 %}";
+
+        formulario.action = urlEliminar.replace('/0/', '/' + id + '/');
+
+        mensaje.textContent =
+            '¿Deseas eliminar el tipo de producto "' +
+            nombre +
+            '" definitivamente?';
+
+        modal.style.display = 'flex';
+    }
 
     /* =====================================================
        CERRAR MODALES
     ===================================================== */
-
     function cerrarModal(idModal) {
-
         const modal = document.getElementById(idModal);
 
         if (modal) {
             modal.style.display = 'none';
         }
-
     }
-
-
-    /* Cerrar al hacer clic fuera del cuadro */
-
-    document.addEventListener('DOMContentLoaded', function () {
-
-        ['modalCrearTipo', 'modalEditarTipo'].forEach(function (id) {
-
-            const modal = document.getElementById(id);
-
-            if (!modal) {
-                return;
-            }
-
-            modal.addEventListener('click', function (event) {
-
-                if (event.target === modal) {
-                    cerrarModal(id);
-                }
-
-            });
-
-        });
-
-    });
-
 </script>
-
-{% endblock %}
+{% endblock extra_js %}

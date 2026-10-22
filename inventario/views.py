@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import unicodedata
+from urllib import request
 from django.contrib import messages
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Count, ProtectedError, Q
@@ -497,10 +498,14 @@ def gestion_tipos_productos(request):
             'busqueda': busqueda,
             'usuario': usuario,
             'total_tipos': TiposProductos.objects.count(),
-            'total_subtipos': Subtipos.objects.count()
+            'total_subtipos': Subtipos.objects.count(),
         }
     )
 
+
+# ============================================================
+# CREAR TIPO DE PRODUCTO
+# ============================================================
 
 def crear_tipo_producto(request):
 
@@ -509,44 +514,48 @@ def crear_tipo_producto(request):
     if not usuario:
         return redirect('login')
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('gestion_tipos_productos')
 
-        nombre = request.POST.get(
-            'Nombre_tipo_producto',
-            ''
-        ).strip()
+    nombre = request.POST.get(
+        'Nombre_tipo_producto',
+        ''
+    ).strip()
 
-        if not nombre:
-            messages.error(
-                request,
-                'Debe ingresar el nombre del tipo de producto.'
-            )
-
-            return redirect('gestion_tipos_productos')
-
-        existe = TiposProductos.objects.filter(
-            Nombre_tipo_producto__iexact=nombre
-        ).exists()
-
-        if existe:
-            messages.error(
-                request,
-                'Ya existe un tipo de producto con ese nombre.'
-            )
-
-            return redirect('gestion_tipos_productos')
-
-        TiposProductos.objects.create(
-            Nombre_tipo_producto=nombre
-        )
-
-        messages.success(
+    if not nombre:
+        messages.error(
             request,
-            'Tipo de producto registrado correctamente.'
+            'Debe ingresar el nombre del tipo de producto.'
         )
+        return redirect('gestion_tipos_productos')
+
+    existe = TiposProductos.objects.filter(
+        Nombre_tipo_producto__iexact=nombre
+    ).exists()
+
+    if existe:
+        messages.error(
+            request,
+            'Ya existe un tipo de producto con ese nombre.'
+        )
+        return redirect('gestion_tipos_productos')
+
+    TiposProductos.objects.create(
+        Nombre_tipo_producto=nombre,
+        Estado_tipo_producto=True
+    )
+
+    messages.success(
+        request,
+        'Tipo de producto registrado correctamente.'
+    )
 
     return redirect('gestion_tipos_productos')
 
+
+# ============================================================
+# EDITAR TIPO DE PRODUCTO
+# ============================================================
 
 def editar_tipo_producto(request, pk):
 
@@ -555,87 +564,142 @@ def editar_tipo_producto(request, pk):
     if not usuario:
         return redirect('login')
 
+    if request.method != 'POST':
+        return redirect('gestion_tipos_productos')
+
     tipo = get_object_or_404(
         TiposProductos,
         ID_Tipo_producto=pk
     )
 
-    if request.method == 'POST':
+    nombre = request.POST.get(
+        'Nombre_tipo_producto',
+        ''
+    ).strip()
 
-        nombre = request.POST.get(
-            'Nombre_tipo_producto',
-            ''
-        ).strip()
+    estado_recibido = request.POST.get(
+        'Estado_tipo_producto',
+        ''
+    )
 
-        if not nombre:
-            messages.error(
-                request,
-                'Debe ingresar el nombre del tipo de producto.'
-            )
-
-            return redirect('gestion_tipos_productos')
-
-        existe = TiposProductos.objects.filter(
-            Nombre_tipo_producto__iexact=nombre
-        ).exclude(
-            ID_Tipo_producto=pk
-        ).exists()
-
-        if existe:
-            messages.error(
-                request,
-                'Ya existe otro tipo de producto con ese nombre.'
-            )
-
-            return redirect('gestion_tipos_productos')
-
-        tipo.Nombre_tipo_producto = nombre
-        tipo.save()
-
-        messages.success(
+    if not nombre:
+        messages.error(
             request,
-            'Tipo de producto actualizado correctamente.'
+            'Debe ingresar el nombre del tipo de producto.'
         )
+        return redirect('gestion_tipos_productos')
+
+    if estado_recibido not in ('True', 'False'):
+        messages.error(
+            request,
+            'El estado seleccionado no es válido.'
+        )
+        return redirect('gestion_tipos_productos')
+
+    existe = TiposProductos.objects.filter(
+        Nombre_tipo_producto__iexact=nombre
+    ).exclude(
+        ID_Tipo_producto=pk
+    ).exists()
+
+    if existe:
+        messages.error(
+            request,
+            'Ya existe otro tipo de producto con ese nombre.'
+        )
+        return redirect('gestion_tipos_productos')
+
+    tipo.Nombre_tipo_producto = nombre
+    tipo.Estado_tipo_producto = (estado_recibido == 'True')
+    tipo.save(
+        update_fields=[
+            'Nombre_tipo_producto',
+            'Estado_tipo_producto',
+        ]
+    )
+
+    messages.success(
+        request,
+        f'Tipo de producto actualizado correctamente. '
+        f'Estado: {"Activo" if tipo.Estado_tipo_producto else "Inactivo"}.'
+    )
 
     return redirect('gestion_tipos_productos')
 
 
+# ============================================================
+# ELIMINAR TIPO DE PRODUCTO
+# No permite eliminar si tiene productos o subtipos asociados.
+# ============================================================
+
 def eliminar_tipo_producto(request, pk):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_autenticado(request)
 
     if not usuario:
-        return redirect('panel_principal')
+        return redirect('login')
+
+    if not usuario_es_administrador(request):
+        messages.error(
+        request,
+        'No tenés permiso para eliminar tipos de productos.'
+    )
+        return redirect('gestion_tipos_productos')
 
     if request.method != 'POST':
         return redirect('gestion_tipos_productos')
 
-    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=pk)
-    nombre = tipo.Nombre_tipo_producto
-    cantidad_subtipos = tipo.subtipos.count()
-
     try:
         with transaction.atomic():
-            tipo.delete()       # los subtipos se borran en cascada
+
+            tipo = get_object_or_404(
+                TiposProductos.objects.select_for_update(),
+                ID_Tipo_producto=pk
+            )
+
+            nombre = tipo.Nombre_tipo_producto
+
+            # Contar los productos asociados al tipo.
+            cantidad_productos = Productos.objects.filter(
+                ID_Tipo_producto=tipo
+            ).count()
+
+            # Contar los subtipos asociados al tipo.
+            cantidad_subtipos = Subtipos.objects.filter(
+                ID_Tipo_producto=tipo
+            ).count()
+
+            if cantidad_productos > 0:
+                messages.error(
+                    request,
+                    f'No se puede eliminar el tipo "{nombre}" porque '
+                    f'tiene {cantidad_productos} producto(s) asociado(s).'
+                )
+                return redirect('gestion_tipos_productos')
+
+            if cantidad_subtipos > 0:
+                messages.error(
+                    request,
+                    f'No se puede eliminar el tipo "{nombre}" porque '
+                    f'tiene {cantidad_subtipos} subtipo(s) asociado(s).'
+                )
+                return redirect('gestion_tipos_productos')
+
+            tipo.delete()
+
+        messages.success(
+            request,
+            f'El tipo "{nombre}" fue eliminado correctamente.'
+        )
+
     except ProtectedError:
         messages.error(
             request,
-            f'No se puede eliminar el tipo "{nombre}": tiene '
-            'productos asociados.'
+            f'No se puede eliminar el tipo "{nombre}" porque '
+            'tiene otros registros relacionados.'
         )
-        return redirect('gestion_tipos_productos')
-
-    if cantidad_subtipos:
-        messages.success(
-            request,
-            f'El tipo "{nombre}" y sus {cantidad_subtipos} '
-            f'subtipo{"s" if cantidad_subtipos != 1 else ""} fueron eliminados.'
-        )
-    else:
-        messages.success(request, f'El tipo "{nombre}" fue eliminado.')
 
     return redirect('gestion_tipos_productos')
-
 
 
 
@@ -727,6 +791,14 @@ def crear_subtipo(request):
             ID_Tipo_producto=tipo_id,
         )
 
+        # No permitir asociar subtipos a tipos inactivos
+        if not tipo.Estado_tipo_producto:
+            messages.error(
+            request,
+                'No se pueden asociar subtipos a un tipo de producto inactivo.'
+        )
+            return redirect('gestion_subtipos')
+
         existe = Subtipos.objects.filter(
             ID_Tipo_producto=tipo,
             Nombre_subtipo__iexact=nombre
@@ -806,6 +878,14 @@ def editar_subtipo(request, pk):
             TiposProductos,
             ID_Tipo_producto=tipo_id,
         )
+
+        # No permitir asociar subtipos a tipos inactivos
+        if not tipo.Estado_tipo_producto:
+            messages.error(
+                request,
+                    'No se pueden asociar subtipos a un tipo de producto inactivo.'
+            )
+            return redirect('gestion_subtipos')
 
 
         if (
@@ -2233,44 +2313,9 @@ def editar_producto(request, pk):
 
     return redirect('gestion_productos')
 
-def cambiar_estado_producto(request, pk):
-    """Activa o da de baja un producto."""
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    producto = get_object_or_404(Productos, ID_Producto=pk)
-
-    if request.method != 'POST':
-        return redirect('gestion_productos')
-
-    if producto.Estado_producto == 'Activo':
-
-        if Stock.objects.filter(
-            ID_Producto=producto, Cantidad_stock__gt=0
-        ).exists():
-            messages.error(
-                request,
-                'No se puede dar de baja un producto con stock. '
-                'Registre primero la salida de sus lotes.'
-            )
-            return redirect('gestion_productos')
-
-        producto.Estado_producto = 'Inactivo'
-        mensaje = 'Producto dado de baja correctamente.'
-    else:
-        producto.Estado_producto = 'Activo'
-        mensaje = 'Producto activado correctamente.'
-
-    producto.save(update_fields=['Estado_producto'])
-    messages.success(request, mensaje)
-
-    return redirect('gestion_productos')
 
 def eliminar_producto(request, pk):
-    """Elimina un producto solo si no tiene lotes asociados."""
+    """Elimina un producto únicamente si no tiene lotes asociados."""
 
     usuario = usuario_es_administrador(request)
 
@@ -2287,28 +2332,28 @@ def eliminar_producto(request, pk):
 
     nombre = producto.Nombre_producto
 
+    # No permitir eliminar productos que tengan lotes.
     if producto.lotes.exists():
         messages.error(
             request,
-            f'No se puede eliminar el producto "{nombre}": tiene '
-            'lotes asociados.'
+            f'No se puede eliminar el producto "{nombre}" porque tiene lotes asociados.'
         )
         return redirect('gestion_productos')
 
     try:
         with transaction.atomic():
-            producto.delete()       # su registro de stock se borra en cascada
+            producto.delete()
+
     except ProtectedError:
         messages.error(
             request,
-            f'No se puede eliminar el producto "{nombre}": tiene '
-            'registros asociados.'
+            f'No se puede eliminar el producto "{nombre}" porque tiene otros registros asociados.'
         )
         return redirect('gestion_productos')
 
     messages.success(
         request,
-        f'El producto "{nombre}" fue eliminado.'
+        f'El producto "{nombre}" fue eliminado correctamente.'
     )
 
     return redirect('gestion_productos')

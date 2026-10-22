@@ -57,7 +57,6 @@ urlpatterns = [
     path('productos/', views.gestion_productos, name='gestion_productos'),
     path('productos/crear/', views.crear_producto, name='crear_producto'),
     path('productos/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
-    path('productos/cambiar-estado/<int:pk>/', views.cambiar_estado_producto, name='cambiar_estado_producto'),
     path('productos/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
 
 

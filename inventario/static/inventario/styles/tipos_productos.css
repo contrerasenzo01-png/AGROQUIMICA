@@ -1,16 +1,22 @@
 /* ============================================================
-   TIPOS DE PRODUCTO - estructura de tabla
-   (mismas clases pr-* que usa la pantalla de productos)
-   ============================================================ */
+   TIPOS DE PRODUCTO
+   Archivo: tipos_productos.css
+   Agroquímica del Valle
+============================================================ */
+
+/* ============================================================
+   BASE
+============================================================ */
 
 .pr-page {
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
-
 
 /* ============================================================
    ENCABEZADO
-   ============================================================ */
+============================================================ */
 
 .pr-header {
     width: 100%;
@@ -35,10 +41,9 @@
     color: #17382a;
 }
 
-
 /* ============================================================
    ÍCONOS
-   ============================================================ */
+============================================================ */
 
 .pr-icon {
     width: 16px;
@@ -51,10 +56,9 @@
     stroke-linejoin: round;
 }
 
-
 /* ============================================================
    BOTONES
-   ============================================================ */
+============================================================ */
 
 .pr-btn {
     display: inline-flex;
@@ -71,7 +75,11 @@
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
-    transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+    transition:
+        background-color .18s ease,
+        border-color .18s ease,
+        color .18s ease,
+        transform .18s ease;
 }
 
 .pr-btn-primary {
@@ -108,10 +116,35 @@
     border-color: #991b1b;
 }
 
+/* Botón de confirmación del modal de eliminación */
+
+.pr-btn-eliminar {
+    border-color: #b42318;
+    background: #b42318;
+    color: #ffffff;
+}
+
+.pr-btn-eliminar:hover {
+    border-color: #912018;
+    background: #912018;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.pr-btn:focus-visible,
+.pr-icon-btn:focus-visible,
+.pr-modal-x:focus-visible {
+    outline: 3px solid rgba(24, 90, 56, .25);
+    outline-offset: 2px;
+}
+
+.pr-btn-eliminar:focus-visible {
+    outline-color: rgba(180, 35, 24, .25);
+}
 
 /* ============================================================
    BÚSQUEDA Y FILTROS
-   ============================================================ */
+============================================================ */
 
 .pr-filtros {
     display: flex;
@@ -148,7 +181,9 @@
     font-family: 'Inter', sans-serif;
     font-size: 12.5px;
     color: #24362d;
-    transition: border-color .18s ease, box-shadow .18s ease;
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease;
 }
 
 .pr-search input::placeholder {
@@ -180,10 +215,9 @@
     box-shadow: 0 0 0 3px rgba(24, 90, 56, .09);
 }
 
-
 /* ============================================================
-   TARJETA CONTENEDORA DE LA TABLA
-   ============================================================ */
+   CONTENEDOR DE LA TABLA
+============================================================ */
 
 .pr-card {
     width: 100%;
@@ -197,12 +231,12 @@
 .pr-table-wrap {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
-
 
 /* ============================================================
    TABLA
-   ============================================================ */
+============================================================ */
 
 .pr-table {
     width: 100%;
@@ -242,9 +276,18 @@
     background: #fafcfb;
 }
 
-.pr-table tr.inactivo .pr-nombre,
-.pr-table tr.inactivo td {
+/* Filas de tipos inactivos */
+
+.pr-table tbody tr.inactivo td {
     color: #7b8b83;
+}
+
+.pr-table tbody tr.inactivo .pr-nombre {
+    color: #65756c;
+}
+
+.pr-table tbody tr.inactivo .pr-estado {
+    opacity: 1;
 }
 
 .pr-vacio {
@@ -254,15 +297,15 @@
     font-size: 12.5px;
 }
 
-
 /* ============================================================
-   CELDA DE TIPO (ícono + nombre)
-   ============================================================ */
+   CELDA DEL TIPO: ÍCONO Y NOMBRE
+============================================================ */
 
 .pr-prod {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 180px;
 }
 
 .pr-prod-icono {
@@ -277,7 +320,12 @@
     color: #a86a35;
 }
 
-tr.inactivo .pr-prod-icono {
+.pr-prod-icono .pr-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.pr-table tr.inactivo .pr-prod-icono {
     background: #eef1ef;
     color: #7b8a82;
 }
@@ -288,12 +336,48 @@ tr.inactivo .pr-prod-icono {
     font-size: 13.5px;
     font-weight: 600;
     color: #173d2b;
+    overflow-wrap: anywhere;
 }
 
-
 /* ============================================================
-   BADGE DE ESTADO
-   ============================================================ */
+   ESTADO ACTIVO / INACTIVO
+============================================================ */
+
+.pr-estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 26px;
+    padding: 4px 11px;
+    box-sizing: border-box;
+    border-radius: 20px;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pr-estado::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.pr-estado-activo {
+    background: #e8f5ee;
+    color: #1b7a4a;
+}
+
+.pr-estado-inactivo {
+    background: #fff4df;
+    color: #9a6700;
+}
+
+/* Compatibilidad con clases anteriores */
 
 .pr-badge {
     display: inline-flex;
@@ -314,6 +398,7 @@ tr.inactivo .pr-prod-icono {
     content: '';
     width: 5px;
     height: 5px;
+    flex-shrink: 0;
     border-radius: 50%;
     background: currentColor;
 }
@@ -328,16 +413,16 @@ tr.inactivo .pr-prod-icono {
     color: #7b8a82;
 }
 
-
 /* ============================================================
-   ACCIONES (lápiz y papelera)
-   ============================================================ */
+   ACCIONES
+============================================================ */
 
 .pr-acciones {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
+    white-space: nowrap;
 }
 
 .pr-form-estado {
@@ -352,13 +437,22 @@ tr.inactivo .pr-prod-icono {
     align-items: center;
     justify-content: center;
     padding: 0;
+    flex-shrink: 0;
     box-sizing: border-box;
     border: 1px solid #dce5df;
     border-radius: 8px;
     background: #ffffff;
     color: #334b3e;
     cursor: pointer;
-    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    transition:
+        background-color .15s ease,
+        border-color .15s ease,
+        color .15s ease;
+}
+
+.pr-icon-btn .pr-icon {
+    width: 16px;
+    height: 16px;
 }
 
 .pr-icon-btn:hover {
@@ -371,7 +465,7 @@ tr.inactivo .pr-prod-icono {
     cursor: not-allowed;
 }
 
-/* Papelera: dar de baja */
+/* Botón de eliminar */
 
 .pr-icon-btn.pr-baja {
     background: #fff5f5;
@@ -384,7 +478,7 @@ tr.inactivo .pr-prod-icono {
     border-color: #fca5a5;
 }
 
-/* Tilde: activar */
+/* Botón de activar, si se utiliza */
 
 .pr-icon-btn.pr-activar {
     background: #f0fdf4;
@@ -397,10 +491,9 @@ tr.inactivo .pr-prod-icono {
     border-color: #86efac;
 }
 
-
 /* ============================================================
    PIE DE TABLA
-   ============================================================ */
+============================================================ */
 
 .pr-pie {
     display: flex;
@@ -415,10 +508,9 @@ tr.inactivo .pr-prod-icono {
     color: #718279;
 }
 
-
 /* ============================================================
-   TOASTS
-   ============================================================ */
+   MENSAJES TOAST
+============================================================ */
 
 .pr-toasts {
     position: fixed;
@@ -428,6 +520,7 @@ tr.inactivo .pr-prod-icono {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    pointer-events: none;
 }
 
 .pr-toast {
@@ -447,6 +540,7 @@ tr.inactivo .pr-prod-icono {
     font-size: 12px;
     color: #31483c;
     animation: prToastEntrada .20s ease-out;
+    pointer-events: auto;
 }
 
 .pr-toast.success {
@@ -469,19 +563,29 @@ tr.inactivo .pr-prod-icono {
 
 .pr-toast-x {
     flex-shrink: 0;
+    padding: 2px 4px;
+    border: 0;
+    background: transparent;
+    color: currentColor;
     cursor: pointer;
     font-size: 13px;
 }
 
 @keyframes prToastEntrada {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-
 /* ============================================================
-   MODALES
-   ============================================================ */
+   MODALES GENERALES
+============================================================ */
 
 .pr-modal {
     display: none;
@@ -495,6 +599,10 @@ tr.inactivo .pr-prod-icono {
     background: rgba(15, 42, 29, .50);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+}
+
+.pr-modal[style*="display: flex"] {
+    display: flex;
 }
 
 .pr-modal-box {
@@ -539,7 +647,9 @@ tr.inactivo .pr-prod-icono {
     background: transparent;
     color: #7b8b83;
     cursor: pointer;
-    transition: background-color .15s ease, color .15s ease;
+    transition:
+        background-color .15s ease,
+        color .15s ease;
 }
 
 .pr-modal-x:hover {
@@ -561,14 +671,20 @@ tr.inactivo .pr-prod-icono {
 }
 
 @keyframes prModalEntrada {
-    from { opacity: 0; transform: translateY(-10px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-
 /* ============================================================
-   FORMULARIOS DE MODALES
-   ============================================================ */
+   FORMULARIOS DE LOS MODALES
+============================================================ */
 
 .pr-grid {
     display: grid;
@@ -621,14 +737,13 @@ tr.inactivo .pr-prod-icono {
     color: #718279;
 }
 
-
 /* ============================================================
-   MODAL DE BAJA
-   ============================================================ */
+   AVISO Y RESUMEN
+============================================================ */
 
 .pr-aviso {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 9px;
     margin-bottom: 16px;
     padding: 11px 13px;
@@ -637,7 +752,7 @@ tr.inactivo .pr-prod-icono {
     background: #fffbeb;
     font-family: 'Inter', sans-serif;
     font-size: 11.5px;
-    line-height: 1.4;
+    line-height: 1.5;
     color: #92400e;
 }
 
@@ -679,6 +794,7 @@ tr.inactivo .pr-prod-icono {
     font-size: 14px;
     font-weight: 600;
     color: #173d2b;
+    overflow-wrap: anywhere;
 }
 
 .pr-resumen-cab p {
@@ -698,6 +814,7 @@ tr.inactivo .pr-prod-icono {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    min-width: 0;
     padding: 11px 7px;
 }
 
@@ -715,19 +832,91 @@ tr.inactivo .pr-prod-icono {
     font-size: 11.5px;
     font-weight: 600;
     color: #34483d;
-    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
+/* ============================================================
+   MODAL DE ELIMINACIÓN
+============================================================ */
+
+.pr-modal-eliminar-box {
+    max-width: 460px;
+}
+
+/* Cuerpo de la confirmación */
+
+.pr-eliminar-body {
+    text-align: center;
+    padding: 26px 24px 24px;
+}
+
+/* Círculo rojo con signo de advertencia */
+
+.pr-eliminar-icono {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 1px solid #fecdca;
+    border-radius: 50%;
+    background: #fee4e2;
+    color: #b42318;
+}
+
+.pr-eliminar-icono .pr-icon {
+    width: 32px;
+    height: 32px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Pregunta de confirmación */
+
+.pr-eliminar-mensaje {
+    margin: 0 0 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.65;
+    color: #26352c;
+    overflow-wrap: anywhere;
+}
+
+/* Advertencia */
+
+.pr-eliminar-advertencia {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #b42318;
+}
+
+/* Pie del modal de eliminación */
+
+#modalEliminarTipo .pr-modal-pie {
+    padding: 16px 22px 20px;
+    gap: 10px;
+}
 
 /* ============================================================
    RESPONSIVE
-   ============================================================ */
+============================================================ */
 
 @media (max-width: 800px) {
-
     .pr-header {
         align-items: flex-start;
         flex-direction: column;
+        gap: 14px;
+    }
+
+    .pr-header .pr-btn {
+        max-width: 100%;
     }
 
     .pr-filtros {
@@ -735,13 +924,14 @@ tr.inactivo .pr-prod-icono {
         align-items: stretch;
     }
 
+    .pr-search,
     .pr-select {
         width: 100%;
+        min-width: 0;
     }
 }
 
 @media (max-width: 600px) {
-
     .pr-title {
         font-size: 24px;
     }
@@ -755,9 +945,56 @@ tr.inactivo .pr-prod-icono {
         padding: 12px;
     }
 
+    .pr-modal-box {
+        max-height: 94vh;
+    }
+
+    .pr-modal-head,
+    .pr-modal-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
     .pr-modal-pie {
         flex-direction: column-reverse;
         align-items: stretch;
+        padding: 14px 16px;
+    }
+
+    .pr-modal-pie .pr-btn {
+        width: 100%;
+    }
+
+    /* Modal de eliminación en celulares */
+
+    .pr-modal-eliminar-box {
+        width: 100%;
+        max-width: 460px;
+    }
+
+    .pr-eliminar-body {
+        padding-top: 22px;
+        padding-bottom: 22px;
+    }
+
+    .pr-eliminar-icono {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 17px;
+    }
+
+    .pr-eliminar-mensaje {
+        font-size: 14px;
+    }
+
+    #modalEliminarTipo .pr-modal-pie {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        padding: 14px 16px 16px;
+    }
+
+    #modalEliminarTipo .pr-modal-pie .pr-btn {
+        width: 100%;
     }
 
     .pr-toasts {
@@ -770,5 +1007,10 @@ tr.inactivo .pr-prod-icono {
         min-width: 0;
         width: 100%;
         max-width: none;
+    }
+
+    .pr-pie {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
