@@ -154,7 +154,6 @@
 
                 <thead>
                     <tr>
-                        <th>N.º</th>
                         <th>Número de remito</th>
                         <th>Proveedor</th>
                         <th>Fecha</th>
@@ -171,11 +170,6 @@
                             data-search="{{ remito.Numero_remito|lower }} {{ remito.ID_Proveedor.nombre_proveedor|lower }}"
                             data-proveedor="{{ remito.ID_Proveedor.ID_Proveedor }}">
 
-                            <td>
-                                <span class="rm-codigo">
-                                    REM-{{ remito.ID_Remito }}
-                                </span>
-                            </td>
 
                             <td>
                                 <strong class="rm-numero">
@@ -245,7 +239,7 @@
                             class="rm-fila-detalle"
                             style="display: none;">
 
-                            <td colspan="6">
+                            <td colspan="5">
 
                                 <div class="rm-detalle">
 
@@ -345,7 +339,7 @@
                     {% empty %}
 
                         <tr>
-                            <td colspan="6" class="rm-vacio">
+                            <td colspan="5" class="rm-vacio">
                                 No se encontraron remitos registrados.
                             </td>
                         </tr>
@@ -375,13 +369,15 @@
 </div>
 
 
-<!-- MODAL REGISTRAR REMITO -->
+<!-- =========================================
+     MODAL REGISTRAR REMITO (con sus lotes)
+========================================= -->
 
 <div class="rm-modal"
      id="modalCrearRemito"
      aria-hidden="true">
 
-    <div class="rm-modal-box"
+    <div class="rm-modal-box rm-modal-box-lotes"
          role="dialog"
          aria-modal="true"
          aria-labelledby="tituloCrearRemito">
@@ -389,7 +385,6 @@
         <div class="rm-modal-head">
             <div>
                 <h2 id="tituloCrearRemito">Registrar remito</h2>
-                <p>Ingresá los datos del documento del proveedor.</p>
             </div>
 
             <button type="button"
@@ -400,13 +395,49 @@
             </button>
         </div>
 
-        <form method="POST" action="{% url 'gestion_remitos' %}">
+        <form method="POST"
+              action="{% url 'gestion_remitos' %}"
+              id="formCrearRemito"
+              novalidate>
+
             {% csrf_token %}
             <input type="hidden" name="accion" value="crear_remito">
 
             <div class="rm-modal-body">
 
+                <p class="rm-modal-intro">
+                    Completá los atributos del remito y sus lotes asociados.
+                    Cada lote genera su movimiento de ingreso y actualiza el stock.
+                </p>
+
+                <div class="rm-error" id="errorCrearRemito" hidden></div>
+
+                <!-- DATOS DEL REMITO -->
+
                 <div class="rm-grid">
+
+                    <div class="rm-grupo">
+                        <label for="crear_numero">Número de remito</label>
+
+                        <input type="text"
+                               name="Numero_remito"
+                               id="crear_numero"
+                               maxlength="20"
+                               placeholder="Ej. R-0001-000042"
+                               autocomplete="off"
+                               required>
+                    </div>
+
+                    <div class="rm-grupo">
+                        <label for="crear_fecha">Fecha del remito</label>
+
+                        <input type="date"
+                               name="Fecha_remito"
+                               id="crear_fecha"
+                               value="{{ hoy|date:'Y-m-d' }}"
+                               max="{{ hoy|date:'Y-m-d' }}"
+                               required>
+                    </div>
 
                     <div class="rm-grupo rm-full">
                         <label for="crear_proveedor">Proveedor</label>
@@ -417,45 +448,133 @@
 
                             <option value="">Seleccioná un proveedor</option>
 
-                            {% for proveedor in proveedores %}
+
+                            {% for proveedor in proveedores_alta %}
                                 <option value="{{ proveedor.ID_Proveedor }}">
                                     {{ proveedor.nombre_proveedor }}
+                                </option>
+
+                            {% empty %}
+                                <option value="" disabled>
+                                    No hay proveedores disponibles
                                 </option>
                             {% endfor %}
 
                         </select>
+
+                            {% if not proveedores_alta %}
+                                <small class="rm-ayuda">
+                                    Primero tenés que registrar un proveedor para poder asociarlo al remito.
+                                </small>
+                            {% endif %}
                     </div>
-
-                    <div class="rm-grupo">
-                        <label for="crear_numero">Número de remito</label>
-
-                        <input type="text"
-                               name="Numero_remito"
-                               id="crear_numero"
-                               maxlength="20"
-                               placeholder="Ej. 0001-00001234"
-                               required>
-                    </div>
-
-                    <div class="rm-grupo">
-                        <label for="crear_fecha">Fecha del remito</label>
-
-                        <input type="date"
-                               name="Fecha_remito"
-                               id="crear_fecha"
-                               required>
-                    </div>
-
                 </div>
 
-                <div class="rm-info">
-                    <svg class="rm-icon" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 16v-4M12 8h.01"/>
-                    </svg>
+                <!-- LOTES ASOCIADOS -->
 
-                    El número de remito debe corresponder al documento entregado por el proveedor.
+                <div class="rm-lotes-cab">
+                    <div>
+                        <h3>Lotes asociados al remito</h3>
+                        <p>
+                            Cada lote corresponde a un producto y conserva sus
+                            propias cantidades y vencimiento.
+                        </p>
+                    </div>
+
+                    <button type="button"
+                            class="rm-btn rm-btn-light rm-btn-chico"
+                            onclick="agregarLote()">
+                        <svg class="rm-icon" viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Agregar lote
+                    </button>
                 </div>
+
+                <div id="listaLotes"></div>
+
+                <!-- Plantilla de un lote: se clona con JavaScript.
+                     Un <template> no se envía con el formulario. -->
+                <template id="plantillaLote">
+                    <div class="rm-lote">
+
+                        <div class="rm-lote-top">
+                            <span class="rm-lote-titulo">Lote 1</span>
+
+                            <button type="button"
+                                    class="rm-lote-quitar"
+                                    onclick="quitarLote(this)"
+                                    aria-label="Quitar este lote">
+                                Quitar
+                            </button>
+                        </div>
+
+                        <div class="rm-grupo rm-full">
+                            <label for="lote_producto___N__">Producto</label>
+
+                            <select name="lote_producto"
+                                    id="lote_producto___N__"
+                                    required>
+
+                                <option value="">Seleccionar producto activo</option>
+
+                                {% for producto in productos_alta %}
+                                    <option value="{{ producto.ID_Producto }}">
+                                        {{ producto.Nombre_producto }}{% if producto.Marca %} · {{ producto.Marca }}{% endif %}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <div class="rm-grid">
+
+                            <div class="rm-grupo">
+                                <label for="lote_numero___N__">Número de lote</label>
+
+                                <input type="text"
+                                       name="lote_numero"
+                                       id="lote_numero___N__"
+                                       maxlength="50"
+                                       autocomplete="off"
+                                       required>
+                            </div>
+
+                            <div class="rm-grupo">
+                                <label for="lote_venc___N__">Fecha de vencimiento</label>
+
+                                <input type="date"
+                                       name="lote_vencimiento"
+                                       id="lote_venc___N__"
+                                       min="{{ hoy|date:'Y-m-d' }}"
+                                       required>
+                            </div>
+
+                            <div class="rm-grupo">
+                                <label for="lote_cant___N__">Cantidad ingresada</label>
+
+                                <input type="number"
+                                       name="lote_cantidad"
+                                       id="lote_cant___N__"
+                                       min="1"
+                                       step="1"
+                                       inputmode="numeric"
+                                       required>
+                            </div>
+
+                            <div class="rm-grupo">
+                                <label for="lote_ingreso___N__">Fecha de ingreso</label>
+
+                                <input type="text"
+                                       id="lote_ingreso___N__"
+                                       value="{{ hoy|date:'d/m/Y' }}"
+                                       readonly
+                                       tabindex="-1">
+                            </div>
+
+                        </div>
+                    </div>
+                </template>
 
             </div>
 
@@ -467,11 +586,12 @@
                 </button>
 
                 <button type="submit"
-                        class="rm-btn rm-btn-primary">
+                        class="rm-btn rm-btn-primary"
+                        id="btnGuardarRemito">
                     <svg class="rm-icon" viewBox="0 0 24 24">
                         <path d="M20 6 9 17l-5-5"/>
                     </svg>
-                    Registrar remito
+                    Registrar remito y lotes
                 </button>
             </div>
 
@@ -638,19 +758,136 @@
     };
 
 
+    /* =========================================
+       REGISTRAR REMITO CON SUS LOTES
+    ========================================= */
+
+    const formCrear = document.getElementById('formCrearRemito');
+    const listaLotes = document.getElementById('listaLotes');
+    const plantillaLote = document.getElementById('plantillaLote');
+    const errorCrear = document.getElementById('errorCrearRemito');
+    const btnGuardar = document.getElementById('btnGuardarRemito');
+
+    // Contador para dar ids únicos a los campos de cada lote.
+    let contadorLotes = 0;
+
+    function mostrarError(texto) {
+        errorCrear.textContent = texto;
+        errorCrear.hidden = false;
+        errorCrear.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function ocultarError() {
+        errorCrear.hidden = true;
+        errorCrear.textContent = '';
+    }
+
+    // Renumera los títulos y oculta "Quitar" si queda un solo lote.
+    function renumerarLotes() {
+        const tarjetas = listaLotes.querySelectorAll('.rm-lote');
+
+        tarjetas.forEach(function (tarjeta, indice) {
+            tarjeta.querySelector('.rm-lote-titulo').textContent =
+                'Lote ' + (indice + 1);
+
+            tarjeta.querySelector('.rm-lote-quitar').style.display =
+                tarjetas.length > 1 ? '' : 'none';
+        });
+    }
+
+    window.agregarLote = function (enfocar) {
+        contadorLotes++;
+
+        const contenedor = document.createElement('div');
+
+        contenedor.innerHTML = plantillaLote.innerHTML
+            .replace(/__N__/g, String(contadorLotes))
+            .trim();
+
+        const tarjeta = contenedor.firstElementChild;
+
+        listaLotes.appendChild(tarjeta);
+        renumerarLotes();
+
+        if (enfocar !== false) {
+            tarjeta.querySelector('select').focus();
+            tarjeta.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+    };
+
+    window.quitarLote = function (boton) {
+        const tarjeta = boton.closest('.rm-lote');
+
+        if (tarjeta && listaLotes.querySelectorAll('.rm-lote').length > 1) {
+            tarjeta.remove();
+            renumerarLotes();
+            ocultarError();
+        }
+    };
+
+  
+    // Valida que no se repita el número de lote para el mismo producto.
+    formCrear.addEventListener('submit', function (evento) {
+        ocultarError();
+
+        if (!formCrear.checkValidity()) {
+            evento.preventDefault();
+            formCrear.reportValidity();
+            return;
+        }
+
+        const tarjetas = Array.from(
+            listaLotes.querySelectorAll('.rm-lote')
+        );
+
+        const combinaciones = tarjetas.map(function (tarjeta) {
+            const producto = tarjeta.querySelector(
+                '[name="lote_producto"]'
+            ).value;
+
+            const numero = tarjeta.querySelector(
+                '[name="lote_numero"]'
+            ).value.trim().toLowerCase();
+
+            return producto + '|' + numero;
+        });
+
+        const repetido = combinaciones.find(function (combinacion, indice) {
+            return combinaciones.indexOf(combinacion) !== indice;
+        });
+
+        if (repetido !== undefined) {
+            evento.preventDefault();
+            mostrarError(
+                'Hay números de lote repetidos para un mismo producto. ' +
+                'Verificá los productos y sus números de lote.'
+            );
+            return;
+        }
+
+        // Evita enviar dos veces el mismo remito.
+        btnGuardar.disabled = true;
+    });
+
+    formCrear.addEventListener('input', ocultarError);
+
+
     /* ABRIR MODALES */
 
     window.abrirModalCrear = function () {
         const modal = document.getElementById('modalCrearRemito');
 
+        // Siempre se abre limpio y con un lote.
+        formCrear.reset();
+        listaLotes.innerHTML = '';
+        ocultarError();
+        btnGuardar.disabled = false;
+        window.agregarLote(false);
+
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
 
-        const primerCampo = document.getElementById('crear_proveedor');
-
-        if (primerCampo) {
-            primerCampo.focus();
-        }
+        document.getElementById('crear_numero').focus();
     };
 
     window.abrirModalEditar = function (id, numero, fecha) {

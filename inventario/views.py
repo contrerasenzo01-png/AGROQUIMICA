@@ -1257,59 +1257,37 @@ def restablecer_contrasena(request, pk):
         ID_Usuario=pk
     )
 
-    if request.method == 'POST':
-
-        nueva_contrasena = request.POST.get(
-            'nueva_contrasena',
-            ''
-        )
-        confirmar_contrasena = request.POST.get(
-            'confirmar_contrasena',
-            ''
-        )
-
-        if nueva_contrasena != confirmar_contrasena:
-            messages.error(
-                request,
-                'Las contraseñas no coinciden.'
-            )
-
-            return render(
-                request,
-                'inventario/restablecer_contrasena.html',
-                {'usuario': usuario}
-            )
-
-        if len(nueva_contrasena) < 8:
-            messages.error(
-                request,
-                'La contraseña debe tener al menos 8 caracteres.'
-            )
-
-            return render(
-                request,
-                'inventario/restablecer_contrasena.html',
-                {'usuario': usuario}
-            )
-
-        usuario.Contrasena = make_password(nueva_contrasena)
-        usuario.Cambiar_contrasena = True
-        usuario.save()
-
-        messages.success(
-            request,
-            f'La contraseña del usuario {usuario.Usuario} '
-            'fue restablecida correctamente. '
-            'Deberá cambiarla en el próximo inicio de sesión.'
-        )
-
+    if request.method != 'POST':
         return redirect('gestion_usuarios')
 
-    return render(
+    nueva_contrasena = request.POST.get('nueva_contrasena', '')
+    confirmar_contrasena = request.POST.get('confirmar_contrasena', '')
+
+
+    if nueva_contrasena != confirmar_contrasena:
+        messages.error(request, 'Las contraseñas no coinciden.')
+        return redirect('gestion_usuarios')
+    
+    if len(nueva_contrasena) < 8:
+        messages.error(
+            request,
+            'La contraseña debe tener al menos 8 caracteres.'
+        )
+        return redirect('gestion_usuarios')
+
+    usuario.Contrasena = make_password(nueva_contrasena)
+    usuario.Cambiar_contrasena = True
+    usuario.save()
+
+    messages.success(
         request,
-        'inventario/restablecer_contrasena.html',
-        {'usuario': usuario}
+        f'La contraseña del usuario {usuario.Usuario} '
+        'fue restablecida correctamente. '
+        'Deberá cambiarla en el próximo inicio de sesión.'
     )
+
+    return redirect('gestion_usuarios')
+
 
 
 def cambiar_contrasena(request):
@@ -2804,17 +2782,14 @@ def editar_lote(request, id):
 
     return redirect('registrar_ingreso_lote')
 
-   
 
 # ============================================================
 # MOVIMIENTOS DE STOCK
 # ============================================================
 
-
 def gestion_movimientos_stock(request):
     usuario = usuario_es_administrador(request)
 
-    # Si no es administrador, comprobar si es Vendedor 1.
     if not usuario:
         usuario = usuario_es_vendedor(request)
 
@@ -2824,6 +2799,7 @@ def gestion_movimientos_stock(request):
     busqueda = request.GET.get('q', '').strip()
     tipo_sel = request.GET.get('tipo', '').strip()
 
+    # Mostrar únicamente los movimientos permitidos.
     movimientos = MovimientosStock.objects.select_related(
         'ID_Usuario',
         'ID_Tipo_movimiento',
@@ -2831,9 +2807,15 @@ def gestion_movimientos_stock(request):
         'ID_Lote__ID_Producto',
         'ID_Lote__ID_Remito',
         'ID_Lote__ID_Remito__ID_Proveedor'
-
+    ).filter(
+        Q(
+            ID_Tipo_movimiento__Nombre_tipo_movimiento__iexact='Entrada de lote'
+        )
+        | Q(
+            ID_Tipo_movimiento__Nombre_tipo_movimiento__iexact='Salida por vencimiento de producto'
+        )
     ).order_by('-Fecha_hora_movimiento')
-    
+
     if busqueda:
         movimientos = movimientos.filter(
             Q(ID_Lote__ID_Producto__Nombre_producto__icontains=busqueda)
@@ -2846,17 +2828,14 @@ def gestion_movimientos_stock(request):
             ID_Tipo_movimiento_id=tipo_sel
         )
 
-    todos_tipos = TiposMovimientos.objects.all()
-
-    tipos_movimientos = TiposMovimientos.objects.exclude(
-        Nombre_tipo_movimiento__iexact='Entrada de lote'
-    )
-
-    lotes = Lotes.objects.select_related(
-        'ID_Producto',
-        'ID_Remito',
-        'ID_Remito__ID_Proveedor'
-    ).filter(Cantidad_actual__gt=0)
+    # Mostrar solamente estos tipos en el filtro.
+    todos_tipos = TiposMovimientos.objects.filter(
+        Q(Nombre_tipo_movimiento__iexact='Entrada de lote')
+        |   Q(
+            Nombre_tipo_movimiento__iexact=
+            'Salida por vencimiento de producto'
+        )
+    ).order_by('Nombre_tipo_movimiento')
 
     return render(
         request,
@@ -2864,155 +2843,12 @@ def gestion_movimientos_stock(request):
         {
             'movimientos': movimientos,
             'todos_tipos': todos_tipos,
-            'tipos_movimientos': tipos_movimientos,
-            'lotes': lotes,
             'busqueda': busqueda,
             'tipo_sel': tipo_sel,
             'usuario': usuario,
             'activo': 'movimientos',
         }
     )
-
-
-
-def crear_movimiento_stock(request):
-    usuario_admin = usuario_es_administrador(request)
-
-    if not usuario_admin:
-        return redirect('panel_principal')
-
-    if request.method != 'POST':
-        return redirect('gestion_movimientos_stock')
-
-    tipo_id = request.POST.get('ID_Tipo_movimiento')
-    lote_id = request.POST.get('ID_Lote')
-
-    if not tipo_id or not lote_id:
-        messages.error(
-            request,
-            'Debe seleccionar el lote y el tipo de movimiento.'
-        )
-        return redirect('gestion_movimientos_stock')
-
-    tipo_movimiento = get_object_or_404(
-        TiposMovimientos,
-        ID_Tipo_movimiento=tipo_id
-    )
-
-    nombre_movimiento = (
-        tipo_movimiento.Nombre_tipo_movimiento.strip().lower()
-    )
-
-    if nombre_movimiento == 'entrada de lote':
-        messages.error(
-            request,
-            'Los movimientos de entrada se registran mediante el ingreso de lote.'
-        )
-        return redirect('gestion_movimientos_stock')
-
-    if nombre_movimiento != 'salida por vencimiento de producto':
-        messages.error(
-            request,
-            'El tipo de movimiento no es válido.'
-        )
-        return redirect('gestion_movimientos_stock')
-
-    try:
-        cantidad = int(
-            request.POST.get(
-                'Cantidad_movimiento',
-                request.POST.get(
-                    'Cantidad_movimiento_stock',
-                    request.POST.get('Cantidad', '0')
-                )
-            )
-        )
-    except (TypeError, ValueError):
-        messages.error(
-            request,
-            'La cantidad ingresada no es válida.'
-        )
-        return redirect('gestion_movimientos_stock')
-
-    if cantidad <= 0:
-        messages.error(
-            request,
-            'La cantidad debe ser mayor a cero.'
-        )
-        return redirect('gestion_movimientos_stock')
-
-    observaciones = request.POST.get(
-        'Observaciones', ''
-    ).strip()
-
-    with transaction.atomic():
-        lote = get_object_or_404(
-            Lotes.objects.select_for_update(),
-            ID_Lote=lote_id
-        )
-
-        producto = lote.ID_Producto
-
-        stock = get_object_or_404(
-            Stock.objects.select_for_update(),
-            ID_Producto=producto
-        )
-
-        if cantidad > lote.Cantidad_actual:
-            messages.error(
-                request,
-                'No hay suficiente cantidad disponible en el lote seleccionado.'
-            )
-            return redirect('gestion_movimientos_stock')
-
-        if cantidad > stock.Cantidad_stock:
-            messages.error(
-                request,
-                'No hay suficiente stock disponible.'
-            )
-            return redirect('gestion_movimientos_stock')
-
-        cantidad_anterior = stock.Cantidad_stock
-
-        stock.Cantidad_stock -= cantidad
-        stock.save(update_fields=['Cantidad_stock'])
-
-        lote.Cantidad_actual -= cantidad
-        lote.save(update_fields=['Cantidad_actual'])
-
-        MovimientosStock.objects.create(
-            ID_Usuario=usuario_admin,
-            ID_Tipo_movimiento=tipo_movimiento,
-            ID_Lote=lote,
-            Cantidad_movimiento_stock=cantidad,
-            Observaciones=observaciones or None
-        )
-
-        # Genera una alerta cuando el stock cruza el mínimo.
-        if (
-            cantidad_anterior > stock.Stock_minimo
-            and stock.Cantidad_stock <= stock.Stock_minimo
-        ):
-            Alertas.objects.create(
-                ID_Stock=stock,
-                Tipo_alerta='Stock mínimo',
-                Mensaje=(
-                    f'El producto {producto.Nombre_producto} tiene '
-                    f'{stock.Cantidad_stock} unidades disponibles, '
-                    f'por debajo o igual al stock mínimo de '
-                    f'{stock.Stock_minimo}.'
-                ),
-                Cantidad_al_generar=stock.Cantidad_stock,
-                Stock_minimo_al_generar=stock.Stock_minimo,
-                Atendida=False
-            )
-
-    messages.success(
-        request,
-        'Movimiento de stock registrado correctamente.'
-    )
-
-    return redirect('gestion_movimientos_stock')
 
 
 # ============================================================
@@ -3715,16 +3551,43 @@ def gestion_remitos(request):
         messages.error(request, 'No tenés permiso para gestionar remitos.')
         return redirect('panel_principal')
 
+    hoy = timezone.localdate()
+
     if request.method == 'POST':
         accion = request.POST.get('accion', '').strip()
 
+        # ====================================================
+        # REGISTRAR REMITO CON SUS LOTES
+        # ====================================================
         if accion == 'crear_remito':
             proveedor_id = request.POST.get('ID_Proveedor', '').strip()
             numero_remito = request.POST.get('Numero_remito', '').strip()
             fecha_texto = request.POST.get('Fecha_remito', '').strip()
 
+            productos_ids = request.POST.getlist('lote_producto')
+            numeros_lote = request.POST.getlist('lote_numero')
+            vencimientos = request.POST.getlist('lote_vencimiento')
+            cantidades = request.POST.getlist('lote_cantidad')
+
             if not proveedor_id or not numero_remito or not fecha_texto:
-                messages.error(request, 'Completá todos los campos del remito.')
+                messages.error(request, 'Completá los datos del remito.')
+                return redirect('gestion_remitos')
+
+            if not (
+                len(productos_ids) == len(numeros_lote)
+                == len(vencimientos) == len(cantidades)
+            ) or not productos_ids:
+                messages.error(
+                    request,
+                    'Agregá al menos un lote y completá todos sus datos.'
+                )
+                return redirect('gestion_remitos')
+
+            if len(numero_remito) > 20:
+                messages.error(
+                    request,
+                    'El número de remito no puede superar los 20 caracteres.'
+                )
                 return redirect('gestion_remitos')
 
             try:
@@ -3733,70 +3596,277 @@ def gestion_remitos(request):
                 messages.error(request, 'La fecha del remito no es válida.')
                 return redirect('gestion_remitos')
 
+            if fecha_remito > hoy:
+                messages.error(
+                    request,
+                    'La fecha del remito no puede ser futura.'
+                )
+                return redirect('gestion_remitos')
+
+            proveedor = Proveedores.objects.filter(
+                ID_Proveedor=proveedor_id,
+                estado_proveedor=True
+            ).first()
+
+            if not proveedor:
+                messages.error(
+                    request,
+                    'El proveedor seleccionado no existe o está inactivo.'
+                )
+                return redirect('gestion_remitos')
+            
+    
+
+            # Validar los lotes antes de guardar.
+            lotes_validados = []
+            combinaciones = set()
+
+            for producto_id, numero_lote, vencimiento_texto, cantidad_texto in zip(
+                productos_ids, numeros_lote, vencimientos, cantidades
+            ):
+                numero_lote = numero_lote.strip()
+
+                if not all([
+                    producto_id,
+                    numero_lote,
+                    vencimiento_texto,
+                    cantidad_texto
+                ]):
+                    messages.error(
+                        request,
+                        'Completá todos los campos de cada lote.'
+                    )
+                    return redirect('gestion_remitos')
+
+                if len(numero_lote) > 50:
+                    messages.error(
+                        request,
+                        'El número de lote no puede superar los 50 caracteres.'
+                    )
+                    return redirect('gestion_remitos')
+
+                try:
+                    cantidad = int(cantidad_texto)
+                    fecha_vencimiento = date.fromisoformat(
+                        vencimiento_texto
+                    )
+                except (ValueError, TypeError):
+                    messages.error(
+                        request,
+                        'Revisá las cantidades y las fechas de los lotes.'
+                    )
+                    return redirect('gestion_remitos')
+
+                if cantidad <= 0:
+                    messages.error(
+                        request,
+                        'La cantidad de cada lote debe ser mayor a cero.'
+                    )
+                    return redirect('gestion_remitos')
+
+                if fecha_vencimiento < hoy:
+                    messages.error(
+                        request,
+                        'No se pueden registrar lotes ya vencidos.'
+                    )
+                    return redirect('gestion_remitos')
+
+                producto = Productos.objects.filter(
+                    ID_Producto=producto_id,
+                    Estado_producto='Activo'
+                ).first()
+
+                if not producto:
+                    messages.error(
+                        request,
+                        'Uno de los productos seleccionados no existe '
+                        'o está inactivo.'
+                    )
+                    return redirect('gestion_remitos')
+                
+                
+            # Verificar si el lote ya existe en la base de datos.
+                if Lotes.objects.filter(
+                    ID_Producto=producto,
+                    Numero_lote=numero_lote
+                ).exists():
+                    messages.error(
+                        request,
+                        f'El lote "{numero_lote}" ya existe para '
+                        f'el producto "{producto.Nombre_producto}".'
+                    )
+                    return redirect('gestion_remitos')
+
+
+                combinacion = (producto.pk, numero_lote)
+
+                if combinacion in combinaciones:
+                    messages.error(
+                        request,
+                        'No podés repetir el número de lote para el mismo producto.'
+                    )
+                    return redirect('gestion_remitos')
+
+                combinaciones.add(combinacion)
+
+                lotes_validados.append({
+                    'producto': producto,
+                    'numero': numero_lote,
+                    'vencimiento': fecha_vencimiento,
+                    'cantidad': cantidad,
+                })
+
+            tipo_entrada = TiposMovimientos.objects.filter(
+                Nombre_tipo_movimiento__iexact='Entrada de lote'
+            ).first()
+
+            if not tipo_entrada:
+                messages.error(
+                    request,
+                    'Falta registrar el tipo de movimiento "Entrada de lote".'
+                )
+                return redirect('gestion_remitos')
+
+            # Todo se guarda junto: si algo falla, se revierte todo.
             try:
-                proveedor = Proveedores.objects.get(
-                    ID_Proveedor=proveedor_id,
-                    estado_proveedor=True
+                with transaction.atomic():
+                    remito = Remitos.objects.create(
+                        ID_Proveedor=proveedor,
+                        Numero_remito=numero_remito,
+                        Fecha_remito=fecha_remito
+                    )
+
+                    for datos in lotes_validados:
+                        lote = Lotes.objects.create(
+                            ID_Remito=remito,
+                            ID_Producto=datos['producto'],
+                            Numero_lote=datos['numero'],
+                            Cantidad_ingresada=datos['cantidad'],
+                            Cantidad_actual=datos['cantidad'],
+                            Fecha_ingreso=hoy,
+                            Fecha_vencimiento=datos['vencimiento']
+                        )
+
+                        stock, creado = (
+                            Stock.objects.select_for_update().get_or_create(
+                                ID_Producto=datos['producto'],
+                                defaults={
+                                    'Cantidad_stock': 0,
+                                    'Stock_minimo': 10
+                                }
+                            )
+                        )
+
+                        stock.Cantidad_stock += datos['cantidad']
+                        stock.save(update_fields=['Cantidad_stock'])
+
+                        MovimientosStock.objects.create(
+                            ID_Usuario=usuario,
+                            ID_Tipo_movimiento=tipo_entrada,
+                            ID_Lote=lote,
+                            Cantidad_movimiento_stock=datos['cantidad'],
+                            Observaciones=(
+                                f'Entrada por remito {numero_remito}'
+                            )
+                        )
+
+                messages.success(
+                    request,
+                    'El remito, sus lotes, el stock y los movimientos '
+                    'se registraron correctamente.'
                 )
-
-                Remitos.objects.create(
-                    ID_Proveedor=proveedor,
-                    Numero_remito=numero_remito,
-                    Fecha_remito=fecha_remito
-                )
-
-                messages.success(request, 'El remito se registró correctamente.')
-
-            except Proveedores.DoesNotExist:
-                messages.error(request, 'El proveedor seleccionado no existe o está inactivo.')
 
             except IntegrityError:
                 messages.error(
                     request,
-                    'Ese número de remito ya está registrado para este proveedor.'
+                    'El número de remito ya existe para ese proveedor, '
+                    'o uno de los lotes está duplicado para el producto.'
+                )
+
+            except DatabaseError:
+                messages.error(
+                    request,
+                    'Ocurrió un error en la base de datos. '
+                    'No se guardaron los cambios.'
                 )
 
             return redirect('gestion_remitos')
 
+
+        # ====================================================
+        # EDITAR DATOS DEL REMITO
+        # ====================================================
         elif accion == 'editar_remito':
             remito_id = request.POST.get('ID_Remito', '').strip()
             numero_remito = request.POST.get('Numero_remito', '').strip()
             fecha_texto = request.POST.get('Fecha_remito', '').strip()
 
             if not remito_id or not numero_remito or not fecha_texto:
-                messages.error(request, 'Completá todos los campos del remito.')
+                messages.error(
+                    request,
+                    'Completá todos los campos del remito.'
+                )
+                return redirect('gestion_remitos')
+
+            # Validar la longitud del número de remito.
+            if len(numero_remito) > 20:
+                messages.error(
+                    request,
+                    'El número de remito no puede superar los 20 caracteres.'
+                )
                 return redirect('gestion_remitos')
 
             try:
                 fecha_remito = date.fromisoformat(fecha_texto)
             except ValueError:
-                messages.error(request, 'La fecha del remito no es válida.')
+                messages.error(
+                    request,
+                    'La fecha del remito no es válida.'
+                )
+                return redirect('gestion_remitos')
+
+            if fecha_remito > hoy:
+                messages.error(
+                    request,
+                    'La fecha del remito no puede ser futura.'
+                )
                 return redirect('gestion_remitos')
 
             try:
                 remito = Remitos.objects.get(ID_Remito=remito_id)
-
                 remito.Numero_remito = numero_remito
                 remito.Fecha_remito = fecha_remito
-                remito.save(update_fields=['Numero_remito', 'Fecha_remito'])
+                remito.save(
+                    update_fields=['Numero_remito', 'Fecha_remito']
+                )
 
-                messages.success(request, 'El remito se actualizó correctamente.')
+                messages.success(
+                    request,
+                    'El remito se actualizó correctamente.'
+                )
 
             except Remitos.DoesNotExist:
-                messages.error(request, 'El remito seleccionado no existe.')
+                messages.error(
+                    request,
+                    'El remito seleccionado no existe.'
+                )
 
             except IntegrityError:
                 messages.error(
                     request,
-                    'Ya existe otro remito con ese número para el mismo proveedor.'
+                    'Ya existe otro remito con ese número para el proveedor.'
                 )
 
             return redirect('gestion_remitos')
+        
+        # Si la acción recibida no es válida.
+        messages.error(request, 'La operación solicitada no es válida.')
+        return redirect('gestion_remitos')
 
-        else:
-            messages.error(request, 'La operación solicitada no es válida.')
-            return redirect('gestion_remitos')
 
+    # ========================================================
+    # GET: CONSULTAR Y FILTRAR REMITOS
+    # ========================================================
     remitos = (
         Remitos.objects
         .select_related('ID_Proveedor')
@@ -3814,43 +3884,39 @@ def gestion_remitos(request):
         )
 
     if proveedor_filtro:
-        remitos = remitos.filter(ID_Proveedor__ID_Proveedor=proveedor_filtro)
+        remitos = remitos.filter(
+            ID_Proveedor__ID_Proveedor=proveedor_filtro
+        )
 
     proveedores = Proveedores.objects.filter(
         estado_proveedor=True
     ).order_by('nombre_proveedor')
 
-    contexto = {
-        'usuario': usuario,
-        'remitos': remitos,
-        'proveedores': proveedores,
-        'total_remitos': Remitos.objects.count(),
-        'total_proveedores': Remitos.objects.values(
-            'ID_Proveedor'
-        ).distinct().count(),
-        'total_lotes': Lotes.objects.count(),
-        'busqueda': busqueda,
-        'proveedor_filtro': proveedor_filtro,
-    }
+    productos_alta = Productos.objects.filter(
+        Estado_producto='Activo'
+    ).order_by('Nombre_producto')
 
     return render(
         request,
         'inventario/gestion_remitos.html',
-        contexto
+        {
+            'usuario': usuario,
+            'remitos': remitos,
+            'proveedores': proveedores,
+            'proveedores_alta': proveedores,
+            'productos_alta': productos_alta,
+            'total_remitos': Remitos.objects.count(),
+            'total_proveedores': Remitos.objects.values(
+                'ID_Proveedor'
+            ).distinct().count(),
+            'total_lotes': Lotes.objects.count(),
+            'busqueda': busqueda,
+            'proveedor_filtro': proveedor_filtro,
+            'hoy': hoy,
+        }
     )
 
-# ============================================================
-# PEGAR AL FINAL DE views.py
-# No requiere imports nuevos: tu views.py ya tiene todo lo necesario
-# (ProtectedError, transaction, require_POST, messages, redirect,
-#  get_object_or_404, PERFILES_ADMIN y los modelos).
-# ============================================================
 
-
-# ============================================================
-# ELIMINAR PROVEEDOR / USUARIO / PERFIL
-# Solo se eliminan si no tienen registros relacionados.
-# ============================================================
 
 @require_POST
 def eliminar_proveedor(request, pk):

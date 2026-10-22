@@ -5,7 +5,6 @@
 :root {
     --verde-oscuro: #0f2e22;
     --verde-medio: #166534;
-    --verde-activo: #1f6b46;
     --verde-boton: #1f6b46;
     --fondo: #ffffff;
     --blanco: #ffffff;
@@ -19,7 +18,6 @@
     --ambar-fondo: #fef3c7;
 }
 
-
 /* ============================================================
    CONFIGURACIÓN GENERAL
    ============================================================ */
@@ -30,7 +28,6 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
-
 /* ============================================================
    ENCABEZADO
    ============================================================ */
@@ -39,41 +36,25 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-
     gap: 16px;
-
     margin-bottom: 24px;
-}
-
-.page-eyebrow {
-    font-family: 'Inter', sans-serif;
-
-    font-size: 10px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-
-    color: var(--texto-suave);
-
-    margin-bottom: 6px;
 }
 
 .page-title {
     font-family: 'Poppins', sans-serif;
-
     font-size: 28px;
     font-weight: 700;
-
     color: var(--texto);
+    margin: 0;
 }
 
-.page-sub {
-    font-family: 'Inter', sans-serif;
-
+.page-header p {
     color: var(--texto-suave);
-
-    margin-top: 4px;
+    font-size: 13px;
+    margin-top: 8px;
+    margin-bottom: 0;
+    line-height: 1.5;
 }
-
 
 /* ============================================================
    BOTONES
@@ -82,21 +63,16 @@ body {
 .btn {
     display: inline-flex;
     align-items: center;
-
+    justify-content: center;
     gap: 8px;
-
     padding: 11px 20px;
-
     border: none;
     border-radius: 10px;
-
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 600;
-
     cursor: pointer;
-
-    transition: filter .15s;
+    transition: filter .15s ease;
 }
 
 .btn:hover {
@@ -105,45 +81,31 @@ body {
 
 .btn-primary {
     background: var(--verde-boton);
-    color: #ffffff;
+    color: var(--blanco);
 }
 
 .btn-secondary {
     background: var(--blanco);
     color: var(--texto);
-
     border: 1px solid var(--borde);
 }
-
-.btn-cancelar {
-    background: #eef2ef;
-    color: var(--texto);
-}
-
 
 /* ============================================================
    MENSAJES
    ============================================================ */
 
 .messages {
-    margin-bottom: 16px;
-
     display: flex;
     flex-direction: column;
-
     gap: 8px;
+    margin-bottom: 16px;
 }
 
 .message {
     padding: 12px 16px;
-
-    border-radius: 10px;
-
     border: 1px solid var(--borde);
-
+    border-radius: 10px;
     background: var(--blanco);
-
-    font-family: 'Inter', sans-serif;
     font-size: 13px;
 }
 
@@ -159,61 +121,45 @@ body {
     color: #7f1d1d;
 }
 
-
 /* ============================================================
-   BÚSQUEDA Y FILTRO
+   BÚSQUEDA Y FILTROS
    ============================================================ */
 
 .toolbar {
     display: flex;
-
-    gap: 12px;
-
-    margin-bottom: 20px;
-
     flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
 .search-box {
     flex: 1;
-
     min-width: 220px;
-
     padding: 12px 16px;
-
     border: 1px solid var(--borde);
     border-radius: 10px;
-
     background: var(--blanco);
-
+    color: var(--texto);
     font-family: 'Inter', sans-serif;
     font-size: 14px;
-
-    color: var(--texto);
 }
 
 .filter-select {
+    min-width: 220px;
     padding: 12px 14px;
-
     border: 1px solid var(--borde);
     border-radius: 10px;
-
     background: var(--blanco);
-
+    color: var(--texto);
     font-family: 'Inter', sans-serif;
     font-size: 14px;
-
-    color: var(--texto);
-
-    min-width: 200px;
 }
 
 .search-box:focus,
 .filter-select:focus {
     outline: 2px solid #86c5a1;
-    border-color: transparent;
+    outline-offset: 1px;
 }
-
 
 /* ============================================================
    TABLA
@@ -221,48 +167,37 @@ body {
 
 .card {
     background: var(--blanco);
-
     border: 1px solid var(--borde);
     border-radius: 14px;
-
     overflow: hidden;
 }
 
 .table-wrap {
     overflow-x: auto;
+    width: 100%;
 }
 
 .custom-table {
     width: 100%;
-
     border-collapse: collapse;
-
     font-family: 'Inter', sans-serif;
 }
 
 .custom-table th {
-    text-align: left;
-
     padding: 14px 16px;
-
-    font-family: 'Inter', sans-serif;
+    text-align: left;
     font-size: 11px;
     font-weight: 600;
-
     color: var(--texto-suave);
-
     border-bottom: 1px solid var(--borde);
-
     white-space: nowrap;
+    background: #fafcfb;
 }
 
 .custom-table td {
     padding: 14px 16px;
-
     border-bottom: 1px solid #eef2ef;
-
     vertical-align: middle;
-
     font-size: 13px;
 }
 
@@ -274,38 +209,34 @@ body {
     background: #f8fbf9;
 }
 
-
 /* ============================================================
-   DATOS DE MOVIMIENTO
+   DATOS DEL MOVIMIENTO
    ============================================================ */
 
 .mov-fecha {
     display: block;
-
     font-size: 13px;
     font-weight: 600;
-
     white-space: nowrap;
 }
 
 .mov-hora {
     display: block;
-
-    font-size: 11px;
-
-    color: var(--texto-suave);
-
     margin-top: 2px;
+    color: var(--texto-suave);
+    font-size: 11px;
 }
 
 .mov-obs {
-    color: var(--texto-suave);
-
+    display: inline-block;
     max-width: 360px;
+    color: var(--texto-suave);
+    overflow-wrap: anywhere;
 }
 
 .mov-cantidad {
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .mov-cantidad.pos {
@@ -317,29 +248,21 @@ body {
 }
 
 .tabla-vacia {
-    text-align: center;
-
     padding: 36px 16px !important;
-
+    text-align: center;
     color: var(--texto-suave);
 }
 
 .tabla-pie {
     display: flex;
     justify-content: space-between;
-
+    gap: 12px;
     padding: 12px 16px;
-
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-
-    color: var(--texto-suave);
-
     border-top: 1px solid var(--borde);
-
     background: #fafcfb;
+    color: var(--texto-suave);
+    font-size: 12px;
 }
-
 
 /* ============================================================
    ETIQUETAS DE TIPO
@@ -347,15 +270,10 @@ body {
 
 .tag {
     display: inline-block;
-
-    padding: 3px 11px;
-
+    padding: 5px 10px;
     border-radius: 6px;
-
-    font-family: 'Inter', sans-serif;
     font-size: 11px;
     font-weight: 600;
-
     white-space: nowrap;
 }
 
@@ -364,156 +282,43 @@ body {
     color: var(--verde-medio);
 }
 
-.tag-salida {
-    background: var(--rojo-fondo);
-    color: #991b1b;
-}
-
 .tag-vencimiento {
     background: var(--ambar-fondo);
     color: var(--ambar);
 }
 
-.tag-otro {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-
 /* ============================================================
-   MODAL
+   COMPROBANTE PDF
    ============================================================ */
 
-.modal {
-    display: none;
-
-    position: fixed;
-
-    inset: 0;
-
-    background: rgba(15, 46, 34, .55);
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 20px;
-
-    z-index: 3000;
-}
-
-.modal-contenido {
-    background: var(--blanco);
-
-    width: 100%;
-    max-width: 480px;
-    max-height: 90vh;
-
-    overflow-y: auto;
-
-    border-radius: 16px;
-
-    padding: 26px;
-
-    box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 18px;
-}
-
-.modal-header h2 {
-    font-family: 'Poppins', sans-serif;
-
-    font-size: 20px;
-    font-weight: 600;
-
-    color: var(--texto);
-}
-
-.modal-cerrar {
-    background: none;
-    border: none;
-
-    font-family: 'Inter', sans-serif;
-    font-size: 26px;
-
-    line-height: 1;
-
-    cursor: pointer;
-
-    color: var(--texto-suave);
-}
-
-.modal-cerrar:hover {
-    color: var(--texto);
-}
-
-
-/* ============================================================
-   FORMULARIO DEL MODAL
-   ============================================================ */
-
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group label {
-    display: block;
-
-    margin-bottom: 6px;
-
-    font-family: 'Inter', sans-serif;
+.btn-comprobante {
+    display: inline-block;
+    padding: 8px 11px;
+    background: var(--verde-oscuro);
+    color: var(--blanco);
+    text-decoration: none;
+    border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
-
-    color: var(--texto-suave);
+    white-space: nowrap;
+    transition: background-color .2s ease;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-
-    padding: 11px 13px;
-
-    border: 1px solid var(--borde);
-    border-radius: 10px;
-
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-
-    color: var(--texto);
-
-    background: var(--blanco);
+.btn-comprobante:hover {
+    background: #174d32;
+    color: var(--blanco);
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.btn-comprobante:focus-visible {
     outline: 2px solid #86c5a1;
-    border-color: transparent;
+    outline-offset: 3px;
 }
-
-.modal-acciones {
-    display: flex;
-    justify-content: flex-end;
-
-    gap: 10px;
-
-    margin-top: 22px;
-}
-
 
 /* ============================================================
-   RESPONSIVE
+   DISEÑO RESPONSIVE
    ============================================================ */
 
 @media (max-width: 900px) {
-
     .page-header {
         flex-direction: column;
         align-items: flex-start;
@@ -524,21 +329,19 @@ body {
     }
 }
 
-
 @media (max-width: 600px) {
-
     .toolbar {
         flex-direction: column;
     }
 
     .search-box,
-    .filter-select {
+    .filter-select,
+    .btn-secondary {
         width: 100%;
         min-width: 0;
     }
 
     .btn-secondary {
-        width: 100%;
         justify-content: center;
     }
 
@@ -547,29 +350,23 @@ body {
         gap: 5px;
     }
 
-    .modal {
-        padding: 12px;
+    .custom-table th,
+    .custom-table td {
+        padding: 11px 12px;
     }
 
-    .modal-contenido {
-        padding: 20px;
+    .mov-obs {
+        min-width: 140px;
     }
 }
 
-.btn-comprobante {
-    display: inline-block;
-    padding: 7px 10px;
-    background-color: #0b311e;
-    color: #ffffff;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    transition: background-color 0.2s ease;
-}
+/* ============================================================
+   ACCESIBILIDAD
+   ============================================================ */
 
-.btn-comprobante:hover {
-    background-color: #174d32;
-    color: #ffffff;
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .btn-comprobante {
+        transition: none;
+    }
 }
