@@ -1,8 +1,7 @@
-
 {% extends 'inventario/base.html' %}
 {% load static %}
 
-{% block title %}Gestión de lotes - Agroquímica del Valle{% endblock %}
+{% block title %}Consultar lotes - Agroquímica del Valle{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/styles/ingreso_lote.css' %}">
@@ -15,17 +14,8 @@
     <!-- ENCABEZADO -->
     <header class="lt-header">
         <div>
-            <h1 class="lt-title">Gestión de lotes</h1>
+            <h1 class="lt-title">Consultar lotes</h1>
         </div>
-
-        <button type="button"
-                class="lt-btn lt-btn-primary"
-                onclick="abrirModalLote()">
-            <svg class="lt-icon" viewBox="0 0 24 24">
-                <path d="M12 5v14M5 12h14"/>
-            </svg>
-            Registrar lote
-        </button>
     </header>
 
     <!-- MENSAJES -->
@@ -59,8 +49,12 @@
                    aria-label="Buscar lotes">
         </div>
 
-        <select name="marca" class="lt-select" aria-label="Filtrar por marca">
+        <select name="marca"
+                class="lt-select"
+                aria-label="Filtrar por marca">
+
             <option value="">Todas las marcas</option>
+
             {% for marca in marcas %}
             <option value="{{ marca }}"
                     {% if marca_filtro == marca %}selected{% endif %}>
@@ -69,38 +63,21 @@
             {% endfor %}
         </select>
 
-        <select name="estado" class="lt-select" aria-label="Filtrar por estado">
-            <option value="" {% if not estado_filtro %}selected{% endif %}>
-                Todos los estados
-            </option>
-            <option value="Activo" {% if estado_filtro == 'Activo' %}selected{% endif %}>
-                Activos
-            </option>
-            <option value="Agotado" {% if estado_filtro == 'Agotado' %}selected{% endif %}>
-                Agotados
-            </option>
-            <option value="Vencido" {% if estado_filtro == 'Vencido' %}selected{% endif %}>
-                Vencidos
-            </option>
-        </select>
-
+        
         <button type="submit" class="lt-btn lt-btn-primary">
             Buscar
         </button>
 
-        {% if busqueda or estado_filtro or marca_filtro %}
-        <a href="{% url 'registrar_ingreso_lote' %}"
-           class="lt-btn lt-btn-claro">
-            Limpiar
-        </a>
-        {% endif %}
+
     </form>
 
     <!-- TABLA DE LOTES -->
     {% with total=lotes|length %}
     <section class="lt-card">
+
         <div class="lt-table-wrap">
             <table class="lt-table">
+
                 <thead>
                     <tr>
                         <th>Número de lote</th>
@@ -111,19 +88,22 @@
                         <th>Fecha de vencimiento</th>
                         <th>Cantidad ingresada</th>
                         <th>Cantidad actual</th>
-                        <th>Estado</th>
-                        <th class="lt-col-acciones">Acciones</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for l in lotes %}
                     <tr>
+
                         <td>
-                            <span class="lt-num">{{ l.Numero_lote }}</span>
+                            <span class="lt-num">
+                                {{ l.Numero_lote }}
+                            </span>
                         </td>
 
-                        <td>{{ l.ID_Producto.Nombre_producto }}</td>
+                        <td>
+                            {{ l.ID_Producto.Nombre_producto }}
+                        </td>
 
                         <td>
                             {{ l.ID_Producto.Marca|default:"Sin marca" }}
@@ -143,19 +123,29 @@
 
                         <td>
                             {% if not l.Fecha_vencimiento %}
-                                <span class="lt-muted">Sin vencimiento</span>
+
+                                <span class="lt-muted">
+                                    Sin vencimiento
+                                </span>
+
                             {% elif l.Fecha_vencimiento < hoy %}
+
                                 <span class="lt-fecha lt-vencido">
                                     {{ l.Fecha_vencimiento|date:"d/m/Y" }}
                                 </span>
+
                             {% elif l.Fecha_vencimiento <= limite %}
+
                                 <span class="lt-fecha lt-por-vencer">
                                     {{ l.Fecha_vencimiento|date:"d/m/Y" }}
                                 </span>
+
                             {% else %}
+
                                 <span class="lt-muted">
                                     {{ l.Fecha_vencimiento|date:"d/m/Y" }}
                                 </span>
+
                             {% endif %}
                         </td>
 
@@ -171,379 +161,32 @@
                             </span>
                         </td>
 
-                        <td>
-                            <span class="lt-estado
-                                {% if l.estado_actual == 'Activo' %}lt-estado-activo
-                                {% elif l.estado_actual == 'Inactivo' %}lt-estado-inactivo
-                                {% elif l.estado_actual == 'Agotado' %}lt-estado-agotado
-                                {% elif l.estado_actual == 'Vencido' %}lt-estado-vencido
-                                {% endif %}">
-                                {{ l.estado_actual }}
-                            </span>
-                        </td>
 
-                        <!-- ACCIONES -->
-                        <td>
-                            <div class="lt-acciones">
-
-                                <!-- EDITAR LOTE -->
-                                <button type="button"
-                                        class="lt-btn-accion lt-btn-editar"
-                                        title="Editar lote"
-                                        aria-label="Editar lote"
-                                        data-url="{% url 'editar_lote' l.ID_Lote %}"
-                                        data-numero="{{ l.Numero_lote }}"
-                                        data-marca="{{ l.ID_Producto.Marca|default:'' }}"
-                                        data-remito="{{ l.ID_Remito.ID_Remito|default:'' }}"
-                                        data-fecha-ingreso="{{ l.Fecha_ingreso|date:'Y-m-d' }}"
-                                        data-vencimiento="{{ l.Fecha_vencimiento|date:'Y-m-d' }}"
-                                        onclick="abrirModalEditarLote(this)">
-                                    <svg class="lt-icon" viewBox="0 0 24 24">
-                                        <path d="M12 20h9"/>
-                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
-                                    </svg>
-                                </button>
-
-                            </div>
-                        </td>
                     </tr>
 
                     {% empty %}
                     <tr>
-                        <td colspan="10" class="lt-vacio">
+                        <td colspan="8" class="lt-vacio">
                             No se encontraron lotes.
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
+
             </table>
         </div>
 
+        <!-- TOTAL DE LOTES -->
         <div class="lt-pie">
             <span>
                 {{ total }} lote{{ total|pluralize }}
                 encontrado{{ total|pluralize }}
             </span>
         </div>
+
     </section>
     {% endwith %}
 
 </div>
-
-<!-- MODAL REGISTRAR LOTE -->
-<div id="modalLote" class="lt-modal">
-    <div class="lt-modal-box"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="lt-modal-titulo">
-
-        <div class="lt-modal-head">
-            <div>
-                <div class="lt-modal-eyebrow">Nuevo registro</div>
-                <h2 id="lt-modal-titulo">Registrar lote</h2>
-            </div>
-
-            <button type="button"
-                    class="lt-modal-x"
-                    onclick="cerrarModalLote()"
-                    aria-label="Cerrar formulario">
-                <svg class="lt-icon" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-
-        <form method="POST"
-              action="{% url 'registrar_ingreso_lote' %}"
-              class="lt-modal-body">
-            {% csrf_token %}
-
-            <div class="lt-campo">
-                <label for="Marca">Marca</label>
-                <select id="Marca" required>
-                    <option value="">Seleccionar marca</option>
-                    {% for marca in marcas %}
-                    <option value="{{ marca }}">{{ marca }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="lt-campo">
-                <label for="ID_Producto">Producto vigente</label>
-                <select name="ID_Producto"
-                        id="ID_Producto"
-                        required
-                        disabled>
-                    <option value="">Primero seleccioná una marca</option>
-                    {% for producto in productos %}
-                    <option value="{{ producto.ID_Producto }}"
-                            data-marca="{{ producto.Marca|default:'' }}">
-                        {{ producto.Nombre_producto }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="lt-campo">
-                <label for="ID_Remito">Remito</label>
-                <select name="ID_Remito" id="ID_Remito" required>
-                    <option value="">Seleccionar remito</option>
-                    {% for remito in remitos %}
-                    <option value="{{ remito.ID_Remito }}">
-                        {{ remito.Numero_remito }} -
-                        {{ remito.ID_Proveedor.nombre_proveedor }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="lt-fila">
-                <div class="lt-campo">
-                    <label for="Numero_lote">Número de lote</label>
-                    <input type="text"
-                           id="Numero_lote"
-                           value="{{ siguiente_numero_lote }}"
-                           readonly>
-                </div>
-
-                <div class="lt-campo">
-                    <label for="Cantidad_ingresada">Cantidad ingresada</label>
-                    <input type="number"
-                           name="Cantidad_ingresada"
-                           id="Cantidad_ingresada"
-                           min="1"
-                           step="1"
-                           required>
-                </div>
-            </div>
-
-            <div class="lt-fila">
-                <div class="lt-campo">
-                    <label for="Fecha_ingreso">Fecha de ingreso</label>
-                    <input type="date"
-                           name="Fecha_ingreso"
-                           id="Fecha_ingreso"
-                           value="{{ hoy|date:'Y-m-d' }}"
-                           readonly>
-                </div>
-
-                <div class="lt-campo">
-                    <label for="Fecha_vencimiento">Fecha de vencimiento</label>
-                    <input type="date"
-                           name="Fecha_vencimiento"
-                           id="Fecha_vencimiento"
-                           min="{{ hoy|date:'Y-m-d' }}"
-                           required>
-                </div>
-            </div>
-
-            <div class="lt-modal-pie">
-                <button type="button"
-                        class="lt-btn lt-btn-claro"
-                        onclick="cerrarModalLote()">
-                    Cancelar
-                </button>
-
-                <button type="submit" class="lt-btn lt-btn-primary">
-                    <svg class="lt-icon" viewBox="0 0 24 24">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
-                        <path d="M17 21v-8H7v8"/>
-                        <path d="M7 3v5h8"/>
-                    </svg>
-                    Guardar lote
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL EDITAR LOTE -->
-<div id="modalEditarLote" class="lt-modal">
-    <div class="lt-modal-box"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="lt-editar-titulo">
-
-        <div class="lt-modal-head">
-            <div>
-                <div class="lt-modal-eyebrow">Modificar registro</div>
-                <h2 id="lt-editar-titulo">Editar lote</h2>
-            </div>
-
-            <button type="button"
-                    class="lt-modal-x"
-                    onclick="cerrarModalEditarLote()"
-                    aria-label="Cerrar formulario">
-                <svg class="lt-icon" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-
-        <form id="formEditarLote"
-              method="POST"
-              action=""
-              class="lt-modal-body">
-            {% csrf_token %}
-
-            <div class="lt-campo">
-                <label for="editar_Numero_lote">Número de lote</label>
-                <input type="text"
-                       id="editar_Numero_lote"
-                       readonly>
-            </div>
-
-            <div class="lt-campo">
-                <label for="editar_Marca">Marca del producto</label>
-                <select id="editar_Marca">
-                    <option value="">Sin marca</option>
-                    {% for marca in marcas %}
-                    <option value="{{ marca }}">{{ marca }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="lt-campo">
-                <label for="editar_ID_Remito">Remito</label>
-                <select name="ID_Remito"
-                        id="editar_ID_Remito"
-                        required>
-                    {% for remito in remitos_edicion %}
-                    <option value="{{ remito.ID_Remito }}">
-                        {{ remito.Numero_remito }} -
-                        {{ remito.ID_Proveedor.nombre_proveedor }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="lt-campo">
-                <label for="editar_Fecha_ingreso">Fecha de ingreso</label>
-                <input type="date"
-                       id="editar_Fecha_ingreso"
-                       readonly>
-            </div>
-
-            <div class="lt-campo">
-                <label for="editar_Fecha_vencimiento">Fecha de vencimiento</label>
-                <input type="date"
-                       name="Fecha_vencimiento"
-                       id="editar_Fecha_vencimiento"
-                       required>
-            </div>
-
-            <p class="lt-ayuda">
-                El producto, la cantidad ingresada y la fecha de ingreso
-                no se modifican para conservar el historial del lote.
-            </p>
-
-            <div class="lt-modal-pie">
-                <button type="button"
-                        class="lt-btn lt-btn-claro"
-                        onclick="cerrarModalEditarLote()">
-                    Cancelar
-                </button>
-
-                <button type="submit" class="lt-btn lt-btn-primary">
-                    Guardar cambios
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- JAVASCRIPT -->
-<script>
-    const modalLote = document.getElementById('modalLote');
-    const modalEditarLote = document.getElementById('modalEditarLote');
-
-    const formEditarLote = document.getElementById('formEditarLote');
-    const selectorMarca = document.getElementById('Marca');
-    const selectorProducto = document.getElementById('ID_Producto');
-
-    // FILTRAR PRODUCTOS POR MARCA
-    function filtrarProductosPorMarca() {
-        const marcaSeleccionada = selectorMarca.value;
-
-        selectorProducto.value = '';
-
-        Array.from(selectorProducto.options).forEach(opcion => {
-            if (!opcion.value) {
-                return;
-            }
-
-            const coincide = opcion.dataset.marca === marcaSeleccionada;
-            opcion.hidden = !coincide;
-            opcion.disabled = !coincide;
-        });
-
-        selectorProducto.disabled = marcaSeleccionada === '';
-
-        selectorProducto.options[0].textContent = marcaSeleccionada
-            ? 'Seleccionar producto'
-            : 'Primero seleccioná una marca';
-    }
-
-    selectorMarca.addEventListener('change', filtrarProductosPorMarca);
-    filtrarProductosPorMarca();
-
-    // REGISTRAR LOTE
-    function abrirModalLote() {
-        modalLote.classList.add('abierto');
-        selectorMarca.focus();
-    }
-
-    function cerrarModalLote() {
-        modalLote.classList.remove('abierto');
-    }
-
-    // EDITAR LOTE
-    function abrirModalEditarLote(boton) {
-        formEditarLote.action = boton.dataset.url;
-
-        document.getElementById('editar_Numero_lote').value =
-            boton.dataset.numero || '';
-
-        document.getElementById('editar_Marca').value =
-            boton.dataset.marca || '';
-
-        document.getElementById('editar_ID_Remito').value =
-            boton.dataset.remito || '';
-
-        document.getElementById('editar_Fecha_ingreso').value =
-            boton.dataset.fechaIngreso || '';
-
-        document.getElementById('editar_Fecha_vencimiento').value =
-            boton.dataset.vencimiento || '';
-
-        modalEditarLote.classList.add('abierto');
-        document.getElementById('editar_Numero_lote').focus();
-    }
-
-    function cerrarModalEditarLote() {
-        modalEditarLote.classList.remove('abierto');
-    }
-
-    // CERRAR MODALES AL HACER CLIC FUERA
-    modalLote.addEventListener('click', function(evento) {
-        if (evento.target === modalLote) {
-            cerrarModalLote();
-        }
-    });
-
-    modalEditarLote.addEventListener('click', function(evento) {
-        if (evento.target === modalEditarLote) {
-            cerrarModalEditarLote();
-        }
-    });
-
-    // CERRAR MODALES CON ESCAPE
-    document.addEventListener('keydown', function(evento) {
-        if (evento.key === 'Escape') {
-            cerrarModalLote();
-            cerrarModalEditarLote();
-        }
-    });
-</script>
 
 {% endblock %}
