@@ -299,21 +299,11 @@
                     <svg class="nav-icon">
                         <use href="#i-inbox"></use>
                     </svg>
-                    <span>Remitos y facturas</span>
+                    <span>Remitos</span>
                 </a>
             </div>
 
-            <!-- INGRESO DE LOTES -->
-            <div class="nav-item">
-                <a href="{% url 'registrar_ingreso_lote' %}"
-                   class="nav-link {% if activo == 'lotes' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-                    <span>Registrar entrada y lotes</span>
-                </a>
-            </div>
-
+            
             <!-- PROVEEDORES -->
             <div class="nav-item">
                 <a href="{% url 'gestion_proveedores' %}"
@@ -353,17 +343,18 @@
             </div>
 
 
+        
         <!-- ==========================================
-             VENDEDOR 1
+             VENDEDOR
              ========================================== -->
 
-        {% elif perfil == 'vendedor 1' %}
+        {% elif perfil == 'vendedor' %}
 
             <div class="nav-section">
-                    <span class="nav-section-title">CONSULTAS DE STOCK</span>
+                <span class="nav-section-title">CONSULTAS DE STOCK</span>
             </div>
 
-            <!-- PRODUCTOS Y STOCK -->
+            <!-- PRODUCTOS -->
             <div class="nav-item">
                 <a href="{% url 'gestion_productos' %}"
                    class="nav-link {% if activo == 'productos' %}active{% endif %}">
@@ -374,14 +365,36 @@
                 </a>
             </div>
 
-            <!-- MOVIMIENTOS -->
+            <!-- LOTES -->
             <div class="nav-item">
-                <a href="{% url 'gestion_movimientos_stock' %}"
-                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
+                <a href="{% url 'registrar_ingreso_lote' %}"
+                   class="nav-link {% if activo == 'lotes' %}active{% endif %}">
                     <svg class="nav-icon">
-                        <use href="#i-swap"></use>
+                        <use href="#i-package"></use>
                     </svg>
-                    <span>Movimientos de stock</span>
+                    <span>Consultar lotes</span>
+                </a>
+            </div>
+
+            <!-- TIPOS DE PRODUCTOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_tipos_productos' %}"
+                   class="nav-link {% if activo == 'tipos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-layers"></use>
+                    </svg>
+                    <span>Tipos de productos</span>
+                </a>
+            </div>
+
+            <!-- SUBTIPOS -->
+            <div class="nav-item">
+                <a href="{% url 'gestion_subtipos' %}"
+                   class="nav-link {% if activo == 'subtipos' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-tags"></use>
+                    </svg>
+                    <span>Subtipos</span>
                 </a>
             </div>
 
@@ -396,40 +409,8 @@
                 </a>
             </div>
 
-
-        <!-- ==========================================
-             VENDEDOR 2
-             ========================================== -->
-
-        {% elif perfil == 'vendedor 2' %}
-
-            <div class="nav-section">
-                <span class="nav-section-title">STOCK Y REPOSICIÓN</span>
-            </div>
-
-            <!-- CONSULTAR STOCK -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_productos' %}"
-                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-                    <span>Consultar stock</span>
-                </a>
-            </div>
-
-            <!-- MOVIMIENTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_movimientos_stock' %}"
-                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-swap"></use>
-                    </svg>
-                    <span>Movimientos de stock</span>
-                </a>
-            </div>
-
         {% endif %}
+
 
     </nav>
 

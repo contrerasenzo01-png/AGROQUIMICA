@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import unicodedata
+from .permissions import usuario_con_acceso
 from urllib import request
 from django.contrib import messages
 from django.db import DatabaseError, IntegrityError, transaction
@@ -44,7 +45,7 @@ from .models import (
 # CONTROL DE ACCESO
 # ============================================================
 
-PERFILES_ADMIN = ('Administrador', 'Jefe')
+PERFILES_ADMIN = ('Administrador',)
 
 
 def usuario_autenticado(request):
@@ -90,14 +91,14 @@ def usuario_es_administrador(request):
     return usuario
 
 def usuario_es_vendedor(request):
-    """Verifica que el usuario tenga el perfil Vendedor 1."""
+    """Verifica que el usuario tenga el perfil Vendedor."""
 
     usuario = usuario_autenticado(request)
 
     if not usuario:
         return None
 
-    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor 1':
+    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor':
         return None
 
     return usuario
@@ -236,11 +237,16 @@ def _proveedor_duplicado(form, excluir_pk=None):
     return proveedores.first()
 
 
+
 def gestion_proveedores(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'proveedores')
 
     if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para consultar proveedores.'
+        )
         return redirect('panel_principal')
 
     busqueda = request.GET.get('q', '').strip()
@@ -288,11 +294,16 @@ def gestion_proveedores(request):
     )
 
 
+
 def crear_proveedor(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'proveedores')
 
     if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para crear proveedores.'
+        )
         return redirect('panel_principal')
 
     if request.method != 'POST':
@@ -344,9 +355,13 @@ def crear_proveedor(request):
 
 def editar_proveedor(request, pk):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'proveedores')
 
     if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para editar proveedores.'
+        )
         return redirect('panel_principal')
 
     proveedor = get_object_or_404(
@@ -465,18 +480,20 @@ def cambiar_estado_proveedor(request, pk):
 
     return redirect('gestion_proveedores')
 
-
-
 # ============================================================
 # TIPOS DE PRODUCTOS
 # ============================================================
 
 def gestion_tipos_productos(request):
 
-    usuario = usuario_autenticado(request)
+    usuario = usuario_con_acceso(request, 'tipos')
 
     if not usuario:
-        return redirect('login')
+        messages.error(
+            request,
+            'No tenés permiso para consultar tipos de productos.'
+        )
+        return redirect('panel_principal')
 
     busqueda = request.GET.get('q', '').strip()
 
@@ -502,17 +519,24 @@ def gestion_tipos_productos(request):
         }
     )
 
-
 # ============================================================
 # CREAR TIPO DE PRODUCTO
 # ============================================================
 
 def crear_tipo_producto(request):
 
-    usuario = usuario_autenticado(request)
+    usuario = usuario_con_acceso(
+        request,
+        'tipos',
+        gestionar=True
+    )
 
     if not usuario:
-        return redirect('login')
+        messages.error(
+            request,
+            'No tenés permiso para gestionar tipos de productos.'
+        )
+        return redirect('panel_principal')
 
     if request.method != 'POST':
         return redirect('gestion_tipos_productos')
@@ -559,10 +583,18 @@ def crear_tipo_producto(request):
 
 def editar_tipo_producto(request, pk):
 
-    usuario = usuario_autenticado(request)
+    usuario = usuario_con_acceso(
+        request,
+        'tipos',
+        gestionar=True
+    )
 
     if not usuario:
-        return redirect('login')
+        messages.error(
+            request,
+            'No tenés permiso para gestionar tipos de productos.'
+        )
+        return redirect('panel_principal')
 
     if request.method != 'POST':
         return redirect('gestion_tipos_productos')
@@ -634,16 +666,24 @@ def editar_tipo_producto(request, pk):
 
 def eliminar_tipo_producto(request, pk):
 
-    usuario = usuario_autenticado(request)
+    usuario = usuario_con_acceso(
+        request,
+        'tipos',
+        gestionar=True
+    )
 
     if not usuario:
-        return redirect('login')
+        messages.error(
+            request,
+            'No tenés permiso para gestionar tipos de productos.'
+        )
+        return redirect('panel_principal')
 
     if not usuario_es_administrador(request):
         messages.error(
-        request,
-        'No tenés permiso para eliminar tipos de productos.'
-    )
+            request,
+            'No tenés permiso para eliminar tipos de productos.'
+        )
         return redirect('gestion_tipos_productos')
 
     if request.method != 'POST':
@@ -716,11 +756,15 @@ def _subtipo_tiene_descripcion():
         for campo in Subtipos._meta.get_fields()
     )
 
-def gestion_subtipos(request):
 
-    usuario = usuario_es_administrador(request)
+def gestion_subtipos(request):
+    usuario = usuario_con_acceso(request, 'subtipos')
 
     if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para consultar subtipos.'
+        )
         return redirect('panel_principal')
 
     busqueda = request.GET.get('q', '').strip()
@@ -794,7 +838,7 @@ def crear_subtipo(request):
         # No permitir asociar subtipos a tipos inactivos
         if not tipo.Estado_tipo_producto:
             messages.error(
-            request,
+                request,
                 'No se pueden asociar subtipos a un tipo de producto inactivo.'
         )
             return redirect('gestion_subtipos')
@@ -883,7 +927,7 @@ def editar_subtipo(request, pk):
         if not tipo.Estado_tipo_producto:
             messages.error(
                 request,
-                    'No se pueden asociar subtipos a un tipo de producto inactivo.'
+                'No se pueden asociar subtipos a un tipo de producto inactivo.'
             )
             return redirect('gestion_subtipos')
 
@@ -1371,19 +1415,13 @@ def restablecer_contrasena(request, pk):
 
 
 def cambiar_contrasena(request):
+    usuario = usuario_autenticado(request)
 
-    usuario_id = request.session.get('usuario_id')
-
-    if not usuario_id:
+    if not usuario:
+        request.session.flush()
         return redirect('login')
 
-    usuario = get_object_or_404(
-        Usuarios,
-        ID_Usuario=usuario_id
-    )
-
     if request.method == 'POST':
-
         nueva_contrasena = request.POST.get(
             'nueva_contrasena',
             ''
@@ -1654,17 +1692,16 @@ def cambiar_estado_perfil(request, id):
     # Si está activo, se intenta dar de baja.
     if perfil.Estado_perfil:
 
-        usuarios_activos = Usuarios.objects.filter(
-            ID_Perfil=perfil,
-            Estado_usuario=True
+        usuarios_asociados = Usuarios.objects.filter(
+            ID_Perfil=perfil
         ).exists()
 
-        if usuarios_activos:
+        if usuarios_asociados:
             messages.error(
                 request,
                 'No se puede dar de baja el perfil porque tiene '
-                'usuarios activos asignados. Primero debe '
-                'desactivar esos usuarios o asignarles otro perfil.'
+                'usuarios asociados. Primero debe asignarles '
+                'otro perfil.'
             )
             return redirect('gestion_perfiles')
 
@@ -1882,8 +1919,8 @@ def mis_permisos(request):
     if not usuario:
         return redirect('login')
 
-    # Solo permite acceder a Vendedor 1.
-    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor 1':
+    # Solo permite acceder al perfil de Vendedor.
+    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor':
         return redirect('panel_principal')
 
     # Obtiene los permisos asignados al perfil del usuario.
@@ -1946,6 +1983,9 @@ def _leer_datos_producto(request, estado_por_defecto):
         TiposProductos,
         ID_Tipo_producto=tipo_id,
     )
+
+    if not tipo.Estado_tipo_producto:
+        return None, 'No se pueden registrar productos con un tipo inactivo.'
 
     # --------------------------------------------------------
     # VALIDAR SUBTIPO
@@ -2093,10 +2133,11 @@ def _producto_duplicado(nombre, marca, excluir_pk=None):
     return productos.exists()
 
 
+
 def gestion_productos(request):
     """Lista, busca y filtra productos por tipo y subtipo."""
 
-    usuario = usuario_autenticado(request)
+    usuario = usuario_con_acceso(request, 'productos')
 
     if not usuario:
         return redirect('login')
@@ -2104,10 +2145,8 @@ def gestion_productos(request):
     busqueda = request.GET.get('q', '').strip()
     tipo_id = request.GET.get('tipo', '').strip()
 
-    # --------------------------------------------------------
-    # PRODUCTOS CON SU TIPO, SUBTIPO Y STOCK
-    # --------------------------------------------------------
 
+    # PRODUCTOS CON SU TIPO, SUBTIPO Y STOCK
     productos = Productos.objects.select_related(
         'ID_Tipo_producto',
         'ID_Subtipo',
@@ -2116,10 +2155,7 @@ def gestion_productos(request):
         num_lotes=Count('lotes')
     )
 
-    # --------------------------------------------------------
     # BÚSQUEDA
-    # --------------------------------------------------------
-
     if busqueda:
         productos = productos.filter(
             Q(Nombre_producto__icontains=busqueda) |
@@ -2133,18 +2169,17 @@ def gestion_productos(request):
             )
         ).distinct()
 
-    # --------------------------------------------------------
+
     # FILTRO POR TIPO
-    # --------------------------------------------------------
 
     if tipo_id:
+
         productos = productos.filter(
             ID_Tipo_producto_id=tipo_id
         )
 
-    # --------------------------------------------------------
+
     # TIPOS Y SUBTIPOS PARA LOS FORMULARIOS
-    # --------------------------------------------------------
 
     tipos_productos = TiposProductos.objects.order_by(
         'Nombre_tipo_producto'
@@ -2156,10 +2191,8 @@ def gestion_productos(request):
         'Nombre_subtipo'
     )
 
-    # --------------------------------------------------------
-    # MOSTRAR PRODUCTOS
-    # --------------------------------------------------------
 
+    # MOSTRAR PRODUCTOS
     return render(
         request,
         'inventario/productos.html',
@@ -2180,10 +2213,18 @@ def gestion_productos(request):
 def crear_producto(request):
     """Registra un producto con su tipo y subtipo correspondiente."""
 
-    usuario = usuario_autenticado(request)
+    usuario = usuario_con_acceso(
+        request,
+        'productos',
+        gestionar=True
+    )
 
     if not usuario:
-        return redirect('login')
+        messages.error(
+            request,
+            'No tenés permiso para gestionar productos.'
+        )
+        return redirect('panel_principal')
 
     if request.method != 'POST':
         return redirect('gestion_productos')
@@ -2242,10 +2283,18 @@ def crear_producto(request):
 def editar_producto(request, pk):
     """Actualiza los datos del producto, incluido su subtipo."""
 
-    usuario = usuario_autenticado(request)
+    usuario = usuario_con_acceso(
+        request,
+        'productos',
+        gestionar=True
+    )
 
     if not usuario:
-        return redirect('login')
+        messages.error(
+            request,
+            'No tenés permiso para gestionar productos.'
+        )
+        return redirect('panel_principal')
 
     producto = get_object_or_404(
         Productos,
@@ -2364,241 +2413,26 @@ def eliminar_producto(request, pk):
 # ============================================================
 
 
-def generar_siguiente_numero_lote():
-    """Genera el siguiente número de lote con el formato AV-0006-006."""
-
-    mayor = 0
-
-    for numero in Lotes.objects.filter(
-        Numero_lote__startswith='AV-'
-    ).values_list('Numero_lote', flat=True):
-        coincidencia = re.match(r'^AV-(\d+)-\d+$', numero)
-
-        if coincidencia:
-            mayor = max(mayor, int(coincidencia.group(1)))
-
-    return f'AV-{mayor + 1:04d}-{mayor + 1:03d}'
-
-
 def registrar_ingreso_lote(request):
-    """Registra lotes nuevos y muestra el listado de lotes."""
+    """Consulta de lotes. El alta se hace desde Remitos."""
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'lotes')
 
     if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para consultar lotes.'
+        )
         return redirect('panel_principal')
 
-    # ========================================================
-    # POST: REGISTRAR UN LOTE NUEVO
-    # ========================================================
-
-    if request.method == 'POST':
-
-        proveedor_id = request.POST.get(
-            'ID_Remito',
-            ''
-        ).strip()
-
-        producto_id = request.POST.get(
-            'ID_Producto',
-            ''
-        ).strip()
-
-
-        cantidad_input = request.POST.get(
-            'Cantidad_ingresada',
-            ''
-        ).strip()
-
-        fecha_vencimiento_input = request.POST.get(
-            'Fecha_vencimiento',
-            ''
-        ).strip()
-
-        fecha_ingreso = timezone.localdate()
-
-        # ----------------------------------------------------
-        # VALIDAR CAMPOS OBLIGATORIOS
-        # ----------------------------------------------------
-
-        if not proveedor_id or not producto_id:
-            messages.error(
-                request,
-                'Debe seleccionar el proveedor y el producto.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-        
-
-
-        try:
-            cantidad = int(cantidad_input)
-        except (TypeError, ValueError):
-            messages.error(
-                request,
-                'La cantidad ingresada no es válida.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-
-        if cantidad <= 0:
-            messages.error(
-                request,
-                'La cantidad debe ser mayor a cero.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-
-        # ----------------------------------------------------
-        # VALIDAR FECHA DE VENCIMIENTO
-        # ----------------------------------------------------
-
-        if not fecha_vencimiento_input:
-            messages.error(
-                request,
-                'La fecha de vencimiento es obligatoria.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-
-        try:
-            fecha_vencimiento = date.fromisoformat(
-                fecha_vencimiento_input
-            )
-        except ValueError:
-            messages.error(
-                request,
-                'La fecha de vencimiento no es válida.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-
-        if fecha_vencimiento < fecha_ingreso:
-            messages.error(
-                request,
-                'La fecha de vencimiento no puede ser anterior '
-                'a la fecha de ingreso.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-
-        # ----------------------------------------------------
-        # VALIDAR PROVEEDOR Y PRODUCTO ACTIVOS
-        # ----------------------------------------------------
-
-        proveedor = get_object_or_404(
-            Proveedores,
-            ID_Proveedor=proveedor_id,
-            estado_proveedor=True
-        )
-
-        producto = get_object_or_404(
-            Productos,
-            ID_Producto=producto_id,
-            Estado_producto='Activo'
-        )
-
-    
-
-        # ----------------------------------------------------
-        # BUSCAR TIPO DE MOVIMIENTO DE ENTRADA
-        # ----------------------------------------------------
-
-        tipo_entrada = TiposMovimientos.objects.filter(
-            Nombre_tipo_movimiento__iexact='Entrada de lote'
-        ).first()
-
-        if not tipo_entrada:
-            messages.error(
-                request,
-                'No está registrado el tipo de movimiento '
-                '"Entrada de lote". Debe crearlo antes de '
-                'registrar ingresos.'
-            )
-
-            return redirect('registrar_ingreso_lote')
-
-        # ----------------------------------------------------
-        # GUARDAR LOTE, STOCK Y MOVIMIENTO EN UNA TRANSACCIÓN
-        # ----------------------------------------------------
-
-        numero_lote = None
-
-        for intento in range(3):
-            try:
-                with transaction.atomic():
-                    candidato = generar_siguiente_numero_lote()
-
-                    lote = Lotes.objects.create(
-                        ID_Proveedor=proveedor,
-                        ID_Producto=producto,
-                        Numero_lote=candidato,
-                        Cantidad_ingresada=cantidad,
-                        Cantidad_actual=cantidad,
-                        Fecha_ingreso=fecha_ingreso,
-                        Fecha_vencimiento=fecha_vencimiento,
-                    )
-
-                    stock, creado = (
-                        Stock.objects.select_for_update().get_or_create(
-                            ID_Producto=producto,
-                            defaults={
-                                'Cantidad_stock': 0,
-                                'Stock_minimo': 0
-                            }
-                        )
-                    )
-
-                    stock.Cantidad_stock += cantidad
-                    stock.save(update_fields=['Cantidad_stock'])
-
-                    MovimientosStock.objects.create(
-                        ID_Usuario=usuario,
-                        ID_Tipo_movimiento=tipo_entrada,
-                        ID_Lote=lote,
-                        Cantidad_movimiento_stock=cantidad,
-                        Observaciones='Entrada de lote'
-                    )
-
-                numero_lote = candidato
-                break
-
-            except IntegrityError:
-                continue        # otro ingreso tomó ese número: reintenta
-            except DatabaseError:
-                break
-
-        if not numero_lote:
-            messages.error(
-                request,
-                'No se pudo registrar el lote. Intente nuevamente.'
-            )
-            return redirect('registrar_ingreso_lote')
-
-        messages.success(
-            request,
-            f'Ingreso de lote registrado correctamente. '
-            f'Número asignado: {numero_lote}.'
-        )
-
-        return redirect('registrar_ingreso_lote')
-
-    # ========================================================
-    # GET: LISTAR Y BUSCAR LOTES
-    # ========================================================
-
     busqueda = request.GET.get('q', '').strip()
-    estado_filtro = request.GET.get('estado', '').strip()
     marca_filtro = request.GET.get('marca', '').strip()
 
     lotes = Lotes.objects.select_related(
         'ID_Producto',
         'ID_Remito',
         'ID_Remito__ID_Proveedor'
-     ).order_by(
-        '-Fecha_ingreso',
-        '-ID_Lote'
-    )
+    ).order_by('-Fecha_ingreso', '-ID_Lote')
 
     if busqueda:
         lotes = lotes.filter(
@@ -2606,61 +2440,22 @@ def registrar_ingreso_lote(request):
             Q(ID_Producto__Nombre_producto__icontains=busqueda) |
             Q(ID_Remito__ID_Proveedor__nombre_proveedor__icontains=busqueda) |
             Q(ID_Remito__Numero_remito__icontains=busqueda)
-    )
-   
-    if marca_filtro:
-        lotes = lotes.filter(
-            ID_Producto__Marca=marca_filtro
         )
 
-    
+    if marca_filtro:
+        lotes = lotes.filter(ID_Producto__Marca=marca_filtro)
+
     hoy = timezone.localdate()
 
-    if estado_filtro == 'Vencido':
-        lotes = lotes.filter(
-            Fecha_vencimiento__lt=hoy
-        )
 
-    elif estado_filtro == 'Agotado':
-        lotes = lotes.filter(
-            Fecha_vencimiento__gte=hoy,
-            Cantidad_actual__lte=0
-        )
-
-    elif estado_filtro == 'Activo':
-        lotes = lotes.filter(
-            Fecha_vencimiento__gte=hoy,
-            Cantidad_actual__gt=0
-        )
-
-    elif estado_filtro:
-        estado_filtro = ''
-
-
-    productos = Productos.objects.filter(
-        Estado_producto='Activo'
-    ).order_by(
-        'Nombre_producto'
-    )
-
-    proveedores = Proveedores.objects.filter(
-        estado_proveedor=True
-    ).order_by(
-        'nombre_proveedor'
-    )
-
-    # MARCAS PARA FILTRAR LOS PRODUCTOS
     marcas = (
         Productos.objects
-        .filter(Estado_producto='Activo')
         .exclude(Marca__isnull=True)
         .exclude(Marca__exact='')
         .values_list('Marca', flat=True)
         .distinct()
         .order_by('Marca')
     )
-
-
 
     return render(
         request,
@@ -2669,12 +2464,7 @@ def registrar_ingreso_lote(request):
             'usuario': usuario,
             'lotes': lotes,
             'marcas': marcas,
-            'productos': productos,
-            'proveedores': proveedores,
-            'proveedores_edicion': Proveedores.objects.order_by('nombre_proveedor'),
-            'siguiente_numero_lote': generar_siguiente_numero_lote(),
             'busqueda': busqueda,
-            'estado_filtro': estado_filtro,
             'marca_filtro': marca_filtro,
             'hoy': hoy,
             'limite': hoy + timedelta(days=30),
@@ -2682,163 +2472,19 @@ def registrar_ingreso_lote(request):
     )
 
 
-# ============================================================
-# EDITAR LOTE
-# ============================================================
-
-def editar_lote(request, id):
-    """Permite editar el proveedor y vencimiento de un lote."""
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    lote = get_object_or_404(
-        Lotes.objects.select_related(
-            'ID_Producto',
-            'ID_Remito',
-            'ID_Remito__ID_Proveedor'
-        ),
-        ID_Lote=id
-    )
-
-    if request.method != 'POST':
-        return redirect('registrar_ingreso_lote')
-    
-
-   
-    proveedor_id = request.POST.get(
-        'ID_Proveedor',
-        ''
-    ).strip()
-
-    fecha_vencimiento_input = request.POST.get(
-        'Fecha_vencimiento',
-        ''
-    ).strip()
-
-
-
-    if lote.Fecha_vencimiento < timezone.localdate():
-        messages.error(
-            request,
-            'No se puede editar un lote vencido.'
-        )
-        return redirect('registrar_ingreso_lote')
-
-
-    # No permitir cambiar el producto de un lote existente.
-    producto_id_recibido = request.POST.get(
-        'ID_Producto',
-        ''
-    ).strip()
-
-    if (
-        producto_id_recibido
-        and producto_id_recibido != str(lote.ID_Producto_id)
-    ):
-        messages.error(
-            request,
-            'No se puede cambiar el producto de un lote existente.'
-        )
-
-        return redirect('registrar_ingreso_lote')
-
-    if not proveedor_id:
-        messages.error(
-            request,
-            'Debe seleccionar un proveedor.'
-        )
-
-        return redirect('registrar_ingreso_lote')
-
-    # --------------------------------------------------------
-    # VALIDAR FECHA DE VENCIMIENTO
-    # --------------------------------------------------------
-
-    if not fecha_vencimiento_input:
-        messages.error(
-            request,
-            'La fecha de vencimiento es obligatoria.'
-        )
-
-        return redirect('registrar_ingreso_lote')
-
-    try:
-        fecha_vencimiento = date.fromisoformat(
-            fecha_vencimiento_input
-        )
-    except ValueError:
-        messages.error(
-            request,
-            'La fecha de vencimiento no es válida.'
-        )
-
-        return redirect('registrar_ingreso_lote')
-
-    if fecha_vencimiento < lote.Fecha_ingreso:
-        messages.error(
-            request,
-            'La fecha de vencimiento no puede ser anterior '
-            'a la fecha de ingreso.'
-        )
-
-        return redirect('registrar_ingreso_lote')
-
-    # --------------------------------------------------------
-    # VALIDAR PROVEEDOR
-    # --------------------------------------------------------
-
-    if proveedor_id == str(lote.ID_Proveedor_id):
-        proveedor = lote.ID_Proveedor       # el de siempre, aunque esté inactivo
-    else:
-        proveedor = Proveedores.objects.filter(
-            ID_Proveedor=proveedor_id,
-            estado_proveedor=True
-        ).first()
-
-        if not proveedor:
-            messages.error(
-                request,
-                'El proveedor seleccionado no existe o está inactivo.'
-            )
-            return redirect('registrar_ingreso_lote')
-
-
-    # --------------------------------------------------------
-    # GUARDAR CAMBIOS
-    # --------------------------------------------------------
-
-    lote.ID_Proveedor = proveedor
-    lote.Fecha_vencimiento = fecha_vencimiento
-
-    lote.save(
-        update_fields=[
-            'ID_Proveedor',
-            'Fecha_vencimiento'
-        ]
-    )
-
-    messages.success(
-        request,
-        'Lote actualizado correctamente.'
-    )
-
-    return redirect('registrar_ingreso_lote')
-
 
 # ============================================================
 # MOVIMIENTOS DE STOCK
 # ============================================================
 
 def gestion_movimientos_stock(request):
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'movimientos')
 
     if not usuario:
-        usuario = usuario_es_vendedor(request)
-
-    if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para consultar movimientos de stock.'
+        )
         return redirect('panel_principal')
 
     busqueda = request.GET.get('q', '').strip()
@@ -3023,9 +2669,13 @@ def clave_fecha_alerta(item):
 # ============================================================
 
 def gestion_alertas(request):
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'alertas')
 
     if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para consultar el historial de alertas.'
+        )
         return redirect('panel_principal')
 
     tipo_alerta = request.GET.get('tipo', '').strip()
@@ -3449,12 +3099,17 @@ def _dibujar_comprobante(buffer, filas, logo_path=None, generado=''):
 
 def comprobante_movimiento_pdf(request, id_movimiento):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(
+        request,
+        'comprobantes',
+        gestionar=True  
+    )
 
     if not usuario:
-        usuario = usuario_es_vendedor(request)
-
-    if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para emitir comprobantes.'
+        )
         return redirect('panel_principal')
     
     movimiento = get_object_or_404(
@@ -3585,15 +3240,17 @@ def comprobante_movimiento_pdf(request, id_movimiento):
 
 
 def gestion_remitos(request):
-    usuario = usuario_autenticado(request)
+    usuario = usuario_con_acceso(
+        request,
+        'remitos',
+        gestionar=True
+    )
 
     if not usuario:
-        return redirect('login')
-
-    perfiles_permitidos = ('Administrador', 'Jefe', 'Secretaria')
-
-    if usuario.ID_Perfil.Nombre_perfil not in perfiles_permitidos:
-        messages.error(request, 'No tenés permiso para gestionar remitos.')
+        messages.error(
+            request,
+            'No tenés permiso para gestionar remitos.'
+        )
         return redirect('panel_principal')
 
     hoy = timezone.localdate()
@@ -3713,6 +3370,14 @@ def gestion_remitos(request):
                     messages.error(
                         request,
                         'No se pueden registrar lotes ya vencidos.'
+                    )
+                    return redirect('gestion_remitos')
+                
+                if fecha_vencimiento < fecha_remito:
+                    messages.error(
+                        request,
+                        'La fecha de vencimiento no puede ser anterior '
+                        'a la fecha del remito.'
                     )
                     return redirect('gestion_remitos')
 

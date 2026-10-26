@@ -60,12 +60,10 @@ urlpatterns = [
     path('productos/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
 
 
-    # ============================================================
-    # GESTIÓN DE LOTES
-    # ============================================================
 
+    # Lotes (solo consulta; el alta se hace desde Remitos)
     path('ingreso-lote/', views.registrar_ingreso_lote, name='registrar_ingreso_lote'),
-    path('ingreso-lote/editar/<int:id>/', views.editar_lote, name='editar_lote'),
+
 
     # Movimientos de stock
     path('movimientos-stock/', views.gestion_movimientos_stock, name='gestion_movimientos_stock'),

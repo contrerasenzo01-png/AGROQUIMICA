@@ -224,7 +224,9 @@ class Usuarios(models.Model):
     ID_Perfil = models.ForeignKey(
         Perfiles,
         on_delete=models.PROTECT,
-        db_column='ID_Perfil'
+        db_column='ID_Perfil',
+        related_name='usuarios'
+
     )
 
     DNI = models.IntegerField(unique=True)
@@ -348,8 +350,6 @@ class Lotes(models.Model):
         on_delete=models.PROTECT,
         db_column='ID_Remito',
         related_name='lotes',
-        null=True,
-        blank=True
     )
 
     ID_Producto = models.ForeignKey(
