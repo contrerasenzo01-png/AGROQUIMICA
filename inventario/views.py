@@ -11,10 +11,12 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from .models import Lotes
 from django.views.decorators.http import require_POST
 from django.contrib.staticfiles import finders
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
+from django.db.models import Count, Prefetch
 import re
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -2146,11 +2148,19 @@ def gestion_productos(request):
     tipo_id = request.GET.get('tipo', '').strip()
 
 
-    # PRODUCTOS CON SU TIPO, SUBTIPO Y STOCK
     productos = Productos.objects.select_related(
         'ID_Tipo_producto',
         'ID_Subtipo',
         'stock'
+    ).prefetch_related(
+        Prefetch(
+            'lotes',
+            queryset=Lotes.objects.select_related(
+                'ID_Remito',
+                'ID_Remito__ID_Proveedor'
+            ).order_by('Fecha_vencimiento', 'Numero_lote'),
+            to_attr='lotes_ordenados'
+        )
     ).annotate(
         num_lotes=Count('lotes')
     )

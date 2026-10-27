@@ -344,6 +344,27 @@
 
                                 <div class="pr-acciones">
 
+                                    
+                                    <!-- CONSULTAR LOTES -->
+
+                                    {% if producto.num_lotes > 0 %}
+                                        <button type="button"
+                                                class="pr-icon-btn pr-ver-lotes"
+                                                title="Consultar lotes"
+                                                aria-label="Consultar lotes"
+                                                aria-expanded="false"
+                                                aria-controls="lotes-{{ producto.ID_Producto }}"
+                                                onclick="toggleLotes({{ producto.ID_Producto }}, this)">
+
+                                            <svg class="pr-icon" viewBox="0 0 24 24">
+                                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+
+                                        </button>
+                                    {% endif %}
+
+
                                     <!-- EDITAR -->
 
                                     <button type="button"
@@ -397,6 +418,93 @@
                                         </button>
 
                                     </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        <!-- DETALLE DE LOTES DEL PRODUCTO -->
+
+                        <tr id="lotes-{{ producto.ID_Producto }}"
+                            class="pr-fila-lotes"
+                            style="display: none;">
+
+                            <td colspan="11">
+
+                                <div class="pr-lotes-contenido">
+
+                                    <h4>
+                                        Lotes de {{ producto.Nombre_producto }}
+                                    </h4>
+
+                                    <div class="pr-lotes-tabla-contenedor">
+
+                                        <table class="pr-lotes-tabla">
+
+                                            <thead>
+                                                <tr>
+                                                    <th>Número de lote</th>
+                                                    <th>Remito</th>
+                                                    <th>Proveedor</th>
+                                                    <th>Fecha de vencimiento</th>
+                                                    <th>Cantidad ingresada</th>
+                                                    <th>Cantidad actual</th>
+                                                    <th>Estado</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+
+                                                {% for lote in producto.lotes_ordenados %}
+
+                                                    <tr>
+                                                        <td>{{ lote.Numero_lote }}</td>
+
+                                                        <td>
+                                                            {{ lote.ID_Remito.Numero_remito }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ lote.ID_Remito.ID_Proveedor }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ lote.Fecha_vencimiento|date:"d/m/Y" }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ lote.Cantidad_ingresada }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ lote.Cantidad_actual }}
+                                                        </td>
+
+                                                        <td>
+                                                            <span class="pr-lote-estado pr-estado-{{ lote.estado_actual|lower }}">
+                                                                {{ lote.estado_actual }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+
+
+                                                {% empty %}
+
+                                                    <tr>
+                                                        <td colspan="7">
+                                                            Este producto no tiene lotes registrados.
+                                                        </td>
+                                                    </tr>
+
+                                                {% endfor %}
+
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
 
                                 </div>
 
@@ -1032,6 +1140,43 @@
     
 
 
+
+    /* =====================================================
+   MOSTRAR Y OCULTAR LOTES DEL PRODUCTO
+===================================================== */
+
+function toggleLotes(productoId, boton) {
+
+    const filaLotes = document.getElementById(
+        'lotes-' + productoId
+    );
+
+    if (!filaLotes) {
+        return;
+    }
+
+    const estaAbierta =
+        filaLotes.style.display === 'table-row';
+
+    if (estaAbierta) {
+
+        filaLotes.style.display = 'none';
+
+        boton.setAttribute('aria-expanded', 'false');
+        boton.title = 'Consultar lotes';
+        boton.setAttribute('aria-label', 'Consultar lotes');
+
+    } else {
+
+        filaLotes.style.display = 'table-row';
+
+        boton.setAttribute('aria-expanded', 'true');
+        boton.title = 'Ocultar lotes';
+        boton.setAttribute('aria-label', 'Ocultar lotes');
+
+    }
+}
+
     /* =====================================================
        BUSCAR Y FILTRAR
     ===================================================== */
@@ -1080,9 +1225,26 @@
                     coincideEstado;
 
 
-                fila.style.display =
-                    visible ? '' : 'none';
+                fila.style.display = visible ? '' : 'none';
 
+                // Ocultar el detalle de lotes al filtrar
+                const idProducto = fila.id.replace('card-', '');
+
+                const filaLotes = document.getElementById(
+                    'lotes-' + idProducto
+                );
+
+                if (filaLotes) {
+                    filaLotes.style.display = 'none';
+                }
+
+                const botonLotes = fila.querySelector('.pr-ver-lotes');
+
+                if (botonLotes) {
+                    botonLotes.setAttribute('aria-expanded', 'false');
+                    botonLotes.title = 'Consultar lotes';
+                    botonLotes.setAttribute('aria-label', 'Consultar lotes');
+                }
 
                 if (visible) {
                     visibles++;

@@ -1,10 +1,8 @@
-
 /* ============================================================
    AGROQUÍMICA DEL VALLE
    GESTIÓN DE REMITOS
    Archivo: gestion_remitos.css
 ============================================================ */
-
 
 /* ============================================================
    VARIABLES Y BASE
@@ -65,7 +63,6 @@
     display: block;
 }
 
-
 /* ============================================================
    ICONOS
 ============================================================ */
@@ -80,7 +77,6 @@
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-
 
 /* ============================================================
    ENCABEZADO
@@ -109,7 +105,6 @@
     font-size: 12px;
     line-height: 1.5;
 }
-
 
 /* ============================================================
    BOTONES
@@ -191,7 +186,6 @@
     outline-offset: 2px;
 }
 
-
 /* ============================================================
    BARRA DE RESUMEN
 ============================================================ */
@@ -237,7 +231,6 @@
     font-weight: 750;
     font-variant-numeric: tabular-nums;
 }
-
 
 /* ============================================================
    BÚSQUEDA Y FILTROS
@@ -309,7 +302,6 @@
         box-shadow var(--rm-transicion);
 }
 
-
 /* ============================================================
    TARJETA PRINCIPAL
 ============================================================ */
@@ -346,7 +338,6 @@
     font-size: 11px;
     line-height: 1.5;
 }
-
 
 /* ============================================================
    TABLAS
@@ -415,7 +406,6 @@
     border-bottom-color: #e1ebe4;
 }
 
-
 /* ============================================================
    DATOS DEL REMITO
 ============================================================ */
@@ -458,7 +448,6 @@
     font-weight: 700;
     white-space: nowrap;
 }
-
 
 /* ============================================================
    ACCIONES DE LA TABLA
@@ -509,7 +498,6 @@
     background: #eff6ff;
     border-color: #bfdbfe;
 }
-
 
 /* ============================================================
    DETALLE DE LOTES
@@ -567,7 +555,6 @@
     background: #f8fbf9;
 }
 
-
 /* ============================================================
    ESTADOS DE LOS LOTES
 ============================================================ */
@@ -602,7 +589,6 @@
     border-color: #e2e8f0;
 }
 
-
 /* ============================================================
    TABLA VACÍA
 ============================================================ */
@@ -613,7 +599,6 @@
     text-align: center;
     font-size: 12px;
 }
-
 
 /* ============================================================
    PIE DE TABLA
@@ -636,7 +621,6 @@
     color: #5b6c61;
     font-weight: 600;
 }
-
 
 /* ============================================================
    MENSAJES / TOASTS
@@ -721,9 +705,8 @@
     }
 }
 
-
 /* ============================================================
-   MODALES
+   MODALES GENERALES
 ============================================================ */
 
 .rm-modal {
@@ -736,25 +719,33 @@
     padding: 18px;
     background: rgba(15, 35, 24, 0.55);
     backdrop-filter: blur(3px);
-    overflow-y: auto;
+    overflow: hidden;
+    overscroll-behavior: contain;
     animation: rm-fondo-entrada 0.18s ease;
 }
 
 .rm-modal-box {
     width: 100%;
     max-width: 530px;
+    height: auto;
     max-height: calc(100vh - 36px);
+    max-height: calc(100dvh - 36px);
+    min-height: 0;
+
     display: flex;
     flex-direction: column;
+
     overflow: hidden;
     background: var(--rm-blanco);
     border: 1px solid rgba(255, 255, 255, 0.65);
     border-radius: 12px;
     box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
+
     animation: rm-modal-entrada 0.22s ease;
 }
 
 .rm-modal-head {
+    flex: 0 0 auto;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -802,14 +793,49 @@
     background: #fef2f2;
 }
 
-.rm-modal-body {
+/*
+   CORRECCIÓN DEL SCROLL:
+   En el HTML, el <form> envuelve el cuerpo y el pie del modal, por lo que
+   es el hijo directo de .rm-modal-box. Para que .rm-modal-body pueda
+   encogerse y desplazarse, el <form> debe continuar la cadena flex:
+   - ocupa el espacio disponible (flex: 1 1 auto) y puede achicarse (min-height: 0)
+   - es un contenedor flex en columna
+   Así el encabezado queda fijo arriba, el pie fijo abajo y solo se
+   desplaza el cuerpo.
+*/
+.rm-modal-box > form {
+    flex: 1 1 auto;
     min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.rm-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
     padding: 18px 20px;
+    overflow-x: hidden;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5cf transparent;
+}
+
+.rm-modal-body::-webkit-scrollbar {
+    width: 7px;
+}
+
+.rm-modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5cf;
+    border-radius: 10px;
 }
 
 .rm-modal-pie {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -821,13 +847,8 @@
 }
 
 @keyframes rm-fondo-entrada {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @keyframes rm-modal-entrada {
@@ -841,7 +862,6 @@
         transform: translateY(0) scale(1);
     }
 }
-
 
 /* ============================================================
    FORMULARIOS DE LOS MODALES
@@ -929,38 +949,75 @@
     color: var(--rm-verde);
 }
 
-
 /* ============================================================
-   FORMULARIO DE REGISTRO DE REMITOS
+   MODAL: REGISTRO DE REMITOS Y LOTES
 ============================================================ */
 
-/* Modal de registro más compacto */
+#modalCrearRemito.rm-modal {
+    padding: 18px;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+}
+
+/*
+   El modal se adapta a la cantidad de espacio disponible.
+   El encabezado y el pie quedan fijos.
+   Solo se desplaza el contenido central.
+*/
+
 #modalCrearRemito .rm-modal-box-lotes {
     width: min(800px, 100%);
     max-width: 800px;
+    height: auto;
     max-height: calc(100vh - 36px);
+    max-height: calc(100dvh - 36px);
+    min-height: 0;
+
     display: flex;
     flex-direction: column;
     overflow: hidden;
+
     border-radius: 13px;
+    background: var(--rm-blanco);
 }
 
-/* Encabezado y pie fijos */
-#modalCrearRemito .rm-modal-head,
-#modalCrearRemito .rm-modal-pie {
-    flex-shrink: 0;
+#modalCrearRemito .rm-modal-head {
+    flex: 0 0 auto;
 }
 
-/* Contenido desplazable */
+/* Área desplazable del formulario y de los lotes */
+
 #modalCrearRemito .rm-modal-body {
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
+    min-width: 0;
     padding: 18px 20px;
-    overscroll-behavior: contain;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5cf transparent;
+}
+
+#modalCrearRemito .rm-modal-body::-webkit-scrollbar {
+    width: 7px;
+}
+
+#modalCrearRemito .rm-modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5cf;
+    border-radius: 10px;
+}
+
+#modalCrearRemito .rm-modal-pie {
+    flex: 0 0 auto;
 }
 
 /* Introducción */
+
 #modalCrearRemito .rm-modal-intro {
     margin: 0 0 15px;
     color: #64748b;
@@ -969,6 +1026,7 @@
 }
 
 /* Campos en dos columnas */
+
 #modalCrearRemito .rm-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 13px 14px;
@@ -984,6 +1042,7 @@
 }
 
 /* Etiquetas */
+
 #modalCrearRemito .rm-grupo label {
     color: #24382c;
     font-size: 12px;
@@ -991,6 +1050,7 @@
 }
 
 /* Campos de texto y desplegables */
+
 #modalCrearRemito .rm-grupo input,
 #modalCrearRemito .rm-grupo select {
     width: 100%;
@@ -1013,6 +1073,7 @@
 }
 
 /* Mensajes de ayuda */
+
 #modalCrearRemito .rm-grupo small,
 #modalCrearRemito .rm-ayuda {
     color: #64748b;
@@ -1020,7 +1081,10 @@
     line-height: 1.5;
 }
 
-/* Sección de lotes */
+/* ============================================================
+   SECCIÓN DE LOTES
+============================================================ */
+
 #modalCrearRemito .rm-lotes-cab {
     display: flex;
     align-items: center;
@@ -1048,7 +1112,9 @@
 }
 
 /* Tarjeta individual de cada lote */
+
 #modalCrearRemito .rm-lote {
+    width: 100%;
     min-width: 0;
     margin-bottom: 10px;
     padding: 14px;
@@ -1060,12 +1126,26 @@
         box-shadow var(--rm-transicion);
 }
 
+#modalCrearRemito .rm-lote:last-child {
+    margin-bottom: 0;
+}
+
 #modalCrearRemito .rm-lote:focus-within {
     border-color: #b8d4c0;
     box-shadow: 0 0 0 2px rgba(24, 90, 56, 0.05);
 }
 
+/*
+   CORRECCIÓN DEL ESPACIADO:
+   El campo "Producto" es un .rm-grupo suelto dentro de .rm-lote (queda
+   fuera del .rm-grid), por eso no recibía separación con la fila siguiente.
+*/
+#modalCrearRemito .rm-lote > .rm-grupo {
+    margin-bottom: 13px;
+}
+
 /* Encabezado de la tarjeta del lote */
+
 #modalCrearRemito .rm-lote-top {
     display: flex;
     align-items: center;
@@ -1081,6 +1161,7 @@
 }
 
 /* Botón para quitar un lote */
+
 #modalCrearRemito .rm-lote-quitar {
     display: inline-flex;
     align-items: center;
@@ -1110,6 +1191,7 @@
 }
 
 /* Mensaje de validación */
+
 #modalCrearRemito .rm-error {
     margin-bottom: 12px;
     padding: 10px 12px;
@@ -1122,13 +1204,13 @@
 }
 
 /* Pie de acciones del modal */
+
 #modalCrearRemito .rm-modal-pie {
     gap: 9px;
     padding: 12px 20px;
     border-top: 1px solid #e2e8e5;
     background: #fbfdfb;
 }
-
 
 /* ============================================================
    BOTÓN PEQUEÑO
@@ -1139,7 +1221,6 @@
     padding: 6px 10px;
     font-size: 11px;
 }
-
 
 /* ============================================================
    RESPONSIVE: TABLETS
@@ -1175,7 +1256,6 @@
         max-width: 760px;
     }
 }
-
 
 /* ============================================================
    RESPONSIVE: CELULARES
@@ -1267,14 +1347,17 @@
         font-size: 12px;
     }
 
+    /* Modales generales */
+
     .rm-modal {
-        align-items: flex-start;
+        align-items: center;
+        justify-content: center;
         padding: 10px;
     }
 
     .rm-modal-box {
         max-height: calc(100vh - 20px);
-        margin: auto 0;
+        max-height: calc(100dvh - 20px);
         border-radius: 10px;
     }
 
@@ -1307,35 +1390,48 @@
         flex: 1;
     }
 
+    /* Notificaciones */
+
     .rm-toasts {
         top: 10px;
         right: 10px;
         width: calc(100vw - 20px);
     }
 
-    /* Modal de registro */
+    /* Modal de registro de remitos */
+
     #modalCrearRemito.rm-modal {
+        align-items: center;
+        justify-content: center;
         padding: 8px;
+        overflow: hidden;
     }
 
     #modalCrearRemito .rm-modal-box-lotes {
         width: 100%;
         max-width: none;
+        height: auto;
         max-height: calc(100vh - 16px);
+        max-height: calc(100dvh - 16px);
         min-height: 0;
-        margin: auto 0;
+        margin: 0;
         border-radius: 10px;
     }
 
     #modalCrearRemito .rm-modal-head {
+        flex: 0 0 auto;
         padding: 13px;
     }
 
     #modalCrearRemito .rm-modal-body {
         flex: 1 1 auto;
         min-height: 0;
+        min-width: 0;
         padding: 14px 12px;
+        overflow-x: hidden;
         overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
     }
 
     #modalCrearRemito .rm-grid {
@@ -1367,6 +1463,7 @@
     }
 
     #modalCrearRemito .rm-modal-pie {
+        flex: 0 0 auto;
         padding: 11px 12px;
     }
 
@@ -1375,7 +1472,6 @@
         white-space: normal;
     }
 }
-
 
 /* ============================================================
    ACCESIBILIDAD: REDUCIR ANIMACIONES
