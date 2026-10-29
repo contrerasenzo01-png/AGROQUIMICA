@@ -80,6 +80,11 @@ urlpatterns = [
     path('permisos/editar/<int:pk>/', views.editar_permiso, name='editar_permiso'),
     path('permisos/eliminar/<int:pk>/', views.eliminar_permiso, name='eliminar_permiso'),
     
-     # Auditoría (solo administrador)
-    path('auditoria/', views.gestion_auditoria, name='gestion_auditoria'),   
+    # Auditoría (solo administrador)
+    path('auditoria/', views.gestion_auditoria, name='gestion_auditoria'),
+    path(
+        'auditoria/detalle/<int:id_log>/',
+        views.detalle_auditoria,
+        name='detalle_auditoria'
+    ),
 ]

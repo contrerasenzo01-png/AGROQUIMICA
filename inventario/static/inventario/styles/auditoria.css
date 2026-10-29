@@ -81,3 +81,88 @@
     cursor: default;
     pointer-events: none;
 }
+
+/* ---------- Botón Ver detalle ---------- */
+
+.aud-btn-detalle {
+    padding: 8px 12px;
+    border: 1px solid #0b311e;
+    border-radius: 6px;
+    background: #fff;
+    color: #0b311e;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.aud-btn-detalle:hover {
+    background: #f1f5f3;
+}
+
+/* ---------- Modal centrado ---------- */
+
+.aud-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+}
+
+.aud-modal.activo {
+    display: flex;
+}
+
+.aud-modal-contenido {
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+}
+
+.aud-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.aud-modal-header h2 {
+    margin: 0;
+    color: #0b311e;
+    font-size: 22px;
+}
+
+.aud-modal-cerrar {
+    border: none;
+    background: transparent;
+    color: #374151;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.aud-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+    .aud-modal {
+        padding: 10px;
+    }
+
+    .aud-modal-contenido {
+        padding: 16px;
+        max-height: 95vh;
+    }
+}

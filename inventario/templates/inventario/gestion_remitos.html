@@ -11,7 +11,6 @@
 {% block contenido %}
 
 <!-- MENSAJES -->
-
 <div class="rm-toasts" id="toastContainer">
     {% if messages %}
         {% for message in messages %}
@@ -28,11 +27,9 @@
     {% endif %}
 </div>
 
-
 <div class="rm-page">
 
     <!-- ENCABEZADO -->
-
     <header class="rm-header">
         <div>
             <h1 class="rm-title">Gestión de remitos</h1>
@@ -51,12 +48,9 @@
         </button>
     </header>
 
-
     <!-- RESUMEN -->
-
     <div class="rm-barra">
         <div class="rm-barra-datos">
-
             <span class="rm-barra-dato">
                 <svg class="rm-icon" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -85,15 +79,11 @@
                 <strong>{{ total_lotes|default:0 }}</strong>
                 lotes asociados
             </span>
-
         </div>
     </div>
 
-
     <!-- BÚSQUEDA Y FILTROS -->
-
     <form method="GET" class="rm-filtros" id="formFiltros">
-
         <div class="rm-search">
             <svg class="rm-icon" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7"/>
@@ -111,7 +101,6 @@
         <select name="proveedor"
                 id="filtroProveedor"
                 class="rm-select">
-
             <option value="">Todos los proveedores</option>
 
             {% for proveedor in proveedores %}
@@ -122,7 +111,6 @@
                     {{ proveedor.nombre_proveedor }}
                 </option>
             {% endfor %}
-
         </select>
 
         <button type="submit" class="rm-btn rm-btn-secondary">
@@ -133,14 +121,10 @@
            class="rm-btn rm-btn-light">
             Limpiar
         </a>
-
     </form>
 
-
     <!-- TABLA DE REMITOS -->
-
     <section class="rm-card">
-
         <div class="rm-card-header">
             <div>
                 <h2>Remitos registrados</h2>
@@ -149,9 +133,7 @@
         </div>
 
         <div class="rm-table-wrap">
-
             <table class="rm-table">
-
                 <thead>
                     <tr>
                         <th>Número de remito</th>
@@ -163,13 +145,10 @@
                 </thead>
 
                 <tbody id="listaRemitos">
-
                     {% for remito in remitos %}
-
                         <tr class="rm-fila-remito"
                             data-search="{{ remito.Numero_remito|lower }} {{ remito.ID_Proveedor.nombre_proveedor|lower }}"
                             data-proveedor="{{ remito.ID_Proveedor.ID_Proveedor }}">
-
 
                             <td>
                                 <strong class="rm-numero">
@@ -183,9 +162,7 @@
                                 </span>
                             </td>
 
-                            <td>
-                                {{ remito.Fecha_remito|date:"d/m/Y" }}
-                            </td>
+                            <td>{{ remito.Fecha_remito|date:"d/m/Y" }}</td>
 
                             <td>
                                 <span class="rm-badge">
@@ -196,18 +173,15 @@
 
                             <td>
                                 <div class="rm-acciones">
-
                                     <button type="button"
                                             class="rm-icon-btn rm-ver"
                                             title="Ver lotes del remito"
                                             aria-label="Ver lotes del remito"
                                             onclick="alternarDetalle('{{ remito.ID_Remito }}')">
-
                                         <svg class="rm-icon" viewBox="0 0 24 24">
                                             <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/>
                                             <circle cx="12" cy="12" r="3"/>
                                         </svg>
-
                                     </button>
 
                                     <button type="button"
@@ -219,30 +193,21 @@
                                                 '{{ remito.Numero_remito|escapejs }}',
                                                 '{{ remito.Fecha_remito|date:'Y-m-d' }}'
                                             )">
-
                                         <svg class="rm-icon" viewBox="0 0 24 24">
                                             <path d="M12 20h9"/>
                                             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/>
                                         </svg>
-
                                     </button>
-
                                 </div>
                             </td>
-
                         </tr>
 
-
                         <!-- DETALLE DE LOTES -->
-
                         <tr id="detalle-{{ remito.ID_Remito }}"
                             class="rm-fila-detalle"
                             style="display: none;">
-
                             <td colspan="5">
-
                                 <div class="rm-detalle">
-
                                     <div class="rm-detalle-header">
                                         <h3>
                                             Lotes del remito {{ remito.Numero_remito }}
@@ -250,9 +215,7 @@
                                     </div>
 
                                     <div class="rm-table-wrap">
-
                                         <table class="rm-table rm-table-lotes">
-
                                             <thead>
                                                 <tr>
                                                     <th>Número de lote</th>
@@ -262,14 +225,21 @@
                                                     <th>Cantidad ingresada</th>
                                                     <th>Stock actual del lote</th>
                                                     <th>Estado</th>
+                                                    <th style="text-align: right;">Acciones</th>
                                                 </tr>
                                             </thead>
 
                                             <tbody>
-
                                                 {% for lote in remito.lotes.all %}
+                                                    <tr
+                                                        data-lote-id="{{ lote.ID_Lote }}"
+                                                        data-producto="{{ lote.ID_Producto_id }}"
+                                                        data-numero="{{ lote.Numero_lote }}"
+                                                        data-ingresada="{{ lote.Cantidad_ingresada }}"
+                                                        data-actual="{{ lote.Cantidad_actual }}"
+                                                        data-ingreso="{{ lote.Fecha_ingreso|date:'Y-m-d' }}"
+                                                        data-vencimiento="{{ lote.Fecha_vencimiento|date:'Y-m-d' }}">
 
-                                                    <tr>
                                                         <td>
                                                             <span class="rm-codigo">
                                                                 {{ lote.Numero_lote }}
@@ -302,81 +272,69 @@
 
                                                         <td>
                                                             {% if lote.estado_actual == "Vencido" %}
-                                                                <span class="rm-estado rm-vencido">
-                                                                    Vencido
-                                                                </span>
+                                                                <span class="rm-estado rm-vencido">Vencido</span>
                                                             {% elif lote.estado_actual == "Agotado" %}
-                                                                <span class="rm-estado rm-agotado">
-                                                                    Agotado
-                                                                </span>
+                                                                <span class="rm-estado rm-agotado">Agotado</span>
                                                             {% else %}
-                                                                <span class="rm-estado rm-activo">
-                                                                    Activo
-                                                                </span>
+                                                                <span class="rm-estado rm-activo">Activo</span>
                                                             {% endif %}
                                                         </td>
+
+                                                        <td>
+                                                            <div class="rm-acciones">
+                                                                <button type="button"
+                                                                        class="rm-icon-btn rm-editar"
+                                                                        title="Editar lote"
+                                                                        aria-label="Editar lote"
+                                                                        onclick="abrirModalEditarLote('{{ lote.ID_Lote }}')">
+                                                                    <svg class="rm-icon" viewBox="0 0 24 24">
+                                                                        <path d="M12 20h9"/>
+                                                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/>
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </td>
                                                     </tr>
-
                                                 {% empty %}
-
                                                     <tr>
-                                                        <td colspan="7" class="rm-vacio">
+                                                        <td colspan="8" class="rm-vacio">
                                                             Este remito todavía no tiene lotes asociados.
                                                         </td>
                                                     </tr>
-
                                                 {% endfor %}
-
                                             </tbody>
-
                                         </table>
-
                                     </div>
                                 </div>
                             </td>
                         </tr>
-
                     {% empty %}
-
                         <tr>
                             <td colspan="5" class="rm-vacio">
                                 No se encontraron remitos registrados.
                             </td>
                         </tr>
-
                     {% endfor %}
-
                 </tbody>
-
             </table>
         </div>
 
-
         <!-- PIE DE TABLA -->
-
         <div class="rm-pie">
             <span id="contadorRemitos">
                 {{ remitos|length }}
                 remito{{ remitos|length|pluralize }}
                 encontrado{{ remitos|length|pluralize }}
             </span>
-
             <span>Agroquímica del Valle</span>
         </div>
-
     </section>
-
 </div>
 
-
-<!-- =========================================
-     MODAL REGISTRAR REMITO (con sus lotes)
-========================================= -->
-
+<!-- MODAL REGISTRAR REMITO CON SUS LOTES -->
 <div class="rm-modal"
      id="modalCrearRemito"
      aria-hidden="true">
-
     <div class="rm-modal-box rm-modal-box-lotes"
          role="dialog"
          aria-modal="true"
@@ -390,35 +348,27 @@
             <button type="button"
                     class="rm-modal-x"
                     onclick="cerrarModal('modalCrearRemito')"
-                    aria-label="Cerrar">
-                ✕
-            </button>
+                    aria-label="Cerrar">✕</button>
         </div>
 
         <form method="POST"
               action="{% url 'gestion_remitos' %}"
               id="formCrearRemito"
               novalidate>
-
             {% csrf_token %}
             <input type="hidden" name="accion" value="crear_remito">
 
             <div class="rm-modal-body">
-
                 <p class="rm-modal-intro">
-                    Completá los atributos del remito y sus lotes asociados.
+                    Completá los datos del remito y sus lotes asociados.
                     Cada lote genera su movimiento de ingreso y actualiza el stock.
                 </p>
 
                 <div class="rm-error" id="errorCrearRemito" hidden></div>
 
-                <!-- DATOS DEL REMITO -->
-
                 <div class="rm-grid">
-
                     <div class="rm-grupo">
                         <label for="crear_numero">Número de remito</label>
-
                         <input type="text"
                                name="Numero_remito"
                                id="crear_numero"
@@ -430,7 +380,6 @@
 
                     <div class="rm-grupo">
                         <label for="crear_fecha">Fecha del remito</label>
-
                         <input type="date"
                                name="Fecha_remito"
                                id="crear_fecha"
@@ -441,37 +390,30 @@
 
                     <div class="rm-grupo rm-full">
                         <label for="crear_proveedor">Proveedor</label>
-
                         <select name="ID_Proveedor"
                                 id="crear_proveedor"
                                 required>
-
                             <option value="">Seleccioná un proveedor</option>
-
-
                             {% for proveedor in proveedores_alta %}
                                 <option value="{{ proveedor.ID_Proveedor }}">
                                     {{ proveedor.nombre_proveedor }}
                                 </option>
-
                             {% empty %}
                                 <option value="" disabled>
                                     No hay proveedores disponibles
                                 </option>
                             {% endfor %}
-
                         </select>
 
-                            {% if not proveedores_alta %}
-                                <small class="rm-ayuda">
-                                    Primero tenés que registrar un proveedor para poder asociarlo al remito.
-                                </small>
-                            {% endif %}
+                        {% if not proveedores_alta %}
+                            <small class="rm-ayuda">
+                                Primero tenés que registrar un proveedor para poder asociarlo al remito.
+                            </small>
+                        {% endif %}
                     </div>
                 </div>
 
                 <!-- LOTES ASOCIADOS -->
-
                 <div class="rm-lotes-cab">
                     <div>
                         <h3>Lotes asociados al remito</h3>
@@ -493,14 +435,10 @@
 
                 <div id="listaLotes"></div>
 
-                <!-- Plantilla de un lote: se clona con JavaScript.
-                     Un <template> no se envía con el formulario. -->
                 <template id="plantillaLote">
                     <div class="rm-lote">
-
                         <div class="rm-lote-top">
                             <span class="rm-lote-titulo">Lote 1</span>
-
                             <button type="button"
                                     class="rm-lote-quitar"
                                     onclick="quitarLote(this)"
@@ -511,27 +449,21 @@
 
                         <div class="rm-grupo rm-full">
                             <label for="lote_producto___N__">Producto</label>
-
                             <select name="lote_producto"
                                     id="lote_producto___N__"
                                     required>
-
                                 <option value="">Seleccionar producto activo</option>
-
                                 {% for producto in productos_alta %}
                                     <option value="{{ producto.ID_Producto }}">
                                         {{ producto.Nombre_producto }}{% if producto.Marca %} · {{ producto.Marca }}{% endif %}
                                     </option>
                                 {% endfor %}
-
                             </select>
                         </div>
 
                         <div class="rm-grid">
-
                             <div class="rm-grupo">
                                 <label for="lote_numero___N__">Número de lote</label>
-
                                 <input type="text"
                                        name="lote_numero"
                                        id="lote_numero___N__"
@@ -542,7 +474,6 @@
 
                             <div class="rm-grupo">
                                 <label for="lote_venc___N__">Fecha de vencimiento</label>
-
                                 <input type="date"
                                        name="lote_vencimiento"
                                        id="lote_venc___N__"
@@ -552,7 +483,6 @@
 
                             <div class="rm-grupo">
                                 <label for="lote_cant___N__">Cantidad ingresada</label>
-
                                 <input type="number"
                                        name="lote_cantidad"
                                        id="lote_cant___N__"
@@ -564,18 +494,15 @@
 
                             <div class="rm-grupo">
                                 <label for="lote_ingreso___N__">Fecha de ingreso</label>
-
                                 <input type="text"
                                        id="lote_ingreso___N__"
                                        value="{{ hoy|date:'d/m/Y' }}"
                                        readonly
                                        tabindex="-1">
                             </div>
-
                         </div>
                     </div>
                 </template>
-
             </div>
 
             <div class="rm-modal-pie">
@@ -594,19 +521,14 @@
                     Registrar remito y lotes
                 </button>
             </div>
-
         </form>
-
     </div>
 </div>
 
-
 <!-- MODAL EDITAR REMITO -->
-
 <div class="rm-modal"
      id="modalEditarRemito"
      aria-hidden="true">
-
     <div class="rm-modal-box"
          role="dialog"
          aria-modal="true"
@@ -621,24 +543,18 @@
             <button type="button"
                     class="rm-modal-x"
                     onclick="cerrarModal('modalEditarRemito')"
-                    aria-label="Cerrar">
-                ✕
-            </button>
+                    aria-label="Cerrar">✕</button>
         </div>
 
         <form method="POST" action="{% url 'gestion_remitos' %}">
             {% csrf_token %}
-
             <input type="hidden" name="accion" value="editar_remito">
             <input type="hidden" name="ID_Remito" id="editar_id_remito">
 
             <div class="rm-modal-body">
-
                 <div class="rm-grid">
-
                     <div class="rm-grupo">
                         <label for="editar_numero">Número de remito</label>
-
                         <input type="text"
                                name="Numero_remito"
                                id="editar_numero"
@@ -648,13 +564,11 @@
 
                     <div class="rm-grupo">
                         <label for="editar_fecha">Fecha del remito</label>
-
                         <input type="date"
                                name="Fecha_remito"
                                id="editar_fecha"
                                required>
                     </div>
-
                 </div>
 
                 <div class="rm-info">
@@ -662,10 +576,8 @@
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 16v-4M12 8h.01"/>
                     </svg>
-
                     Esta modificación no cambia los productos ni las cantidades de los lotes asociados.
                 </div>
-
             </div>
 
             <div class="rm-modal-pie">
@@ -674,23 +586,128 @@
                         onclick="cerrarModal('modalEditarRemito')">
                     Cancelar
                 </button>
-
-                <button type="submit"
-                        class="rm-btn rm-btn-primary">
+                <button type="submit" class="rm-btn rm-btn-primary">
                     Guardar cambios
                 </button>
             </div>
-
         </form>
-
     </div>
 </div>
 
+
+<!-- MODAL EDITAR LOTE -->
+<div class="rm-modal" id="modalEditarLote" aria-hidden="true">
+    <div class="rm-modal-box"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloEditarLote">
+
+        <div class="rm-modal-head">
+            <div>
+                <h2 id="tituloEditarLote">Editar lote</h2>
+                <p>Modificá los datos registrados del lote.</p>
+            </div>
+
+            <button type="button"
+                    class="rm-modal-x"
+                    onclick="cerrarModal('modalEditarLote')"
+                    aria-label="Cerrar">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'gestion_remitos' %}">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="editar_lote">
+            <input type="hidden" name="ID_Lote" id="editar_lote_id">
+
+            <div class="rm-modal-body">
+                <div class="rm-grid">
+
+                    <div class="rm-grupo rm-full">
+                        <label for="editar_lote_producto">Producto</label>
+                        <select name="ID_Producto"
+                                id="editar_lote_producto"
+                                required>
+                            <option value="">Seleccioná un producto</option>
+                            {% for producto in productos_alta %}
+                                <option value="{{ producto.ID_Producto }}">
+                                    {{ producto.Nombre_producto }}{% if producto.Marca %} · {{ producto.Marca }}{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="rm-grupo">
+                        <label for="editar_lote_numero">Número de lote</label>
+                        <input type="text"
+                               name="Numero_lote"
+                               id="editar_lote_numero"
+                               maxlength="50"
+                               required>
+                    </div>
+
+                    <div class="rm-grupo">
+                        <label for="editar_lote_ingresada">Cantidad ingresada</label>
+                        <input type="number"
+                               name="Cantidad_ingresada"
+                               id="editar_lote_ingresada"
+                               min="1"
+                               step="1"
+                               required>
+                    </div>
+
+                    <div class="rm-grupo">
+                        <label for="editar_lote_actual">Cantidad actual</label>
+                        <input type="number"
+                               name="Cantidad_actual"
+                               id="editar_lote_actual"
+                               min="0"
+                               step="1"
+                               required>
+                    </div>
+
+                    <div class="rm-grupo">
+                        <label for="editar_lote_ingreso">Fecha de ingreso</label>
+                        <input type="date"
+                               name="Fecha_ingreso"
+                               id="editar_lote_ingreso"
+                               required>
+                    </div>
+
+                    <div class="rm-grupo">
+                        <label for="editar_lote_vencimiento">Fecha de vencimiento</label>
+                        <input type="date"
+                               name="Fecha_vencimiento"
+                               id="editar_lote_vencimiento"
+                               required>
+                    </div>
+
+                </div>
+
+                <div class="rm-info">
+                    Los cambios en el producto o las cantidades pueden estar
+                    restringidos si el lote tiene movimientos registrados.
+                </div>
+            </div>
+
+            <div class="rm-modal-pie">
+                <button type="button"
+                        class="rm-btn rm-btn-light"
+                        onclick="cerrarModal('modalEditarLote')">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="rm-btn rm-btn-primary">
+                    Guardar cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
 {% endblock %}
 
-
 {% block extra_js %}
-
 <script>
 (function () {
     'use strict';
@@ -701,11 +718,9 @@
     const contadorRemitos = document.getElementById('contadorRemitos');
 
     /* BÚSQUEDA Y FILTROS */
-
     function filtrarRemitos() {
         const texto = searchInput.value.toLowerCase().trim();
         const proveedorSeleccionado = filtroProveedor.value;
-
         let visibles = 0;
 
         filasRemitos.forEach(function (fila) {
@@ -718,11 +733,9 @@
                 proveedorFila === proveedorSeleccionado;
 
             const visible = coincideTexto && coincideProveedor;
-
             fila.style.display = visible ? '' : 'none';
 
             const detalle = fila.nextElementSibling;
-
             if (
                 detalle &&
                 detalle.classList.contains('rm-fila-detalle') &&
@@ -731,50 +744,43 @@
                 detalle.style.display = 'none';
             }
 
-            if (visible) {
-                visibles++;
-            }
+            if (visible) visibles++;
         });
 
         contadorRemitos.textContent =
-            visibles + (visibles === 1 ? ' remito encontrado' : ' remitos encontrados');
+            visibles + (visibles === 1
+                ? ' remito encontrado'
+                : ' remitos encontrados');
     }
 
     searchInput.addEventListener('input', filtrarRemitos);
     filtroProveedor.addEventListener('change', filtrarRemitos);
 
-
-    /* MOSTRAR Y OCULTAR DETALLE DE LOTES */
-
+    /* MOSTRAR Y OCULTAR LOTES */
     window.alternarDetalle = function (id) {
         const fila = document.getElementById('detalle-' + id);
-
-        if (!fila) {
-            return;
-        }
+        if (!fila) return;
 
         fila.style.display =
             fila.style.display === 'none' ? 'table-row' : 'none';
     };
 
-
-    /* =========================================
-       REGISTRAR REMITO CON SUS LOTES
-    ========================================= */
-
+    /* REGISTRAR REMITO CON SUS LOTES */
     const formCrear = document.getElementById('formCrearRemito');
     const listaLotes = document.getElementById('listaLotes');
     const plantillaLote = document.getElementById('plantillaLote');
     const errorCrear = document.getElementById('errorCrearRemito');
     const btnGuardar = document.getElementById('btnGuardarRemito');
 
-    // Contador para dar ids únicos a los campos de cada lote.
     let contadorLotes = 0;
 
     function mostrarError(texto) {
         errorCrear.textContent = texto;
         errorCrear.hidden = false;
-        errorCrear.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        errorCrear.scrollIntoView({
+            block: 'nearest',
+            behavior: 'smooth'
+        });
     }
 
     function ocultarError() {
@@ -782,7 +788,6 @@
         errorCrear.textContent = '';
     }
 
-    // Renumera los títulos y oculta "Quitar" si queda un solo lote.
     function renumerarLotes() {
         const tarjetas = listaLotes.querySelectorAll('.rm-lote');
 
@@ -799,34 +804,37 @@
         contadorLotes++;
 
         const contenedor = document.createElement('div');
-
         contenedor.innerHTML = plantillaLote.innerHTML
             .replace(/__N__/g, String(contadorLotes))
             .trim();
 
         const tarjeta = contenedor.firstElementChild;
-
         listaLotes.appendChild(tarjeta);
         renumerarLotes();
 
         if (enfocar !== false) {
             tarjeta.querySelector('select').focus();
-            tarjeta.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            tarjeta.scrollIntoView({
+                block: 'nearest',
+                behavior: 'smooth'
+            });
         }
     };
 
     window.quitarLote = function (boton) {
         const tarjeta = boton.closest('.rm-lote');
 
-        if (tarjeta && listaLotes.querySelectorAll('.rm-lote').length > 1) {
+        if (
+            tarjeta &&
+            listaLotes.querySelectorAll('.rm-lote').length > 1
+        ) {
             tarjeta.remove();
             renumerarLotes();
             ocultarError();
         }
     };
 
-  
-    // Valida que no se repita el número de lote para el mismo producto.
+    /* VALIDAR LOTES ANTES DE ENVIAR */
     formCrear.addEventListener('submit', function (evento) {
         ocultarError();
 
@@ -865,19 +873,15 @@
             return;
         }
 
-        // Evita enviar dos veces el mismo remito.
         btnGuardar.disabled = true;
     });
 
     formCrear.addEventListener('input', ocultarError);
 
-
     /* ABRIR MODALES */
-
     window.abrirModalCrear = function () {
         const modal = document.getElementById('modalCrearRemito');
 
-        // Siempre se abre limpio y con un lote.
         formCrear.reset();
         listaLotes.innerHTML = '';
         ocultarError();
@@ -896,28 +900,70 @@
         document.getElementById('editar_fecha').value = fecha;
 
         const modal = document.getElementById('modalEditarRemito');
-
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
 
         document.getElementById('editar_numero').focus();
     };
 
+    window.abrirModalEditarLote = function (id) {
+    const fila = document.querySelector(
+        `tr[data-lote-id="${id}"]`
+    );
+
+    if (!fila) {
+        alert('No se encontraron los datos del lote.');
+        return;
+    }
+
+    document.getElementById('editar_lote_id').value = id;
+    document.getElementById('editar_lote_producto').value =
+        fila.dataset.producto;
+    document.getElementById('editar_lote_numero').value =
+        fila.dataset.numero;
+    document.getElementById('editar_lote_ingresada').value =
+        fila.dataset.ingresada;
+    document.getElementById('editar_lote_actual').value =
+        fila.dataset.actual;
+    document.getElementById('editar_lote_ingreso').value =
+        fila.dataset.ingreso;
+    document.getElementById('editar_lote_vencimiento').value =
+        fila.dataset.vencimiento;
+
+    const fechaIngreso = document.getElementById('editar_lote_ingreso');
+    const fechaVencimiento = document.getElementById('editar_lote_vencimiento');
+
+    fechaVencimiento.min = fechaIngreso.value;
+
+    fechaIngreso.onchange = function () {
+        fechaVencimiento.min = fechaIngreso.value;
+
+        if (fechaVencimiento.value < fechaIngreso.value) {
+            fechaVencimiento.value = fechaIngreso.value;
+        }
+    };
+
+    const modal = document.getElementById('modalEditarLote');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+
+    document.getElementById('editar_lote_producto').focus();
+    };
 
     /* CERRAR MODALES */
-
     window.cerrarModal = function (idModal) {
         const modal = document.getElementById(idModal);
-
-        if (!modal) {
-            return;
-        }
+        if (!modal) return;
 
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
     };
 
-    ['modalCrearRemito', 'modalEditarRemito'].forEach(function (id) {
+    [
+        'modalCrearRemito',
+        'modalEditarRemito',
+        'modalEditarLote'
+    ].forEach(function (id) {
         const modal = document.getElementById(id);
 
         modal.addEventListener('click', function (event) {
@@ -931,21 +977,16 @@
         if (event.key === 'Escape') {
             cerrarModal('modalCrearRemito');
             cerrarModal('modalEditarRemito');
+            cerrarModal('modalEditarLote');
         }
     });
 
-
     /* CIERRE DE MENSAJES */
-
     document.querySelectorAll('.rm-toast').forEach(function (toast) {
         window.setTimeout(function () {
-            if (toast.parentElement) {
-                toast.remove();
-            }
+            if (toast.parentElement) toast.remove();
         }, 4000);
     });
-
 })();
 </script>
-
 {% endblock %}

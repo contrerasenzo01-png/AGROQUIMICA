@@ -1,4 +1,3 @@
-
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -6,6 +5,7 @@ import unicodedata
 
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
+from django.http import JsonResponse
 from django.contrib.staticfiles import finders
 from django.core.paginator import Paginator
 from django.db import DatabaseError, IntegrityError, transaction
@@ -2381,6 +2381,24 @@ def crear_producto(request):
             }
         )
 
+        despues = snapshot(producto)
+
+        stock_actual = Stock.objects.filter(
+            ID_Producto=producto
+        ).first()
+
+        if stock_actual:
+            despues['Stock_minimo'] = stock_actual.Stock_minimo
+
+        registrar_auditoria(
+            usuario=usuario,
+            entidad='Productos',
+            objeto=producto,
+            accion='CREACION',
+            antes={},
+            despues=despues,
+        )
+
     messages.success(
         request,
         'Producto registrado correctamente.'
@@ -2450,6 +2468,7 @@ def editar_producto(request, pk):
         producto.Cantidad_presentacion = datos['cantidad_presentacion']
         producto.Unidad_medida_producto = datos['unidad_medida']
         producto.Estado_producto = datos['estado_producto']
+        
 
         producto.save()
 
@@ -2495,6 +2514,7 @@ def editar_producto(request, pk):
 
     return redirect('gestion_productos')
 
+
 def eliminar_producto(request, pk):
     """Elimina un producto únicamente si no tiene lotes asociados."""
 
@@ -2523,6 +2543,27 @@ def eliminar_producto(request, pk):
 
     try:
         with transaction.atomic():
+            # Guardar los datos antes de eliminar.
+            antes = snapshot(producto)
+
+            stock = Stock.objects.filter(
+                ID_Producto=producto
+            ).first()
+
+            if stock:
+                antes['Stock_minimo'] = stock.Stock_minimo
+
+            # Registrar la eliminación en la auditoría.
+            registrar_auditoria(
+                usuario=usuario,
+                entidad='Productos',
+                objeto=producto,
+                accion='ELIMINACION',
+                antes=antes,
+                despues={},
+            )
+
+            # Eliminar el producto.
             producto.delete()
 
     except ProtectedError:
@@ -3704,9 +3745,264 @@ def gestion_remitos(request):
 
             return redirect('gestion_remitos')
         
+       
+      
+        # ====================================================
+        # EDITAR DATOS DEL LOTE
+        # ====================================================
+        elif accion == 'editar_lote':
+            lote_id = request.POST.get('ID_Lote', '').strip()
+            producto_id = request.POST.get('ID_Producto', '').strip()
+            numero_lote = request.POST.get('Numero_lote', '').strip()
+            cantidad_ingresada_texto = request.POST.get(
+                'Cantidad_ingresada', ''
+            ).strip()
+            cantidad_actual_texto = request.POST.get(
+                'Cantidad_actual', ''
+            ).strip()
+            fecha_ingreso_texto = request.POST.get(
+                'Fecha_ingreso', ''
+            ).strip()
+            vencimiento_texto = request.POST.get(
+                'Fecha_vencimiento', ''
+            ).strip()
+
+            if not all([
+                lote_id, producto_id, numero_lote,
+                cantidad_ingresada_texto, cantidad_actual_texto,
+                fecha_ingreso_texto, vencimiento_texto
+            ]):
+                messages.error(request, 'Completá todos los campos del lote.')
+                return redirect('gestion_remitos')
+
+            if len(numero_lote) > 50:
+                messages.error(
+                    request,
+                    'El número de lote no puede superar los 50 caracteres.'
+                )
+                return redirect('gestion_remitos')
+
+            try:
+                cantidad_ingresada = int(cantidad_ingresada_texto)
+                cantidad_actual = int(cantidad_actual_texto)
+                fecha_ingreso = date.fromisoformat(fecha_ingreso_texto)
+                fecha_vencimiento = date.fromisoformat(vencimiento_texto)
+            except (ValueError, TypeError):
+                messages.error(
+                    request,
+                    'Revisá las cantidades y las fechas ingresadas.'
+                )
+                return redirect('gestion_remitos')
+
+            if cantidad_ingresada <= 0:
+                messages.error(
+                    request,
+                    'La cantidad ingresada debe ser mayor a cero.'
+                )
+                return redirect('gestion_remitos')
+
+            if not 0 <= cantidad_actual <= cantidad_ingresada:
+                messages.error(
+                    request,
+                    'La cantidad actual debe estar entre cero y la cantidad ingresada.'
+                )
+                return redirect('gestion_remitos')
+
+            if fecha_ingreso > hoy:
+                messages.error(
+                    request,
+                    'La fecha de ingreso no puede ser futura.'
+                )
+                return redirect('gestion_remitos')
+
+            if fecha_vencimiento < fecha_ingreso:
+                messages.error(
+                    request,
+                    'El vencimiento no puede ser anterior al ingreso.'
+                )
+                return redirect('gestion_remitos')
+
+            try:
+                with transaction.atomic():
+                    lote = Lotes.objects.select_for_update().select_related(
+                        'ID_Producto', 'ID_Remito'
+                    ).get(ID_Lote=lote_id)
+
+                    producto = Productos.objects.filter(
+                        ID_Producto=producto_id,
+                        Estado_producto='Activo'
+                    ).first()
+
+                    if not producto:
+                        messages.error(
+                            request,
+                            'El producto seleccionado no existe o está inactivo.'
+                        )
+                        return redirect('gestion_remitos')
+
+                    duplicado = Lotes.objects.filter(
+                        ID_Producto=producto,
+                        Numero_lote=numero_lote
+                    ).exclude(ID_Lote=lote.ID_Lote).exists()
+
+                    if duplicado:
+                        messages.error(
+                            request,
+                            'Ya existe ese número de lote para el producto.'
+                        )
+                        return redirect('gestion_remitos')
+
+                    # Buscar el movimiento de entrada original.
+                    tipo_entrada = TiposMovimientos.objects.filter(
+                        Nombre_tipo_movimiento__iexact='Entrada de lote'
+                    ).first()
+
+                    if not tipo_entrada:
+                        messages.error(
+                            request,
+                            'No existe el tipo de movimiento "Entrada de lote".'
+                        )
+                        return redirect('gestion_remitos')
+
+                    entradas = MovimientosStock.objects.filter(
+                        ID_Lote=lote,
+                        ID_Tipo_movimiento=tipo_entrada
+                    )
+
+                    entrada = entradas.select_for_update().first()
+
+                    if not entrada:
+                        messages.error(
+                            request,
+                            'No se encontró el movimiento de entrada del lote.'
+                        )
+                        return redirect('gestion_remitos')
+
+                    # Verificar que no existan movimientos posteriores.
+                    otros_movimientos = MovimientosStock.objects.filter(
+                        ID_Lote=lote
+                    ).exclude(
+                        ID_Movimiento_stock=entrada.ID_Movimiento_stock
+                    ).exists()
+
+                    cambio_producto = lote.ID_Producto_id != producto.pk
+                    if cambio_producto:
+                        messages.error(
+                            request,
+                            'No se puede cambiar el producto de un lote que ya tiene '
+                            'un movimiento de entrada registrado.'
+                        )
+                        return redirect('gestion_remitos')
+
+                    cambio_cantidades = (
+                        lote.Cantidad_ingresada != cantidad_ingresada
+                        or lote.Cantidad_actual != cantidad_actual
+                    )
+
+                    if otros_movimientos and (cambio_producto or cambio_cantidades):
+                        messages.error(
+                            request,
+                            'No se puede cambiar el producto o las cantidades '
+                            'porque el lote tiene otros movimientos registrados.'
+                        )
+                        return redirect('gestion_remitos')
+
+                    # La corrección de cantidades solo se permite
+                    # si el lote conserva únicamente su entrada original.
+                    if cambio_cantidades and (
+                        lote.Cantidad_actual != lote.Cantidad_ingresada
+                    ):
+                        messages.error(
+                            request,
+                            'No se pueden corregir las cantidades porque '
+                            'la cantidad actual ya es diferente de la ingresada.'
+                        )
+                        return redirect('gestion_remitos')
+
+                    antes = snapshot(lote)
+                    if cambio_cantidades:
+                        cantidad_actual = cantidad_ingresada
+                    else:
+                        cantidad_actual = lote.Cantidad_actual
+
+                    # Actualizar el stock por la diferencia de entrada.
+                    if cambio_cantidades:
+                        diferencia = (
+                            cantidad_ingresada - lote.Cantidad_ingresada
+                        )
+
+                        stock = Stock.objects.select_for_update().filter(
+                            ID_Producto=lote.ID_Producto
+                        ).first()
+
+                        if not stock:
+                            messages.error(
+                                request,
+                                'No se encontró el stock del producto.'
+                            )
+                            return redirect('gestion_remitos')
+
+
+                        if stock.Cantidad_stock + diferencia < 0:
+                            messages.error(
+                                request,
+                                'La corrección dejaría el stock general en negativo.'
+                            )
+                            return redirect('gestion_remitos')
+
+                        stock.Cantidad_stock += diferencia
+                        stock.save(update_fields=['Cantidad_stock'])
+
+                        # Actualizar el movimiento de entrada existente.
+                        entrada.Cantidad_movimiento_stock = cantidad_ingresada
+                        entrada.save(
+                            update_fields=['Cantidad_movimiento_stock']
+                        )
+
+                    lote.ID_Producto = producto
+                    lote.Numero_lote = numero_lote
+                    lote.Cantidad_ingresada = cantidad_ingresada
+                    lote.Cantidad_actual = cantidad_actual
+                    lote.Fecha_ingreso = fecha_ingreso
+                    lote.Fecha_vencimiento = fecha_vencimiento
+                    lote.save()
+
+                    registrar_auditoria(
+                        usuario,
+                        'Lotes',
+                        lote,
+                        'MODIFICACION',
+                        antes,
+                        snapshot(lote)
+                    )
+
+                messages.success(
+                    request,
+                    'Los datos del lote se actualizaron correctamente.'
+                )
+
+            except Lotes.DoesNotExist:
+                messages.error(request, 'El lote seleccionado no existe.')
+
+            except IntegrityError:
+                messages.error(
+                    request,
+                    'No se pudo actualizar el lote por datos duplicados '
+                    'o una restricción de la base de datos.'
+                )
+
+            except DatabaseError:
+                messages.error(
+                    request,
+                    'Ocurrió un error en la base de datos. No se guardaron los cambios.'
+                )
+
+            return redirect('gestion_remitos')
+
         # Si la acción recibida no es válida.
         messages.error(request, 'La operación solicitada no es válida.')
         return redirect('gestion_remitos')
+
 
 
     # ========================================================
@@ -3892,8 +4188,10 @@ def gestion_auditoria(request):
     fecha_desde = request.GET.get('fecha_desde', '').strip()
     fecha_hasta = request.GET.get('fecha_hasta', '').strip()
 
-    logs = LogAuditoria.objects.select_related('ID_Usuario')
-
+    logs = LogAuditoria.objects.select_related(
+        'ID_Usuario'
+    ).order_by('-Fecha_hora')
+    
     if entidad:
         logs = logs.filter(Entidad=entidad)
 
@@ -3936,3 +4234,39 @@ def gestion_auditoria(request):
             'activo': 'auditoria',
         }
     )
+
+def detalle_auditoria(request, id_log):
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        return JsonResponse(
+            {'error': 'No tenés permiso para consultar la auditoría.'},
+            status=403
+        )
+
+    log = get_object_or_404(LogAuditoria, pk=id_log)
+
+    return JsonResponse({
+        'id': log.ID_Log,
+        'fecha': log.Fecha_hora.strftime('%d/%m/%Y'),
+        'hora': log.Fecha_hora.strftime('%H:%M'),
+        'usuario': (
+            f'{log.ID_Usuario.Apellido_usuario}, '
+            f'{log.ID_Usuario.Nombre_usuario}'
+            if log.ID_Usuario else 'Sistema'
+        ),
+        'perfil': log.Perfil_usuario or 'Sin perfil',
+        'entidad': log.Entidad,
+        'registro': log.ID_Registro,
+        'accion': log.Accion,
+        'anteriores': log.Valores_anteriores or {},
+        'actuales': log.Valores_actuales or {},
+        'cambios': [
+            {
+                'campo': campo,
+                'antes': antes,
+                'despues': despues
+            }
+            for campo, antes, despues in log.cambios
+        ]
+    })

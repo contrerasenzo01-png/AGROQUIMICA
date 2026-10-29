@@ -32,17 +32,23 @@
                 <select id="entidad" name="entidad">
                     <option value="">Todas las secciones</option>
                     {% for e in entidades %}
-                        <option value="{{ e }}" {% if e == entidad %}selected{% endif %}>{{ e }}</option>
+                        <option value="{{ e }}" {% if e == entidad %}selected{% endif %}>
+                            {{ e }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
 
-            <div class="al-campo">
+           <div class="al-campo">
                 <label for="accion">Acción</label>
                 <select id="accion" name="accion">
                     <option value="">Todas las acciones</option>
+                    <option value="CREACION" {% if accion == 'CREACION' %}selected{% endif %}>Creación</option>
                     <option value="MODIFICACION" {% if accion == 'MODIFICACION' %}selected{% endif %}>Modificación</option>
+                    <option value="ELIMINACION" {% if accion == 'ELIMINACION' %}selected{% endif %}>Eliminación</option>
                     <option value="ANULACION" {% if accion == 'ANULACION' %}selected{% endif %}>Anulación</option>
+                    <option value="INICIO_SESION" {% if accion == 'INICIO_SESION' %}selected{% endif %}>Inicio de sesión</option>
+                    <option value="CIERRE_SESION" {% if accion == 'CIERRE_SESION' %}selected{% endif %}>Cierre de sesión</option>
                 </select>
             </div>
 
@@ -118,8 +124,12 @@
                         <td class="al-centro">{{ log.Fecha_hora|date:"H:i" }}</td>
 
                         <td>
+                            {% if log.ID_Usuario %}
                             {{ log.ID_Usuario.Apellido_usuario }}
                             {{ log.ID_Usuario.Nombre_usuario }}
+                            {% else %}
+                                Sistema
+                            {% endif %}
                         </td>
                     
                         <td>
@@ -129,30 +139,33 @@
                         <td>
                             <span class="al-producto">{{ log.Entidad }}</span>
                         </td>
+                        
 
+                        
                         <td>
-                            {% if log.Accion == 'MODIFICACION' %}
+                            {% if log.Accion == 'CREACION' %}
+                                <span class="al-badge">Creación</span>
+                            {% elif log.Accion == 'MODIFICACION' %}
                                 <span class="al-badge aud-mod">Modificación</span>
+                            {% elif log.Accion == 'ELIMINACION' %}
+                                <span class="al-badge aud-anu">Eliminación</span>
                             {% elif log.Accion == 'ANULACION' %}
                                 <span class="al-badge aud-anu">Anulación</span>
+                            {% elif log.Accion == 'INICIO_SESION' %}
+                                <span class="al-badge">Inicio de sesión</span>
+                            {% elif log.Accion == 'CIERRE_SESION' %}
+                                <span class="al-badge">Cierre de sesión</span>
                             {% else %}
                                 <span class="al-badge">{{ log.Accion }}</span>
                             {% endif %}
                         </td>
-
                         <td>
-                            <ul class="aud-cambios">
-                                {% for campo, antes, despues in log.cambios %}
-                                <li>
-                                    <span class="aud-cambio-campo">{{ campo }}</span>
-                                    <span class="aud-antes">{% if antes is None or antes == "" %}—{% else %}{{ antes }}{% endif %}</span>
-                                    <span class="aud-flecha">→</span>
-                                    <span class="aud-despues">{% if despues is None or despues == "" %}—{% else %}{{ despues }}{% endif %}</span>
-                                </li>
-                                {% empty %}
-                                <li class="al-muted">Sin diferencias de campos</li>
-                                {% endfor %}
-                            </ul>
+                            <button type="button"
+                                    class="aud-btn-detalle"
+                                    data-url="{% url 'detalle_auditoria' log.pk %}"
+                                    onclick="abrirDetalleAuditoria(this)">
+                                Ver detalle
+                            </button>
                         </td>
 
                     </tr>
@@ -210,8 +223,45 @@
 
         </div>
 
-    </section>
+        </section>
+
+    <!-- MODAL DE DETALLE -->
+    <div id="modalAuditoria" class="aud-modal" aria-hidden="true">
+        <div class="aud-modal-contenido"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="tituloModalAuditoria">
+
+            <div class="aud-modal-header">
+                <h2 id="tituloModalAuditoria">Detalle de auditoría</h2>
+
+                <button type="button"
+                        class="aud-modal-cerrar"
+                        onclick="cerrarDetalleAuditoria()"
+                        aria-label="Cerrar">
+                    &times;
+                </button>
+            </div>
+
+            <div id="contenidoDetalleAuditoria">
+                <!-- Aquí se cargarán los datos del registro -->
+            </div>
+
+            <div class="aud-modal-footer">
+                <button type="button"
+                        class="al-btn al-btn-claro"
+                        onclick="cerrarDetalleAuditoria()">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
 
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'inventario/js/auditoria.js' %}"></script>
 {% endblock %}
