@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import unicodedata
@@ -20,9 +20,10 @@ from django.db.models import Count, Prefetch
 import re
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-
+from .auditoria import snapshot, registrar_auditoria
 from reportlab.lib.units import cm
-
+from django.core.paginator import Paginator
+from .models import LogAuditoria
 
 from .forms import ProveedorForm
 
@@ -371,6 +372,8 @@ def editar_proveedor(request, pk):
         ID_Proveedor=pk
     )
 
+    antes = snapshot(proveedor)         # <-- NUEVO: antes del formulario
+
     estado_original = proveedor.estado_proveedor
 
     if request.method != 'POST':
@@ -420,6 +423,15 @@ def editar_proveedor(request, pk):
     proveedor_actualizado.estado_proveedor = estado_original
     proveedor_actualizado.save()
 
+    registrar_auditoria(
+        usuario,
+        'Proveedores',
+        proveedor_actualizado,
+        'MODIFICACION',
+        antes,
+        snapshot(proveedor_actualizado)
+    )
+
     messages.success(
         request,
         'Proveedor actualizado correctamente.'
@@ -447,6 +459,8 @@ def cambiar_estado_proveedor(request, pk):
         'estado',
         ''
     ).strip().lower()
+
+    antes = snapshot(proveedor)
 
     if estado_solicitado == 'inactivo':
 
@@ -477,6 +491,8 @@ def cambiar_estado_proveedor(request, pk):
     proveedor.save(
         update_fields=['estado_proveedor']
     )
+
+    registrar_auditoria(usuario, 'Proveedores', proveedor, 'MODIFICACION', antes, snapshot(proveedor))
 
     messages.success(request, mensaje)
 
@@ -606,6 +622,8 @@ def editar_tipo_producto(request, pk):
         ID_Tipo_producto=pk
     )
 
+    antes = snapshot(tipo)   
+
     nombre = request.POST.get(
         'Nombre_tipo_producto',
         ''
@@ -650,6 +668,15 @@ def editar_tipo_producto(request, pk):
             'Nombre_tipo_producto',
             'Estado_tipo_producto',
         ]
+    )
+
+    registrar_auditoria(                # <-- NUEVO
+        usuario,
+        'Tipos de productos',
+        tipo,
+        'MODIFICACION',
+        antes,
+        snapshot(tipo)
     )
 
     messages.success(
@@ -895,6 +922,8 @@ def editar_subtipo(request, pk):
         ID_Subtipo=pk
     )
 
+    antes = snapshot(subtipo)  
+
     if request.method == 'POST':
 
         nombre = request.POST.get(
@@ -974,6 +1003,15 @@ def editar_subtipo(request, pk):
             )
 
         subtipo.save()
+
+        registrar_auditoria(            # <-- NUEVO
+            usuario,
+            'Subtipos',
+            subtipo,
+            'MODIFICACION',
+            antes,
+            snapshot(subtipo)
+        )
 
         messages.success(
             request,
@@ -1248,6 +1286,8 @@ def editar_usuario(request, pk):
         ID_Usuario=pk
     )
 
+    antes = snapshot(usuario)
+
     if request.method == 'POST':
 
         nuevo_email = request.POST.get(
@@ -1288,6 +1328,8 @@ def editar_usuario(request, pk):
         usuario.Email_usuario = nuevo_email
         usuario.save()
 
+        registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'MODIFICACION', antes, snapshot(usuario))
+
         messages.success(
             request,
             f'El usuario {usuario.Usuario} '
@@ -1325,9 +1367,13 @@ def dar_baja_usuario(request, pk):
 
     if request.method == 'POST':
 
+        antes = snapshot(usuario)
+
         usuario.Estado_usuario = False
         usuario.Fecha_Baja = timezone.now().date()
         usuario.save()
+
+        registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'MODIFICACION', antes, snapshot(usuario))
 
         messages.success(
             request,
@@ -1358,9 +1404,13 @@ def activar_usuario(request, id):
             )
             return redirect('gestion_usuarios')
 
+        antes = snapshot(usuario)
+
         usuario.Estado_usuario = True
         usuario.Fecha_Baja = None
         usuario.save()
+
+        registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'MODIFICACION', antes, snapshot(usuario))
 
         messages.success(
             request,
@@ -1401,9 +1451,16 @@ def restablecer_contrasena(request, pk):
         )
         return redirect('gestion_usuarios')
 
+    antes = snapshot(usuario)
+    antes['Contrasena'] = 'anterior'
+
     usuario.Contrasena = make_password(nueva_contrasena)
     usuario.Cambiar_contrasena = True
     usuario.save()
+
+    despues = snapshot(usuario)
+    despues['Contrasena'] = 'restablecida'
+    registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'MODIFICACION', antes, despues)
 
     messages.success(
         request,
@@ -1478,6 +1535,15 @@ def cambiar_contrasena(request):
 # ============================================================
 # GESTIÓN DE PERFILES
 # ============================================================
+
+def _snapshot_perfil(perfil):
+    datos = snapshot(perfil)
+    datos['permisos'] = ', '.join(sorted(
+        PerfilesXPermisos.objects
+        .filter(ID_Perfil=perfil)
+        .values_list('ID_Permiso__Nombre_permiso', flat=True)
+    ))
+    return datos
 
 def gestion_perfiles(request):
 
@@ -1621,6 +1687,8 @@ def editar_perfil(request, pk):
 
         permisos_ids = request.POST.getlist('permisos')
 
+        antes = _snapshot_perfil(perfil)
+
         with transaction.atomic():
 
             perfil.Nombre_perfil = nombre_perfil
@@ -1641,6 +1709,8 @@ def editar_perfil(request, pk):
                     ID_Perfil=perfil,
                     ID_Permiso=permiso
                 )
+
+            registrar_auditoria(usuario, 'Perfiles', perfil, 'MODIFICACION', antes, _snapshot_perfil(perfil))
 
         messages.success(
             request,
@@ -1669,7 +1739,7 @@ def cambiar_estado_perfil(request, id):
         ID_Perfil=id
     )
 
-        # No permitir dar de baja perfiles de sistema.
+    # No permitir dar de baja perfiles de sistema.
     if (
         perfil.Estado_perfil
         and perfil.Nombre_perfil in PERFILES_ADMIN
@@ -1691,6 +1761,8 @@ def cambiar_estado_perfil(request, id):
         )
         return redirect('gestion_perfiles')
 
+    antes = snapshot(perfil)
+
     # Si está activo, se intenta dar de baja.
     if perfil.Estado_perfil:
 
@@ -1710,6 +1782,8 @@ def cambiar_estado_perfil(request, id):
         perfil.Estado_perfil = False
         perfil.save(update_fields=['Estado_perfil'])
 
+        registrar_auditoria(usuario, 'Perfiles', perfil, 'MODIFICACION', antes, snapshot(perfil))
+
         messages.success(
             request,
             f'El perfil "{perfil.Nombre_perfil}" '
@@ -1721,6 +1795,8 @@ def cambiar_estado_perfil(request, id):
         perfil.Estado_perfil = True
         perfil.save(update_fields=['Estado_perfil'])
 
+        registrar_auditoria(usuario, 'Perfiles', perfil, 'MODIFICACION', antes, snapshot(perfil))
+
         messages.success(
             request,
             f'El perfil "{perfil.Nombre_perfil}" '
@@ -1728,8 +1804,6 @@ def cambiar_estado_perfil(request, id):
         )
 
     return redirect('gestion_perfiles')
-
-
 # ============================================================
 # GESTIÓN DE PERMISOS
 # ============================================================
@@ -1860,9 +1934,13 @@ def editar_permiso(request, pk):
 
             return redirect('gestion_permisos')
 
+        antes = snapshot(permiso)
+
         permiso.Nombre_permiso = nombre_permiso
         permiso.Descripcion_permiso = descripcion_permiso
         permiso.save()
+
+        registrar_auditoria(usuario, 'Permisos', permiso, 'MODIFICACION', antes, snapshot(permiso))
 
         messages.success(
             request,
@@ -2314,6 +2392,12 @@ def editar_producto(request, pk):
     if request.method != 'POST':
         return redirect('gestion_productos')
 
+    # --- AUDITORÍA: foto antes del cambio (incluye stock mínimo) ---
+    stock_previo = Stock.objects.filter(ID_Producto=producto).first()
+    antes = snapshot(producto)
+    if stock_previo:
+        antes['Stock_minimo'] = stock_previo.Stock_minimo
+
     datos, error = _leer_datos_producto(
         request,
         producto.Estado_producto
@@ -2365,13 +2449,30 @@ def editar_producto(request, pk):
                     update_fields=['Stock_minimo']
                 )
 
+        # --- AUDITORÍA: foto después del cambio ---
+        # refresh_from_db normaliza los decimales (1500.00 vs 1500)
+        producto.refresh_from_db()
+        despues = snapshot(producto)
+
+        stock_actual = Stock.objects.filter(ID_Producto=producto).first()
+        if stock_actual:
+            despues['Stock_minimo'] = stock_actual.Stock_minimo
+
+        registrar_auditoria(
+            usuario,
+            'Productos',
+            producto,
+            'MODIFICACION',
+            antes,
+            despues
+        )
+
     messages.success(
         request,
         'Producto actualizado correctamente.'
     )
 
     return redirect('gestion_productos')
-
 
 def eliminar_producto(request, pk):
     """Elimina un producto únicamente si no tiene lotes asociados."""
@@ -3554,11 +3655,14 @@ def gestion_remitos(request):
 
             try:
                 remito = Remitos.objects.get(ID_Remito=remito_id)
+                antes = snapshot(remito)
                 remito.Numero_remito = numero_remito
                 remito.Fecha_remito = fecha_remito
                 remito.save(
                     update_fields=['Numero_remito', 'Fecha_remito']
                 )
+
+                registrar_auditoria(usuario, 'Remitos', remito, 'MODIFICACION', antes, snapshot(remito))
 
                 messages.success(
                     request,
@@ -3734,3 +3838,80 @@ def eliminar_perfil(request, pk):
     messages.success(request, f'El perfil "{nombre}" fue eliminado.')
 
     return redirect('gestion_perfiles')
+
+# ============================================================
+# AUDITORÍA (solo Administrador)
+# ============================================================
+
+def _fecha_iso(texto):
+    try:
+        return date.fromisoformat(texto)
+    except ValueError:
+        return None
+
+
+def _inicio_dia(d):
+    return timezone.make_aware(datetime.combine(d, time.min))
+
+
+def gestion_auditoria(request):
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        messages.error(
+            request,
+            'Solo el administrador puede consultar la auditoría.'
+        )
+        return redirect('panel_principal')
+
+    entidad = request.GET.get('entidad', '').strip()
+    accion = request.GET.get('accion', '').strip()
+    usuario_id = request.GET.get('usuario', '').strip()
+    fecha_desde = request.GET.get('fecha_desde', '').strip()
+    fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+
+    logs = LogAuditoria.objects.select_related('ID_Usuario')
+
+    if entidad:
+        logs = logs.filter(Entidad=entidad)
+
+    if accion:
+        logs = logs.filter(Accion=accion)
+
+    if usuario_id.isdigit():
+        logs = logs.filter(ID_Usuario_id=usuario_id)
+
+    desde = _fecha_iso(fecha_desde)
+    hasta = _fecha_iso(fecha_hasta)
+
+    if desde:
+        logs = logs.filter(Fecha_hora__gte=_inicio_dia(desde))
+
+    if hasta:
+        logs = logs.filter(
+            Fecha_hora__lt=_inicio_dia(hasta + timedelta(days=1))
+        )
+
+    pagina = Paginator(logs, 50).get_page(request.GET.get('page'))
+
+    return render(
+        request,
+        'inventario/auditoria.html',
+        {
+            'usuario': usuario,
+            'pagina': pagina,
+            'entidades': LogAuditoria.objects.values_list(
+                'Entidad', flat=True
+            ).distinct(),
+            'usuarios': Usuarios.objects.order_by(
+                'Apellido_usuario', 'Nombre_usuario'
+            ),
+            'entidad': entidad,
+            'accion': accion,
+            'usuario_id': usuario_id,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'activo': 'auditoria',
+        }
+    )

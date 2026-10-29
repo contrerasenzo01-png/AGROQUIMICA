@@ -514,3 +514,35 @@ class MovimientosStock(models.Model):
             f"Movimiento {self.ID_Movimiento_stock} - "
             f"{self.Cantidad_movimiento_stock} unidades"
         )
+
+class LogAuditoria(models.Model):
+    ID_Log = models.AutoField(primary_key=True)
+
+    ID_Usuario = models.ForeignKey(
+        Usuarios,
+        on_delete=models.PROTECT,
+        db_column='ID_Usuario',
+        related_name='auditorias'
+    )
+
+    Fecha_hora = models.DateTimeField(auto_now_add=True)
+    Entidad = models.CharField(max_length=50)
+    ID_Registro = models.IntegerField()
+    Accion = models.CharField(max_length=20)
+    Valores_anteriores = models.JSONField(default=dict)
+    Valores_actuales = models.JSONField(default=dict)
+
+    class Meta:
+        db_table = 'LOG_AUDITORIA'
+        verbose_name_plural = "Log de auditoría"
+        ordering = ['-Fecha_hora']
+
+    @property
+    def cambios(self):
+        ant = self.Valores_anteriores or {}
+        act = self.Valores_actuales or {}
+        return [
+            (campo, ant.get(campo), act.get(campo))
+            for campo in sorted(set(ant) | set(act))
+            if ant.get(campo) != act.get(campo)
+        ]

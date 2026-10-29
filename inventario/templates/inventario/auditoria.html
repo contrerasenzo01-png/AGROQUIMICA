@@ -1,0 +1,215 @@
+{% extends 'inventario/base.html' %}
+{% load static %}
+
+{% block title %}
+    Auditoría - Agroquímicos del Valle
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="al-page">
+
+    <!-- ENCABEZADO -->
+    <header class="al-header">
+        <h1 class="al-title">Registro de auditoría</h1>
+    </header>
+
+
+    <!-- CRITERIOS DE BÚSQUEDA -->
+    <form method="GET"
+          action="{% url 'gestion_auditoria' %}"
+          class="al-filtros">
+
+        <div class="al-filtros-grid">
+
+            <div class="al-campo">
+                <label for="entidad">Entidad</label>
+                <select id="entidad" name="entidad">
+                    <option value="">Todas las entidades</option>
+                    {% for e in entidades %}
+                        <option value="{{ e }}" {% if e == entidad %}selected{% endif %}>{{ e }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="al-campo">
+                <label for="accion">Acción</label>
+                <select id="accion" name="accion">
+                    <option value="">Todas las acciones</option>
+                    <option value="MODIFICACION" {% if accion == 'MODIFICACION' %}selected{% endif %}>Modificación</option>
+                    <option value="ANULACION" {% if accion == 'ANULACION' %}selected{% endif %}>Anulación</option>
+                </select>
+            </div>
+
+            <div class="al-campo">
+                <label for="usuario">Realizada por</label>
+                <select id="usuario" name="usuario">
+                    <option value="">Todos los usuarios</option>
+                    {% for u in usuarios %}
+                        <option value="{{ u.ID_Usuario }}"
+                            {% if usuario_id|stringformat:"s" == u.ID_Usuario|stringformat:"s" %}selected{% endif %}>
+                            {{ u.Apellido_usuario }}, {{ u.Nombre_usuario }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="al-campo">
+                <label for="fecha_desde">Desde</label>
+                <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+            </div>
+
+            <div class="al-campo">
+                <label for="fecha_hasta">Hasta</label>
+                <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+            </div>
+
+        </div>
+
+        <div class="al-filtros-acc">
+
+            <button type="submit" class="al-btn al-btn-primary">
+                <svg class="al-icon" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m21 21-4.3-4.3"/>
+                </svg>
+                Consultar
+            </button>
+
+            <a href="{% url 'gestion_auditoria' %}" class="al-btn al-btn-claro">
+                Limpiar
+            </a>
+
+        </div>
+
+    </form>
+
+
+    <!-- RESULTADOS -->
+    <section class="al-card">
+
+        <div class="al-table-wrap">
+
+            <table class="al-table">
+
+                <thead>
+                    <tr>
+                        <th class="al-centro">Fecha</th>
+                        <th class="al-centro">Hora</th>
+                        <th>Usuario</th>
+                        <th>Entidad</th>
+                        <th>Registro</th>
+                        <th>Acción</th>
+                        <th>Cambios (anterior → actual)</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for log in pagina %}
+                    <tr>
+
+                        <td class="al-centro">{{ log.Fecha_hora|date:"d/m/Y" }}</td>
+                        <td class="al-centro">{{ log.Fecha_hora|date:"H:i" }}</td>
+
+                        <td>
+                            {{ log.ID_Usuario.Apellido_usuario }}
+                            {{ log.ID_Usuario.Nombre_usuario }}
+                        </td>
+
+                        <td>
+                            <span class="al-producto">{{ log.Entidad }}</span>
+                        </td>
+
+                        <td class="al-muted">#{{ log.ID_Registro }}</td>
+
+                        <td>
+                            {% if log.Accion == 'MODIFICACION' %}
+                                <span class="al-badge aud-mod">Modificación</span>
+                            {% elif log.Accion == 'ANULACION' %}
+                                <span class="al-badge aud-anu">Anulación</span>
+                            {% else %}
+                                <span class="al-badge">{{ log.Accion }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <ul class="aud-cambios">
+                                {% for campo, antes, despues in log.cambios %}
+                                <li>
+                                    <span class="aud-cambio-campo">{{ campo }}</span>
+                                    <span class="aud-antes">{% if antes is None or antes == "" %}—{% else %}{{ antes }}{% endif %}</span>
+                                    <span class="aud-flecha">→</span>
+                                    <span class="aud-despues">{% if despues is None or despues == "" %}—{% else %}{{ despues }}{% endif %}</span>
+                                </li>
+                                {% empty %}
+                                <li class="al-muted">Sin diferencias de campos</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7" class="al-vacio">
+                            No se encontraron registros
+                            con los criterios seleccionados.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- PIE -->
+        <div class="al-pie">
+
+            <span>
+                {{ pagina.paginator.count }}
+                registro{{ pagina.paginator.count|pluralize }}
+                encontrado{{ pagina.paginator.count|pluralize }}
+            </span>
+
+            {% if pagina.paginator.num_pages > 1 %}
+            <nav class="aud-paginas" aria-label="Paginación">
+
+                {% if pagina.has_previous %}
+                    <a class="al-btn al-btn-claro"
+                       href="{% querystring page=pagina.previous_page_number %}">Anterior</a>
+                {% else %}
+                    <span class="al-btn al-btn-claro aud-off">Anterior</span>
+                {% endif %}
+
+                <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+
+                {% if pagina.has_next %}
+                    <a class="al-btn al-btn-claro"
+                       href="{% querystring page=pagina.next_page_number %}">Siguiente</a>
+                {% else %}
+                    <span class="al-btn al-btn-claro aud-off">Siguiente</span>
+                {% endif %}
+
+            </nav>
+            {% else %}
+                <span>Agroquímicos del Valle</span>
+            {% endif %}
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

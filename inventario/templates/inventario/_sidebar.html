@@ -280,7 +280,18 @@
                     <span>Permisos del sistema</span>
                 </a>
             </div>
-
+            <!-- AUDITORÍA: SOLO ADMINISTRADOR -->
+        {% if perfil == 'administrador' %}
+            <div class="nav-item">
+                <a href="{% url 'gestion_auditoria' %}"
+                   class="nav-link {% if activo == 'auditoria' %}active{% endif %}">
+                    <svg class="nav-icon">
+                        <use href="#i-shield"></use>
+                    </svg>                        
+                    <span>Auditoría</span>
+                </a>
+            </div>
+        {% endif %}
 
         <!-- ==========================================
              SECRETARIA

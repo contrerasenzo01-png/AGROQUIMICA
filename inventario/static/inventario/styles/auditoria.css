@@ -1,0 +1,83 @@
+/* ==========================================================
+   AUDITORÍA
+   Usa las clases al- de alertas.css; acá solo va lo propio.
+   ========================================================== */
+
+/* ---------- Etiquetas de acción ---------- */
+
+.aud-mod {
+    color: #0d4f8b;
+    background: #e3f0fb;
+}
+
+.aud-anu {
+    color: #a3201a;
+    background: #fdecea;
+}
+
+
+/* ---------- Cambios (anterior → actual) ---------- */
+
+.aud-cambios {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 260px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.aud-cambios li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.aud-cambio-campo {
+    font-weight: 600;
+}
+
+.aud-cambio-campo::after {
+    content: ":";
+}
+
+.aud-antes,
+.aud-despues {
+    padding: 1px 8px;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+}
+
+.aud-antes {
+    color: #a3201a;
+    background: #fdecea;
+    text-decoration: line-through;
+    text-decoration-color: rgba(163, 32, 26, 0.45);
+}
+
+.aud-despues {
+    color: #1b5e20;
+    background: #eaf4e6;
+    font-weight: 500;
+}
+
+.aud-flecha {
+    color: #6b7a6e;
+}
+
+
+/* ---------- Paginación ---------- */
+
+.aud-paginas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.aud-off {
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
+}
