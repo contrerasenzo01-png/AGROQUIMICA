@@ -525,6 +525,8 @@ class LogAuditoria(models.Model):
         related_name='auditorias'
     )
 
+    Perfil_usuario = models.CharField(max_length=100, null=True, blank=True)
+
     Fecha_hora = models.DateTimeField(auto_now_add=True)
     Entidad = models.CharField(max_length=50)
     ID_Registro = models.IntegerField()

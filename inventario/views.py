@@ -1,31 +1,29 @@
+
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import unicodedata
-from .permissions import usuario_con_acceso
-from urllib import request
+
 from django.contrib import messages
-from django.db import DatabaseError, IntegrityError, transaction
-from django.db.models import Count, ProtectedError, Q
 from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.staticfiles import finders
+from django.core.paginator import Paginator
+from django.db import DatabaseError, IntegrityError, transaction
+from django.db.models import Count, Prefetch, ProtectedError, Q
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from .models import Lotes
 from django.views.decorators.http import require_POST
-from django.contrib.staticfiles import finders
-from reportlab.lib.utils import ImageReader, simpleSplit
-from reportlab.pdfgen import canvas
-from django.db.models import Count, Prefetch
-import re
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from .auditoria import snapshot, registrar_auditoria
 from reportlab.lib.units import cm
-from django.core.paginator import Paginator
-from .models import LogAuditoria
+from reportlab.lib.utils import ImageReader, simpleSplit
+from reportlab.pdfgen import canvas
 
+from .auditoria import snapshot, registrar_auditoria
 from .forms import ProveedorForm
+from .permissions import usuario_con_acceso
 
 from .models import (
     TiposProductos,
@@ -42,7 +40,9 @@ from .models import (
     Stock,
     Alertas,
     MovimientosStock,
+    LogAuditoria,
 )
+
 
 # ============================================================
 # CONTROL DE ACCESO
@@ -151,6 +151,15 @@ def login_view(request):
                     usuario.ID_Perfil.Nombre_perfil
                 )
 
+                registrar_auditoria(
+                    usuario=usuario,
+                    entidad="USUARIOS",
+                    objeto=usuario,
+                    accion="INICIO_SESION",
+                    antes={},
+                    despues={"accion": "Inicio de sesión"}
+                )
+
                 if usuario.Cambiar_contrasena:
                     return redirect('cambiar_contrasena')
 
@@ -172,6 +181,18 @@ def login_view(request):
 
 
 def cerrar_sesion(request):
+
+    usuario = usuario_autenticado(request)
+
+    if usuario:
+        registrar_auditoria(
+            usuario=usuario,
+            entidad="USUARIOS",
+            objeto=usuario,
+            accion="CIERRE_SESION",
+            antes={},
+            despues={"accion": "Cierre de sesión"}
+        )
 
     request.session.flush()
 

@@ -28,9 +28,9 @@
         <div class="al-filtros-grid">
 
             <div class="al-campo">
-                <label for="entidad">Entidad</label>
+                <label for="entidad">Sección</label>
                 <select id="entidad" name="entidad">
-                    <option value="">Todas las entidades</option>
+                    <option value="">Todas las secciones</option>
                     {% for e in entidades %}
                         <option value="{{ e }}" {% if e == entidad %}selected{% endif %}>{{ e }}</option>
                     {% endfor %}
@@ -102,10 +102,10 @@
                         <th class="al-centro">Fecha</th>
                         <th class="al-centro">Hora</th>
                         <th>Usuario</th>
-                        <th>Entidad</th>
-                        <th>Registro</th>
+                        <th>Perfil</th>
+                        <th>Sección</th>
                         <th>Acción</th>
-                        <th>Cambios (anterior → actual)</th>
+                        <th>Detalle</th>
                     </tr>
                 </thead>
 
@@ -121,12 +121,14 @@
                             {{ log.ID_Usuario.Apellido_usuario }}
                             {{ log.ID_Usuario.Nombre_usuario }}
                         </td>
+                    
+                        <td>
+                            {{ log.Perfil_usuario|default:"Sin perfil" }}
+                        </td>
 
                         <td>
                             <span class="al-producto">{{ log.Entidad }}</span>
                         </td>
-
-                        <td class="al-muted">#{{ log.ID_Registro }}</td>
 
                         <td>
                             {% if log.Accion == 'MODIFICACION' %}
