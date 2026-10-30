@@ -23,7 +23,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
-
+from .reportes import generar_reportes
 from .auditoria import snapshot, registrar_auditoria
 from .forms import ProveedorForm
 from .permissions import usuario_con_acceso, puede
@@ -4201,6 +4201,8 @@ def gestion_auditoria(request):
 
     logs = LogAuditoria.objects.select_related(
         'ID_Usuario'
+    ).exclude(
+        Accion='EGRESO_STOCK'
     ).order_by('-Fecha_hora')
     
     if entidad:
@@ -4231,7 +4233,9 @@ def gestion_auditoria(request):
         {
             'usuario': usuario,
             'pagina': pagina,
-            'entidades': LogAuditoria.objects.values_list(
+            'entidades': LogAuditoria.objects.exclude(
+                Accion='EGRESO_STOCK'
+            ).order_by('Entidad').values_list(
                 'Entidad', flat=True
             ).distinct(),
             'usuarios': Usuarios.objects.order_by(
@@ -4465,9 +4469,6 @@ def registrar_egreso(request):
                 )
                 return redirect('gestion_productos')
 
-            lote_antes = lote.Cantidad_actual
-            stock_antes = stock.Cantidad_stock
-
             lote.Cantidad_actual -= cantidad
             lote.save(update_fields=['Cantidad_actual'])
 
@@ -4484,27 +4485,6 @@ def registrar_egreso(request):
                 ID_Lote=lote,
                 Cantidad_movimiento_stock=cantidad,
                 Observaciones=detalle[:255]
-            )
-
-            registrar_auditoria(
-                usuario,
-                'Stock',
-                stock,
-                'EGRESO_STOCK',
-                {
-                    'Producto': producto.Nombre_producto,
-                    'Lote': lote.Numero_lote,
-                    'Cantidad_lote': lote_antes,
-                    'Cantidad_stock': stock_antes,
-                },
-                {
-                    'Producto': producto.Nombre_producto,
-                    'Lote': lote.Numero_lote,
-                    'Cantidad_lote': lote.Cantidad_actual,
-                    'Cantidad_stock': stock.Cantidad_stock,
-                    'Cantidad_egresada': cantidad,
-                    'Descripcion': descripcion,
-                }
             )
 
             stock_bajo = _alerta_stock_bajo(stock, producto)
@@ -4532,3 +4512,28 @@ def registrar_egreso(request):
         )
 
     return redirect('gestion_productos')
+
+# ============================================================
+# REPORTES (solo Administrador)
+# ============================================================
+
+def gestion_reportes(request):
+
+    usuario = usuario_es_administrador(request)
+
+    if not usuario:
+        messages.error(
+            request,
+            'Solo el administrador puede consultar los reportes.'
+        )
+        return redirect('panel_principal')
+
+    return render(
+        request,
+        'inventario/reportes.html',
+        {
+            'usuario': usuario,
+            'activo': 'reportes',
+            'graficos': generar_reportes(TIPO_EGRESO),
+        }
+    )

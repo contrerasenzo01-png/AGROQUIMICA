@@ -97,6 +97,14 @@
         <line x1="21" y1="12" x2="9" y2="12"/>
     </symbol>
 
+    <!-- Reportes -->
+    <symbol id="i-chart" viewBox="0 0 24 24">
+        <line x1="4" y1="20" x2="20" y2="20"/>
+        <rect x="6" y="11" width="3" height="9"/>
+        <rect x="11" y="6" width="3" height="14"/>
+        <rect x="16" y="14" width="3" height="6"/>
+    </symbol>
+
 </svg>
 
 
@@ -255,6 +263,24 @@
             </div>
 
 
+            <!-- ANÁLISIS: SOLO ADMINISTRADOR -->
+            {% if perfil == 'administrador' %}
+                <div class="nav-section">
+                    <span class="nav-section-title">ANÁLISIS</span>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{% url 'gestion_reportes' %}"
+                       class="nav-link {% if activo == 'reportes' %}active{% endif %}">
+                        <svg class="nav-icon">
+                            <use href="#i-chart"></use>
+                        </svg>
+                        <span>Reportes</span>
+                    </a>
+                </div>
+            {% endif %}
+
+
             <div class="nav-section">
                 <span class="nav-section-title">SEGURIDAD</span>
             </div>
@@ -280,23 +306,23 @@
                     <span>Permisos del sistema</span>
                 </a>
             </div>
+
             <!-- AUDITORÍA: SOLO ADMINISTRADOR -->
-        {% if perfil == 'administrador' %}
-            <div class="nav-item">
-                <a href="{% url 'gestion_auditoria' %}"
-                   class="nav-link {% if activo == 'auditoria' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-shield"></use>
-                    </svg>                        
-                    <span>Auditoría</span>
-                </a>
-            </div>
-        {% endif %}
+            {% if perfil == 'administrador' %}
+                <div class="nav-item">
+                    <a href="{% url 'gestion_auditoria' %}"
+                       class="nav-link {% if activo == 'auditoria' %}active{% endif %}">
+                        <svg class="nav-icon">
+                            <use href="#i-shield"></use>
+                        </svg>
+                        <span>Auditoría</span>
+                    </a>
+                </div>
+            {% endif %}
 
         <!-- ==========================================
              SECRETARIA
              ========================================== -->
-
         {% elif perfil == 'secretaria' %}
 
             <div class="nav-section">

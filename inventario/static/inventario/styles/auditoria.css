@@ -5,17 +5,35 @@
 
 /* ---------- Etiquetas de acción ---------- */
 
+.aud-cre {
+    color: #1b5e20;
+    background: #eaf4e6;
+}
+
 .aud-mod {
     color: #0d4f8b;
     background: #e3f0fb;
 }
 
-.aud-anu {
+.aud-eli {
     color: #a3201a;
     background: #fdecea;
 }
 
+.aud-anu {
+    color: #9a5b00;
+    background: #fff3e0;
+}
 
+.aud-ini {
+    color: #5b21b6;
+    background: #f0e9fd;
+}
+
+.aud-cie {
+    color: #4b5563;
+    background: #f1f3f2;
+}
 /* ---------- Cambios (anterior → actual) ---------- */
 
 .aud-cambios {
@@ -165,4 +183,42 @@
         padding: 16px;
         max-height: 95vh;
     }
+}
+/* ---------- Detalle: que todo entre en el modal ---------- */
+
+.aud-modal-contenido {
+    overflow-x: hidden;
+}
+
+#contenidoDetalleAuditoria {
+    width: 100%;
+}
+
+#contenidoDetalleAuditoria table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+#contenidoDetalleAuditoria th,
+#contenidoDetalleAuditoria td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-align: left;
+    padding: 10px 14px;
+    vertical-align: top;
+}
+
+/* Primera columna (etiqueta / campo) más angosta */
+#contenidoDetalleAuditoria th:first-child,
+#contenidoDetalleAuditoria td:first-child {
+    width: 28%;
+}
+
+#contenidoDetalleAuditoria h3,
+#contenidoDetalleAuditoria h4 {
+    margin: 24px 0 10px;
+    color: #0b311e;
 }

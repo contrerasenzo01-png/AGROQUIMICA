@@ -1,0 +1,104 @@
+.rep-card {
+    margin-bottom: 24px;
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #e3eae6;
+    border-radius: 12px;
+}
+
+.rep-card h2 {
+    margin: 0 0 6px;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: 20px;
+    color: #0f3a24;
+}
+
+.rep-card > p {
+    margin: 0 0 18px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #6b7c73;
+}
+
+.rep-chart {
+    width: 100%;
+    min-height: 260px;
+}
+
+.rep-vacio {
+    padding: 60px 0;
+    text-align: center;
+    color: #6b7c73;
+}
+
+/* Leyenda del gráfico de stock */
+.rep-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #1f2d26;
+}
+
+.rep-leyenda span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rep-leyenda i {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.rep-leyenda i.rep-marca {
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: #0f1b14;
+}
+
+/* Tooltip del gráfico de stock */
+.rep-tip {
+    padding: 10px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #1f2d26;
+}
+
+.rep-tip strong {
+    display: block;
+    margin-bottom: 2px;
+    color: #0f3a24;
+}
+
+.rep-tip-ok  { margin-top: 4px; font-weight: 600; color: #2e7d32; }
+.rep-tip-mal { margin-top: 4px; font-weight: 600; color: #c62828; }
+
+/* Productos sin stock (fuera del gráfico) */
+.rep-sin-stock {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #1f2d26;
+}
+
+.rep-sin-stock[hidden] {
+    display: none;
+}
+
+.rep-chip {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #fdecea;
+    color: #c62828;
+    font-size: 12.5px;
+    font-weight: 600;
+}

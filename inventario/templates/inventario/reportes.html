@@ -1,0 +1,306 @@
+{% extends 'inventario/base.html' %}
+{% load static %}
+
+{% block title %}
+    Reportes - Agroquímica del Valle
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/styles/reportes.css' %}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="al-page">
+
+    <header class="al-header">
+        <h1 class="al-title">Reportes</h1>
+    </header>
+
+    <section class="rep-card">
+        <h2>Stock actual vs. stock mínimo por producto</h2>
+        <p>Cada barra muestra el stock actual del producto y la marca negra indica su mínimo. En rojo están los productos que llegaron al mínimo o están por debajo: son los que conviene reponer primero.</p>
+        <div class="rep-leyenda">
+            <span><i style="background:#2e7d32"></i>Stock suficiente</span>
+            <span><i style="background:#c62828"></i>En el mínimo o por debajo</span>
+            <span><i class="rep-marca"></i>Stock mínimo</span>
+        </div>
+        <div id="stock-sin-stock" class="rep-sin-stock" hidden></div>
+        <div id="grafico-stock" class="rep-chart"></div>
+    </section>
+
+    <section class="rep-card">
+        <h2>Unidades por vencer según el plazo</h2>
+        <p>Cantidad de unidades en stock agrupadas por el tiempo que falta para su vencimiento. Sirve para decidir qué vender primero y qué sacar de la venta.</p>
+        <div id="grafico-tramos" class="rep-chart"></div>
+    </section>
+
+    <section class="rep-card">
+        <h2>Ventas vs. ingresos de mercadería por mes</h2>
+        <p>Unidades vendidas y unidades ingresadas por remito en los últimos 12 meses. Permite ver las épocas fuertes y si se está comprando de más o de menos respecto de lo que se vende.</p>
+        <div id="grafico-evolucion" class="rep-chart"></div>
+    </section>
+
+    <section class="rep-card">
+        <h2>Productos con más unidades vencidas</h2>
+        <p>Los 10 productos con mayor cantidad de unidades que se vencieron sin venderse. Ayuda a ajustar las próximas compras.</p>
+        <div id="grafico-vencidos" class="rep-chart"></div>
+    </section>
+
+</div>
+
+{{ graficos|json_script:"datos-reportes" }}
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const D = JSON.parse(document.getElementById('datos-reportes').textContent);
+
+    const VERDE = '#2e7d32';
+    const ROJO = '#c62828';
+    const AZUL = '#1565c0';
+    const TEXTO = '#1f2d26';
+    const GRIS = '#6b7c73';
+
+    const chartBase = {
+        fontFamily: 'Inter, sans-serif',
+        toolbar: { show: false },
+        zoom: { enabled: false },
+        animations: { enabled: true, speed: 500 },
+    };
+
+    const grid = { borderColor: '#e8eeea', strokeDashArray: 4 };
+
+    const etiquetasFuera = {
+        enabled: true,
+        textAnchor: 'start',
+        offsetX: 8,
+        style: { colors: [TEXTO], fontSize: '12px', fontWeight: 600 },
+        background: { enabled: false },
+        dropShadow: { enabled: false },
+    };
+
+    function dibujar(id, hayDatos, mensajeVacio, opciones) {
+        const el = document.getElementById(id);
+
+        if (!hayDatos) {
+            el.innerHTML = '<p class="rep-vacio">' + mensajeVacio + '</p>';
+            return;
+        }
+
+        new ApexCharts(el, opciones).render();
+    }
+
+    // ------------------------------------------------------
+    // 1. STOCK ACTUAL VS MÍNIMO
+    // ------------------------------------------------------
+    const maxStock = D.stock.length
+        ? Math.max(...D.stock.map(p => Math.max(p.stock, p.minimo)))
+        : 0;
+
+    // Productos sin stock: se listan fuera del gráfico
+    const sinStock = D.stock.filter(p => p.stock === 0);
+    const contSinStock = document.getElementById('stock-sin-stock');
+
+    if (sinStock.length > 0) {
+        const titulo = document.createElement('strong');
+        titulo.textContent = 'Sin stock:';
+        contSinStock.appendChild(titulo);
+
+        sinStock.forEach(p => {
+            const chip = document.createElement('span');
+            chip.className = 'rep-chip';
+            chip.textContent = p.nombre;
+            contSinStock.appendChild(chip);
+        });
+
+        contSinStock.hidden = false;
+    }
+
+    dibujar(
+        'grafico-stock',
+        D.stock.length > 0,
+        'No hay productos activos con stock registrado.',
+        {
+            chart: {
+                ...chartBase,
+                type: 'bar',
+                height: Math.max(260, D.stock.length * 46 + 70),
+            },
+            series: [{
+                name: 'Stock actual',
+                data: D.stock.map(p => ({
+                    x: p.nombre,
+                    y: p.stock,
+                    fillColor: p.stock <= p.minimo ? ROJO : VERDE,
+                    goals: [{
+                        name: 'Stock mínimo',
+                        value: p.minimo,
+                        strokeHeight: 16,
+                        strokeWidth: 3,
+                        strokeColor: '#0f1b14',
+                        strokeLineCap: 'round',
+                    }],
+                })),
+            }],
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    barHeight: '60%',
+                    borderRadius: 4,
+                    dataLabels: { position: 'top' },
+                },
+            },
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            grid: grid,
+            xaxis: {
+                min: 0,
+                max: Math.ceil(maxStock * 1.2) + 5,
+                title: { text: 'Unidades' },
+                labels: { style: { colors: GRIS } },
+            },
+            yaxis: {
+                labels: { maxWidth: 280, style: { colors: TEXTO, fontSize: '12.5px' } },
+            },
+            tooltip: {
+                custom: function ({ dataPointIndex }) {
+                    const p = D.stock[dataPointIndex];
+                    const critico = p.stock <= p.minimo;
+                    return `
+                        <div class="rep-tip">
+                            <strong>${p.nombre}</strong>
+                            <div>Stock actual: <b>${p.stock}</b></div>
+                            <div>Stock mínimo: <b>${p.minimo}</b></div>
+                            <div class="${critico ? 'rep-tip-mal' : 'rep-tip-ok'}">
+                                ${critico ? 'Conviene reponer' : 'Stock suficiente'}
+                            </div>
+                        </div>`;
+                },
+            },
+        }
+    );
+    // ------------------------------------------------------
+    // 2. UNIDADES POR VENCER SEGÚN EL PLAZO (4 tramos)
+    // ------------------------------------------------------
+    dibujar(
+        'grafico-tramos',
+        D.tramos.valores.some(v => v > 0),
+        'No hay unidades que venzan en los próximos 90 días.',
+        {
+            chart: { ...chartBase, type: 'bar', height: 340 },
+            series: [{ name: 'Unidades', data: D.tramos.valores }],
+            colors: D.tramos.colores,
+            plotOptions: {
+                bar: {
+                    distributed: true,
+                    columnWidth: '50%',
+                    borderRadius: 6,
+                    dataLabels: { position: 'top' },
+                },
+            },
+            dataLabels: {
+                enabled: true,
+                offsetY: -22,
+                style: { colors: [TEXTO], fontSize: '12px', fontWeight: 600 },
+            },
+            legend: { show: false },
+            grid: grid,
+            xaxis: {
+                categories: D.tramos.etiquetas,
+                labels: { style: { colors: TEXTO, fontSize: '12.5px' } },
+            },
+            yaxis: {
+                title: { text: 'Unidades' },
+                labels: { style: { colors: GRIS } },
+            },
+            tooltip: { y: { formatter: v => v + ' unidades' } },
+        }
+    );
+
+    // ------------------------------------------------------
+    // 3. VENTAS VS INGRESOS POR MES (líneas)
+    // ------------------------------------------------------
+    dibujar(
+        'grafico-evolucion',
+        D.evolucion.ventas.some(v => v > 0) || D.evolucion.ingresos.some(v => v > 0),
+        'Todavía no hay ventas ni ingresos en los últimos 12 meses.',
+        {
+            chart: { ...chartBase, type: 'line', height: 380 },
+            series: [
+                { name: 'Unidades vendidas', data: D.evolucion.ventas },
+                { name: 'Unidades ingresadas', data: D.evolucion.ingresos },
+            ],
+            colors: [VERDE, AZUL],
+            stroke: { curve: 'smooth', width: 3 },
+            markers: { size: 5, strokeWidth: 0, hover: { size: 7 } },
+            dataLabels: { enabled: false },
+            legend: { position: 'top', horizontalAlign: 'right', fontSize: '13px' },
+            grid: grid,
+            xaxis: {
+                categories: D.evolucion.meses,
+                labels: { style: { colors: TEXTO } },
+            },
+            yaxis: {
+                min: 0,
+                forceNiceScale: true,
+                title: { text: 'Unidades' },
+                labels: { style: { colors: GRIS }, formatter: v => Math.round(v) },
+            },
+            tooltip: {
+                shared: true,
+                intersect: false,
+                y: { formatter: v => v + ' unidades' },
+            },
+        }
+    );
+
+    // ------------------------------------------------------
+    // 4. PRODUCTOS CON MÁS UNIDADES VENCIDAS
+    // ------------------------------------------------------
+    dibujar(
+        'grafico-vencidos',
+        D.vencidos.length > 0,
+        'No hay productos vencidos con unidades en stock.',
+        {
+            chart: {
+                ...chartBase,
+                type: 'bar',
+                height: Math.max(260, D.vencidos.length * 46 + 70),
+            },
+            series: [{
+                name: 'Unidades vencidas',
+                data: D.vencidos.map(p => ({ x: p.nombre, y: p.unidades })),
+            }],
+            colors: [ROJO],
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    barHeight: '55%',
+                    borderRadius: 4,
+                    dataLabels: { position: 'top' },
+                },
+            },
+            dataLabels: etiquetasFuera,
+            legend: { show: false },
+            grid: grid,
+            xaxis: {
+                title: { text: 'Unidades vencidas' },
+                labels: { style: { colors: GRIS } },
+            },
+            yaxis: {
+                labels: { maxWidth: 280, style: { colors: TEXTO, fontSize: '12.5px' } },
+            },
+            tooltip: { y: { formatter: v => v + ' unidades vencidas' } },
+        }
+    );
+
+});
+</script>
+{% endblock %}

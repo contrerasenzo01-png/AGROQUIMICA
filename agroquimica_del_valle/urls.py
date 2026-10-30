@@ -91,4 +91,6 @@ urlpatterns = [
         views.detalle_auditoria,
         name='detalle_auditoria'
     ),
+    # Reportes (solo administrador)
+    path('reportes/', views.gestion_reportes, name='gestion_reportes'),
 ]

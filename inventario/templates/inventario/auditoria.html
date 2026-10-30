@@ -139,22 +139,19 @@
                         <td>
                             <span class="al-producto">{{ log.Entidad }}</span>
                         </td>
-                        
-
-                        
                         <td>
                             {% if log.Accion == 'CREACION' %}
-                                <span class="al-badge">Creación</span>
+                                <span class="al-badge aud-cre">Creación</span>
                             {% elif log.Accion == 'MODIFICACION' %}
                                 <span class="al-badge aud-mod">Modificación</span>
                             {% elif log.Accion == 'ELIMINACION' %}
-                                <span class="al-badge aud-anu">Eliminación</span>
+                                <span class="al-badge aud-eli">Eliminación</span>
                             {% elif log.Accion == 'ANULACION' %}
                                 <span class="al-badge aud-anu">Anulación</span>
                             {% elif log.Accion == 'INICIO_SESION' %}
-                                <span class="al-badge">Inicio de sesión</span>
+                                <span class="al-badge aud-ini">Inicio de sesión</span>
                             {% elif log.Accion == 'CIERRE_SESION' %}
-                                <span class="al-badge">Cierre de sesión</span>
+                                <span class="al-badge aud-cie">Cierre de sesión</span>
                             {% else %}
                                 <span class="al-badge">{{ log.Accion }}</span>
                             {% endif %}
