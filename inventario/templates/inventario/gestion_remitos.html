@@ -222,7 +222,8 @@
                                                     <th>Producto</th>
                                                     <th>Marca</th>
                                                     <th>Vencimiento</th>
-                                                    <th>Cantidad ingresada</th>
+                                                    <th>Cajas</th>
+                                                    <th>Unidades ingresadas</th>
                                                     <th>Stock actual del lote</th>
                                                     <th>Estado</th>
                                                     <th style="text-align: right;">Acciones</th>
@@ -235,6 +236,8 @@
                                                         data-lote-id="{{ lote.ID_Lote }}"
                                                         data-producto="{{ lote.ID_Producto_id }}"
                                                         data-numero="{{ lote.Numero_lote }}"
+                                                        data-cajas="{{ lote.Cantidad_cajas|default_if_none:'' }}"
+                                                        data-unidades="{{ lote.ID_Producto.Unidades_por_presentacion }}"
                                                         data-ingresada="{{ lote.Cantidad_ingresada }}"
                                                         data-actual="{{ lote.Cantidad_actual }}"
                                                         data-ingreso="{{ lote.Fecha_ingreso|date:'Y-m-d' }}"
@@ -260,6 +263,10 @@
                                                             {% else %}
                                                                 —
                                                             {% endif %}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ lote.Cantidad_cajas|default_if_none:"—" }}
                                                         </td>
 
                                                         <td>
@@ -297,7 +304,7 @@
                                                     </tr>
                                                 {% empty %}
                                                     <tr>
-                                                        <td colspan="8" class="rm-vacio">
+                                                        <td colspan="9" class="rm-vacio">
                                                             Este remito todavía no tiene lotes asociados.
                                                         </td>
                                                     </tr>
@@ -418,8 +425,8 @@
                     <div>
                         <h3>Lotes asociados al remito</h3>
                         <p>
-                            Cada lote corresponde a un producto y conserva sus
-                            propias cantidades y vencimiento.
+                            Cada lote corresponde a un producto del proveedor elegido
+                            y conserva sus propias cajas y vencimiento.
                         </p>
                     </div>
 
@@ -452,9 +459,11 @@
                             <select name="lote_producto"
                                     id="lote_producto___N__"
                                     required>
-                                <option value="">Seleccionar producto activo</option>
+                                <option value="">Primero seleccioná un proveedor</option>
                                 {% for producto in productos_alta %}
-                                    <option value="{{ producto.ID_Producto }}">
+                                    <option value="{{ producto.ID_Producto }}"
+                                            data-unidades="{{ producto.Unidades_por_presentacion }}"
+                                            data-proveedores="{% for pr in producto.proveedores.all %}{{ pr.ID_Proveedor }}{% if not forloop.last %},{% endif %}{% endfor %}">
                                         {{ producto.Nombre_producto }}{% if producto.Marca %} · {{ producto.Marca }}{% endif %}
                                     </option>
                                 {% endfor %}
@@ -482,14 +491,25 @@
                             </div>
 
                             <div class="rm-grupo">
-                                <label for="lote_cant___N__">Cantidad ingresada</label>
+                                <label for="lote_cajas___N__">Cantidad de cajas</label>
                                 <input type="number"
-                                       name="lote_cantidad"
-                                       id="lote_cant___N__"
+                                       name="lote_cajas"
+                                       id="lote_cajas___N__"
                                        min="1"
                                        step="1"
                                        inputmode="numeric"
                                        required>
+                            </div>
+
+                            <div class="rm-grupo">
+                                <label for="lote_total___N__">Unidades totales</label>
+                                <input type="text"
+                                       class="rm-lote-total"
+                                       id="lote_total___N__"
+                                       value="—"
+                                       readonly
+                                       tabindex="-1">
+                                <small class="rm-ayuda rm-lote-calculo"></small>
                             </div>
 
                             <div class="rm-grupo">
@@ -646,13 +666,21 @@
                     </div>
 
                     <div class="rm-grupo">
-                        <label for="editar_lote_ingresada">Cantidad ingresada</label>
+                        <label for="editar_lote_cajas">Cantidad de cajas</label>
                         <input type="number"
-                               name="Cantidad_ingresada"
-                               id="editar_lote_ingresada"
+                               name="Cantidad_cajas"
+                               id="editar_lote_cajas"
                                min="1"
                                step="1"
                                required>
+                    </div>
+
+                    <div class="rm-grupo">
+                        <label for="editar_lote_total">Unidades totales</label>
+                        <input type="text"
+                               id="editar_lote_total"
+                               readonly
+                               tabindex="-1">
                     </div>
 
                     <div class="rm-grupo">
@@ -684,8 +712,10 @@
                 </div>
 
                 <div class="rm-info">
-                    Los cambios en el producto o las cantidades pueden estar
-                    restringidos si el lote tiene movimientos registrados.
+                    Las unidades totales se calculan como cajas por unidades de la
+                    presentación del producto. Los cambios en el producto o las
+                    cantidades pueden estar restringidos si el lote tiene
+                    movimientos registrados.
                 </div>
             </div>
 
@@ -771,6 +801,7 @@
     const plantillaLote = document.getElementById('plantillaLote');
     const errorCrear = document.getElementById('errorCrearRemito');
     const btnGuardar = document.getElementById('btnGuardarRemito');
+    const selectProveedor = document.getElementById('crear_proveedor');
 
     let contadorLotes = 0;
 
@@ -800,6 +831,89 @@
         });
     }
 
+    /* UNIDADES TOTALES = CAJAS x UNIDADES POR PRESENTACIÓN */
+    function actualizarTotalLote(tarjeta) {
+        const opcion = tarjeta
+            .querySelector('[name="lote_producto"]')
+            .selectedOptions[0];
+
+        const unidades = opcion && opcion.value
+            ? parseInt(opcion.dataset.unidades, 10)
+            : 0;
+
+        const cajas = parseInt(
+            tarjeta.querySelector('[name="lote_cajas"]').value,
+            10
+        );
+
+        const campoTotal = tarjeta.querySelector('.rm-lote-total');
+        const ayuda = tarjeta.querySelector('.rm-lote-calculo');
+
+        if (unidades > 0 && cajas > 0) {
+            campoTotal.value = cajas * unidades;
+            ayuda.textContent =
+                cajas + ' caja(s) × ' + unidades + ' unidad(es) por caja';
+        } else {
+            campoTotal.value = '—';
+            ayuda.textContent = '';
+        }
+    }
+
+    /* SOLO PRODUCTOS SUMINISTRADOS POR EL PROVEEDOR ELEGIDO */
+    function filtrarProductosLote(tarjeta) {
+        const select = tarjeta.querySelector('[name="lote_producto"]');
+        const proveedor = selectProveedor.value;
+        let reiniciado = false;
+
+        Array.from(select.options).forEach(function (opcion) {
+            if (!opcion.value) {
+                opcion.textContent = proveedor
+                    ? 'Seleccionar producto del proveedor'
+                    : 'Primero seleccioná un proveedor';
+                return;
+            }
+
+            const ids = (opcion.dataset.proveedores || '').split(',');
+            const permitido = proveedor !== '' && ids.includes(proveedor);
+
+            opcion.hidden = !permitido;
+            opcion.disabled = !permitido;
+        });
+
+        const elegida = select.selectedOptions[0];
+
+        if (elegida && elegida.value && elegida.disabled) {
+            select.value = '';
+            reiniciado = true;
+        }
+
+        actualizarTotalLote(tarjeta);
+
+        return reiniciado;
+    }
+
+    selectProveedor.addEventListener('change', function () {
+        let hubo = false;
+
+        listaLotes.querySelectorAll('.rm-lote').forEach(function (tarjeta) {
+            if (filtrarProductosLote(tarjeta)) hubo = true;
+        });
+
+        if (hubo) {
+            mostrarError(
+                'Se reiniciaron los productos que no son suministrados ' +
+                'por el proveedor elegido.'
+            );
+        }
+    });
+
+    ['input', 'change'].forEach(function (tipo) {
+        listaLotes.addEventListener(tipo, function (evento) {
+            const tarjeta = evento.target.closest('.rm-lote');
+            if (tarjeta) actualizarTotalLote(tarjeta);
+        });
+    });
+
     window.agregarLote = function (enfocar) {
         contadorLotes++;
 
@@ -810,6 +924,7 @@
 
         const tarjeta = contenedor.firstElementChild;
         listaLotes.appendChild(tarjeta);
+        filtrarProductosLote(tarjeta);
         renumerarLotes();
 
         if (enfocar !== false) {
@@ -906,48 +1021,88 @@
         document.getElementById('editar_numero').focus();
     };
 
-    window.abrirModalEditarLote = function (id) {
-    const fila = document.querySelector(
-        `tr[data-lote-id="${id}"]`
-    );
+    /* EDITAR LOTE: UNIDADES TOTALES = CAJAS x UNIDADES POR PRESENTACIÓN */
+    const inputCajasEdicion = document.getElementById('editar_lote_cajas');
+    const inputTotalEdicion = document.getElementById('editar_lote_total');
+    const inputActualEdicion = document.getElementById('editar_lote_actual');
 
-    if (!fila) {
-        alert('No se encontraron los datos del lote.');
-        return;
+    let edicionLote = { unidades: 1, intacto: true };
+
+    function actualizarTotalEdicion() {
+        const cajas = parseInt(inputCajasEdicion.value, 10);
+
+        if (cajas > 0) {
+            const total = cajas * edicionLote.unidades;
+            inputTotalEdicion.value = total;
+
+            // Si el lote no tiene salidas, el stock del lote acompaña al total.
+            if (edicionLote.intacto) {
+                inputActualEdicion.value = total;
+            }
+        } else {
+            inputTotalEdicion.value = '';
+        }
     }
 
-    document.getElementById('editar_lote_id').value = id;
-    document.getElementById('editar_lote_producto').value =
-        fila.dataset.producto;
-    document.getElementById('editar_lote_numero').value =
-        fila.dataset.numero;
-    document.getElementById('editar_lote_ingresada').value =
-        fila.dataset.ingresada;
-    document.getElementById('editar_lote_actual').value =
-        fila.dataset.actual;
-    document.getElementById('editar_lote_ingreso').value =
-        fila.dataset.ingreso;
-    document.getElementById('editar_lote_vencimiento').value =
-        fila.dataset.vencimiento;
+    inputCajasEdicion.addEventListener('input', actualizarTotalEdicion);
 
-    const fechaIngreso = document.getElementById('editar_lote_ingreso');
-    const fechaVencimiento = document.getElementById('editar_lote_vencimiento');
+    window.abrirModalEditarLote = function (id) {
+        const fila = document.querySelector(
+            'tr[data-lote-id="' + id + '"]'
+        );
 
-    fechaVencimiento.min = fechaIngreso.value;
+        if (!fila) {
+            alert('No se encontraron los datos del lote.');
+            return;
+        }
 
-    fechaIngreso.onchange = function () {
+        const unidades = parseInt(fila.dataset.unidades, 10) || 1;
+        const ingresada = parseInt(fila.dataset.ingresada, 10);
+        const actual = parseInt(fila.dataset.actual, 10);
+
+        // Lotes cargados antes de existir las cajas: se deducen si es posible.
+        let cajas = fila.dataset.cajas;
+
+        if (!cajas && ingresada % unidades === 0) {
+            cajas = String(ingresada / unidades);
+        }
+
+        edicionLote = {
+            unidades: unidades,
+            intacto: actual === ingresada
+        };
+
+        document.getElementById('editar_lote_id').value = id;
+        document.getElementById('editar_lote_producto').value =
+            fila.dataset.producto;
+        document.getElementById('editar_lote_numero').value =
+            fila.dataset.numero;
+        inputCajasEdicion.value = cajas || '';
+        inputTotalEdicion.value = ingresada;
+        inputActualEdicion.value = fila.dataset.actual;
+        document.getElementById('editar_lote_ingreso').value =
+            fila.dataset.ingreso;
+        document.getElementById('editar_lote_vencimiento').value =
+            fila.dataset.vencimiento;
+
+        const fechaIngreso = document.getElementById('editar_lote_ingreso');
+        const fechaVencimiento = document.getElementById('editar_lote_vencimiento');
+
         fechaVencimiento.min = fechaIngreso.value;
 
-        if (fechaVencimiento.value < fechaIngreso.value) {
-            fechaVencimiento.value = fechaIngreso.value;
-        }
-    };
+        fechaIngreso.onchange = function () {
+            fechaVencimiento.min = fechaIngreso.value;
 
-    const modal = document.getElementById('modalEditarLote');
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
+            if (fechaVencimiento.value < fechaIngreso.value) {
+                fechaVencimiento.value = fechaIngreso.value;
+            }
+        };
 
-    document.getElementById('editar_lote_producto').focus();
+        const modal = document.getElementById('modalEditarLote');
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+
+        document.getElementById('editar_lote_producto').focus();
     };
 
     /* CERRAR MODALES */

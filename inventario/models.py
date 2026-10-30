@@ -327,7 +327,16 @@ class Productos(models.Model):
         default=1,
         verbose_name='Unidades por presentación'
     )
-    
+
+    # Proveedores que suministran este producto.
+    proveedores = models.ManyToManyField(
+        Proveedores,
+        blank=True,
+        related_name='productos',
+        db_table='PRODUCTOS_X_PROVEEDORES',
+        verbose_name='Proveedores'
+    )
+
     ESTADO_CHOICES = [
         ('Activo', 'Activo'),
         ('Inactivo', 'Inactivo'),
@@ -365,6 +374,12 @@ class Lotes(models.Model):
     )
 
     Numero_lote = models.CharField(max_length=50)
+
+    Cantidad_cajas = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Cantidad de cajas'
+    )
 
     Cantidad_ingresada = models.IntegerField()
 

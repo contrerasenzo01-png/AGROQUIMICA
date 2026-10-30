@@ -452,7 +452,8 @@
                                                 '{{ producto.Estado_producto }}',
                                                 '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}',
                                                 '{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}',
-                                                '{{ producto.Unidades_por_presentacion }}'
+                                                '{{ producto.Unidades_por_presentacion }}',
+                                                '{% for p in producto.proveedores.all %}{{ p.ID_Proveedor }}{% if not forloop.last %},{% endif %}{% endfor %}'
                                             )">
 
                                         <svg class="pr-icon" viewBox="0 0 24 24">
@@ -877,6 +878,43 @@
 
                     </div>
 
+
+                    <!-- PROVEEDORES QUE SUMINISTRAN EL PRODUCTO -->
+
+                    <div class="pr-grupo pr-full">
+
+                        <label>
+                            Proveedores que lo suministran
+                        </label>
+
+                        <div style="border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; max-height: 130px; overflow-y: auto;">
+
+                            {% for prov in proveedores_activos %}
+
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: 400; padding: 2px 0;">
+                                    <input type="checkbox"
+                                           name="proveedores"
+                                           value="{{ prov.ID_Proveedor }}"
+                                           style="width: auto;">
+                                    {{ prov.nombre_proveedor }}
+                                </label>
+
+                            {% empty %}
+
+                                <span class="pr-hint">
+                                    No hay proveedores activos. Registrá uno primero.
+                                </span>
+
+                            {% endfor %}
+
+                        </div>
+
+                        <span class="pr-hint">
+                            Solo estos proveedores podrán ingresar este producto en un remito.
+                        </span>
+
+                    </div>
+
                 </div>
 
 
@@ -1206,6 +1244,43 @@
                                id="edit_unidades"
                                name="Unidades_por_presentacion"
                                required>
+
+                    </div>
+
+
+                    <!-- PROVEEDORES QUE SUMINISTRAN EL PRODUCTO -->
+
+                    <div class="pr-grupo pr-full">
+
+                        <label>
+                            Proveedores que lo suministran
+                        </label>
+
+                        <div style="border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; max-height: 130px; overflow-y: auto;">
+
+                            {% for prov in proveedores_activos %}
+
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: 400; padding: 2px 0;">
+                                    <input type="checkbox"
+                                           name="proveedores"
+                                           value="{{ prov.ID_Proveedor }}"
+                                           style="width: auto;">
+                                    {{ prov.nombre_proveedor }}
+                                </label>
+
+                            {% empty %}
+
+                                <span class="pr-hint">
+                                    No hay proveedores activos. Registrá uno primero.
+                                </span>
+
+                            {% endfor %}
+
+                        </div>
+
+                        <span class="pr-hint">
+                            Solo estos proveedores podrán ingresar este producto en un remito.
+                        </span>
 
                     </div>
 
@@ -1755,7 +1830,8 @@ function toggleLotes(productoId, boton) {
         estado,
         stockMinimo,
         subtipo,
-        unidades
+        unidades,
+        proveedoresIds
     ) {
 
         document.getElementById(
@@ -1814,6 +1890,24 @@ function toggleLotes(productoId, boton) {
             'edit_unidades'
         ).value =
             unidades || 1;
+
+
+        /* PROVEEDORES QUE SUMINISTRAN EL PRODUCTO */
+
+        const idsProveedores = (proveedoresIds || '')
+            .split(',')
+            .filter(Boolean);
+
+        document
+            .querySelectorAll(
+                '#formEditarProducto input[name="proveedores"]'
+            )
+            .forEach(function (casilla) {
+
+                casilla.checked =
+                    idsProveedores.includes(casilla.value);
+
+            });
 
 
         document.getElementById(

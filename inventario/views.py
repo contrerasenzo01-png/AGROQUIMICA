@@ -156,7 +156,7 @@ def login_view(request):
 
                 registrar_auditoria(
                     usuario=usuario,
-                    entidad="Usuarios",
+                    entidad="USUARIOS",
                     objeto=usuario,
                     accion="INICIO_SESION",
                     antes={},
@@ -190,7 +190,7 @@ def cerrar_sesion(request):
     if usuario:
         registrar_auditoria(
             usuario=usuario,
-            entidad="Usuarios",
+            entidad="USUARIOS",
             objeto=usuario,
             accion="CIERRE_SESION",
             antes={},
@@ -2203,6 +2203,29 @@ def _leer_datos_producto(request, estado_por_defecto):
         stock_minimo = None
 
     # --------------------------------------------------------
+    # VALIDAR PROVEEDORES QUE SUMINISTRAN EL PRODUCTO
+    # --------------------------------------------------------
+
+    ids_proveedores = {
+        i.strip()
+        for i in request.POST.getlist('proveedores')
+        if i.strip().isdigit()
+    }
+
+    proveedores_producto = list(
+        Proveedores.objects.filter(
+            ID_Proveedor__in=ids_proveedores,
+            estado_proveedor=True
+        )
+    )
+
+    if not proveedores_producto:
+        return None, 'Seleccioná al menos un proveedor que suministre el producto.'
+
+    if len(proveedores_producto) != len(ids_proveedores):
+        return None, 'Alguno de los proveedores seleccionados no existe o está inactivo.'
+
+    # --------------------------------------------------------
     # VALIDAR ESTADO
     # --------------------------------------------------------
 
@@ -2223,6 +2246,7 @@ def _leer_datos_producto(request, estado_por_defecto):
         'precio': precio,
         'cantidad_presentacion': cantidad_presentacion,
         'unidades_por_presentacion': unidades_por_presentacion,
+        'proveedores': proveedores_producto,
         'unidad_medida': unidad_medida or None,
         'estado_producto': estado_producto,
     }
@@ -2276,6 +2300,7 @@ def gestion_productos(request):
         'ID_Subtipo',
         'stock'
     ).prefetch_related(
+        'proveedores',
         Prefetch(
             'lotes',
             queryset=Lotes.objects.select_related(
@@ -2341,6 +2366,9 @@ def gestion_productos(request):
                 Estado_producto='Activo'
             ).count(),
             'total_tipos': tipos_productos.count(),
+            'proveedores_activos': Proveedores.objects.filter(
+                estado_proveedor=True
+            ).order_by('nombre_proveedor'),
             'puede_egresar': puede_egresar,
             'datos_egreso': _datos_egreso() if puede_egresar else [],
         }
@@ -2400,6 +2428,8 @@ def crear_producto(request):
             Unidad_medida_producto=datos['unidad_medida'],
             Estado_producto=datos['estado_producto'],
         )
+
+        producto.proveedores.set(datos['proveedores'])
 
         # El stock inicial es cero.
         # Las entradas se registran mediante lotes.
@@ -2504,6 +2534,7 @@ def editar_producto(request, pk):
         
 
         producto.save()
+        producto.proveedores.set(datos['proveedores'])
 
         # Actualizar el stock mínimo sin modificar el stock actual.
         if datos['stock_minimo'] is not None:
@@ -3480,7 +3511,7 @@ def gestion_remitos(request):
             productos_ids = request.POST.getlist('lote_producto')
             numeros_lote = request.POST.getlist('lote_numero')
             vencimientos = request.POST.getlist('lote_vencimiento')
-            cantidades = request.POST.getlist('lote_cantidad')
+            cajas_lista = request.POST.getlist('lote_cajas')
 
             if not proveedor_id or not numero_remito or not fecha_texto:
                 messages.error(request, 'Completá los datos del remito.')
@@ -3488,7 +3519,7 @@ def gestion_remitos(request):
 
             if not (
                 len(productos_ids) == len(numeros_lote)
-                == len(vencimientos) == len(cantidades)
+                == len(vencimientos) == len(cajas_lista)
             ) or not productos_ids:
                 messages.error(
                     request,
@@ -3534,8 +3565,8 @@ def gestion_remitos(request):
             lotes_validados = []
             combinaciones = set()
 
-            for producto_id, numero_lote, vencimiento_texto, cantidad_texto in zip(
-                productos_ids, numeros_lote, vencimientos, cantidades
+            for producto_id, numero_lote, vencimiento_texto, cajas_texto in zip(
+                productos_ids, numeros_lote, vencimientos, cajas_lista
             ):
                 numero_lote = numero_lote.strip()
 
@@ -3543,7 +3574,7 @@ def gestion_remitos(request):
                     producto_id,
                     numero_lote,
                     vencimiento_texto,
-                    cantidad_texto
+                    cajas_texto
                 ]):
                     messages.error(
                         request,
@@ -3559,7 +3590,7 @@ def gestion_remitos(request):
                     return redirect('gestion_remitos')
 
                 try:
-                    cantidad = int(cantidad_texto)
+                    cajas = int(cajas_texto)
                     fecha_vencimiento = date.fromisoformat(
                         vencimiento_texto
                     )
@@ -3570,10 +3601,10 @@ def gestion_remitos(request):
                     )
                     return redirect('gestion_remitos')
 
-                if cantidad <= 0:
+                if cajas <= 0:
                     messages.error(
                         request,
-                        'La cantidad de cada lote debe ser mayor a cero.'
+                        'La cantidad de cajas de cada lote debe ser mayor a cero.'
                     )
                     return redirect('gestion_remitos')
 
@@ -3606,6 +3637,21 @@ def gestion_remitos(request):
                     return redirect('gestion_remitos')
                 
                 
+                # El producto debe ser suministrado por el proveedor del remito.
+                if not producto.proveedores.filter(
+                    pk=proveedor.pk
+                ).exists():
+                    messages.error(
+                        request,
+                        f'El producto "{producto.Nombre_producto}" no es '
+                        f'suministrado por el proveedor '
+                        f'"{proveedor.nombre_proveedor}".'
+                    )
+                    return redirect('gestion_remitos')
+
+                # Unidades totales = cajas x unidades por presentación.
+                cantidad = cajas * producto.Unidades_por_presentacion
+
             # Verificar si el lote ya existe en la base de datos.
                 if Lotes.objects.filter(
                     ID_Producto=producto,
@@ -3634,6 +3680,7 @@ def gestion_remitos(request):
                     'producto': producto,
                     'numero': numero_lote,
                     'vencimiento': fecha_vencimiento,
+                    'cajas': cajas,
                     'cantidad': cantidad,
                 })
 
@@ -3662,6 +3709,7 @@ def gestion_remitos(request):
                             ID_Remito=remito,
                             ID_Producto=datos['producto'],
                             Numero_lote=datos['numero'],
+                            Cantidad_cajas=datos['cajas'],
                             Cantidad_ingresada=datos['cantidad'],
                             Cantidad_actual=datos['cantidad'],
                             Fecha_ingreso=hoy,
@@ -3792,8 +3840,8 @@ def gestion_remitos(request):
             lote_id = request.POST.get('ID_Lote', '').strip()
             producto_id = request.POST.get('ID_Producto', '').strip()
             numero_lote = request.POST.get('Numero_lote', '').strip()
-            cantidad_ingresada_texto = request.POST.get(
-                'Cantidad_ingresada', ''
+            cajas_texto = request.POST.get(
+                'Cantidad_cajas', ''
             ).strip()
             cantidad_actual_texto = request.POST.get(
                 'Cantidad_actual', ''
@@ -3807,7 +3855,7 @@ def gestion_remitos(request):
 
             if not all([
                 lote_id, producto_id, numero_lote,
-                cantidad_ingresada_texto, cantidad_actual_texto,
+                cajas_texto, cantidad_actual_texto,
                 fecha_ingreso_texto, vencimiento_texto
             ]):
                 messages.error(request, 'Completá todos los campos del lote.')
@@ -3821,7 +3869,7 @@ def gestion_remitos(request):
                 return redirect('gestion_remitos')
 
             try:
-                cantidad_ingresada = int(cantidad_ingresada_texto)
+                cajas = int(cajas_texto)
                 cantidad_actual = int(cantidad_actual_texto)
                 fecha_ingreso = date.fromisoformat(fecha_ingreso_texto)
                 fecha_vencimiento = date.fromisoformat(vencimiento_texto)
@@ -3832,12 +3880,28 @@ def gestion_remitos(request):
                 )
                 return redirect('gestion_remitos')
 
-            if cantidad_ingresada <= 0:
+            if cajas <= 0:
                 messages.error(
                     request,
-                    'La cantidad ingresada debe ser mayor a cero.'
+                    'La cantidad de cajas debe ser mayor a cero.'
                 )
                 return redirect('gestion_remitos')
+
+            # Unidades totales = cajas x unidades por presentación.
+            unidades_producto = Productos.objects.filter(
+                ID_Producto=producto_id
+            ).values_list(
+                'Unidades_por_presentacion', flat=True
+            ).first()
+
+            if unidades_producto is None:
+                messages.error(
+                    request,
+                    'El producto seleccionado no existe.'
+                )
+                return redirect('gestion_remitos')
+
+            cantidad_ingresada = cajas * unidades_producto
 
             if not 0 <= cantidad_actual <= cantidad_ingresada:
                 messages.error(
@@ -3999,6 +4063,7 @@ def gestion_remitos(request):
 
                     lote.ID_Producto = producto
                     lote.Numero_lote = numero_lote
+                    lote.Cantidad_cajas = cajas
                     lote.Cantidad_ingresada = cantidad_ingresada
                     lote.Cantidad_actual = cantidad_actual
                     lote.Fecha_ingreso = fecha_ingreso
@@ -4073,6 +4138,8 @@ def gestion_remitos(request):
 
     productos_alta = Productos.objects.filter(
         Estado_producto='Activo'
+    ).prefetch_related(
+        'proveedores'
     ).order_by('Nombre_producto')
 
     return render(
