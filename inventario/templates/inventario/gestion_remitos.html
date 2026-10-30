@@ -6,6 +6,136 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/styles/gestion_remitos.css' %}">
+
+<style>
+    /* REMITOS ANULADOS */
+    .rm-anulado td { opacity: .6; }
+    .rm-anulado td:last-child { opacity: 1; }
+
+    .rm-icon-btn.rm-anular { color: #b91c1c; }
+    .rm-icon-btn.rm-anular:hover {
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
+    .rm-banner-anulado {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 12px;
+        color: #991b1b;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .rm-banner-anulado strong { font-weight: 600; }
+
+    /* MODAL DE ANULACIÓN */
+    .rm-anular-aviso {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+    }
+
+    .rm-anular-aviso svg {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .rm-anular-aviso strong {
+        display: block;
+        font-size: 15px;
+        margin-bottom: 2px;
+    }
+
+    .rm-anular-aviso span {
+        font-size: 13px;
+        color: #b91c1c;
+    }
+
+    .rm-anular-resumen {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 16px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+    }
+
+    .rm-anular-resumen small {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #6b7280;
+    }
+
+    .rm-anular-resumen b {
+        font-size: 14px;
+        color: #111827;
+    }
+
+    .rm-anular-lista {
+        margin: 0 0 16px;
+        padding-left: 18px;
+        font-size: 13px;
+        color: #4b5563;
+        line-height: 1.7;
+    }
+
+    #anular_motivo {
+        width: 100%;
+        min-height: 100px;
+        resize: vertical;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        font: inherit;
+        box-sizing: border-box;
+    }
+
+    #anular_motivo:focus {
+        outline: none;
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, .15);
+    }
+
+    .rm-anular-pie-texto {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .rm-btn-anular {
+        background: #b91c1c;
+        color: #fff;
+        border: 1px solid #b91c1c;
+    }
+
+    .rm-btn-anular:hover:not(:disabled) { background: #991b1b; }
+
+    .rm-btn-anular:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+</style>
 {% endblock %}
 
 {% block contenido %}
@@ -113,6 +243,14 @@
             {% endfor %}
         </select>
 
+        <select name="estado"
+                id="filtroEstado"
+                class="rm-select">
+            <option value="">Todos los estados</option>
+            <option value="Confirmado" {% if estado_filtro == 'Confirmado' %}selected{% endif %}>Confirmado</option>
+            <option value="Anulado" {% if estado_filtro == 'Anulado' %}selected{% endif %}>Anulado</option>
+        </select>
+
         <button type="submit" class="rm-btn rm-btn-secondary">
             Buscar
         </button>
@@ -140,15 +278,18 @@
                         <th>Proveedor</th>
                         <th>Fecha</th>
                         <th>Lotes asociados</th>
+                        <th>Unidades totales</th>
+                        <th>Estado</th>
                         <th style="text-align: right;">Acciones</th>
                     </tr>
                 </thead>
 
                 <tbody id="listaRemitos">
                     {% for remito in remitos %}
-                        <tr class="rm-fila-remito"
+                        <tr class="rm-fila-remito{% if remito.Estado_remito == 'Anulado' %} rm-anulado{% endif %}"
                             data-search="{{ remito.Numero_remito|lower }} {{ remito.ID_Proveedor.nombre_proveedor|lower }}"
-                            data-proveedor="{{ remito.ID_Proveedor.ID_Proveedor }}">
+                            data-proveedor="{{ remito.ID_Proveedor.ID_Proveedor }}"
+                            data-estado="{{ remito.Estado_remito }}">
 
                             <td>
                                 <strong class="rm-numero">
@@ -171,6 +312,16 @@
                                 </span>
                             </td>
 
+                            <td>{{ remito.total_unidades }}</td>
+
+                            <td>
+                                {% if remito.Estado_remito == 'Anulado' %}
+                                    <span class="rm-estado rm-vencido">Anulado</span>
+                                {% else %}
+                                    <span class="rm-estado rm-activo">Confirmado</span>
+                                {% endif %}
+                            </td>
+
                             <td>
                                 <div class="rm-acciones">
                                     <button type="button"
@@ -184,20 +335,43 @@
                                         </svg>
                                     </button>
 
-                                    <button type="button"
-                                            class="rm-icon-btn rm-editar"
-                                            title="Editar remito"
-                                            aria-label="Editar remito"
-                                            onclick="abrirModalEditar(
-                                                '{{ remito.ID_Remito }}',
-                                                '{{ remito.Numero_remito|escapejs }}',
-                                                '{{ remito.Fecha_remito|date:'Y-m-d' }}'
-                                            )">
-                                        <svg class="rm-icon" viewBox="0 0 24 24">
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/>
-                                        </svg>
-                                    </button>
+                                    {% if remito.Estado_remito == 'Confirmado' %}
+
+                                        <button type="button"
+                                                class="rm-icon-btn rm-editar"
+                                                title="Editar remito"
+                                                aria-label="Editar remito"
+                                                onclick="abrirModalEditar(
+                                                    '{{ remito.ID_Remito }}',
+                                                    '{{ remito.Numero_remito|escapejs }}',
+                                                    '{{ remito.Fecha_remito|date:'Y-m-d' }}'
+                                                )">
+                                            <svg class="rm-icon" viewBox="0 0 24 24">
+                                                <path d="M12 20h9"/>
+                                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/>
+                                            </svg>
+                                        </button>
+
+                                        {% if puede_anular %}
+                                        <button type="button"
+                                                class="rm-icon-btn rm-anular"
+                                                title="Anular remito"
+                                                aria-label="Anular remito"
+                                                onclick="abrirModalAnular(
+                                                    '{{ remito.ID_Remito }}',
+                                                    '{{ remito.Numero_remito|escapejs }}',
+                                                    '{{ remito.ID_Proveedor.nombre_proveedor|escapejs }}',
+                                                    '{{ remito.lotes.count }}',
+                                                    '{{ remito.total_unidades }}'
+                                                )">
+                                            <svg class="rm-icon" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <path d="m4.9 4.9 14.2 14.2"/>
+                                            </svg>
+                                        </button>
+                                        {% endif %}
+
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -206,13 +380,26 @@
                         <tr id="detalle-{{ remito.ID_Remito }}"
                             class="rm-fila-detalle"
                             style="display: none;">
-                            <td colspan="5">
+                            <td colspan="7">
                                 <div class="rm-detalle">
                                     <div class="rm-detalle-header">
                                         <h3>
                                             Lotes del remito {{ remito.Numero_remito }}
                                         </h3>
                                     </div>
+
+                                    {% if remito.Estado_remito == 'Anulado' %}
+                                        <div class="rm-banner-anulado">
+                                            <strong>Remito anulado</strong>
+                                            el {{ remito.Fecha_anulacion|date:"d/m/Y H:i" }}
+                                            {% if remito.ID_Usuario_anulacion %}
+                                                por {{ remito.ID_Usuario_anulacion.Nombre_usuario }}
+                                                {{ remito.ID_Usuario_anulacion.Apellido_usuario }}
+                                            {% endif %}.
+                                            <br>
+                                            Motivo: {{ remito.Motivo_anulacion|default:"—" }}
+                                        </div>
+                                    {% endif %}
 
                                     <div class="rm-table-wrap">
                                         <table class="rm-table rm-table-lotes">
@@ -223,7 +410,8 @@
                                                     <th>Marca</th>
                                                     <th>Vencimiento</th>
                                                     <th>Cajas</th>
-                                                    <th>Unidades ingresadas</th>
+                                                    <th>Unidades por caja</th>
+                                                    <th>Unidades totales</th>
                                                     <th>Stock actual del lote</th>
                                                     <th>Estado</th>
                                                     <th style="text-align: right;">Acciones</th>
@@ -237,7 +425,7 @@
                                                         data-producto="{{ lote.ID_Producto_id }}"
                                                         data-numero="{{ lote.Numero_lote }}"
                                                         data-cajas="{{ lote.Cantidad_cajas|default_if_none:'' }}"
-                                                        data-unidades="{{ lote.ID_Producto.Unidades_por_presentacion }}"
+                                                        data-unidades="{{ lote.Unidades_por_caja|default_if_none:lote.ID_Producto.Unidades_por_presentacion }}"
                                                         data-ingresada="{{ lote.Cantidad_ingresada }}"
                                                         data-actual="{{ lote.Cantidad_actual }}"
                                                         data-ingreso="{{ lote.Fecha_ingreso|date:'Y-m-d' }}"
@@ -270,6 +458,10 @@
                                                         </td>
 
                                                         <td>
+                                                            {{ lote.Unidades_por_caja|default_if_none:"—" }}
+                                                        </td>
+
+                                                        <td>
                                                             {{ lote.Cantidad_ingresada|default_if_none:"—" }}
                                                         </td>
 
@@ -278,7 +470,9 @@
                                                         </td>
 
                                                         <td>
-                                                            {% if lote.estado_actual == "Vencido" %}
+                                                            {% if remito.Estado_remito == "Anulado" %}
+                                                                <span class="rm-estado rm-vencido">Anulado</span>
+                                                            {% elif lote.estado_actual == "Vencido" %}
                                                                 <span class="rm-estado rm-vencido">Vencido</span>
                                                             {% elif lote.estado_actual == "Agotado" %}
                                                                 <span class="rm-estado rm-agotado">Agotado</span>
@@ -289,6 +483,7 @@
 
                                                         <td>
                                                             <div class="rm-acciones">
+                                                                {% if remito.Estado_remito == 'Confirmado' %}
                                                                 <button type="button"
                                                                         class="rm-icon-btn rm-editar"
                                                                         title="Editar lote"
@@ -299,12 +494,13 @@
                                                                         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/>
                                                                     </svg>
                                                                 </button>
+                                                                {% endif %}
                                                             </div>
                                                         </td>
                                                     </tr>
                                                 {% empty %}
                                                     <tr>
-                                                        <td colspan="9" class="rm-vacio">
+                                                        <td colspan="10" class="rm-vacio">
                                                             Este remito todavía no tiene lotes asociados.
                                                         </td>
                                                     </tr>
@@ -317,7 +513,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5" class="rm-vacio">
+                            <td colspan="7" class="rm-vacio">
                                 No se encontraron remitos registrados.
                             </td>
                         </tr>
@@ -502,6 +698,20 @@
                             </div>
 
                             <div class="rm-grupo">
+                                <label for="lote_upc___N__">Unidades por caja</label>
+                                <input type="number"
+                                       name="lote_unidades_caja"
+                                       id="lote_upc___N__"
+                                       min="1"
+                                       step="1"
+                                       inputmode="numeric"
+                                       required>
+                                <small class="rm-ayuda">
+                                    Se completa con la presentación del producto y se puede ajustar.
+                                </small>
+                            </div>
+
+                            <div class="rm-grupo">
                                 <label for="lote_total___N__">Unidades totales</label>
                                 <input type="text"
                                        class="rm-lote-total"
@@ -676,6 +886,16 @@
                     </div>
 
                     <div class="rm-grupo">
+                        <label for="editar_lote_upc">Unidades por caja</label>
+                        <input type="number"
+                               name="Unidades_por_caja"
+                               id="editar_lote_upc"
+                               min="1"
+                               step="1"
+                               required>
+                    </div>
+
+                    <div class="rm-grupo">
                         <label for="editar_lote_total">Unidades totales</label>
                         <input type="text"
                                id="editar_lote_total"
@@ -712,10 +932,9 @@
                 </div>
 
                 <div class="rm-info">
-                    Las unidades totales se calculan como cajas por unidades de la
-                    presentación del producto. Los cambios en el producto o las
-                    cantidades pueden estar restringidos si el lote tiene
-                    movimientos registrados.
+                    Las unidades totales se calculan como cajas por unidades por caja.
+                    Los cambios en el producto o las cantidades pueden estar
+                    restringidos si el lote tiene movimientos registrados.
                 </div>
             </div>
 
@@ -735,6 +954,110 @@
 </div>
 
 
+<!-- MODAL ANULAR REMITO -->
+<div class="rm-modal" id="modalAnularRemito" aria-hidden="true">
+    <div class="rm-modal-box"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloAnularRemito">
+
+        <div class="rm-modal-head">
+            <div>
+                <h2 id="tituloAnularRemito">Anular remito</h2>
+                <p>Esta acción no se puede deshacer.</p>
+            </div>
+
+            <button type="button"
+                    class="rm-modal-x"
+                    onclick="cerrarModal('modalAnularRemito')"
+                    aria-label="Cerrar">✕</button>
+        </div>
+
+        <form method="POST"
+              action="{% url 'gestion_remitos' %}"
+              id="formAnularRemito">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="anular_remito">
+            <input type="hidden" name="ID_Remito" id="anular_id_remito">
+
+            <div class="rm-modal-body">
+
+                <div class="rm-anular-aviso">
+                    <svg viewBox="0 0 24 24">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                        <path d="M12 9v4"/>
+                        <path d="M12 17h.01"/>
+                    </svg>
+                    <div>
+                        <strong>Si anula este remito debe justificarlo.</strong>
+                        <span>
+                            El remito no se elimina: queda registrado como anulado
+                            con su motivo, fecha y usuario.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="rm-anular-resumen">
+                    <div>
+                        <small>Remito</small>
+                        <b id="anular_numero">—</b>
+                    </div>
+                    <div>
+                        <small>Proveedor</small>
+                        <b id="anular_proveedor">—</b>
+                    </div>
+                    <div>
+                        <small>Lotes</small>
+                        <b id="anular_lotes">—</b>
+                    </div>
+                    <div>
+                        <small>Unidades a descontar del stock</small>
+                        <b id="anular_unidades">—</b>
+                    </div>
+                </div>
+
+                <ul class="rm-anular-lista">
+                    <li>Se descuentan del stock las unidades de todos sus lotes.</li>
+                    <li>Los lotes del remito quedan en cero.</li>
+                    <li>No se puede anular si algún lote ya tuvo salidas.</li>
+                </ul>
+
+                <div class="rm-grupo rm-full">
+                    <label for="anular_motivo">Justificación de la anulación</label>
+                    <textarea name="Motivo_anulacion"
+                              id="anular_motivo"
+                              maxlength="200"
+                              rows="4"
+                              placeholder="Ej.: Se cargó el proveedor equivocado y los lotes no coinciden con el remito en papel."
+                              required></textarea>
+
+                    <div class="rm-anular-pie-texto">
+                        <span id="anular_ayuda">Escribí al menos 10 caracteres.</span>
+                        <span id="anular_contador">0 / 200</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="rm-modal-pie">
+                <button type="button"
+                        class="rm-btn rm-btn-light"
+                        onclick="cerrarModal('modalAnularRemito')">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        class="rm-btn rm-btn-anular"
+                        id="btnConfirmarAnulacion"
+                        disabled>
+                    Anular remito
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
 {% endblock %}
 
 {% block extra_js %}
@@ -744,6 +1067,7 @@
 
     const searchInput = document.getElementById('searchInput');
     const filtroProveedor = document.getElementById('filtroProveedor');
+    const filtroEstado = document.getElementById('filtroEstado');
     const filasRemitos = document.querySelectorAll('.rm-fila-remito');
     const contadorRemitos = document.getElementById('contadorRemitos');
 
@@ -751,18 +1075,24 @@
     function filtrarRemitos() {
         const texto = searchInput.value.toLowerCase().trim();
         const proveedorSeleccionado = filtroProveedor.value;
+        const estadoSeleccionado = filtroEstado.value;
         let visibles = 0;
 
         filasRemitos.forEach(function (fila) {
             const textoFila = fila.dataset.search || '';
             const proveedorFila = fila.dataset.proveedor || '';
+            const estadoFila = fila.dataset.estado || '';
 
             const coincideTexto = textoFila.includes(texto);
             const coincideProveedor =
                 !proveedorSeleccionado ||
                 proveedorFila === proveedorSeleccionado;
+            const coincideEstado =
+                !estadoSeleccionado ||
+                estadoFila === estadoSeleccionado;
 
-            const visible = coincideTexto && coincideProveedor;
+            const visible =
+                coincideTexto && coincideProveedor && coincideEstado;
             fila.style.display = visible ? '' : 'none';
 
             const detalle = fila.nextElementSibling;
@@ -785,6 +1115,7 @@
 
     searchInput.addEventListener('input', filtrarRemitos);
     filtroProveedor.addEventListener('change', filtrarRemitos);
+    filtroEstado.addEventListener('change', filtrarRemitos);
 
     /* MOSTRAR Y OCULTAR LOTES */
     window.alternarDetalle = function (id) {
@@ -831,15 +1162,12 @@
         });
     }
 
-    /* UNIDADES TOTALES = CAJAS x UNIDADES POR PRESENTACIÓN */
+    /* UNIDADES TOTALES = CAJAS x UNIDADES POR CAJA */
     function actualizarTotalLote(tarjeta) {
-        const opcion = tarjeta
-            .querySelector('[name="lote_producto"]')
-            .selectedOptions[0];
-
-        const unidades = opcion && opcion.value
-            ? parseInt(opcion.dataset.unidades, 10)
-            : 0;
+        const unidades = parseInt(
+            tarjeta.querySelector('[name="lote_unidades_caja"]').value,
+            10
+        );
 
         const cajas = parseInt(
             tarjeta.querySelector('[name="lote_cajas"]').value,
@@ -857,6 +1185,16 @@
             campoTotal.value = '—';
             ayuda.textContent = '';
         }
+    }
+
+    /* AL ELEGIR PRODUCTO, SE SUGIERE SU PRESENTACIÓN */
+    function sugerirUnidadesPorCaja(tarjeta) {
+        const opcion = tarjeta
+            .querySelector('[name="lote_producto"]')
+            .selectedOptions[0];
+
+        tarjeta.querySelector('[name="lote_unidades_caja"]').value =
+            opcion && opcion.value ? (opcion.dataset.unidades || '') : '';
     }
 
     /* SOLO PRODUCTOS SUMINISTRADOS POR EL PROVEEDOR ELEGIDO */
@@ -885,6 +1223,7 @@
         if (elegida && elegida.value && elegida.disabled) {
             select.value = '';
             reiniciado = true;
+            sugerirUnidadesPorCaja(tarjeta);
         }
 
         actualizarTotalLote(tarjeta);
@@ -910,7 +1249,13 @@
     ['input', 'change'].forEach(function (tipo) {
         listaLotes.addEventListener(tipo, function (evento) {
             const tarjeta = evento.target.closest('.rm-lote');
-            if (tarjeta) actualizarTotalLote(tarjeta);
+            if (!tarjeta) return;
+
+            if (evento.target.name === 'lote_producto' && tipo === 'change') {
+                sugerirUnidadesPorCaja(tarjeta);
+            }
+
+            actualizarTotalLote(tarjeta);
         });
     });
 
@@ -1021,22 +1366,24 @@
         document.getElementById('editar_numero').focus();
     };
 
-    /* EDITAR LOTE: UNIDADES TOTALES = CAJAS x UNIDADES POR PRESENTACIÓN */
+    /* EDITAR LOTE: UNIDADES TOTALES = CAJAS x UNIDADES POR CAJA */
     const inputCajasEdicion = document.getElementById('editar_lote_cajas');
+    const inputUpcEdicion = document.getElementById('editar_lote_upc');
     const inputTotalEdicion = document.getElementById('editar_lote_total');
     const inputActualEdicion = document.getElementById('editar_lote_actual');
 
-    let edicionLote = { unidades: 1, intacto: true };
+    let loteIntacto = true;
 
     function actualizarTotalEdicion() {
         const cajas = parseInt(inputCajasEdicion.value, 10);
+        const unidades = parseInt(inputUpcEdicion.value, 10);
 
-        if (cajas > 0) {
-            const total = cajas * edicionLote.unidades;
+        if (cajas > 0 && unidades > 0) {
+            const total = cajas * unidades;
             inputTotalEdicion.value = total;
 
-            // Si el lote no tiene salidas, el stock del lote acompaña al total.
-            if (edicionLote.intacto) {
+            // Si el lote no tiene salidas, su stock acompaña al total.
+            if (loteIntacto) {
                 inputActualEdicion.value = total;
             }
         } else {
@@ -1045,6 +1392,7 @@
     }
 
     inputCajasEdicion.addEventListener('input', actualizarTotalEdicion);
+    inputUpcEdicion.addEventListener('input', actualizarTotalEdicion);
 
     window.abrirModalEditarLote = function (id) {
         const fila = document.querySelector(
@@ -1067,10 +1415,7 @@
             cajas = String(ingresada / unidades);
         }
 
-        edicionLote = {
-            unidades: unidades,
-            intacto: actual === ingresada
-        };
+        loteIntacto = actual === ingresada;
 
         document.getElementById('editar_lote_id').value = id;
         document.getElementById('editar_lote_producto').value =
@@ -1078,6 +1423,7 @@
         document.getElementById('editar_lote_numero').value =
             fila.dataset.numero;
         inputCajasEdicion.value = cajas || '';
+        inputUpcEdicion.value = unidades;
         inputTotalEdicion.value = ingresada;
         inputActualEdicion.value = fila.dataset.actual;
         document.getElementById('editar_lote_ingreso').value =
@@ -1105,6 +1451,52 @@
         document.getElementById('editar_lote_producto').focus();
     };
 
+    /* ANULAR REMITO */
+    const motivoAnulacion = document.getElementById('anular_motivo');
+    const contadorAnulacion = document.getElementById('anular_contador');
+    const ayudaAnulacion = document.getElementById('anular_ayuda');
+    const btnAnular = document.getElementById('btnConfirmarAnulacion');
+    const formAnular = document.getElementById('formAnularRemito');
+
+    function validarMotivo() {
+        const largo = motivoAnulacion.value.trim().length;
+
+        contadorAnulacion.textContent =
+            motivoAnulacion.value.length + ' / 200';
+
+        const valido = largo >= 10;
+        btnAnular.disabled = !valido;
+
+        ayudaAnulacion.textContent = valido
+            ? 'Justificación lista.'
+            : 'Escribí al menos 10 caracteres.';
+    }
+
+    motivoAnulacion.addEventListener('input', validarMotivo);
+
+    formAnular.addEventListener('submit', function () {
+        btnAnular.disabled = true;
+    });
+
+    window.abrirModalAnular = function (
+        id, numero, proveedor, lotes, unidades
+    ) {
+        document.getElementById('anular_id_remito').value = id;
+        document.getElementById('anular_numero').textContent = numero;
+        document.getElementById('anular_proveedor').textContent = proveedor;
+        document.getElementById('anular_lotes').textContent = lotes;
+        document.getElementById('anular_unidades').textContent = unidades;
+
+        motivoAnulacion.value = '';
+        validarMotivo();
+
+        const modal = document.getElementById('modalAnularRemito');
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+
+        motivoAnulacion.focus();
+    };
+
     /* CERRAR MODALES */
     window.cerrarModal = function (idModal) {
         const modal = document.getElementById(idModal);
@@ -1117,7 +1509,8 @@
     [
         'modalCrearRemito',
         'modalEditarRemito',
-        'modalEditarLote'
+        'modalEditarLote',
+        'modalAnularRemito'
     ].forEach(function (id) {
         const modal = document.getElementById(id);
 
@@ -1133,6 +1526,7 @@
             cerrarModal('modalCrearRemito');
             cerrarModal('modalEditarRemito');
             cerrarModal('modalEditarLote');
+            cerrarModal('modalAnularRemito');
         }
     });
 

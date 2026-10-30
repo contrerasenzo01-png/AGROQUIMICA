@@ -2732,6 +2732,7 @@ def gestion_movimientos_stock(request):
         'Entrada de lote',
         'Salida por vencimiento de producto',
         TIPO_EGRESO,
+        TIPO_ANULACION_REMITO,
     ):
         TiposMovimientos.objects.get_or_create(
             Nombre_tipo_movimiento=nombre_tipo
@@ -2741,6 +2742,7 @@ def gestion_movimientos_stock(request):
         'Entrada de lote',
         'Salida por vencimiento de producto',
         TIPO_EGRESO,
+        TIPO_ANULACION_REMITO,
     ]
 
     movimientos = MovimientosStock.objects.select_related(
@@ -3512,6 +3514,7 @@ def gestion_remitos(request):
             numeros_lote = request.POST.getlist('lote_numero')
             vencimientos = request.POST.getlist('lote_vencimiento')
             cajas_lista = request.POST.getlist('lote_cajas')
+            unidades_lista = request.POST.getlist('lote_unidades_caja')
 
             if not proveedor_id or not numero_remito or not fecha_texto:
                 messages.error(request, 'Completá los datos del remito.')
@@ -3520,6 +3523,7 @@ def gestion_remitos(request):
             if not (
                 len(productos_ids) == len(numeros_lote)
                 == len(vencimientos) == len(cajas_lista)
+                == len(unidades_lista)
             ) or not productos_ids:
                 messages.error(
                     request,
@@ -3565,8 +3569,12 @@ def gestion_remitos(request):
             lotes_validados = []
             combinaciones = set()
 
-            for producto_id, numero_lote, vencimiento_texto, cajas_texto in zip(
-                productos_ids, numeros_lote, vencimientos, cajas_lista
+            for (
+                producto_id, numero_lote, vencimiento_texto,
+                cajas_texto, unidades_texto
+            ) in zip(
+                productos_ids, numeros_lote, vencimientos,
+                cajas_lista, unidades_lista
             ):
                 numero_lote = numero_lote.strip()
 
@@ -3574,7 +3582,8 @@ def gestion_remitos(request):
                     producto_id,
                     numero_lote,
                     vencimiento_texto,
-                    cajas_texto
+                    cajas_texto,
+                    unidades_texto
                 ]):
                     messages.error(
                         request,
@@ -3591,6 +3600,7 @@ def gestion_remitos(request):
 
                 try:
                     cajas = int(cajas_texto)
+                    unidades_caja = int(unidades_texto)
                     fecha_vencimiento = date.fromisoformat(
                         vencimiento_texto
                     )
@@ -3598,6 +3608,13 @@ def gestion_remitos(request):
                     messages.error(
                         request,
                         'Revisá las cantidades y las fechas de los lotes.'
+                    )
+                    return redirect('gestion_remitos')
+
+                if unidades_caja <= 0:
+                    messages.error(
+                        request,
+                        'Las unidades por caja de cada lote deben ser mayor a cero.'
                     )
                     return redirect('gestion_remitos')
 
@@ -3649,8 +3666,8 @@ def gestion_remitos(request):
                     )
                     return redirect('gestion_remitos')
 
-                # Unidades totales = cajas x unidades por presentación.
-                cantidad = cajas * producto.Unidades_por_presentacion
+                # Unidades totales = cajas x unidades por caja.
+                cantidad = cajas * unidades_caja
 
             # Verificar si el lote ya existe en la base de datos.
                 if Lotes.objects.filter(
@@ -3681,6 +3698,7 @@ def gestion_remitos(request):
                     'numero': numero_lote,
                     'vencimiento': fecha_vencimiento,
                     'cajas': cajas,
+                    'unidades_caja': unidades_caja,
                     'cantidad': cantidad,
                 })
 
@@ -3710,6 +3728,7 @@ def gestion_remitos(request):
                             ID_Producto=datos['producto'],
                             Numero_lote=datos['numero'],
                             Cantidad_cajas=datos['cajas'],
+                            Unidades_por_caja=datos['unidades_caja'],
                             Cantidad_ingresada=datos['cantidad'],
                             Cantidad_actual=datos['cantidad'],
                             Fecha_ingreso=hoy,
@@ -3803,6 +3822,14 @@ def gestion_remitos(request):
 
             try:
                 remito = Remitos.objects.get(ID_Remito=remito_id)
+
+                if remito.Estado_remito == 'Anulado':
+                    messages.error(
+                        request,
+                        'No se puede modificar un remito anulado.'
+                    )
+                    return redirect('gestion_remitos')
+
                 antes = snapshot(remito)
                 remito.Numero_remito = numero_remito
                 remito.Fecha_remito = fecha_remito
@@ -3843,6 +3870,9 @@ def gestion_remitos(request):
             cajas_texto = request.POST.get(
                 'Cantidad_cajas', ''
             ).strip()
+            unidades_caja_texto = request.POST.get(
+                'Unidades_por_caja', ''
+            ).strip()
             cantidad_actual_texto = request.POST.get(
                 'Cantidad_actual', ''
             ).strip()
@@ -3855,7 +3885,7 @@ def gestion_remitos(request):
 
             if not all([
                 lote_id, producto_id, numero_lote,
-                cajas_texto, cantidad_actual_texto,
+                cajas_texto, unidades_caja_texto, cantidad_actual_texto,
                 fecha_ingreso_texto, vencimiento_texto
             ]):
                 messages.error(request, 'Completá todos los campos del lote.')
@@ -3870,6 +3900,7 @@ def gestion_remitos(request):
 
             try:
                 cajas = int(cajas_texto)
+                unidades_caja = int(unidades_caja_texto)
                 cantidad_actual = int(cantidad_actual_texto)
                 fecha_ingreso = date.fromisoformat(fecha_ingreso_texto)
                 fecha_vencimiento = date.fromisoformat(vencimiento_texto)
@@ -3887,21 +3918,15 @@ def gestion_remitos(request):
                 )
                 return redirect('gestion_remitos')
 
-            # Unidades totales = cajas x unidades por presentación.
-            unidades_producto = Productos.objects.filter(
-                ID_Producto=producto_id
-            ).values_list(
-                'Unidades_por_presentacion', flat=True
-            ).first()
-
-            if unidades_producto is None:
+            if unidades_caja <= 0:
                 messages.error(
                     request,
-                    'El producto seleccionado no existe.'
+                    'Las unidades por caja deben ser mayor a cero.'
                 )
                 return redirect('gestion_remitos')
 
-            cantidad_ingresada = cajas * unidades_producto
+            # Unidades totales = cajas x unidades por caja.
+            cantidad_ingresada = cajas * unidades_caja
 
             if not 0 <= cantidad_actual <= cantidad_ingresada:
                 messages.error(
@@ -3929,6 +3954,13 @@ def gestion_remitos(request):
                     lote = Lotes.objects.select_for_update().select_related(
                         'ID_Producto', 'ID_Remito'
                     ).get(ID_Lote=lote_id)
+
+                    if lote.ID_Remito.Estado_remito == 'Anulado':
+                        messages.error(
+                            request,
+                            'No se puede modificar un lote de un remito anulado.'
+                        )
+                        return redirect('gestion_remitos')
 
                     producto = Productos.objects.filter(
                         ID_Producto=producto_id,
@@ -4064,6 +4096,7 @@ def gestion_remitos(request):
                     lote.ID_Producto = producto
                     lote.Numero_lote = numero_lote
                     lote.Cantidad_cajas = cajas
+                    lote.Unidades_por_caja = unidades_caja
                     lote.Cantidad_ingresada = cantidad_ingresada
                     lote.Cantidad_actual = cantidad_actual
                     lote.Fecha_ingreso = fecha_ingreso
@@ -4102,6 +4135,151 @@ def gestion_remitos(request):
 
             return redirect('gestion_remitos')
 
+        # ====================================================
+        # ANULAR REMITO (no se elimina: cambia de estado)
+        # ====================================================
+        elif accion == 'anular_remito':
+            remito_id = request.POST.get('ID_Remito', '').strip()
+            motivo = request.POST.get('Motivo_anulacion', '').strip()
+
+            if usuario.ID_Perfil.Nombre_perfil not in PERFILES_ADMIN:
+                messages.error(
+                    request,
+                    'No tenés permiso para anular remitos.'
+                )
+                return redirect('gestion_remitos')
+
+            if len(motivo) < 10:
+                messages.error(
+                    request,
+                    'Si anula este remito debe justificarlo '
+                    '(mínimo 10 caracteres).'
+                )
+                return redirect('gestion_remitos')
+
+            if len(motivo) > 200:
+                messages.error(
+                    request,
+                    'La justificación no puede superar los 200 caracteres.'
+                )
+                return redirect('gestion_remitos')
+
+            try:
+                with transaction.atomic():
+                    remito = Remitos.objects.select_for_update().get(
+                        ID_Remito=remito_id
+                    )
+
+                    if remito.Estado_remito == 'Anulado':
+                        messages.error(
+                            request,
+                            'El remito ya se encuentra anulado.'
+                        )
+                        return redirect('gestion_remitos')
+
+                    lotes_remito = list(
+                        Lotes.objects.select_for_update().select_related(
+                            'ID_Producto'
+                        ).filter(ID_Remito=remito)
+                    )
+
+                    # Validar todo antes de modificar nada.
+                    stocks = {}
+
+                    for lote_r in lotes_remito:
+                        if lote_r.Cantidad_actual != lote_r.Cantidad_ingresada:
+                            messages.error(
+                                request,
+                                f'No se puede anular: el lote '
+                                f'"{lote_r.Numero_lote}" ya tuvo salidas.'
+                            )
+                            return redirect('gestion_remitos')
+
+                        stock_r = stocks.get(lote_r.ID_Producto_id)
+
+                        if stock_r is None:
+                            stock_r = Stock.objects.select_for_update().filter(
+                                ID_Producto=lote_r.ID_Producto
+                            ).first()
+                            stocks[lote_r.ID_Producto_id] = stock_r
+
+                        if not stock_r:
+                            messages.error(
+                                request,
+                                f'No se encontró el stock de '
+                                f'"{lote_r.ID_Producto.Nombre_producto}".'
+                            )
+                            return redirect('gestion_remitos')
+
+                    tipo_anulacion, _ = TiposMovimientos.objects.get_or_create(
+                        Nombre_tipo_movimiento=TIPO_ANULACION_REMITO
+                    )
+
+                    antes = snapshot(remito)
+                    antes['Estado_remito'] = remito.Estado_remito
+
+                    # Revertir el ingreso: stock, lote y movimiento.
+                    for lote_r in lotes_remito:
+                        stock_r = stocks[lote_r.ID_Producto_id]
+                        stock_r.Cantidad_stock -= lote_r.Cantidad_ingresada
+                        stock_r.save(update_fields=['Cantidad_stock'])
+
+                        MovimientosStock.objects.create(
+                            ID_Usuario=usuario,
+                            ID_Tipo_movimiento=tipo_anulacion,
+                            ID_Lote=lote_r,
+                            Cantidad_movimiento_stock=lote_r.Cantidad_ingresada,
+                            Observaciones=(
+                                f'Anulación del remito '
+                                f'{remito.Numero_remito}: {motivo}'
+                            )[:255]
+                        )
+
+                        lote_r.Cantidad_actual = 0
+                        lote_r.save(update_fields=['Cantidad_actual'])
+
+                    remito.Estado_remito = 'Anulado'
+                    remito.Fecha_anulacion = timezone.now()
+                    remito.Motivo_anulacion = motivo
+                    remito.ID_Usuario_anulacion = usuario
+                    remito.save(update_fields=[
+                        'Estado_remito',
+                        'Fecha_anulacion',
+                        'Motivo_anulacion',
+                        'ID_Usuario_anulacion',
+                    ])
+
+                    despues = snapshot(remito)
+                    despues['Estado_remito'] = 'Anulado'
+                    despues['Motivo_anulacion'] = motivo
+
+                    registrar_auditoria(
+                        usuario,
+                        'Remitos',
+                        remito,
+                        'ANULACION',
+                        antes,
+                        despues
+                    )
+
+                messages.success(
+                    request,
+                    f'El remito {remito.Numero_remito} fue anulado y se '
+                    f'revirtió su ingreso de stock.'
+                )
+
+            except Remitos.DoesNotExist:
+                messages.error(request, 'El remito seleccionado no existe.')
+
+            except DatabaseError:
+                messages.error(
+                    request,
+                    'Ocurrió un error en la base de datos. '
+                    'No se guardaron los cambios.'
+                )
+
+            return redirect('gestion_remitos')
+
         # Si la acción recibida no es válida.
         messages.error(request, 'La operación solicitada no es válida.')
         return redirect('gestion_remitos')
@@ -4113,13 +4291,22 @@ def gestion_remitos(request):
     # ========================================================
     remitos = (
         Remitos.objects
-        .select_related('ID_Proveedor')
+        .select_related('ID_Proveedor', 'ID_Usuario_anulacion')
         .prefetch_related('lotes__ID_Producto')
+        .annotate(
+            total_unidades=Coalesce(Sum('lotes__Cantidad_ingresada'), 0)
+        )
         .order_by('-Fecha_remito', '-ID_Remito')
     )
 
     busqueda = request.GET.get('q', '').strip()
     proveedor_filtro = request.GET.get('proveedor', '').strip()
+    estado_filtro = request.GET.get('estado', '').strip()
+
+    if estado_filtro in ('Confirmado', 'Anulado'):
+        remitos = remitos.filter(Estado_remito=estado_filtro)
+    else:
+        estado_filtro = ''
 
     if busqueda:
         remitos = remitos.filter(
@@ -4158,6 +4345,8 @@ def gestion_remitos(request):
             'total_lotes': Lotes.objects.count(),
             'busqueda': busqueda,
             'proveedor_filtro': proveedor_filtro,
+            'estado_filtro': estado_filtro,
+            'puede_anular': usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN,
             'hoy': hoy,
         }
     )
@@ -4385,6 +4574,7 @@ def detalle_auditoria(request, id_log):
 # ============================================================
 
 TIPO_EGRESO = 'Egreso por venta'
+TIPO_ANULACION_REMITO = 'Anulación de remito'
 
 
 def _alerta_stock_bajo(stock, producto):
