@@ -728,3 +728,45 @@
 
 .pr-form-estado { display: inline-flex; margin: 0; }
 
+/* ============================================================
+   EGRESO POR VENTA
+   ============================================================ */
+.pr-header-acciones { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+.pr-btn-rojo        { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+.pr-btn-rojo:hover  { background: #991b1b; border-color: #991b1b; }
+.pr-btn-rojo:disabled { opacity: .45; cursor: not-allowed; }
+
+.pr-modal-egreso { max-width: 640px; max-height: 96vh; }
+.pr-modal-egreso .pr-modal-body { padding-top: 16px; }
+.pr-modal-egreso .pr-grupo { margin-bottom: 12px; }
+.pr-modal-egreso textarea { resize: none; }
+
+/* Resumen del lote: etiqueta arriba, dato abajo */
+.eg-datos {
+    background: #f3f7f5;
+    border: 1px solid #e3eae6;
+    border-radius: 12px;
+    padding: 14px 18px;
+}
+.eg-datos-titulo { margin: 0 0 10px; color: #6b7c73; }
+.eg-datos-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+.eg-dato         { display: flex; flex-direction: column; gap: 2px; }
+.eg-dato-label   { font-size: 13px; color: #6b7c73; }
+.eg-dato-valor   { font-size: 14px; font-weight: 700; color: #1c2a23; }
+
+/* Resultado: cómo quedan lote y stock */
+.eg-resultado { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.eg-res {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: #e8f5ee;
+    color: #1b7a4a;
+}
+.eg-res-label { font-size: 12px; }
+.eg-res-valor { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.eg-res.eg-alerta { background: #fef3c7; color: #b45309; }
+.eg-res.eg-error  { background: #fee2e2; color: #b91c1c; }

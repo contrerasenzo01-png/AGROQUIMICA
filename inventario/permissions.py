@@ -54,6 +54,10 @@ MODULOS = {
         None,
         'Emitir comprobantes',
     ),
+    'egresos': (
+        None,
+        'Registrar egresos de stock',
+    ),
 }
 
 

@@ -1,6 +1,7 @@
 /* ==========================================
-   CONTENEDOR PRINCIPAL
+   BASE
    ========================================== */
+html, body { margin: 0; padding: 0; }
 
 .layout {
     display: flex;
@@ -8,110 +9,68 @@
     min-height: 100vh;
 }
 
-
 /* ==========================================
    SIDEBAR
    ========================================== */
-
 .sidebar {
     position: fixed;
     top: 0;
     left: 0;
-
     width: 220px;
     min-width: 220px;
     height: 100vh;
-
     box-sizing: border-box;
-
     background-color: #0b311e;
     color: #ffffff;
-
     display: flex;
     flex-direction: column;
-
     padding: 24px 16px;
-
     z-index: 2000;
-
-    overflow-y: auto;
-
+    overflow: hidden;               /* solo scrollea el menú, el pie queda fijo */
     font-family: 'Inter', sans-serif;
-
     transition: transform 0.3s ease;
 }
 
-
-/* ==========================================
-   SIDEBAR OCULTO
-   ========================================== */
-
-.sidebar.sidebar-hidden {
-    transform: translateX(-100%);
-}
-
+.sidebar.sidebar-hidden { transform: translateX(-100%); }
 
 /* ==========================================
    ÁREA DE LA PÁGINA
    ========================================== */
-
 .page-area {
-    width: 100%;
+    flex: 1;
     min-width: 0;
     min-height: 100vh;
-
     margin-left: 220px;
-
     transition: margin-left 0.3s ease;
 }
 
-
-/* Cuando el sidebar está oculto */
-
-.sidebar.sidebar-hidden ~ .page-area {
-    margin-left: 0;
-}
-
-
-/* ==========================================
-   CONTENIDO PRINCIPAL
-   ========================================== */
+.sidebar.sidebar-hidden ~ .page-area { margin-left: 0; }
 
 .main-content {
     width: 100%;
     max-width: 1400px;
-
     box-sizing: border-box;
-
     margin: 0 auto;
-
     padding: 28px 32px 40px;
-
     font-family: 'Inter', sans-serif;
 }
-
 
 /* ==========================================
    LOGO
    ========================================== */
-
 .sidebar-logo {
     display: flex;
     align-items: center;
-
     gap: 10px;
-
     padding: 4px 8px;
-
     margin-bottom: 30px;
+    flex-shrink: 0;
 }
 
 .logo-icon {
     width: 38px;
     height: 38px;
-
     flex-shrink: 0;
-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -120,331 +79,407 @@
 .logo-svg {
     width: 32px;
     height: 32px;
-
     fill: none;
     stroke: #ffffff;
-
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
-.logo-text {
-    display: flex;
-    flex-direction: column;
-
-    line-height: 1.1;
-}
+.logo-text { display: flex; flex-direction: column; line-height: 1.1; }
 
 .logo-text strong {
     font-family: 'Poppins', sans-serif;
-
     font-size: 16px;
     font-weight: 700;
-
     color: #ffffff;
 }
 
-.logo-text span {
-    margin-top: 3px;
-
-    font-size: 11px;
-
-    color: #b9cabe;
-}
-
+.logo-text span { margin-top: 3px; font-size: 11px; color: #b9cabe; }
 
 /* ==========================================
    NAVEGACIÓN
    ========================================== */
-
 .sidebar-nav {
     flex: 1;
-
+    min-height: 0;
     overflow-y: auto;
 }
 
-.sidebar-nav::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sidebar-nav::-webkit-scrollbar-track {
-    background: transparent;
-}
-
+.sidebar-nav::-webkit-scrollbar { width: 4px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
 .sidebar-nav::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.20);
     border-radius: 10px;
 }
 
-
-/* ==========================================
-   ELEMENTOS DEL MENÚ
-   ========================================== */
-
-.nav-item {
-    margin-bottom: 4px;
-}
+.nav-item { margin-bottom: 4px; }
 
 .nav-link {
     display: flex;
     align-items: center;
-
     width: 100%;
-
     box-sizing: border-box;
-
     padding: 10px 12px;
-
     border-radius: 8px;
-
     color: #ffffff;
     text-decoration: none;
-
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     font-weight: 500;
-
-    transition:
-        background-color 0.2s ease,
-        color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .nav-link:hover,
-.nav-link.active:hover {
-    background-color: rgba(255, 255, 255, 0.10);
-    color: #ffffff;
-}
+.nav-link.active:hover { background-color: rgba(255, 255, 255, 0.10); color: #ffffff; }
 
-.nav-link.active {
-    background-color: transparent;
-    color: #ffffff;
-}
-
-
-/* ==========================================
-   ICONOS
-   ========================================== */
+.nav-link.active { background-color: transparent; color: #ffffff; }
 
 .nav-icon {
     width: 20px;
     height: 20px;
-
     margin-right: 10px;
-
     flex-shrink: 0;
-
     fill: none;
     stroke: currentColor;
-
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
-
-/* ==========================================
-   SECCIONES
-   ========================================== */
-
-.nav-section {
-    margin-top: 22px;
-    margin-bottom: 9px;
-
-    padding-left: 10px;
-}
+.nav-section { margin-top: 22px; margin-bottom: 9px; padding-left: 10px; }
 
 .nav-section-title {
     font-size: 10px;
     font-weight: 700;
-
     letter-spacing: 0.8px;
-
     color: #91aa9b;
 }
-
 
 /* ==========================================
    PIE DEL SIDEBAR
    ========================================== */
-
 .sidebar-footer {
+    flex-shrink: 0;
     margin-top: 16px;
     padding-top: 15px;
-
     border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-
-/* ==========================================
-   USUARIO
-   ========================================== */
-
-.sidebar-user {
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-
-    padding: 8px;
-
-    margin-bottom: 8px;
-}
+.sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px; margin-bottom: 8px; }
 
 .sidebar-user-avatar {
     width: 34px;
     height: 34px;
-
     flex-shrink: 0;
-
     border-radius: 50%;
-
     background-color: #e3efe7;
     color: #1b5e3a;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     font-size: 12px;
     font-weight: 700;
 }
 
-.sidebar-user-info {
-    min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-}
+.sidebar-user-info { min-width: 0; display: flex; flex-direction: column; }
 
 .sidebar-user-name {
     max-width: 140px;
-
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-
     font-size: 11px;
     font-weight: 600;
-
     color: #ffffff;
 }
 
-.sidebar-user-role {
-    margin-top: 3px;
-
-    font-size: 10px;
-
-    color: #9db5a7;
-}
-
-
-/* ==========================================
-   CERRAR SESIÓN
-   ========================================== */
+.sidebar-user-role { margin-top: 3px; font-size: 10px; color: #9db5a7; }
 
 .logout-link {
     display: flex;
     align-items: center;
-
     width: 100%;
-
     box-sizing: border-box;
-
     padding: 10px 12px;
-
     border-radius: 8px;
-
     color: #ffffff;
     text-decoration: none;
-
     font-size: 13px;
     font-weight: 500;
-
     transition: background-color 0.2s ease;
 }
 
-.logout-link:hover {
-    background-color: rgba(255, 255, 255, 0.10);
-}
-
-.logout-link .nav-icon {
-    margin-right: 10px;
-}
-
-
-/* ==========================================
-   SCROLL DEL SIDEBAR
-   ========================================== */
-
-.sidebar::-webkit-scrollbar {
-    width: 5px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.20);
-    border-radius: 10px;
-}
-
+.logout-link:hover { background-color: rgba(255, 255, 255, 0.10); }
+.logout-link .nav-icon { margin-right: 10px; }
 
 /* ==========================================
    RESPONSIVE
    ========================================== */
-
 @media (max-width: 1000px) {
-
-    .sidebar {
-        width: 210px;
-        min-width: 210px;
-    }
-
-    .page-area {
-        margin-left: 210px;
-    }
+    .sidebar { width: 210px; min-width: 210px; }
+    .page-area { margin-left: 210px; }
 }
-
 
 @media (max-width: 800px) {
+    .sidebar { width: 200px; min-width: 200px; }
+    .page-area { margin-left: 200px; }
+    .main-content { padding: 24px 22px 32px; }
+    .sidebar.sidebar-hidden ~ .page-area { margin-left: 0; }
+}
 
-    .sidebar {
-        width: 200px;
-        min-width: 200px;
-    }
-
-    .page-area {
-        margin-left: 200px;
-    }
-
-    .main-content {
-        padding: 24px 22px 32px;
-    }
-
-    .sidebar.sidebar-hidden ~ .page-area {
-        margin-left: 0;
-    }
+@media (max-width: 600px) {
+    .sidebar { width: 220px; min-width: 220px; }
+    .page-area { margin-left: 0; }
+    .sidebar:not(.sidebar-hidden) { box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15); }
+    .main-content { padding: 18px 16px 30px; }
 }
 
 
-@media (max-width: 600px) {
+/* ==========================================================
+   TIPOGRAFÍA UNIFICADA PARA TODAS LAS VISTAS
+   Gana sobre los CSS de cada vista (productos, tipos, etc.)
+   ----------------------------------------------------------
+   Título de página ....... 28 px Poppins 700
+   Subtítulo de página .... 13 px
+   Título de modal ........ 17 px Poppins 600
+   Subtítulos (h3/h4) ..... 14 px Poppins 600
+   Encabezado de tabla .... 12 px 600
+   Texto de tabla ......... 13 px
+   Etiquetas de formulario  12 px 600
+   Inputs / selects ....... 13 px
+   Botones ................ 13 px 600
+   Badges y tags .......... 12 px 600
+   Textos de ayuda ........ 12 px
+   ========================================================== */
+.main-content,
+.main-content input,
+.main-content select,
+.main-content textarea,
+.main-content button {
+    font-family: 'Inter', sans-serif;
+}
 
-    .sidebar {
-        width: 220px;
-        min-width: 220px;
-    }
+.main-content h1,
+.main-content .page-title,
+.main-content .pr-title,
+.main-content .ts-title,
+.main-content .lt-title {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.02em !important;
+    margin: 0 0 6px !important;
+}
 
-    .page-area {
-        margin-left: 0;
-    }
+.main-content .page-header p,
+.main-content .pr-sub,
+.main-content .ts-sub,
+.main-content .lt-sub,
+.main-content .lt-header p {
+    font-size: 13px !important;
+    margin: 0 !important;
+    color: #6b7c73;
+}
 
-    .sidebar:not(.sidebar-hidden) {
-        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15);
-    }
+.main-content h2 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+}
 
-    .main-content {
-        padding: 18px 16px 30px;
-    }
+.main-content h3,
+.main-content h4 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+.main-content table th {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.main-content table td,
+.main-content table td span,
+.main-content table td a,
+.main-content table td strong,
+.main-content table td small {
+    font-size: 13px !important;
+}
+
+.main-content label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.main-content input,
+.main-content select,
+.main-content textarea {
+    font-size: 13px !important;
+}
+
+.main-content button,
+.main-content .btn,
+.main-content a[class*="btn"] {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+.main-content [class*="badge"],
+.main-content [class*="estado"],
+.main-content [class*="tag-"],
+.main-content .tag {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.main-content .pr-hint,
+.main-content small,
+.main-content .mov-hora {
+    font-size: 12px !important;
+}
+
+.main-content .pr-toast,
+.main-content .ts-toast,
+.main-content .lt-message,
+.main-content .message {
+    font-size: 13px !important;
+}
+
+/* ==========================================================
+   TIPOGRAFÍA UNIFICADA: REMITOS (prefijo rm-)
+   Misma escala que el resto de las vistas.
+   ========================================================== */
+.main-content .rm-page,
+.main-content .rm-page input,
+.main-content .rm-page select,
+.main-content .rm-page textarea,
+.main-content .rm-page button,
+.rm-modal,
+.rm-modal input,
+.rm-modal select,
+.rm-modal textarea,
+.rm-modal button {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Título de página: 28 px */
+.main-content .rm-title {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.02em !important;
+    margin: 0 0 6px !important;
+    color: #0f3a24;
+}
+
+/* Subtítulo: 13 px */
+.main-content .rm-subtitle {
+    font-size: 13px !important;
+    margin: 0 !important;
+}
+
+/* Títulos de tarjeta y de modal */
+.main-content .rm-card-header h2 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+}
+
+.rm-modal .rm-modal-head h2 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+}
+
+/* Subtítulos (h3): 14 px */
+.main-content .rm-detalle-header h3,
+.rm-modal .rm-lotes-cab h3 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+/* Encabezados de tabla: 12 px, sin mayúsculas forzadas */
+.main-content .rm-table thead th,
+.main-content .rm-table-lotes thead th {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+}
+
+/* Texto de tabla: 13 px */
+.main-content .rm-table,
+.main-content .rm-table tbody td,
+.main-content .rm-table-lotes tbody td,
+.main-content .rm-numero,
+.main-content .rm-proveedor,
+.main-content .rm-codigo {
+    font-size: 13px !important;
+}
+
+/* Badges y estados: 12 px */
+.main-content .rm-badge,
+.main-content .rm-estado {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+/* Etiquetas de formulario: 12 px */
+.rm-modal .rm-grupo label,
+#modalCrearRemito .rm-grupo label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+/* Inputs, selects y botones: 13 px */
+.main-content .rm-search input,
+.main-content .rm-select,
+.rm-modal .rm-grupo input,
+.rm-modal .rm-grupo select,
+#modalCrearRemito .rm-grupo input,
+#modalCrearRemito .rm-grupo select,
+.main-content .rm-btn,
+.rm-modal .rm-btn,
+.rm-modal .rm-lote-quitar {
+    font-size: 13px !important;
+}
+
+.main-content .rm-btn,
+.rm-modal .rm-btn {
+    font-weight: 600 !important;
+}
+
+/* Textos de ayuda y descripciones: 12 px */
+.main-content .rm-card-header p,
+.main-content .rm-barra-dato,
+.main-content .rm-pie,
+.rm-modal .rm-modal-head p,
+.rm-modal .rm-modal-intro,
+.rm-modal .rm-lotes-cab p,
+.rm-modal .rm-grupo small,
+.rm-modal .rm-ayuda,
+.rm-modal .rm-info,
+.rm-modal .rm-error {
+    font-size: 12px !important;
+}
+
+.main-content .rm-barra-dato strong {
+    font-size: 15px !important;
+}
+
+/* Mensajes (toasts): 13 px */
+.rm-toast {
+    font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Título "Lote N" dentro del modal */
+#modalCrearRemito .rm-lote-titulo {
+    font-size: 13px !important;
 }

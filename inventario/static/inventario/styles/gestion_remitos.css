@@ -1489,3 +1489,170 @@
         scroll-behavior: auto !important;
     }
 }
+
+/* ==========================================================
+   UNIFICACIÓN CON EL RESTO DE LAS VISTAS (Productos, Tipos...)
+   ========================================================== */
+
+/* ---------- Layout: sin padding ni ancho extra ---------- */
+.rm-page {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* ---------- Encabezado ---------- */
+.rm-header {
+    align-items: flex-end !important;
+    gap: 24px !important;
+    margin-bottom: 22px !important;
+}
+.rm-title {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.02em !important;
+    margin: 0 0 6px !important;
+    color: #17382a !important;
+}
+.rm-subtitle {
+    font-size: 13px !important;
+    margin: 0 !important;
+    color: #718279 !important;
+}
+
+/* ---------- Botones ---------- */
+.rm-btn {
+    min-height: 38px !important;
+    padding: 0 17px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+.rm-btn-primary { background: #185a38 !important; border-color: #185a38 !important; color: #fff !important; }
+.rm-btn-primary:hover { background: #134a2e !important; border-color: #134a2e !important; }
+.rm-btn-light,
+.rm-btn-secondary {
+    background: #fff !important;
+    color: #31483c !important;
+    border: 1px solid #dce5df !important;
+}
+.rm-btn-light:hover,
+.rm-btn-secondary:hover { background: #f4f7f5 !important; }
+.rm-btn-chico { min-height: 34px !important; padding: 0 12px !important; }
+
+/* ---------- Barra de resumen ---------- */
+.rm-barra {
+    min-height: 0 !important;
+    padding: 10px 20px !important;
+    margin-bottom: 14px !important;
+    border: 1px solid #e1e9e4 !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+}
+.rm-barra-dato { font-size: 12px !important; color: #718279 !important; }
+.rm-barra-dato strong { font-size: 15px !important; color: #17382a !important; }
+
+/* ---------- Búsqueda y filtros ---------- */
+.rm-filtros { gap: 12px !important; margin-bottom: 18px !important; }
+.rm-search input,
+.rm-select {
+    height: 46px !important;
+    border: 1px solid #e1e9e4 !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    color: #24362d !important;
+}
+.rm-search input { padding-left: 40px !important; }
+.rm-filtros .rm-btn { height: 46px !important; }
+
+/* ---------- Tarjeta y tabla ---------- */
+.rm-card {
+    border: 1px solid #e1e9e4 !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+}
+.rm-card-header {
+    padding: 14px 18px !important;
+    border-bottom: 1px solid #e1e9e4 !important;
+}
+.rm-card-header h2 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: #20392c !important;
+}
+.rm-card-header p { font-size: 12px !important; color: #718279 !important; }
+
+.rm-table { min-width: 0 !important; border-collapse: collapse !important; font-size: 13px !important; }
+.rm-table thead { background: #fafcfb !important; }
+.rm-table thead th {
+    padding: 14px 18px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    color: #718279 !important;
+    border-bottom: 1px solid #e1e9e4 !important;
+}
+.rm-table tbody td {
+    padding: 16px 18px !important;
+    font-size: 13px !important;
+    color: #34483d !important;
+    border-bottom: 1px solid #edf2ef !important;
+}
+.rm-table tbody tr:last-child > td { border-bottom: 0 !important; }
+.rm-table-lotes { min-width: 0 !important; }
+.rm-table-lotes thead th,
+.rm-table-lotes tbody td { padding: 12px 14px !important; }
+
+.rm-numero, .rm-proveedor, .rm-codigo { font-size: 13px !important; }
+.rm-numero { color: #173d2b !important; font-weight: 600 !important; }
+.rm-badge, .rm-estado { font-size: 12px !important; font-weight: 600 !important; }
+
+.rm-icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+    border: 1px solid #dce5df !important;
+    border-radius: 8px !important;
+    color: #334b3e !important;
+}
+.rm-icon-btn .rm-icon { width: 16px !important; height: 16px !important; }
+
+.rm-pie {
+    padding: 12px 18px !important;
+    background: #fafcfb !important;
+    border-top: 1px solid #e1e9e4 !important;
+    font-size: 12px !important;
+    color: #718279 !important;
+}
+
+/* ---------- Detalle de lotes ---------- */
+.rm-detalle-header h3 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+/* ---------- Modales ---------- */
+.rm-modal { background: rgba(15, 42, 29, .50) !important; }
+.rm-modal-box { border-radius: 14px !important; }
+.rm-modal-head { padding: 18px 22px !important; background: #fff !important; border-bottom: 1px solid #e1e9e4 !important; }
+.rm-modal-head h2 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    color: #20392c !important;
+}
+.rm-modal-head p { font-size: 12px !important; }
+.rm-modal-x { border: 0 !important; background: transparent !important; }
+.rm-modal-body,
+#modalCrearRemito .rm-modal-body { padding: 22px 22px 8px !important; }
+.rm-modal-pie,
+#modalCrearRemito .rm-modal-pie {
+    padding: 16px 22px !important;
+    background: #fff !important; }

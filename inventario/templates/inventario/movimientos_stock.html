@@ -8,6 +8,15 @@
 {% block extra_css %}
 <link rel="stylesheet"
       href="{% static 'inventario/styles/movimientos_stock.css' %}">
+<style>
+    .tag-venta {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 6px;
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+</style>
 {% endblock %}
 
 {% block contenido %}
@@ -15,7 +24,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Movimientos de stock</h1>
-        <p>Historial automático de ingresos de lotes y egresos por vencimiento.</p>
+        <p>Historial automático de ingresos de lotes, egresos por vencimiento y egresos por venta.</p>
     </div>
 </div>
 
@@ -46,20 +55,18 @@
         <option value="">Todos los movimientos</option>
 
         {% for t in todos_tipos %}
-            {% if t.Nombre_tipo_movimiento == "Entrada de lote" or t.Nombre_tipo_movimiento == "Salida por vencimiento de producto" %}
-                <option
-                    value="{{ t.ID_Tipo_movimiento }}"
-                    {% if tipo_sel == t.ID_Tipo_movimiento|stringformat:"s" %}
-                        selected
-                    {% endif %}
-                >
-                    {% if t.Nombre_tipo_movimiento == "Entrada de lote" %}
-                        Ingreso de lote
-                    {% else %}
-                        Egreso por vencimiento
-                    {% endif %}
-                </option>
-            {% endif %}
+            <option
+                value="{{ t.ID_Tipo_movimiento }}"
+                {% if tipo_sel == t.ID_Tipo_movimiento|stringformat:"s" %}selected{% endif %}
+            >
+                {% if t.Nombre_tipo_movimiento == "Entrada de lote" %}
+                    Ingreso de lote
+                {% elif t.Nombre_tipo_movimiento == "Salida por vencimiento de producto" %}
+                    Egreso por vencimiento
+                {% else %}
+                    {{ t.Nombre_tipo_movimiento }}
+                {% endif %}
+            </option>
         {% endfor %}
 
     </select>
@@ -95,97 +102,83 @@
 
                     {% with tipo=m.ID_Tipo_movimiento.Nombre_tipo_movimiento %}
 
-                        {% if tipo == "Entrada de lote" or tipo == "Salida por vencimiento de producto" %}
+                        <tr>
 
-                            <tr>
+                            <td>
+                                <span class="mov-fecha">
+                                    {{ m.Fecha_hora_movimiento|date:"d/m/Y" }}
+                                </span>
+                                <span class="mov-hora">
+                                    {{ m.Fecha_hora_movimiento|date:"H:i" }}
+                                </span>
+                            </td>
 
-                                <!-- FECHA Y HORA -->
-                                <td>
-                                    <span class="mov-fecha">
-                                        {{ m.Fecha_hora_movimiento|date:"d/m/Y" }}
+                            <td>
+                                {% if m.ID_Lote %}
+                                    {{ m.ID_Lote.ID_Producto.Nombre_producto }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if m.ID_Lote %}
+                                    {{ m.ID_Lote.Numero_lote }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if tipo == "Entrada de lote" %}
+                                    <span class="tag tag-entrada">Ingreso de lote</span>
+                                {% elif tipo == "Salida por vencimiento de producto" %}
+                                    <span class="tag tag-vencimiento">Egreso por vencimiento</span>
+                                {% else %}
+                                    <span class="tag tag-venta">{{ tipo }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if tipo == "Entrada de lote" %}
+                                    <span class="mov-cantidad pos">
+                                        +{{ m.Cantidad_movimiento_stock }}
                                     </span>
-                                    <span class="mov-hora">
-                                        {{ m.Fecha_hora_movimiento|date:"H:i" }}
+                                {% else %}
+                                    <span class="mov-cantidad neg">
+                                        -{{ m.Cantidad_movimiento_stock }}
                                     </span>
-                                </td>
+                                {% endif %}
+                            </td>
 
-                                <!-- PRODUCTO -->
-                                <td>
-                                    {% if m.ID_Lote %}
-                                        {{ m.ID_Lote.ID_Producto.Nombre_producto }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
+                            <td>
+                                {% if m.ID_Usuario %}
+                                    {{ m.ID_Usuario.Apellido_usuario }}
+                                    {{ m.ID_Usuario.Nombre_usuario }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
 
-                                <!-- LOTE -->
-                                <td>
-                                    {% if m.ID_Lote %}
-                                        {{ m.ID_Lote.Numero_lote }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
+                            <td>
+                                <span class="mov-obs">
+                                    {{ m.Observaciones|default:"—" }}
+                                </span>
+                            </td>
 
-                                <!-- TIPO -->
-                                <td>
-                                    {% if tipo == "Entrada de lote" %}
-                                        <span class="tag tag-entrada">
-                                            Ingreso de lote
-                                        </span>
-                                    {% else %}
-                                        <span class="tag tag-vencimiento">
-                                            Egreso por vencimiento
-                                        </span>
-                                    {% endif %}
-                                </td>
+                            <td>
+                                <a
+                                    href="{% url 'comprobante_movimiento_pdf' m.ID_Movimiento_stock %}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="btn-comprobante"
+                                    title="Generar comprobante PDF"
+                                >
+                                    📄 Generar PDF
+                                </a>
+                            </td>
 
-                                <!-- CANTIDAD -->
-                                <td>
-                                    {% if tipo == "Entrada de lote" %}
-                                        <span class="mov-cantidad pos">
-                                            +{{ m.Cantidad_movimiento_stock }}
-                                        </span>
-                                    {% else %}
-                                        <span class="mov-cantidad neg">
-                                            -{{ m.Cantidad_movimiento_stock }}
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <!-- USUARIO -->
-                                <td>
-                                    {% if m.ID_Usuario %}
-                                        {{ m.ID_Usuario.Apellido_usuario }}
-                                        {{ m.ID_Usuario.Nombre_usuario }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-
-                                <!-- OBSERVACIONES -->
-                                <td>
-                                    <span class="mov-obs">
-                                        {{ m.Observaciones|default:"—" }}
-                                    </span>
-                                </td>
-
-                                <!-- COMPROBANTE PDF -->
-                                <td>
-                                    <a
-                                        href="{% url 'comprobante_movimiento_pdf' m.ID_Movimiento_stock %}"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="btn-comprobante"
-                                        title="Generar comprobante PDF"
-                                    >
-                                        📄 Generar PDF
-                                    </a>
-                                </td>
-
-                            </tr>
-
-                        {% endif %}
+                        </tr>
 
                     {% endwith %}
 
@@ -204,7 +197,6 @@
         </table>
     </div>
 
-    <!-- PIE DE TABLA -->
     <div class="tabla-pie">
         <span>
             {{ movimientos|length }}

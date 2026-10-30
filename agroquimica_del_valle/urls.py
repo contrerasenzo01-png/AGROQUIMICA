@@ -59,6 +59,10 @@ urlpatterns = [
     path('productos/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
     path('productos/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
 
+    # Egreso de stock
+    path('egreso-productos/', views.egreso_productos, name='egreso_productos'),
+    path('egreso-productos/registrar/', views.registrar_egreso, name='registrar_egreso'),
+
 
 
     # Lotes (solo consulta; el alta se hace desde Remitos)

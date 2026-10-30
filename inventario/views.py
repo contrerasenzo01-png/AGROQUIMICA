@@ -9,11 +9,14 @@ from django.http import JsonResponse
 from django.contrib.staticfiles import finders
 from django.core.paginator import Paginator
 from django.db import DatabaseError, IntegrityError, transaction
-from django.db.models import Count, Prefetch, ProtectedError, Q
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.urls import reverse
+
+from django.db.models import Count, Prefetch, ProtectedError, Q, Sum
+from django.db.models.functions import Coalesce
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -23,7 +26,7 @@ from reportlab.pdfgen import canvas
 
 from .auditoria import snapshot, registrar_auditoria
 from .forms import ProveedorForm
-from .permissions import usuario_con_acceso
+from .permissions import usuario_con_acceso, puede
 
 from .models import (
     TiposProductos,
@@ -2302,6 +2305,8 @@ def gestion_productos(request):
 
 
     # MOSTRAR PRODUCTOS
+    puede_egresar = puede(usuario, 'egresos', gestionar=True)
+
     return render(
         request,
         'inventario/productos.html',
@@ -2315,9 +2320,10 @@ def gestion_productos(request):
                 Estado_producto='Activo'
             ).count(),
             'total_tipos': tipos_productos.count(),
+            'puede_egresar': puede_egresar,
+            'datos_egreso': _datos_egreso() if puede_egresar else [],
         }
     )
-
 
 def crear_producto(request):
     """Registra un producto con su tipo y subtipo correspondiente."""
@@ -2663,7 +2669,22 @@ def gestion_movimientos_stock(request):
     busqueda = request.GET.get('q', '').strip()
     tipo_sel = request.GET.get('tipo', '').strip()
 
-    # Mostrar únicamente los movimientos permitidos.
+    # Asegura que los tipos existan en la base de datos.
+    for nombre_tipo in (
+        'Entrada de lote',
+        'Salida por vencimiento de producto',
+        TIPO_EGRESO,
+    ):
+        TiposMovimientos.objects.get_or_create(
+            Nombre_tipo_movimiento=nombre_tipo
+        )
+
+    tipos_visibles = [
+        'Entrada de lote',
+        'Salida por vencimiento de producto',
+        TIPO_EGRESO,
+    ]
+
     movimientos = MovimientosStock.objects.select_related(
         'ID_Usuario',
         'ID_Tipo_movimiento',
@@ -2672,12 +2693,7 @@ def gestion_movimientos_stock(request):
         'ID_Lote__ID_Remito',
         'ID_Lote__ID_Remito__ID_Proveedor'
     ).filter(
-        Q(
-            ID_Tipo_movimiento__Nombre_tipo_movimiento__iexact='Entrada de lote'
-        )
-        | Q(
-            ID_Tipo_movimiento__Nombre_tipo_movimiento__iexact='Salida por vencimiento de producto'
-        )
+        ID_Tipo_movimiento__Nombre_tipo_movimiento__in=tipos_visibles
     ).order_by('-Fecha_hora_movimiento')
 
     if busqueda:
@@ -2692,13 +2708,8 @@ def gestion_movimientos_stock(request):
             ID_Tipo_movimiento_id=tipo_sel
         )
 
-    # Mostrar solamente estos tipos en el filtro.
     todos_tipos = TiposMovimientos.objects.filter(
-        Q(Nombre_tipo_movimiento__iexact='Entrada de lote')
-        |   Q(
-            Nombre_tipo_movimiento__iexact=
-            'Salida por vencimiento de producto'
-        )
+        Nombre_tipo_movimiento__in=tipos_visibles
     ).order_by('Nombre_tipo_movimiento')
 
     return render(
@@ -4270,3 +4281,254 @@ def detalle_auditoria(request, id_log):
             for campo, antes, despues in log.cambios
         ]
     })
+
+# ============================================================
+# EGRESO DE STOCK
+# ============================================================
+
+TIPO_EGRESO = 'Egreso por venta'
+
+
+def _alerta_stock_bajo(stock, producto):
+    """Genera una alerta si el stock quedó en o bajo el mínimo."""
+
+    if stock.Cantidad_stock > stock.Stock_minimo:
+        return False
+
+    if Alertas.objects.filter(
+        ID_Stock=stock,
+        Tipo_alerta='Stock bajo',
+        Atendida=False
+    ).exists():
+        return True
+
+    Alertas.objects.create(
+        ID_Stock=stock,
+        Tipo_alerta='Stock bajo',
+        Mensaje=(
+            f'El producto {producto.Nombre_producto} quedó con '
+            f'{stock.Cantidad_stock} unidades '
+            f'(stock mínimo: {stock.Stock_minimo}).'
+        ),
+        Cantidad_al_generar=stock.Cantidad_stock,
+        Stock_minimo_al_generar=stock.Stock_minimo,
+        Atendida=False
+    )
+
+    return True
+
+
+def egreso_productos(request):
+    """Compatibilidad: abre la vista de productos con el modal de egreso."""
+    return redirect(f"{reverse('gestion_productos')}?egreso=1")
+
+
+def _datos_egreso():
+    """Productos activos con sus lotes vigentes (FEFO) para el modal."""
+
+    hoy = timezone.localdate()
+
+    productos = Productos.objects.filter(
+        Estado_producto='Activo'
+    ).select_related('stock').prefetch_related(
+        Prefetch(
+            'lotes',
+            queryset=Lotes.objects.select_related(
+                'ID_Remito',
+                'ID_Remito__ID_Proveedor'
+            ).filter(
+                Cantidad_actual__gt=0,
+                Fecha_vencimiento__gte=hoy
+            ).order_by('Fecha_vencimiento', 'ID_Lote'),
+            to_attr='lotes_disponibles'
+        )
+    ).order_by('Nombre_producto')
+
+    datos = []
+
+    for p in productos:
+        if not p.lotes_disponibles:
+            continue
+
+        stock = getattr(p, 'stock', None)
+
+        datos.append({
+            'id': p.ID_Producto,
+            'nombre': p.Nombre_producto,
+            'marca': p.Marca or '',
+            'stock': stock.Cantidad_stock if stock else 0,
+            'stock_minimo': stock.Stock_minimo if stock else 0,
+            'lotes': [
+                {
+                    'id': l.ID_Lote,
+                    'numero': l.Numero_lote,
+                    'remito': l.ID_Remito.Numero_remito,
+                    'proveedor': l.ID_Remito.ID_Proveedor.nombre_proveedor,
+                    'vence': l.Fecha_vencimiento.strftime('%d/%m/%Y'),
+                    'cantidad': l.Cantidad_actual,
+                }
+                for l in p.lotes_disponibles
+            ],
+        })
+
+    return datos
+
+
+@require_POST
+def registrar_egreso(request):
+    """Registra un egreso por venta descontando de un lote específico."""
+
+    usuario = usuario_con_acceso(request, 'egresos', gestionar=True)
+
+    if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para registrar egresos de stock.'
+        )
+        return redirect('panel_principal')
+
+    lote_id = request.POST.get('lote', '').strip()
+
+    if not lote_id.isdigit():
+        messages.error(request, 'Seleccioná un lote válido.')
+        return redirect('gestion_productos')
+
+    try:
+        cantidad = int(request.POST.get('cantidad', '').strip())
+    except (ValueError, TypeError):
+        messages.error(request, 'La cantidad ingresada no es válida.')
+        return redirect('gestion_productos')
+
+    if cantidad <= 0:
+        messages.error(request, 'La cantidad debe ser mayor a cero.')
+        return redirect('gestion_productos')
+
+    descripcion = request.POST.get('descripcion', '').strip()[:200]
+
+    lote_base = Lotes.objects.filter(ID_Lote=lote_id).first()
+
+    if not lote_base:
+        messages.error(request, 'El lote seleccionado no existe.')
+        return redirect('gestion_productos')
+
+    tipo_egreso, _ = TiposMovimientos.objects.get_or_create(
+        Nombre_tipo_movimiento=TIPO_EGRESO
+    )
+
+    hoy = timezone.localdate()
+    stock_bajo = False
+
+    try:
+        with transaction.atomic():
+
+            # Se bloquean stock y lote para evitar egresos simultáneos.
+            stock = Stock.objects.select_for_update().filter(
+                ID_Producto_id=lote_base.ID_Producto_id
+            ).first()
+
+            lote = Lotes.objects.select_for_update().get(
+                ID_Lote=lote_id
+            )
+
+            producto = lote.ID_Producto
+
+            if producto.Estado_producto != 'Activo':
+                messages.error(request, 'El producto está inactivo.')
+                return redirect('gestion_productos')
+
+            if not stock:
+                messages.error(
+                    request,
+                    'El producto no tiene stock registrado.'
+                )
+                return redirect('gestion_productos')
+
+            if lote.Fecha_vencimiento < hoy:
+                messages.error(
+                    request,
+                    'No se puede egresar de un lote vencido.'
+                )
+                return redirect('gestion_productos')
+
+            if cantidad > lote.Cantidad_actual:
+                messages.error(
+                    request,
+                    f'El lote {lote.Numero_lote} solo tiene '
+                    f'{lote.Cantidad_actual} unidades disponibles.'
+                )
+                return redirect('gestion_productos')
+
+            if cantidad > stock.Cantidad_stock:
+                messages.error(
+                    request,
+                    'La cantidad supera el stock del producto.'
+                )
+                return redirect('gestion_productos')
+
+            lote_antes = lote.Cantidad_actual
+            stock_antes = stock.Cantidad_stock
+
+            lote.Cantidad_actual -= cantidad
+            lote.save(update_fields=['Cantidad_actual'])
+
+            stock.Cantidad_stock -= cantidad
+            stock.save(update_fields=['Cantidad_stock'])
+
+            detalle = TIPO_EGRESO
+            if descripcion:
+                detalle = f'{TIPO_EGRESO}. {descripcion}'
+
+            MovimientosStock.objects.create(
+                ID_Usuario=usuario,
+                ID_Tipo_movimiento=tipo_egreso,
+                ID_Lote=lote,
+                Cantidad_movimiento_stock=cantidad,
+                Observaciones=detalle[:255]
+            )
+
+            registrar_auditoria(
+                usuario,
+                'Stock',
+                stock,
+                'EGRESO_STOCK',
+                {
+                    'Producto': producto.Nombre_producto,
+                    'Lote': lote.Numero_lote,
+                    'Cantidad_lote': lote_antes,
+                    'Cantidad_stock': stock_antes,
+                },
+                {
+                    'Producto': producto.Nombre_producto,
+                    'Lote': lote.Numero_lote,
+                    'Cantidad_lote': lote.Cantidad_actual,
+                    'Cantidad_stock': stock.Cantidad_stock,
+                    'Cantidad_egresada': cantidad,
+                    'Descripcion': descripcion,
+                }
+            )
+
+            stock_bajo = _alerta_stock_bajo(stock, producto)
+
+    except DatabaseError:
+        messages.error(
+            request,
+            'Ocurrió un error en la base de datos. '
+            'No se registró el egreso.'
+        )
+        return redirect('gestion_productos')
+
+    messages.success(
+        request,
+        f'Egreso registrado: {cantidad} unidad(es) de '
+        f'"{producto.Nombre_producto}" (lote {lote.Numero_lote}). '
+        f'Stock actual: {stock.Cantidad_stock}.'
+    )
+
+    if stock_bajo:
+        messages.warning(
+            request,
+            f'Atención: "{producto.Nombre_producto}" está en o por '
+            f'debajo del stock mínimo ({stock.Stock_minimo}).'
+        )
+
+    return redirect('gestion_productos')

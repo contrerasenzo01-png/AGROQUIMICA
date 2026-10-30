@@ -299,7 +299,7 @@ class Productos(models.Model):
 
     Nombre_producto = models.CharField(max_length=50)
 
-    Descripcion_producto = models.CharField(
+    Descripcion_producto = models.TextField(
         max_length=100,
         blank=True,
         null=True

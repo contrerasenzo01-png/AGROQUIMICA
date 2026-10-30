@@ -32,6 +32,28 @@
 
         {% include 'inventario/_sidebar.html' with activo=activo %}
 
+        <!-- RECORDAR LA POSICIÓN DEL MENÚ LATERAL -->
+        <script>
+        (function () {
+            var nav = document.querySelector('#sidebar .sidebar-nav');
+            if (!nav) { return; }
+
+            var guardado = sessionStorage.getItem('sidebarNavScroll');
+            if (guardado !== null) {
+                nav.scrollTop = parseInt(guardado, 10) || 0;
+            }
+
+            // Antes de salir de la página, guarda la posición actual
+            window.addEventListener('pagehide', function () {
+                sessionStorage.setItem('sidebarNavScroll', nav.scrollTop);
+            });
+
+            nav.addEventListener('scroll', function () {
+                sessionStorage.setItem('sidebarNavScroll', nav.scrollTop);
+            });
+        })();
+        </script>
+
         <div class="page-area">
 
             <!-- TOPBAR -->
@@ -51,24 +73,6 @@
                     </span>
                 </div>
 
-                <div class="topbar-user">
-
-                    <div class="topbar-user-info">
-                        <strong>
-                            {{ usuario.Email_usuario }}
-                        </strong>
-
-                        <span>
-                            {{ usuario.ID_Perfil.Nombre_perfil }}
-                        </span>
-                    </div>
-
-                    <div class="topbar-avatar">
-                        {{ usuario.Email_usuario|first|upper }}
-                    </div>
-
-                </div>
-
             </header>
 
             <!-- CONTENIDO -->
@@ -82,7 +86,7 @@
         </div>
 
     </div>
-    
+
 
     {% block extra_js %}
     {% endblock %}

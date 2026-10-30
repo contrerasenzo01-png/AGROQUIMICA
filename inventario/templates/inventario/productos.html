@@ -8,6 +8,47 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}">
+    <style>
+        .pr-header-acciones { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+        .pr-btn-rojo          { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+        .pr-btn-rojo:hover    { background: #991b1b; border-color: #991b1b; }
+        .pr-btn-rojo:disabled { opacity: .45; cursor: not-allowed; }
+
+        .pr-modal-egreso { max-width: 640px; max-height: 96vh; }
+        .pr-modal-egreso .pr-modal-body { padding-top: 16px; }
+        .pr-modal-egreso .pr-grupo { margin-bottom: 12px; }
+        .pr-modal-egreso textarea {
+            width: 100%; padding: 10px 12px; resize: none;
+            border: 1px solid #dde7e0; border-radius: 8px;
+            font-family: inherit; outline: none;
+        }
+
+        /* Resumen del lote: etiqueta arriba, dato abajo */
+        .eg-datos {
+            background: #f3f7f5;
+            border: 1px solid #e3eae6;
+            border-radius: 12px;
+            padding: 14px 18px;
+        }
+        .eg-datos-titulo { margin: 0 0 10px; color: #6b7c73; }
+        .eg-datos-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+        .eg-dato         { display: flex; flex-direction: column; gap: 2px; }
+        .eg-dato-label   { display: block; font-size: 13px; color: #6b7c73; }
+        .eg-dato-valor   { display: block; font-size: 14px; font-weight: 700; color: #1c2a23; }
+
+        /* Cómo quedan lote y stock */
+        .eg-resultado { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .eg-res {
+            display: flex; flex-direction: column; gap: 2px;
+            padding: 10px 16px; border-radius: 12px;
+            background: #e8f5ee; color: #1b7a4a;
+        }
+        .eg-res-label { display: block; font-size: 12px; }
+        .eg-res-valor { display: block; font-size: 24px; font-weight: 700; line-height: 1.2; }
+        .eg-res.eg-alerta { background: #fef3c7; color: #b45309; }
+        .eg-res.eg-error  { background: #fee2e2; color: #b91c1c; }
+    </style>
 {% endblock %}
 
 {% block contenido %}
@@ -38,17 +79,35 @@
             <h1 class="pr-title">Gestión de productos</h1>
         </div>
 
-        <button type="button"
-                class="pr-btn pr-btn-primary"
-                onclick="abrirModalCrear()">
+        <div class="pr-header-acciones">
 
-            <svg class="pr-icon" viewBox="0 0 24 24">
-                <path d="M12 5v14M5 12h14"/>
-            </svg>
+            <button type="button"
+                    class="pr-btn pr-btn-primary"
+                    onclick="abrirModalCrear()">
 
-            Registrar producto
+                <svg class="pr-icon" viewBox="0 0 24 24">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
 
-        </button>
+                Registrar producto
+
+            </button>
+
+            {% if puede_egresar %}
+            <button type="button"
+                    class="pr-btn pr-btn-rojo"
+                    onclick="abrirModalEgreso()">
+
+                <svg class="pr-icon" viewBox="0 0 24 24">
+                    <path d="M5 12h14"/>
+                </svg>
+
+                Registrar egreso
+
+            </button>
+            {% endif %}
+
+        </div>
 
     </header>
 
@@ -1131,13 +1190,282 @@
 </div>
 
 
+{% if puede_egresar %}
 
+{{ datos_egreso|json_script:"datosEgreso" }}
+
+<div class="pr-modal" id="modalEgreso">
+
+    <div class="pr-modal-box pr-modal-egreso">
+
+        <div class="pr-modal-head">
+            <h2>Registrar egreso por venta</h2>
+
+            <button type="button"
+                    class="pr-modal-x"
+                    onclick="cerrarModal('modalEgreso')"
+                    aria-label="Cerrar">
+                <svg class="pr-icon" viewBox="0 0 24 24">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'registrar_egreso' %}" id="formEgreso">
+
+            {% csrf_token %}
+
+            <div class="pr-modal-body">
+
+                <div class="pr-grid">
+
+                    <div class="pr-grupo">
+                        <label>Tipo de movimiento</label>
+                        <input type="text" value="Egreso por venta" readonly>
+                    </div>
+
+                    <div class="pr-grupo">
+                        <label>Fecha y hora (automático)</label>
+                        <input type="text" id="eg_fecha" readonly>
+                    </div>
+
+                    <div class="pr-grupo pr-full">
+                        <label>Usuario y perfil (automático, según la sesión)</label>
+                        <input type="text"
+                               value="{{ usuario.Nombre_usuario }} {{ usuario.Apellido_usuario }} - {{ usuario.ID_Perfil.Nombre_perfil }}"
+                               readonly>
+                    </div>
+
+                    <div class="pr-grupo">
+                        <label>Producto</label>
+                        <select id="eg_producto" onchange="egCargarLotes()" required></select>
+                    </div>
+
+                    <div class="pr-grupo">
+                        <label>Lote</label>
+                        <select name="lote" id="eg_lote" onchange="egActualizar()" required></select>
+                    </div>
+
+                    <div class="pr-grupo pr-full">
+                        <div class="eg-datos">
+                            <p class="eg-datos-titulo">Datos del lote (solo lectura)</p>
+                            <div class="eg-datos-grid">
+                                <div class="eg-dato">
+                                    <span class="eg-dato-label">Remito de origen</span>
+                                    <span class="eg-dato-valor" id="eg_remito">—</span>
+                                </div>
+                                <div class="eg-dato">
+                                    <span class="eg-dato-label">Proveedor</span>
+                                    <span class="eg-dato-valor" id="eg_proveedor">—</span>
+                                </div>
+                                <div class="eg-dato">
+                                    <span class="eg-dato-label">Vencimiento</span>
+                                    <span class="eg-dato-valor" id="eg_vence">—</span>
+                                </div>
+                                <div class="eg-dato">
+                                    <span class="eg-dato-label">Cantidad actual del lote</span>
+                                    <span class="eg-dato-valor" id="eg_cant_lote">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-grupo pr-full">
+                        <label>Cantidad a vender</label>
+                        <input type="number"
+                               name="cantidad"
+                               id="eg_cantidad"
+                               min="1"
+                               step="1"
+                               oninput="egActualizar()"
+                               required>
+                    </div>
+
+                    <div class="pr-grupo pr-full">
+                        <div class="eg-resultado">
+                            <div class="eg-res" id="eg_box_lote">
+                                <span class="eg-res-label">Lote quedará en</span>
+                                <span class="eg-res-valor" id="eg_res_lote">—</span>
+                            </div>
+                            <div class="eg-res" id="eg_box_stock">
+                                <span class="eg-res-label">Stock del producto quedará en</span>
+                                <span class="eg-res-valor" id="eg_res_stock">—</span>
+                            </div>
+                        </div>
+                        <span class="pr-hint" id="eg_aviso"></span>
+                    </div>
+
+                    <div class="pr-grupo pr-full">
+                        <label>Descripción</label>
+                        <textarea name="descripcion"
+                                  id="eg_descripcion"
+                                  rows="2"
+                                  maxlength="200"
+                                  placeholder="Ej. Venta a cliente, factura 0001-00123"></textarea>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="pr-modal-pie">
+                <button type="button"
+                        class="pr-btn pr-btn-claro"
+                        onclick="cerrarModal('modalEgreso')">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        id="eg_submit"
+                        class="pr-btn pr-btn-rojo">
+                    Registrar egreso
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endif %}
 
     {% block extra_js %}
 
-<script>
 
     
+<script>
+
+    /* =====================================================
+       EGRESO POR VENTA
+    ===================================================== */
+
+    const DATOS_EGRESO = (function () {
+        const el = document.getElementById('datosEgreso');
+        return el ? JSON.parse(el.textContent) : [];
+    })();
+
+    function egProductoActual() {
+        return DATOS_EGRESO[document.getElementById('eg_producto').value];
+    }
+
+    function egLoteActual() {
+        const p = egProductoActual();
+        const id = Number(document.getElementById('eg_lote').value);
+        return p ? p.lotes.find(function (l) { return l.id === id; }) : null;
+    }
+
+    function abrirModalEgreso() {
+
+        if (!DATOS_EGRESO.length) {
+            mostrarToast('No hay productos con lotes disponibles para egresar.', 'warning');
+            return;
+        }
+
+        const selProd = document.getElementById('eg_producto');
+        selProd.innerHTML = '';
+
+        DATOS_EGRESO.forEach(function (p, i) {
+            selProd.add(new Option(
+                p.nombre + (p.marca ? ' - ' + p.marca : ''), i
+            ));
+        });
+
+        document.getElementById('eg_cantidad').value = '';
+        document.getElementById('eg_descripcion').value = '';
+        document.getElementById('eg_fecha').value =
+            new Date().toLocaleString('es-AR', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            });
+
+        egCargarLotes();
+
+        document.getElementById('modalEgreso').style.display = 'flex';
+    }
+
+    function egCargarLotes() {
+
+        const p = egProductoActual();
+        const selLote = document.getElementById('eg_lote');
+        selLote.innerHTML = '';
+
+        p.lotes.forEach(function (l) {
+            selLote.add(new Option(l.numero, l.id));
+        });
+
+        egActualizar();
+    }
+
+    function egActualizar() {
+
+        const p = egProductoActual();
+        const l = egLoteActual();
+
+        if (!p || !l) { return; }
+
+        document.getElementById('eg_remito').textContent = l.remito;
+        document.getElementById('eg_proveedor').textContent = l.proveedor;
+        document.getElementById('eg_vence').textContent = l.vence;
+        document.getElementById('eg_cant_lote').textContent = l.cantidad;
+
+        const inputCant = document.getElementById('eg_cantidad');
+        inputCant.max = Math.min(l.cantidad, p.stock);
+
+        const cant = parseInt(inputCant.value, 10);
+        const boxLote = document.getElementById('eg_box_lote');
+        const boxStock = document.getElementById('eg_box_stock');
+        const aviso = document.getElementById('eg_aviso');
+        const btn = document.getElementById('eg_submit');
+
+        boxLote.className = 'eg-res';
+        boxStock.className = 'eg-res';
+        aviso.textContent = '';
+
+        if (isNaN(cant) || cant <= 0) {
+            document.getElementById('eg_res_lote').textContent = '—';
+            document.getElementById('eg_res_stock').textContent = '—';
+            btn.disabled = true;
+            return;
+        }
+
+        const restoLote = l.cantidad - cant;
+        const restoStock = p.stock - cant;
+
+        document.getElementById('eg_res_lote').textContent = restoLote;
+        document.getElementById('eg_res_stock').textContent = restoStock;
+
+        if (restoLote < 0 || restoStock < 0) {
+            boxLote.className = 'eg-res eg-error';
+            boxStock.className = 'eg-res eg-error';
+            aviso.textContent = 'La cantidad supera lo disponible en el lote o en el stock.';
+            btn.disabled = true;
+            return;
+        }
+
+        if (restoStock <= p.stock_minimo) {
+            boxStock.className = 'eg-res eg-alerta';
+            aviso.textContent =
+                'El stock quedará en o por debajo del mínimo (' + p.stock_minimo + ').';
+        }
+
+        btn.disabled = false;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const modalEgreso = document.getElementById('modalEgreso');
+
+        if (!modalEgreso) { return; }
+
+        modalEgreso.addEventListener('click', function (e) {
+            if (e.target === this) { cerrarModal('modalEgreso'); }
+        });
+
+        if (new URLSearchParams(window.location.search).get('egreso') === '1') {
+            abrirModalEgreso();
+        }
+    });    
 
 
 
