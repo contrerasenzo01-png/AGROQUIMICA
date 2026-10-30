@@ -323,6 +323,11 @@ class Productos(models.Model):
         blank=True
     )
 
+    Unidades_por_presentacion = models.PositiveIntegerField(
+        default=1,
+        verbose_name='Unidades por presentación'
+    )
+    
     ESTADO_CHOICES = [
         ('Activo', 'Activo'),
         ('Inactivo', 'Inactivo'),

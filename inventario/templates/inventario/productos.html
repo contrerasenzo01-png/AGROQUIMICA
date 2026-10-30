@@ -222,6 +222,7 @@
                         <th>Precio</th>
                         <th>Cantidad presentación</th>
                         <th>Unidad medida</th>
+                        <th>Unidades por presentación</th>
                         <th>Stock disponible</th>
                         <th>Stock mínimo</th>
                         <th>Estado</th>
@@ -338,6 +339,15 @@
                             </td>
 
 
+                            <!-- ===================== UNIDADES POR PRESENTACIÓN ===================== -->
+
+                            <td>
+
+                                {{ producto.Unidades_por_presentacion }}
+
+                            </td>
+
+
                             <!-- ===================== STOCK ===================== -->
 
                             <td>
@@ -441,7 +451,8 @@
                                                 '{{ producto.Unidad_medida_producto|default:''|escapejs }}',
                                                 '{{ producto.Estado_producto }}',
                                                 '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}',
-                                                '{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}'
+                                                '{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}',
+                                                '{{ producto.Unidades_por_presentacion }}'
                                             )">
 
                                         <svg class="pr-icon" viewBox="0 0 24 24">
@@ -490,7 +501,7 @@
                             class="pr-fila-lotes"
                             style="display: none;">
 
-                            <td colspan="11">
+                            <td colspan="12">
 
                                 <div class="pr-lotes-contenido">
 
@@ -576,7 +587,7 @@
 
                         <tr>
 
-                            <td colspan="11" class="pr-vacio">
+                            <td colspan="12" class="pr-vacio">
                                 No se encontraron productos.
                             </td>
 
@@ -841,6 +852,28 @@
                             </option>
 
                         </select>
+
+                    </div>
+
+
+                    <!-- UNIDADES POR PRESENTACIÓN -->
+
+                    <div class="pr-grupo">
+
+                        <label>
+                            Unidades por presentación
+                        </label>
+
+                        <input type="number"
+                               step="1"
+                               min="1"
+                               name="Unidades_por_presentacion"
+                               value="1"
+                               required>
+
+                        <span class="pr-hint">
+                            Envases que trae cada presentación (ej.: 4 en "4X 5L").
+                        </span>
 
                     </div>
 
@@ -1155,6 +1188,24 @@
                             </option>
 
                         </select>
+
+                    </div>
+
+
+                    <!-- UNIDADES POR PRESENTACIÓN -->
+
+                    <div class="pr-grupo">
+
+                        <label>
+                            Unidades por presentación
+                        </label>
+
+                        <input type="number"
+                               step="1"
+                               min="1"
+                               id="edit_unidades"
+                               name="Unidades_por_presentacion"
+                               required>
 
                     </div>
 
@@ -1703,7 +1754,8 @@ function toggleLotes(productoId, boton) {
         unidad,
         estado,
         stockMinimo,
-        subtipo
+        subtipo,
+        unidades
     ) {
 
         document.getElementById(
@@ -1756,6 +1808,12 @@ function toggleLotes(productoId, boton) {
             'edit_cantidad'
         ).value =
             cantidad;
+
+
+        document.getElementById(
+            'edit_unidades'
+        ).value =
+            unidades || 1;
 
 
         document.getElementById(

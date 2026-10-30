@@ -156,7 +156,7 @@ def login_view(request):
 
                 registrar_auditoria(
                     usuario=usuario,
-                    entidad="USUARIOS",
+                    entidad="Usuarios",
                     objeto=usuario,
                     accion="INICIO_SESION",
                     antes={},
@@ -190,7 +190,7 @@ def cerrar_sesion(request):
     if usuario:
         registrar_auditoria(
             usuario=usuario,
-            entidad="USUARIOS",
+            entidad="Usuarios",
             objeto=usuario,
             accion="CIERRE_SESION",
             antes={},
@@ -2067,6 +2067,10 @@ def _leer_datos_producto(request, estado_por_defecto):
         'Cantidad_presentacion', ''
     ).strip()
 
+    unidades_input = request.POST.get(
+        'Unidades_por_presentacion', ''
+    ).strip()
+
     unidad_medida = request.POST.get(
         'Unidad_medida_producto', ''
     ).strip()
@@ -2168,6 +2172,18 @@ def _leer_datos_producto(request, estado_por_defecto):
         cantidad_presentacion = None
 
     # --------------------------------------------------------
+    # VALIDAR UNIDADES POR PRESENTACIÓN
+    # --------------------------------------------------------
+
+    try:
+        unidades_por_presentacion = int(unidades_input or 1)
+    except (ValueError, TypeError):
+        return None, 'Las unidades por presentación no son válidas.'
+
+    if unidades_por_presentacion < 1:
+        return None, 'Las unidades por presentación deben ser al menos 1.'
+
+    # --------------------------------------------------------
     # VALIDAR STOCK MÍNIMO
     # --------------------------------------------------------
 
@@ -2206,6 +2222,7 @@ def _leer_datos_producto(request, estado_por_defecto):
         'descripcion': descripcion or None,
         'precio': precio,
         'cantidad_presentacion': cantidad_presentacion,
+        'unidades_por_presentacion': unidades_por_presentacion,
         'unidad_medida': unidad_medida or None,
         'estado_producto': estado_producto,
     }
@@ -2213,11 +2230,15 @@ def _leer_datos_producto(request, estado_por_defecto):
     return datos, None
 
 
-def _producto_duplicado(nombre, marca, excluir_pk=None):
-    """Comprueba si existe otro producto con el mismo nombre y marca."""
+def _producto_duplicado(nombre, marca, cantidad_presentacion,
+                        unidades, excluir_pk=None):
+    """Comprueba si existe otro producto con el mismo nombre, marca
+    y presentación (cantidad y unidades por presentación)."""
 
     productos = Productos.objects.filter(
-        Nombre_producto__iexact=nombre
+        Nombre_producto__iexact=nombre,
+        Cantidad_presentacion=cantidad_presentacion,
+        Unidades_por_presentacion=unidades,
     )
 
     if marca:
@@ -2355,7 +2376,9 @@ def crear_producto(request):
 
     if _producto_duplicado(
         datos['nombre'],
-        datos['marca']
+        datos['marca'],
+        datos['cantidad_presentacion'],
+        datos['unidades_por_presentacion']
     ):
         messages.error(
             request,
@@ -2373,6 +2396,7 @@ def crear_producto(request):
             Descripcion_producto=datos['descripcion'],
             Precio=datos['precio'],
             Cantidad_presentacion=datos['cantidad_presentacion'],
+            Unidades_por_presentacion=datos['unidades_por_presentacion'],
             Unidad_medida_producto=datos['unidad_medida'],
             Estado_producto=datos['estado_producto'],
         )
@@ -2455,6 +2479,8 @@ def editar_producto(request, pk):
     if _producto_duplicado(
         datos['nombre'],
         datos['marca'],
+        datos['cantidad_presentacion'],
+        datos['unidades_por_presentacion'],
         excluir_pk=pk
     ):
         messages.error(
@@ -2472,6 +2498,7 @@ def editar_producto(request, pk):
         producto.Descripcion_producto = datos['descripcion']
         producto.Precio = datos['precio']
         producto.Cantidad_presentacion = datos['cantidad_presentacion']
+        producto.Unidades_por_presentacion = datos['unidades_por_presentacion']
         producto.Unidad_medida_producto = datos['unidad_medida']
         producto.Estado_producto = datos['estado_producto']
         
