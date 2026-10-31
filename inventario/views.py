@@ -23,7 +23,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
-from .reportes import generar_reportes
+from .reportes import generar_reportes, datos_evolucion_rango
 from .auditoria import snapshot, registrar_auditoria
 from .forms import ProveedorForm
 from .permissions import usuario_con_acceso, puede
@@ -4881,3 +4881,31 @@ def gestion_reportes(request):
             'graficos': generar_reportes(TIPO_EGRESO),
         }
     )
+
+def datos_evolucion(request):
+    """Ventas e ingresos entre dos fechas (JSON, solo Administrador)."""
+
+    if not usuario_es_administrador(request):
+        return JsonResponse(
+            {'error': 'No tenés permiso para consultar los reportes.'},
+            status=403
+        )
+
+    desde = _fecha_iso(request.GET.get('desde', ''))
+    hasta = _fecha_iso(request.GET.get('hasta', ''))
+
+    if not desde or not hasta:
+        return JsonResponse(
+            {'error': 'Las fechas ingresadas no son válidas.'},
+            status=400
+        )
+
+    # No tiene sentido consultar fechas futuras.
+    hasta = min(hasta, timezone.localdate())
+
+    try:
+        datos = datos_evolucion_rango(desde, hasta, TIPO_EGRESO)
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse(datos)

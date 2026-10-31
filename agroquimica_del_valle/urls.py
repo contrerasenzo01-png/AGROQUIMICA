@@ -93,4 +93,5 @@ urlpatterns = [
     ),
     # Reportes (solo administrador)
     path('reportes/', views.gestion_reportes, name='gestion_reportes'),
+    path('reportes/evolucion/', views.datos_evolucion, name='datos_evolucion'),
 ]

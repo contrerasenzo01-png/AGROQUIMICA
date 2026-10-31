@@ -1,8 +1,8 @@
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 
 from django.utils import timezone
 
-from .models import Lotes, MovimientosStock, Stock
+from .models import Lotes, MovimientosStock, Stock, TiposProductos
 
 TIPO_ENTRADA = 'Entrada de lote'
 
@@ -16,6 +16,11 @@ MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
 
 ETIQUETAS_TRAMOS = ['Vencidos', '0-30 días', '31-60 días', '61-90 días']
 COLORES_TRAMOS = [ROJO, NARANJA, AMARILLO, VERDE]
+
+# Filtro de fechas del gráfico 3:
+# hasta este largo se agrupa por día; más largo, por mes.
+MAX_DIAS_AGRUPADO_POR_DIA = 62
+MAX_MESES_RANGO = 60
 
 
 # ============================================================
@@ -39,6 +44,32 @@ def _periodos(hoy, cantidad=12):
 
 
 # ============================================================
+# TIPOS Y SUBTIPOS (para los filtros de los gráficos 1 y 4)
+# ============================================================
+
+def _datos_tipos():
+    tipos = TiposProductos.objects.order_by(
+        'Nombre_tipo_producto'
+    ).prefetch_related('subtipos')
+
+    return [
+        {
+            'id': t.ID_Tipo_producto,
+            'nombre': t.Nombre_tipo_producto,
+            # Los tipos sin subtipos quedan con la lista vacía.
+            'subtipos': [
+                {'id': s.ID_Subtipo, 'nombre': s.Nombre_subtipo}
+                for s in sorted(
+                    t.subtipos.all(),
+                    key=lambda s: s.Nombre_subtipo.lower()
+                )
+            ],
+        }
+        for t in tipos
+    ]
+
+
+# ============================================================
 # 1. STOCK ACTUAL VS MÍNIMO
 # ============================================================
 
@@ -50,6 +81,8 @@ def _datos_stock():
         'ID_Producto__Marca',
         'Cantidad_stock',
         'Stock_minimo',
+        'ID_Producto__ID_Tipo_producto',
+        'ID_Producto__ID_Subtipo',
     )
 
     datos = [
@@ -57,8 +90,10 @@ def _datos_stock():
             'nombre': _etiqueta(producto, marca),
             'stock': stock,
             'minimo': minimo,
+            'tipo_id': tipo_id,
+            'subtipo_id': subtipo_id,
         }
-        for producto, marca, stock, minimo in filas
+        for producto, marca, stock, minimo, tipo_id, subtipo_id in filas
     ]
 
     # Los más críticos primero (los que están más por debajo del mínimo).
@@ -142,6 +177,93 @@ def _datos_evolucion(periodos, tipo_venta):
         'meses': etiquetas,
         'ventas': [ventas[c] for c in claves],
         'ingresos': [ingresos[c] for c in claves],
+        'agrupacion': 'mes',
+    }
+
+
+def datos_evolucion_rango(desde, hasta, tipo_venta):
+    """Ventas e ingresos entre dos fechas (inclusive).
+
+    Hasta 62 días agrupa por día; más que eso, por mes.
+    Lanza ValueError si el rango no es válido.
+    """
+
+    if desde > hasta:
+        raise ValueError('La fecha "Desde" no puede ser posterior a "Hasta".')
+
+    dias = (hasta - desde).days + 1
+    por_dia = dias <= MAX_DIAS_AGRUPADO_POR_DIA
+
+    if por_dia:
+        periodos = [desde + timedelta(days=i) for i in range(dias)]
+
+        def clave(f):
+            return f.strftime('%Y-%m-%d')
+
+        def etiqueta(p):
+            return p.strftime('%d/%m')
+    else:
+        periodos = []
+        actual = desde.replace(day=1)
+
+        while actual <= hasta:
+            periodos.append(actual)
+            actual = date(
+                actual.year + actual.month // 12,
+                actual.month % 12 + 1,
+                1
+            )
+
+        if len(periodos) > MAX_MESES_RANGO:
+            raise ValueError('El rango es demasiado largo (máximo 5 años).')
+
+        def clave(f):
+            return f.strftime('%Y-%m')
+
+        def etiqueta(p):
+            return f'{MESES[p.month - 1]} {str(p.year)[2:]}'
+
+    claves = [clave(p) for p in periodos]
+
+    inicio = timezone.make_aware(datetime.combine(desde, time.min))
+    fin = timezone.make_aware(
+        datetime.combine(hasta + timedelta(days=1), time.min)
+    )
+
+    filas = MovimientosStock.objects.filter(
+        Fecha_hora_movimiento__gte=inicio,
+        Fecha_hora_movimiento__lt=fin,
+        ID_Tipo_movimiento__Nombre_tipo_movimiento__in=[
+            tipo_venta, TIPO_ENTRADA
+        ]
+    ).values_list(
+        'Fecha_hora_movimiento',
+        'ID_Tipo_movimiento__Nombre_tipo_movimiento',
+        'Cantidad_movimiento_stock',
+    )
+
+    ventas = {c: 0 for c in claves}
+    ingresos = {c: 0 for c in claves}
+
+    for fecha, tipo, cantidad in filas:
+        if timezone.is_aware(fecha):
+            fecha = timezone.localtime(fecha)
+
+        k = clave(fecha)
+
+        if k not in ventas:
+            continue
+
+        if tipo == tipo_venta:
+            ventas[k] += cantidad
+        else:
+            ingresos[k] += cantidad
+
+    return {
+        'meses': [etiqueta(p) for p in periodos],
+        'ventas': [ventas[c] for c in claves],
+        'ingresos': [ingresos[c] for c in claves],
+        'agrupacion': 'día' if por_dia else 'mes',
     }
 
 
@@ -150,26 +272,43 @@ def _datos_evolucion(periodos, tipo_venta):
 # ============================================================
 
 def _datos_vencidos(hoy):
+    """Unidades vencidas por producto (todos, de mayor a menor).
+
+    El top 10 se arma en el navegador, así se puede recalcular
+    al filtrar por tipo y subtipo.
+    """
+
     filas = Lotes.objects.filter(
         Cantidad_actual__gt=0,
         Fecha_vencimiento__isnull=False,
         Fecha_vencimiento__lt=hoy,
     ).values_list(
+        'ID_Producto',
         'ID_Producto__Nombre_producto',
         'ID_Producto__Marca',
+        'ID_Producto__ID_Tipo_producto',
+        'ID_Producto__ID_Subtipo',
         'Cantidad_actual',
     )
 
     totales = {}
 
-    for producto, marca, cantidad in filas:
-        nombre = _etiqueta(producto, marca)
-        totales[nombre] = totales.get(nombre, 0) + cantidad
+    for pid, producto, marca, tipo_id, subtipo_id, cantidad in filas:
+        if pid not in totales:
+            totales[pid] = {
+                'nombre': _etiqueta(producto, marca),
+                'tipo_id': tipo_id,
+                'subtipo_id': subtipo_id,
+                'unidades': 0,
+            }
 
-    # Top 10, el mayor primero (queda arriba en el gráfico).
-    top = sorted(totales.items(), key=lambda x: x[1], reverse=True)[:10]
+        totales[pid]['unidades'] += cantidad
 
-    return [{'nombre': n, 'unidades': u} for n, u in top]
+    return sorted(
+        totales.values(),
+        key=lambda d: d['unidades'],
+        reverse=True
+    )
 
 
 # ============================================================
@@ -183,6 +322,7 @@ def generar_reportes(tipo_venta):
     periodos = _periodos(hoy)
 
     return {
+        'tipos': _datos_tipos(),
         'stock': _datos_stock(),
         'tramos': _datos_tramos(hoy),
         'evolucion': _datos_evolucion(periodos, tipo_venta),
