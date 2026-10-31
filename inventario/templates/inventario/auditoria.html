@@ -133,11 +133,11 @@
                         </td>
                     
                         <td>
-                            {{ log.Perfil_usuario|default:"Sin perfil" }}
+                            {{ log.ID_Usuario.ID_Perfil.Nombre_perfil|default:"Sin perfil" }}
                         </td>
 
                         <td>
-                            <span class="al-producto">{{ log.Entidad }}</span>
+                            <span class="al-producto">{{ log.Seccion }}</span>
                         </td>
                         <td>
                             {% if log.Accion == 'CREACION' %}

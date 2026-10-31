@@ -4483,13 +4483,13 @@ def gestion_auditoria(request):
     fecha_hasta = request.GET.get('fecha_hasta', '').strip()
 
     logs = LogAuditoria.objects.select_related(
-        'ID_Usuario'
+        'ID_Usuario__ID_Perfil'
     ).exclude(
         Accion='EGRESO_STOCK'
     ).order_by('-Fecha_hora')
     
     if entidad:
-        logs = logs.filter(Entidad=entidad)
+        logs = logs.filter(Seccion=entidad)
 
     if accion:
         logs = logs.filter(Accion=accion)
@@ -4518,8 +4518,8 @@ def gestion_auditoria(request):
             'pagina': pagina,
             'entidades': LogAuditoria.objects.exclude(
                 Accion='EGRESO_STOCK'
-            ).order_by('Entidad').values_list(
-                'Entidad', flat=True
+            ).order_by('Seccion').values_list(
+                'Seccion', flat=True
             ).distinct(),
             'usuarios': Usuarios.objects.order_by(
                 'Apellido_usuario', 'Nombre_usuario'
@@ -4533,6 +4533,35 @@ def gestion_auditoria(request):
         }
     )
 
+# Campos que guardan el ID de otro registro: en pantalla se muestra su nombre.
+_REFERENCIAS_AUDITORIA = {
+    'ID_Tipo_producto': (TiposProductos, lambda o: o.Nombre_tipo_producto),
+    'ID_Subtipo': (Subtipos, lambda o: o.Nombre_subtipo),
+    'ID_Proveedor': (Proveedores, lambda o: o.nombre_proveedor),
+    'ID_Producto': (Productos, lambda o: o.Nombre_producto),
+    'ID_Remito': (Remitos, lambda o: o.Numero_remito),
+    'ID_Perfil': (Perfiles, lambda o: o.Nombre_perfil),
+    'ID_Usuario_anulacion': (
+        Usuarios,
+        lambda o: f'{o.Apellido_usuario}, {o.Nombre_usuario}'
+    ),
+}
+
+
+def _valor_visible_auditoria(campo, valor):
+    """Reemplaza el ID de un registro relacionado por su nombre."""
+
+    referencia = _REFERENCIAS_AUDITORIA.get(campo)
+
+    if referencia is None or valor in (None, ''):
+        return valor
+
+    modelo, nombre = referencia
+    objeto = modelo.objects.filter(pk=valor).first()
+
+    return nombre(objeto) if objeto else 'Registro eliminado'
+
+
 def detalle_auditoria(request, id_log):
     usuario = usuario_es_administrador(request)
 
@@ -4544,29 +4573,60 @@ def detalle_auditoria(request, id_log):
 
     log = get_object_or_404(LogAuditoria, pk=id_log)
 
+    # La fecha se guarda en UTC: se muestra en la hora local del sistema.
+    fecha_local = timezone.localtime(log.Fecha_hora)
+
+    anteriores = log.Valores_anteriores or {}
+    actuales = log.Valores_actuales or {}
+
+    # Qué se muestra en el detalle según la acción:
+    #   datos   -> altas y eliminaciones: los datos del registro
+    #   cambios -> modificaciones y anulaciones: valor anterior y nuevo
+    #   ninguno -> inicio y cierre de sesión: nada más que los datos básicos
+    if log.Accion == 'CREACION':
+        modo, origen = 'datos', actuales
+    elif log.Accion == 'ELIMINACION':
+        modo, origen = 'datos', anteriores
+    elif log.Accion in ('INICIO_SESION', 'CIERRE_SESION'):
+        modo, origen = 'ninguno', {}
+    else:
+        modo, origen = 'cambios', {}
+
     return JsonResponse({
         'id': log.ID_Log,
-        'fecha': log.Fecha_hora.strftime('%d/%m/%Y'),
-        'hora': log.Fecha_hora.strftime('%H:%M'),
+        'fecha': fecha_local.strftime('%d/%m/%Y'),
+        'hora': fecha_local.strftime('%H:%M'),
         'usuario': (
             f'{log.ID_Usuario.Apellido_usuario}, '
             f'{log.ID_Usuario.Nombre_usuario}'
             if log.ID_Usuario else 'Sistema'
         ),
-        'perfil': log.Perfil_usuario or 'Sin perfil',
-        'entidad': log.Entidad,
+        'perfil': (
+            log.ID_Usuario.ID_Perfil.Nombre_perfil
+            if log.ID_Usuario and log.ID_Usuario.ID_Perfil
+            else 'Sin perfil'
+        ),
+        'entidad': log.Seccion,
         'registro': log.ID_Registro,
         'accion': log.Accion,
-        'anteriores': log.Valores_anteriores or {},
-        'actuales': log.Valores_actuales or {},
+        'modo': modo,
+        'datos': [
+            {
+                'campo': campo,
+                'valor': _valor_visible_auditoria(campo, valor)
+            }
+            for campo, valor in sorted(origen.items())
+        ],
+        'anteriores': anteriores,
+        'actuales': actuales,
         'cambios': [
             {
                 'campo': campo,
-                'antes': antes,
-                'despues': despues
+                'antes': _valor_visible_auditoria(campo, antes),
+                'despues': _valor_visible_auditoria(campo, despues)
             }
             for campo, antes, despues in log.cambios
-        ]
+        ] if modo == 'cambios' else []
     })
 
 # ============================================================

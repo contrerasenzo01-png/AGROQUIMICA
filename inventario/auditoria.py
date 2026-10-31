@@ -28,12 +28,7 @@ def registrar_auditoria(usuario, entidad, objeto, accion, antes, despues):
 
     return LogAuditoria.objects.create(
         ID_Usuario=usuario,
-        Perfil_usuario=(
-            usuario.ID_Perfil.Nombre_perfil
-            if usuario and usuario.ID_Perfil
-            else "Sin perfil"
-        ),
-        Entidad=entidad,
+        Seccion=entidad,
         ID_Registro=objeto.pk,
         Accion=accion,
         Valores_anteriores=antes,
