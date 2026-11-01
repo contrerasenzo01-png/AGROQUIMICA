@@ -1,15 +1,6 @@
-/* Modo oscuro: invierte los colores de toda la página y deja las imágenes como están. */
-html.modo-oscuro {
-    background: #fff;
-    filter: invert(0.92) hue-rotate(180deg);
-}
-
-html.modo-oscuro img,
-html.modo-oscuro video,
-html.modo-oscuro iframe {
-    filter: invert(1) hue-rotate(180deg);
-}
-
+/* ============================================================
+   BOTÓN DE TEMA (barra superior)
+   ============================================================ */
 .topbar-tema {
     margin-left: auto;
     display: inline-flex;
@@ -23,7 +14,576 @@ html.modo-oscuro iframe {
     color: inherit;
     cursor: pointer;
 }
+.topbar-tema:hover { background: rgba(0, 0, 0, .07); }
+html.modo-oscuro .topbar-tema:hover { background: rgba(255, 255, 255, .08); }
 
-.topbar-tema:hover {
-    background: rgba(0, 0, 0, 0.07);
+
+/* ============================================================
+   MODO OSCURO — PALETA
+   ============================================================ */
+html.modo-oscuro {
+    color-scheme: dark;
+
+    --d-bg: #0d1511;
+    --d-surface: #151f1a;
+    --d-surface-2: #1a2620;
+    --d-surface-3: #223029;
+    --d-input: #111a15;
+    --d-hover: #1b2822;
+    --d-border: #263830;
+    --d-border-2: #324539;
+    --d-text: #e3ece6;
+    --d-text-2: #a4b6ab;
+    --d-text-3: #7f9387;
+    --d-title: #eef6f1;
+    --d-green: #4ade80;
+    --d-green-btn: #26905c;
+    --d-green-btn-h: #2fa86d;
+    --d-green-bg: #12301f;
+    --d-green-tx: #6ee7a1;
+    --d-green-bd: #1f5a38;
+    --d-red-bg: #381616;
+    --d-red-tx: #f87171;
+    --d-red-bd: #5c2222;
+    --d-amb-bg: #3a2d0f;
+    --d-amb-tx: #fbbf24;
+    --d-amb-bd: #5e4813;
+    --d-blue-bg: #11273f;
+    --d-blue-tx: #7db8f5;
+    --d-blue-bd: #1f4670;
+    --d-vio-bg: #271a40;
+    --d-vio-tx: #c4a7f5;
+
+    /* Variables de Movimientos */
+    --fondo: var(--d-bg);
+    --borde: var(--d-border);
+    --texto: var(--d-text);
+    --texto-suave: var(--d-text-2);
+    --verde-fondo: var(--d-green-bg);
+    --verde-medio: var(--d-green-tx);
+    --rojo: var(--d-red-tx);
+    --rojo-fondo: var(--d-red-bg);
+    --ambar: var(--d-amb-tx);
+    --ambar-fondo: var(--d-amb-bg);
+    --verde-boton: var(--d-green-btn);
+
+    /* Variables de Remitos */
+    --rm-verde: var(--d-green-btn);
+    --rm-verde-oscuro: var(--d-green-btn-h);
+    --rm-verde-profundo: var(--d-title);
+    --rm-verde-claro: var(--d-green-bg);
+    --rm-verde-suave: var(--d-surface-2);
+    --rm-texto: var(--d-text);
+    --rm-texto-secundario: var(--d-text-2);
+    --rm-borde: var(--d-border);
+    --rm-fondo: var(--d-bg);
+    --rm-blanco: var(--d-surface);
+    --rm-rojo: var(--d-red-tx);
+    --rm-rojo-fondo: var(--d-red-bg);
+    --rm-sombra: none;
 }
+
+/* Variables de cada pantalla */
+html.modo-oscuro .pr-page, html.modo-oscuro .pr-modal, html.modo-oscuro .pr-toasts {
+    --pr-verde: #2e9d66; --pr-verde-hover: #37b077; --pr-titulo: var(--d-title);
+    --pr-borde: var(--d-border); --pr-borde-campo: var(--d-border-2);
+    --pr-texto: var(--d-text); --pr-suave: var(--d-text-2);
+}
+html.modo-oscuro .pv-page, html.modo-oscuro .pv-modal, html.modo-oscuro .pv-toasts {
+    --pv-verde: #2e9d66; --pv-verde-hover: #37b077; --pv-titulo: var(--d-title);
+    --pv-borde: var(--d-border); --pv-borde-campo: var(--d-border-2);
+    --pv-texto: var(--d-text); --pv-suave: var(--d-text-2);
+}
+html.modo-oscuro .us-page, html.modo-oscuro .us-modal, html.modo-oscuro .us-toasts {
+    --us-verde: #2e9d66; --us-verde-hover: #37b077; --us-titulo: var(--d-title);
+    --us-borde: var(--d-border); --us-borde-campo: var(--d-border-2);
+    --us-texto: var(--d-text); --us-suave: var(--d-text-2);
+}
+html.modo-oscuro .pf-page, html.modo-oscuro .pf-modal, html.modo-oscuro .pf-toasts, html.modo-oscuro .pf-popover {
+    --pf-verde: #2e9d66; --pf-verde-hover: #37b077; --pf-titulo: var(--d-title);
+    --pf-borde: var(--d-border); --pf-borde-campo: var(--d-border-2);
+    --pf-texto: var(--d-text); --pf-suave: var(--d-text-2);
+}
+html.modo-oscuro .al-page {
+    --al-verde: #2e9d66; --al-verde-hover: #37b077; --al-titulo: var(--d-title);
+    --al-borde: var(--d-border); --al-borde-campo: var(--d-border-2);
+    --al-texto: var(--d-text); --al-suave: var(--d-text-2);
+}
+html.modo-oscuro .lt-page, html.modo-oscuro .lt-modal {
+    --lt-verde: #2e9d66; --lt-verde-hover: #37b077; --lt-titulo: var(--d-title);
+    --lt-borde: var(--d-border); --lt-borde-campo: var(--d-border-2);
+    --lt-texto: var(--d-text); --lt-suave: var(--d-text-2);
+}
+
+
+/* ============================================================
+   FONDO GENERAL Y BARRAS
+   ============================================================ */
+html.modo-oscuro,
+html.modo-oscuro body {
+    background: var(--d-bg) !important;
+    color: var(--d-text);
+}
+
+html.modo-oscuro .layout,
+html.modo-oscuro .page-area,
+html.modo-oscuro .main-content {
+    background: var(--d-bg);
+    color: var(--d-text);
+}
+
+html.modo-oscuro .sidebar {
+    background: #08180f;
+    border-right: 1px solid var(--d-border);
+}
+
+html.modo-oscuro .topbar {
+    background: #111a15;
+    border-bottom-color: var(--d-border);
+}
+html.modo-oscuro .topbar-title { color: var(--d-title); }
+html.modo-oscuro .topbar-menu { color: #8fd0a8; }
+html.modo-oscuro .topbar-menu:hover { background: var(--d-surface-3); }
+html.modo-oscuro .topbar-user-info strong { color: var(--d-title); }
+html.modo-oscuro .topbar-user-info span { color: var(--d-text-3); }
+html.modo-oscuro .topbar-avatar { background: var(--d-green-bg); border-color: var(--d-green-bd); color: var(--d-green-tx); }
+
+
+/* ============================================================
+   TARJETAS, PANELES Y MODALES
+   ============================================================ */
+html.modo-oscuro .pr-card, html.modo-oscuro .pv-card, html.modo-oscuro .ts-card,
+html.modo-oscuro .us-card, html.modo-oscuro .pf-card, html.modo-oscuro .al-card,
+html.modo-oscuro .rm-card, html.modo-oscuro .lt-card, html.modo-oscuro .card,
+html.modo-oscuro .pr-barra, html.modo-oscuro .rm-barra, html.modo-oscuro .al-filtros,
+html.modo-oscuro .rep-card, html.modo-oscuro .card-panel, html.modo-oscuro .metric-card,
+html.modo-oscuro .profile-card, html.modo-oscuro .permission-item,
+html.modo-oscuro .pr-modal-box, html.modo-oscuro .pv-modal-box, html.modo-oscuro .ts-modal-box,
+html.modo-oscuro .us-modal-box, html.modo-oscuro .pf-modal-box, html.modo-oscuro .rm-modal-box,
+html.modo-oscuro .lt-modal-box, html.modo-oscuro .modal-contenido, html.modo-oscuro .aud-modal-contenido,
+html.modo-oscuro .pf-popover {
+    background: var(--d-surface) !important;
+    border-color: var(--d-border) !important;
+    color: var(--d-text);
+}
+
+/* Cabeceras y pies de tablas y modales */
+html.modo-oscuro .pr-table th, html.modo-oscuro .pv-table th, html.modo-oscuro .ts-table th,
+html.modo-oscuro .ts-table thead, html.modo-oscuro .us-table th, html.modo-oscuro .pf-table th,
+html.modo-oscuro .al-table th, html.modo-oscuro .lt-table th, html.modo-oscuro .custom-table th,
+html.modo-oscuro .rm-table thead, html.modo-oscuro .rm-table thead th,
+html.modo-oscuro .rm-table-lotes thead, html.modo-oscuro .rm-table-lotes thead th,
+html.modo-oscuro .pr-pie, html.modo-oscuro .pv-pie, html.modo-oscuro .ts-pie,
+html.modo-oscuro .us-pie, html.modo-oscuro .pf-pie, html.modo-oscuro .al-pie,
+html.modo-oscuro .rm-pie, html.modo-oscuro .lt-pie, html.modo-oscuro .tabla-pie,
+html.modo-oscuro .rm-modal-head, html.modo-oscuro .rm-modal-pie,
+html.modo-oscuro #modalCrearRemito .rm-modal-pie,
+html.modo-oscuro .modal-acciones {
+    background: var(--d-surface-2) !important;
+    color: var(--d-text-3) !important;
+    border-color: var(--d-border) !important;
+}
+
+html.modo-oscuro .rm-pie span:first-child { color: var(--d-text-2) !important; }
+
+/* Bordes de celdas y secciones */
+html.modo-oscuro td, html.modo-oscuro th,
+html.modo-oscuro .pr-modal-head, html.modo-oscuro .pv-modal-head, html.modo-oscuro .ts-modal-head,
+html.modo-oscuro .us-modal-head, html.modo-oscuro .pf-modal-head, html.modo-oscuro .lt-modal-head,
+html.modo-oscuro .modal-header, html.modo-oscuro .pr-modal-pie, html.modo-oscuro .pv-modal-pie,
+html.modo-oscuro .ts-modal-pie, html.modo-oscuro .us-modal-pie, html.modo-oscuro .pf-modal-pie,
+html.modo-oscuro .lt-modal-pie, html.modo-oscuro .rm-card-header,
+html.modo-oscuro .al-filtros-acc, html.modo-oscuro .aud-modal-header,
+html.modo-oscuro .pf-popover-pie, html.modo-oscuro .lt-resumen-baja-cab {
+    border-color: var(--d-border) !important;
+}
+
+html.modo-oscuro .ts-tabs, html.modo-oscuro .pr-tabs { border-color: var(--d-border); }
+
+/* Filas al pasar el mouse */
+html.modo-oscuro .pr-table tbody tr:hover, html.modo-oscuro .pv-table tbody tr:hover,
+html.modo-oscuro .ts-table tbody tr:hover, html.modo-oscuro .us-table tbody tr:hover,
+html.modo-oscuro .pf-table tbody tr:hover, html.modo-oscuro .al-table tbody tr:hover,
+html.modo-oscuro .lt-table tbody tr:hover, html.modo-oscuro .custom-table tr:hover,
+html.modo-oscuro .custom-table tbody tr:hover, html.modo-oscuro .rm-table tbody tr.rm-fila-remito:hover,
+html.modo-oscuro .rm-table-lotes tbody tr:hover {
+    background: var(--d-hover) !important;
+}
+
+/* Detalle de lotes (productos y remitos) */
+html.modo-oscuro .rm-fila-detalle > td,
+html.modo-oscuro .pr-fila-lotes > td,
+html.modo-oscuro .pr-lotes-contenido { background: var(--d-surface-2) !important; }
+html.modo-oscuro .rm-detalle { border-color: var(--d-border) !important; }
+html.modo-oscuro .rm-table-lotes, html.modo-oscuro .pr-lotes-tabla { background: var(--d-surface) !important; border-color: var(--d-border) !important; }
+html.modo-oscuro .rm-lote { background: var(--d-surface-2) !important; border-color: var(--d-border-2) !important; }
+
+
+/* ============================================================
+   TEXTOS
+   ============================================================ */
+html.modo-oscuro .pr-title, html.modo-oscuro .pv-title, html.modo-oscuro .ts-title,
+html.modo-oscuro .us-title, html.modo-oscuro .pf-title, html.modo-oscuro .al-title,
+html.modo-oscuro .lt-title, html.modo-oscuro .rm-title, html.modo-oscuro .page-title,
+html.modo-oscuro .header h1, html.modo-oscuro .main-content h1,
+html.modo-oscuro .main-content h2, html.modo-oscuro .main-content h3, html.modo-oscuro .main-content h4,
+html.modo-oscuro .rm-card-header h2, html.modo-oscuro .rm-modal-head h2,
+html.modo-oscuro .rm-detalle-header h3, html.modo-oscuro .rm-numero,
+html.modo-oscuro .pr-nombre, html.modo-oscuro .pv-nombre, html.modo-oscuro .ts-nombre,
+html.modo-oscuro .us-username, html.modo-oscuro .pf-nombre, html.modo-oscuro .al-producto,
+html.modo-oscuro .lt-num, html.modo-oscuro .perm-name, html.modo-oscuro .id-mov,
+html.modo-oscuro .rep-card h2, html.modo-oscuro .card-panel h2,
+html.modo-oscuro .pr-resumen-cab h4, html.modo-oscuro .pv-resumen-cab h4,
+html.modo-oscuro .pf-resumen-cab h4, html.modo-oscuro .lt-resumen-baja-cab h3,
+html.modo-oscuro .pf-popover-titulo, html.modo-oscuro .pr-prod .pr-nombre,
+html.modo-oscuro #contenidoDetalleAuditoria h3, html.modo-oscuro #contenidoDetalleAuditoria h4,
+html.modo-oscuro .aud-modal-header h2, html.modo-oscuro .metric-value {
+    color: var(--d-title) !important;
+}
+
+html.modo-oscuro .page-sub, html.modo-oscuro .subtitle, html.modo-oscuro .rm-subtitle,
+html.modo-oscuro .page-header p, html.modo-oscuro .perm-desc, html.modo-oscuro .metric-title,
+html.modo-oscuro .obs-text, html.modo-oscuro .mov-hora, html.modo-oscuro .mov-obs,
+html.modo-oscuro .pr-hint, html.modo-oscuro .rm-ayuda, html.modo-oscuro .us-hint,
+html.modo-oscuro .rm-card-header p, html.modo-oscuro .rm-barra-dato,
+html.modo-oscuro .rep-card > p, html.modo-oscuro .rep-vacio, html.modo-oscuro .pf-sin,
+html.modo-oscuro .pr-barra, html.modo-oscuro .rm-modal-head p, html.modo-oscuro .rm-modal-intro,
+html.modo-oscuro .rm-lotes-cab p, html.modo-oscuro .al-hora, html.modo-oscuro .al-sub,
+html.modo-oscuro .pr-minimo small, html.modo-oscuro .pr-ayuda, html.modo-oscuro .pf-popover-lista li {
+    color: var(--d-text-2) !important;
+}
+
+html.modo-oscuro .pr-muted, html.modo-oscuro .pv-muted, html.modo-oscuro .ts-muted,
+html.modo-oscuro .us-muted, html.modo-oscuro .pf-muted, html.modo-oscuro .al-muted,
+html.modo-oscuro .lt-muted, html.modo-oscuro .pr-tipo, html.modo-oscuro .pr-subtipos,
+html.modo-oscuro .pr-precio, html.modo-oscuro .pr-stock {
+    color: var(--d-text-2) !important;
+}
+html.modo-oscuro .pr-stock.pr-bajo { color: var(--d-red-tx) !important; }
+
+html.modo-oscuro .pr-table td, html.modo-oscuro .pv-table td, html.modo-oscuro .ts-table td,
+html.modo-oscuro .us-table td, html.modo-oscuro .pf-table td, html.modo-oscuro .al-table td,
+html.modo-oscuro .lt-table td, html.modo-oscuro .custom-table td {
+    color: var(--d-text);
+}
+html.modo-oscuro .rm-table tbody td, html.modo-oscuro .rm-table-lotes tbody td,
+html.modo-oscuro .rm-proveedor, html.modo-oscuro .rm-codigo {
+    color: var(--d-text) !important;
+}
+html.modo-oscuro .rm-table tbody td { border-color: var(--d-border) !important; }
+html.modo-oscuro .rm-codigo { background: var(--d-surface-3) !important; border-color: var(--d-border-2) !important; }
+
+html.modo-oscuro label,
+html.modo-oscuro .pr-grupo label, html.modo-oscuro .pv-grupo label, html.modo-oscuro .ts-grupo label,
+html.modo-oscuro .us-grupo label, html.modo-oscuro .pf-grupo label, html.modo-oscuro .rm-grupo label,
+html.modo-oscuro .al-campo label, html.modo-oscuro .lt-campo label, html.modo-oscuro .form-group label,
+html.modo-oscuro #modalCrearRemito .rm-grupo label {
+    color: var(--d-text-2) !important;
+}
+
+html.modo-oscuro .pf-popover-link, html.modo-oscuro .pr-tab.activa,
+html.modo-oscuro .ts-tab.activa, html.modo-oscuro .ts-tab:hover { color: var(--d-green) !important; }
+
+
+/* ============================================================
+   CAMPOS DE FORMULARIO
+   ============================================================ */
+html.modo-oscuro input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]),
+html.modo-oscuro select,
+html.modo-oscuro textarea {
+    background-color: var(--d-input) !important;
+    color: var(--d-text) !important;
+    border-color: var(--d-border-2) !important;
+}
+
+html.modo-oscuro input[readonly],
+html.modo-oscuro input[readonly]:focus {
+    background-color: var(--d-surface-3) !important;
+    color: var(--d-text-2) !important;
+}
+
+html.modo-oscuro input::placeholder,
+html.modo-oscuro textarea::placeholder { color: var(--d-text-3) !important; }
+
+html.modo-oscuro input:focus,
+html.modo-oscuro select:focus,
+html.modo-oscuro textarea:focus {
+    border-color: #3fa877 !important;
+    box-shadow: 0 0 0 3px rgba(63, 168, 119, .22) !important;
+}
+
+html.modo-oscuro select option { background: var(--d-surface); color: var(--d-text); }
+html.modo-oscuro input[type="checkbox"],
+html.modo-oscuro input[type="radio"] { accent-color: var(--d-green); }
+
+/* Contenedores de búsqueda con ícono */
+html.modo-oscuro .pr-search, html.modo-oscuro .pv-search, html.modo-oscuro .ts-search,
+html.modo-oscuro .us-search, html.modo-oscuro .pf-search, html.modo-oscuro .lt-search {
+    background: var(--d-input) !important;
+    border-color: var(--d-border-2) !important;
+}
+html.modo-oscuro .pr-search input, html.modo-oscuro .pv-search input, html.modo-oscuro .ts-search input,
+html.modo-oscuro .us-search input, html.modo-oscuro .pf-search input, html.modo-oscuro .lt-search input {
+    background: transparent !important;
+}
+
+html.modo-oscuro .rm-grupo input[type="date"],
+html.modo-oscuro input[type="date"] { color-scheme: dark; }
+
+/* Cuadros con casillas */
+html.modo-oscuro .pf-permiso, html.modo-oscuro .pr-subtipos-caja {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border) !important;
+}
+html.modo-oscuro .pf-permiso:hover { background: var(--d-surface-3) !important; }
+html.modo-oscuro .pf-permiso-info strong { color: var(--d-text) !important; }
+html.modo-oscuro .pf-permiso-info small { color: var(--d-text-2) !important; }
+
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+html.modo-oscuro .pr-btn-claro, html.modo-oscuro .pv-btn-claro, html.modo-oscuro .ts-btn-claro,
+html.modo-oscuro .us-btn-claro, html.modo-oscuro .pf-btn-claro, html.modo-oscuro .al-btn-claro,
+html.modo-oscuro .lt-btn-claro, html.modo-oscuro .rm-btn-light, html.modo-oscuro .rm-btn-secondary,
+html.modo-oscuro .btn, html.modo-oscuro .btn-secondary, html.modo-oscuro .search-button,
+html.modo-oscuro .btn-cancelar, html.modo-oscuro .aud-btn-detalle {
+    background: var(--d-surface-2) !important;
+    color: var(--d-text) !important;
+    border: 1px solid var(--d-border-2) !important;
+}
+html.modo-oscuro .pr-btn-claro:hover, html.modo-oscuro .pv-btn-claro:hover, html.modo-oscuro .ts-btn-claro:hover,
+html.modo-oscuro .us-btn-claro:hover, html.modo-oscuro .pf-btn-claro:hover, html.modo-oscuro .al-btn-claro:hover,
+html.modo-oscuro .lt-btn-claro:hover, html.modo-oscuro .rm-btn-light:hover, html.modo-oscuro .rm-btn-secondary:hover,
+html.modo-oscuro .btn:hover, html.modo-oscuro .search-button:hover, html.modo-oscuro .btn-cancelar:hover,
+html.modo-oscuro .aud-btn-detalle:hover {
+    background: var(--d-surface-3) !important;
+}
+
+html.modo-oscuro .pr-btn-primary, html.modo-oscuro .pv-btn-primary, html.modo-oscuro .ts-btn-primary,
+html.modo-oscuro .us-btn-primary, html.modo-oscuro .pf-btn-primary, html.modo-oscuro .al-btn-primary,
+html.modo-oscuro .lt-btn-primary, html.modo-oscuro .rm-btn-primary, html.modo-oscuro .btn-primary,
+html.modo-oscuro .lck-btn {
+    background: var(--d-green-btn) !important;
+    border-color: var(--d-green-btn) !important;
+    color: #fff !important;
+}
+html.modo-oscuro .pr-btn-primary:hover, html.modo-oscuro .pv-btn-primary:hover, html.modo-oscuro .ts-btn-primary:hover,
+html.modo-oscuro .us-btn-primary:hover, html.modo-oscuro .pf-btn-primary:hover, html.modo-oscuro .al-btn-primary:hover,
+html.modo-oscuro .lt-btn-primary:hover, html.modo-oscuro .rm-btn-primary:hover, html.modo-oscuro .btn-primary:hover,
+html.modo-oscuro .lck-btn:hover {
+    background: var(--d-green-btn-h) !important;
+    border-color: var(--d-green-btn-h) !important;
+}
+
+/* Botones con solo un ícono */
+html.modo-oscuro .pr-icon-btn, html.modo-oscuro .pv-accion-icono, html.modo-oscuro .ts-icon-btn,
+html.modo-oscuro .us-icon-btn, html.modo-oscuro .pf-accion, html.modo-oscuro .rm-icon-btn,
+html.modo-oscuro .lt-btn-accion, html.modo-oscuro .pr-accion, html.modo-oscuro .pv-accion,
+html.modo-oscuro .ts-accion, html.modo-oscuro .rm-modal-x, html.modo-oscuro .rm-lote-quitar {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border-2) !important;
+    color: var(--d-text-2) !important;
+}
+html.modo-oscuro .pr-icon-btn:hover, html.modo-oscuro .pv-accion-icono:hover, html.modo-oscuro .ts-icon-btn:hover,
+html.modo-oscuro .us-icon-btn:hover, html.modo-oscuro .pf-accion:hover, html.modo-oscuro .rm-icon-btn:hover,
+html.modo-oscuro .lt-btn-accion:hover, html.modo-oscuro .pr-accion:hover, html.modo-oscuro .pv-accion:hover,
+html.modo-oscuro .ts-accion:hover {
+    background: var(--d-surface-3) !important;
+    color: var(--d-text) !important;
+}
+
+/* Variantes: eliminar / dar de baja / anular */
+html.modo-oscuro .pr-icon-btn.pr-baja, html.modo-oscuro .pv-accion-icono.pv-baja,
+html.modo-oscuro .ts-icon-btn.ts-peligro, html.modo-oscuro .us-peligro, html.modo-oscuro .pf-baja,
+html.modo-oscuro .lt-btn-baja, html.modo-oscuro .action-baja, html.modo-oscuro .rm-icon-btn.rm-anular,
+html.modo-oscuro .rm-lote-quitar {
+    background: var(--d-red-bg) !important;
+    border-color: var(--d-red-bd) !important;
+    color: var(--d-red-tx) !important;
+}
+
+/* Variantes: activar / atender */
+html.modo-oscuro .pr-icon-btn.pr-activar, html.modo-oscuro .pv-accion-icono.pv-activar,
+html.modo-oscuro .ts-icon-btn.ts-activar, html.modo-oscuro .us-activar, html.modo-oscuro .pf-activar,
+html.modo-oscuro .lt-btn-activar, html.modo-oscuro .al-btn-atender {
+    background: var(--d-green-bg) !important;
+    border-color: var(--d-green-bd) !important;
+    color: var(--d-green-tx) !important;
+}
+
+html.modo-oscuro .pr-icon-btn.pr-baja:hover, html.modo-oscuro .pv-accion-icono.pv-baja:hover,
+html.modo-oscuro .ts-icon-btn.ts-peligro:hover, html.modo-oscuro .us-peligro:hover,
+html.modo-oscuro .pf-baja:hover, html.modo-oscuro .lt-btn-baja:hover,
+html.modo-oscuro .pr-icon-btn.pr-activar:hover, html.modo-oscuro .pv-accion-icono.pv-activar:hover,
+html.modo-oscuro .us-activar:hover, html.modo-oscuro .pf-activar:hover, html.modo-oscuro .al-btn-atender:hover {
+    filter: brightness(1.25);
+}
+
+html.modo-oscuro .pr-modal-x, html.modo-oscuro .pv-modal-x, html.modo-oscuro .ts-modal-x,
+html.modo-oscuro .us-modal-x, html.modo-oscuro .pf-modal-x, html.modo-oscuro .lt-modal-x,
+html.modo-oscuro .modal-cerrar, html.modo-oscuro .aud-modal-cerrar { color: var(--d-text-3) !important; }
+html.modo-oscuro .pr-modal-x:hover, html.modo-oscuro .pv-modal-x:hover, html.modo-oscuro .ts-modal-x:hover,
+html.modo-oscuro .us-modal-x:hover, html.modo-oscuro .pf-modal-x:hover, html.modo-oscuro .lt-modal-x:hover {
+    background: var(--d-surface-3) !important;
+    color: var(--d-text) !important;
+}
+
+
+/* ============================================================
+   ESTADOS Y ETIQUETAS
+   ============================================================ */
+/* Verde */
+html.modo-oscuro .pr-activo, html.modo-oscuro .pv-activo, html.modo-oscuro .us-activo,
+html.modo-oscuro .pf-activo, html.modo-oscuro .ts-activo, html.modo-oscuro .pr-estado-activo,
+html.modo-oscuro .lt-estado-activo, html.modo-oscuro .rm-activo, html.modo-oscuro .rm-badge,
+html.modo-oscuro .al-atendida, html.modo-oscuro .tag-entrada, html.modo-oscuro .badge-tag.entrada,
+html.modo-oscuro .aud-cre, html.modo-oscuro .aud-despues, html.modo-oscuro .chip-perfil-1,
+html.modo-oscuro .pf-chip, html.modo-oscuro .pr-info, html.modo-oscuro .rm-info,
+html.modo-oscuro .us-info, html.modo-oscuro .eg-res, html.modo-oscuro .pr-prod-icono + div .pr-nombre ~ .x {
+    background: var(--d-green-bg) !important;
+    color: var(--d-green-tx) !important;
+    border-color: var(--d-green-bd) !important;
+}
+
+/* Gris */
+html.modo-oscuro .pr-inactivo, html.modo-oscuro .pv-inactivo, html.modo-oscuro .us-inactivo,
+html.modo-oscuro .pf-inactivo, html.modo-oscuro .ts-inactivo, html.modo-oscuro .lt-estado-inactivo,
+html.modo-oscuro .al-pendiente, html.modo-oscuro .rm-agotado, html.modo-oscuro .aud-cie,
+html.modo-oscuro .pr-contador, html.modo-oscuro .ts-contador, html.modo-oscuro .pf-chip-mas {
+    background: var(--d-surface-3) !important;
+    color: var(--d-text-3) !important;
+    border-color: var(--d-border-2) !important;
+}
+
+/* Rojo */
+html.modo-oscuro .rm-vencido, html.modo-oscuro .lt-estado-vencido, html.modo-oscuro .lt-vencido,
+html.modo-oscuro .al-stock-minimo, html.modo-oscuro .aud-eli, html.modo-oscuro .aud-antes,
+html.modo-oscuro .rep-chip, html.modo-oscuro .badge-tag.salida, html.modo-oscuro .stock-item,
+html.modo-oscuro .eg-res.eg-error, html.modo-oscuro .pr-aviso, html.modo-oscuro .pv-aviso,
+html.modo-oscuro .pf-aviso, html.modo-oscuro .pf-aviso-peligro, html.modo-oscuro .pv-alerta,
+html.modo-oscuro .pv-conflicto, html.modo-oscuro .rm-anular-aviso, html.modo-oscuro .rm-banner-anulado,
+html.modo-oscuro .rm-error, html.modo-oscuro .us-info.us-alerta, html.modo-oscuro .lck-error,
+html.modo-oscuro .pr-avatar, html.modo-oscuro .pv-avatar, html.modo-oscuro .pf-avatar,
+html.modo-oscuro .lt-avatar-baja {
+    background: var(--d-red-bg) !important;
+    color: var(--d-red-tx) !important;
+    border-color: var(--d-red-bd) !important;
+}
+html.modo-oscuro .stock-qty, html.modo-oscuro .qty-negative, html.modo-oscuro .mov-cantidad.neg { color: var(--d-red-tx) !important; }
+html.modo-oscuro .qty-positive, html.modo-oscuro .mov-cantidad.pos { color: var(--d-green-tx) !important; }
+html.modo-oscuro .stock-name { color: var(--d-text) !important; }
+html.modo-oscuro .pv-conflicto-d { background: var(--d-surface) !important; border-color: var(--d-red-bd) !important; color: var(--d-text) !important; }
+html.modo-oscuro .rm-anular-aviso span { color: var(--d-red-tx) !important; }
+
+/* Ámbar */
+html.modo-oscuro .al-vencimiento, html.modo-oscuro .lt-por-vencer, html.modo-oscuro .lt-estado-agotado,
+html.modo-oscuro .tag-vencimiento, html.modo-oscuro .badge-tag.vencimiento, html.modo-oscuro .pr-estado-inactivo,
+html.modo-oscuro .aud-anu, html.modo-oscuro .pf-chip-aviso, html.modo-oscuro .chip-perfil-3,
+html.modo-oscuro .eg-res.eg-alerta, html.modo-oscuro .lt-aviso {
+    background: var(--d-amb-bg) !important;
+    color: var(--d-amb-tx) !important;
+    border-color: var(--d-amb-bd) !important;
+}
+
+/* Azul y violeta */
+html.modo-oscuro .aud-mod, html.modo-oscuro .chip-perfil-2 {
+    background: var(--d-blue-bg) !important;
+    color: var(--d-blue-tx) !important;
+    border-color: var(--d-blue-bd) !important;
+}
+html.modo-oscuro .aud-ini { background: var(--d-vio-bg) !important; color: var(--d-vio-tx) !important; }
+
+/* Ícono de producto y filas inactivas */
+html.modo-oscuro .pr-prod-icono { background: #2a2315 !important; color: #d9a05b !important; }
+html.modo-oscuro .pr-table tr.inactivo .pr-prod-icono { background: var(--d-surface-3) !important; color: var(--d-text-3) !important; }
+html.modo-oscuro .pr-table tr.inactivo .pr-nombre,
+html.modo-oscuro .pv-table tr.inactivo .pv-nombre { color: var(--d-text-3) !important; }
+
+
+/* ============================================================
+   RESÚMENES DENTRO DE LOS MODALES
+   ============================================================ */
+html.modo-oscuro .pr-resumen, html.modo-oscuro .pv-resumen, html.modo-oscuro .pf-resumen,
+html.modo-oscuro .lt-resumen-baja, html.modo-oscuro .rm-anular-resumen, html.modo-oscuro .eg-datos,
+html.modo-oscuro .pr-resumen-cab, html.modo-oscuro .pv-resumen-cab, html.modo-oscuro .pf-resumen-cab,
+html.modo-oscuro .lt-resumen-baja-cab {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border) !important;
+}
+html.modo-oscuro .pr-dato, html.modo-oscuro .pv-dato, html.modo-oscuro .pf-dato,
+html.modo-oscuro .lt-datos-baja > div {
+    background: var(--d-surface) !important;
+    border-color: var(--d-border) !important;
+}
+html.modo-oscuro .pr-dato .val, html.modo-oscuro .pv-dato .val, html.modo-oscuro .pf-dato .val,
+html.modo-oscuro .lt-datos-baja strong, html.modo-oscuro .rm-anular-resumen b, html.modo-oscuro .eg-dato-valor {
+    color: var(--d-text) !important;
+}
+html.modo-oscuro .pr-dato .lbl, html.modo-oscuro .pv-dato .lbl, html.modo-oscuro .pf-dato .lbl,
+html.modo-oscuro .lt-label-baja, html.modo-oscuro .rm-anular-resumen small,
+html.modo-oscuro .eg-dato-label, html.modo-oscuro .eg-datos-titulo, html.modo-oscuro .rm-anular-lista {
+    color: var(--d-text-3) !important;
+}
+html.modo-oscuro .pf-dato .val.val-ok { color: var(--d-green-tx) !important; }
+
+
+/* ============================================================
+   MENSAJES (TOASTS)
+   ============================================================ */
+html.modo-oscuro .pr-toast, html.modo-oscuro .pv-toast, html.modo-oscuro .ts-toast,
+html.modo-oscuro .us-toast, html.modo-oscuro .pf-toast, html.modo-oscuro .rm-toast,
+html.modo-oscuro .lt-message, html.modo-oscuro .message {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border-2) !important;
+    color: var(--d-text) !important;
+}
+html.modo-oscuro .pr-toast.success, html.modo-oscuro .ts-toast.success,
+html.modo-oscuro .rm-toast.success, html.modo-oscuro .message.success {
+    background: var(--d-green-bg) !important; color: var(--d-green-tx) !important; border-color: var(--d-green-bd) !important;
+}
+html.modo-oscuro .pr-toast.error, html.modo-oscuro .ts-toast.error, html.modo-oscuro .rm-toast.error,
+html.modo-oscuro .rm-toast.danger, html.modo-oscuro .message.error {
+    background: var(--d-red-bg) !important; color: var(--d-red-tx) !important; border-color: var(--d-red-bd) !important;
+}
+html.modo-oscuro .pr-toast.warning, html.modo-oscuro .ts-toast.warning,
+html.modo-oscuro .rm-toast.warning, html.modo-oscuro .message.warning {
+    background: var(--d-amb-bg) !important; color: var(--d-amb-tx) !important; border-color: var(--d-amb-bd) !important;
+}
+
+
+/* ============================================================
+   PANEL, REPORTES, AUDITORÍA Y PERMISOS
+   ============================================================ */
+html.modo-oscuro .metric-value.green { color: var(--d-green-tx) !important; }
+html.modo-oscuro .metric-value.blue { color: #5eead4 !important; }
+html.modo-oscuro .metric-value.red { color: var(--d-green) !important; }
+html.modo-oscuro .metric-value.orange { color: #d4d94a !important; }
+
+/* Los gráficos se dibujan con colores para fondo claro:
+   se invierten solo ellos para que el texto se lea. */
+html.modo-oscuro .rep-chart { filter: invert(.92) hue-rotate(180deg); }
+html.modo-oscuro .rep-leyenda, html.modo-oscuro .rep-sin-stock { color: var(--d-text) !important; }
+
+html.modo-oscuro .tabla-permisos .grupo-fila td {
+    background: var(--d-green-bg) !important;
+    color: var(--d-green-tx) !important;
+}
+
+html.modo-oscuro .aud-cambio-campo { color: var(--d-text) !important; }
+
+
+/* ============================================================
+   CARTELES: CONFIRMACIÓN Y BLOQUEO POR INACTIVIDAD
+   ============================================================ */
+html.modo-oscuro .cfm-caja, html.modo-oscuro .lck-caja {
+    background: var(--d-surface) !important;
+    border: 1px solid var(--d-border-2);
+}
+html.modo-oscuro .cfm-titulo, html.modo-oscuro .lck-caja h3 { color: var(--d-title) !important; }
+html.modo-oscuro .cfm-mensaje, html.modo-oscuro .lck-caja p, html.modo-oscuro .lck-link { color: var(--d-text-2) !important; }
+html.modo-oscuro .cfm-acciones { background: var(--d-surface-2) !important; border-color: var(--d-border) !important; }
+html.modo-oscuro .cfm-cancelar { background: var(--d-surface-2) !important; color: var(--d-text) !important; border-color: var(--d-border-2) !important; }
+html.modo-oscuro .cfm-icono { background: var(--d-green-bg) !important; color: var(--d-green-tx) !important; }
+html.modo-oscuro .cfm-peligro .cfm-icono { background: var(--d-red-bg) !important; color: var(--d-red-tx) !important; }
+html.modo-oscuro .lck-campo label { color: var(--d-text-2) !important; }

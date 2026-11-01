@@ -2907,7 +2907,7 @@ def gestion_alertas(request):
 
 @require_POST
 def atender_alerta(request, id_alerta):
-    uusuario = usuario_con_accion(request, 'atender_alertas')
+    usuario = usuario_con_accion(request, 'atender_alertas')
 
     if not usuario:
         return redirect('panel_principal')

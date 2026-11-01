@@ -35,7 +35,7 @@
         <div>
             <h1 class="pf-title">Perfiles de acceso</h1>
         </div>
-
+        {% if perm.perfiles_gestionar %}
         <button type="button"
                 class="pf-btn pf-btn-primary"
                 onclick="openCreateModal()">
@@ -46,6 +46,7 @@
             </svg>
             Nuevo perfil
         </button>
+        {% endif %}
     </header>
 
     <!-- BUSCADOR -->
@@ -150,7 +151,7 @@
                                                             </li>
                                                         {% endfor %}
                                                     </ul>
-
+                                                    {% if perm.perfiles_gestionar %}
                                                     <div class="pf-popover-pie">
                                                         <button type="button"
                                                                 class="pf-popover-link"
@@ -160,6 +161,7 @@
                                                             Editar permisos →
                                                         </button>
                                                     </div>
+                                                    {% endif %}
                                                 </div>
                                             {% endif %}
                                         </div>
@@ -189,7 +191,7 @@
                                 <!-- ACCIONES CON ÍCONOS -->
                                 <td>
                                     <div class="pf-acciones">
-
+                                        {% if perm.perfiles_gestionar %}
                                         <!-- MODIFICAR PERFIL -->
                                         <button type="button"
                                                 class="pf-accion pf-btn-editar"
@@ -265,7 +267,7 @@
                                                 </button>
                                             </form>
                                         {% endif %}
-
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

@@ -80,7 +80,7 @@
         </div>
 
         <div class="pr-header-acciones">
-
+            {% if perm.productos_gestionar %}
             <button type="button"
                     class="pr-btn pr-btn-primary"
                     onclick="abrirModalCrear()">
@@ -92,7 +92,7 @@
                 Registrar producto
 
             </button>
-
+            {% endif %}
             {% if puede_egresar %}
             <button type="button"
                     class="pr-btn pr-btn-rojo"
@@ -433,7 +433,7 @@
                                         </button>
                                     {% endif %}
 
-
+                                    {% if perm.productos_gestionar %}
                                     <!-- EDITAR -->
 
                                     <button type="button"
@@ -489,7 +489,7 @@
                                         </button>
 
                                     </form>
-
+                                    {% endif %}
                                 </div>
 
                             </td>

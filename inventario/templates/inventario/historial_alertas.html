@@ -391,7 +391,7 @@
 
                                     </span>
 
-                                {% else %}
+                                {% elif perm.atender_alertas %}
 
                                     <form method="POST"
                                           action="{% url 'atender_alerta' alerta.id %}"

@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from .permissions import rutas_denegadas
+from .permissions import permisos_ui, rutas_denegadas
 
 
 def configuracion_sesion(request):
@@ -19,4 +19,5 @@ def configuracion_sesion(request):
     return {
         'inactividad_ms': settings.INACTIVIDAD_SEGUNDOS * 1000,
         'rutas_denegadas': rutas_denegadas(usuario),
+        'perm': permisos_ui(usuario),
     }

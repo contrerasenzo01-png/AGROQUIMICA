@@ -35,12 +35,12 @@
         <div>
             <h1 class="pv-title">Gestión de proveedores</h1>
         </div>
-
+        {% if perm.proveedores_gestionar %}
         <button type="button" class="pv-btn pv-btn-primary" onclick="abrirModalCrear()">
             <svg class="pv-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
             Nuevo proveedor
         </button>
-
+        {% endif %}
     </header>
 
 
@@ -109,7 +109,7 @@
 
                             <td>
                                 <div class="pv-acciones">
-
+                                    {% if perm.proveedores_gestionar %}
                                     <!-- EDITAR -->
                                     <button type="button" class="pv-accion pv-accion-icono"
                                         aria-label="Editar proveedor"
@@ -173,9 +173,9 @@
                                         {% endif %}
 
                                     </button>
-
+                                
                                 </form>
-
+                                {% endif %}
                             </div>
                         </td>
 

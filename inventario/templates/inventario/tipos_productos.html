@@ -121,7 +121,7 @@
                             <!-- ACCIONES -->
                             <td>
                                 <div class="pr-acciones">
-
+                                    {% if perm.tipos_gestionar %}
                                     <!-- EDITAR -->
                                     <button type="button"
                                             class="pr-icon-btn"
@@ -157,7 +157,7 @@
                                             <path d="M14 11v5"/>
                                         </svg>
                                     </button>
-
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -194,7 +194,7 @@
 
         <div class="pr-modal-head">
             <h2>Nuevo tipo de producto</h2>
-
+            {% if perm.tipos_gestionar %}
             <button type="button"
                     class="pr-modal-x"
                     onclick="cerrarModal('modalCrearTipo')"
@@ -203,6 +203,7 @@
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
             </button>
+            {% endif %}
         </div>
 
         <form method="POST" action="{% url 'crear_tipo_producto' %}">

@@ -48,12 +48,12 @@
         <div>
             <h1 class="us-title">Gestión de usuarios</h1>
         </div>
-
+        {% if perm.usuarios_gestionar %}
         <button type="button" class="us-btn us-btn-primary" onclick="abrirModalCrear()">
             <svg class="us-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
             Nuevo usuario
         </button>
-
+        {% endif %}
     </header>
 
 
@@ -134,7 +134,7 @@
 
                             <td>
                                 <div class="us-acciones">
-
+                                    {% if perm.usuarios_gestionar %}
                                     <!-- EDITAR -->
                                     <button type="button" class="us-icon-btn" title="Editar usuario" aria-label="Editar usuario"
                                         onclick="abrirModalEditar(
@@ -212,7 +212,7 @@
 
 
                                     {% endif %}
-
+                                    {% endif %}
                                 </div>
                             </td>
 

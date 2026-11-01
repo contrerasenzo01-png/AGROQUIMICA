@@ -339,3 +339,22 @@ def rutas_denegadas(usuario):
             patrones += [_patron(n) for n in nombres]
 
     return patrones
+
+def permisos_ui(usuario):
+    """Diccionario para los templates: perm.productos_gestionar, perm.anular_remitos, etc."""
+    if not usuario or not usuario.ID_Perfil:
+        return {}
+
+    asignados = None if _es_admin(usuario) else permisos_asignados(usuario)
+    datos = {}
+
+    for modulo in MODULOS:
+        datos[f'{modulo}_ver'] = puede(usuario, modulo, asignados=asignados)
+        datos[f'{modulo}_gestionar'] = puede(
+            usuario, modulo, gestionar=True, asignados=asignados
+        )
+
+    for accion in ACCIONES:
+        datos[accion] = puede_accion(usuario, accion)
+
+    return datos
