@@ -1,5 +1,8 @@
 from datetime import date, datetime
 from decimal import Decimal
+
+from django.apps import apps
+
 from .models import LogAuditoria
 
 CAMPOS_EXCLUIDOS = {'Contrasena'}   # nunca guardar el hash
@@ -22,13 +25,32 @@ def snapshot(obj):
     }
 
 
+def nombre_seccion(entidad):
+    """
+    Unifica el nombre de la sección.
+    'USUARIOS', 'usuarios' o 'Usuarios' -> 'Usuarios' (verbose_name_plural del modelo).
+    Si no coincide con ningún modelo, se deja como vino.
+    """
+    if not entidad:
+        return entidad
+
+    buscado = entidad.strip().upper()
+
+    for modelo in apps.get_app_config('inventario').get_models():
+        meta = modelo._meta
+        if buscado in (meta.db_table.upper(), str(meta.verbose_name_plural).upper()):
+            return str(meta.verbose_name_plural)
+
+    return entidad.strip()
+
+
 def registrar_auditoria(usuario, entidad, objeto, accion, antes, despues):
     if accion == 'MODIFICACION' and antes == despues:
         return None
 
     return LogAuditoria.objects.create(
         ID_Usuario=usuario,
-        Seccion=entidad,
+        Seccion=nombre_seccion(entidad),
         ID_Registro=objeto.pk,
         Accion=accion,
         Valores_anteriores=antes,
