@@ -1655,4 +1655,161 @@
 .rm-modal-pie,
 #modalCrearRemito .rm-modal-pie {
     padding: 16px 22px !important;
-    background: #fff !important; }
+    background: #fff !important;
+}
+
+
+/* ============================================================
+   ESTILOS QUE ANTES ESTABAN EN EL <style> DE gestion_remitos.html
+============================================================ */
+
+/* ---------- Remitos anulados ---------- */
+.rm-anulado td { opacity: .6; }
+.rm-anulado td:last-child { opacity: 1; }
+
+.rm-icon-btn.rm-anular { color: #b91c1c !important; }
+.rm-icon-btn.rm-anular:hover {
+    background: #fef2f2;
+    border-color: #fecaca !important;
+}
+
+.rm-banner-anulado {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    color: #991b1b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.rm-banner-anulado strong { font-weight: 600; }
+
+/* ---------- Proveedor en el título de los lotes del remito ---------- */
+.rm-detalle-proveedor {
+    margin-left: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7c73;
+}
+
+.rm-detalle-proveedor strong {
+    font-weight: 600;
+    color: #1c2a23;
+}
+
+/* ---------- Modal de anulación ---------- */
+.rm-anular-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    color: #991b1b;
+}
+
+.rm-anular-aviso svg {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.rm-anular-aviso strong {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 15px;
+}
+
+.rm-anular-aviso span {
+    font-size: 13px;
+    color: #b91c1c;
+}
+
+.rm-anular-resumen {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.rm-anular-resumen small {
+    display: block;
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.rm-anular-resumen b {
+    font-size: 14px;
+    color: #111827;
+}
+
+.rm-anular-lista {
+    margin: 0 0 16px;
+    padding-left: 18px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #4b5563;
+}
+
+#anular_motivo {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+#anular_motivo:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .15);
+}
+
+.rm-anular-pie-texto {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.rm-btn-anular {
+    background: #b91c1c !important;
+    border: 1px solid #b91c1c !important;
+    color: #fff !important;
+}
+
+.rm-btn-anular:hover:not(:disabled) { background: #991b1b !important; }
+
+.rm-btn-anular:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .rm-anular-resumen { grid-template-columns: 1fr; }
+
+    .rm-detalle-proveedor {
+        display: block;
+        margin: 4px 0 0;
+    }
+}

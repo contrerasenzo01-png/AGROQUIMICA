@@ -111,8 +111,7 @@
                                     {% if lista %}
                                         <div class="pf-chips">
                                             {% for permiso in lista|slice:":3" %}
-                                                <span class="pf-chip"
-                                                      title="{{ permiso.Descripcion_permiso|default:'' }}">
+                                                <span class="pf-chip">
                                                     {{ permiso.Nombre_permiso }}
                                                 </span>
                                             {% endfor %}
@@ -306,6 +305,9 @@
 
 <!-- =========================================
      MODAL NUEVO PERFIL
+     Los permisos salen de grupos_permisos (catálogo de permissions.py):
+     agrupados por módulo y con la misma descripción que
+     "Permisos del sistema".
 ========================================= -->
 <div id="createModal" class="pf-modal">
 
@@ -345,25 +347,22 @@
                     <label>Permisos asignados</label>
 
                     <div class="pf-permisos-lista">
-                        {% for permiso in permisos %}
-                            <label class="pf-permiso">
+                        {% for grupo, permisos_grupo in grupos_permisos %}
+                            <div class="pf-permisos-modulo">{{ grupo }}</div>
 
-                                <input type="checkbox"
-                                       name="permisos"
-                                       value="{{ permiso.ID_Permiso }}">
+                            {% for permiso in permisos_grupo %}
+                                <label class="pf-permiso">
 
-                                <span class="pf-permiso-info">
-                                    <strong>
-                                        {{ permiso.Nombre_permiso }}
-                                    </strong>
+                                    <input type="checkbox"
+                                           name="permisos"
+                                           value="{{ permiso.id }}">
 
-                                    {% if permiso.Descripcion_permiso %}
-                                        <small>
-                                            {{ permiso.Descripcion_permiso }}
-                                        </small>
-                                    {% endif %}
-                                </span>
-                            </label>
+                                    <span class="pf-permiso-info">
+                                        <strong>{{ permiso.nombre }}</strong>
+                                        <small>{{ permiso.descripcion }}</small>
+                                    </span>
+                                </label>
+                            {% endfor %}
                         {% empty %}
                             <p class="pf-sin">
                                 No hay permisos registrados.
@@ -430,26 +429,23 @@
                     <label>Permisos asignados</label>
 
                     <div class="pf-permisos-lista">
-                        {% for permiso in permisos %}
-                            <label class="pf-permiso">
+                        {% for grupo, permisos_grupo in grupos_permisos %}
+                            <div class="pf-permisos-modulo">{{ grupo }}</div>
 
-                                <input type="checkbox"
-                                       name="permisos"
-                                       value="{{ permiso.ID_Permiso }}"
-                                       class="edit-permission">
+                            {% for permiso in permisos_grupo %}
+                                <label class="pf-permiso">
 
-                                <span class="pf-permiso-info">
-                                    <strong>
-                                        {{ permiso.Nombre_permiso }}
-                                    </strong>
+                                    <input type="checkbox"
+                                           name="permisos"
+                                           value="{{ permiso.id }}"
+                                           class="edit-permission">
 
-                                    {% if permiso.Descripcion_permiso %}
-                                        <small>
-                                            {{ permiso.Descripcion_permiso }}
-                                        </small>
-                                    {% endif %}
-                                </span>
-                            </label>
+                                    <span class="pf-permiso-info">
+                                        <strong>{{ permiso.nombre }}</strong>
+                                        <small>{{ permiso.descripcion }}</small>
+                                    </span>
+                                </label>
+                            {% endfor %}
                         {% empty %}
                             <p class="pf-sin">
                                 No hay permisos registrados.

@@ -59,7 +59,7 @@
 
         <input type="text" id="searchInput" name="q" value="{{ busqueda }}"
                onkeyup="filtrarProveedores()"
-               placeholder="Buscar por nombre, correo, dirección o código...">
+               placeholder="Buscar por nombre, teléfono, correo o dirección...">
 
     </form>
 
@@ -88,7 +88,7 @@
 
                         <tr id="card-{{ p.pk }}"
                             class="supplier-card {% if not p.estado_proveedor %}inactivo{% endif %}"
-                            data-search="{{ p.nombre_proveedor|lower }} sup-0{{ p.pk }} {{ p.email_proveedor|default:''|lower }} {{ p.direccion_proveedor|default:''|lower }} {{ p.telefono_proveedor|default:''|lower }}">
+                            data-search="{{ p.nombre_proveedor|lower }} {{ p.email_proveedor|default:''|lower }} {{ p.direccion_proveedor|default:''|lower }} {{ p.telefono_proveedor|default:''|lower }}">
 
                             <td>
                                 <span class="pv-nombre">{{ p.nombre_proveedor }}</span>
@@ -110,17 +110,17 @@
                             <td>
                                 <div class="pv-acciones">
                                     {% if perm.proveedores_gestionar %}
+
                                     <!-- EDITAR -->
                                     <button type="button" class="pv-accion pv-accion-icono"
+                                        title="Editar proveedor"
                                         aria-label="Editar proveedor"
-
                                         onclick="abrirModalEditar(
                                             '{{ p.pk }}',
                                             '{{ p.nombre_proveedor|escapejs }}',
                                             '{{ p.telefono_proveedor|default:''|escapejs }}',
                                             '{{ p.email_proveedor|default:''|escapejs }}',
-                                            '{{ p.direccion_proveedor|default:''|escapejs }}',
-                                            '{{ p.estado_proveedor|lower }}'
+                                            '{{ p.direccion_proveedor|default:''|escapejs }}'
                                         )">
                                         <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                                             <path d="M12 20h9"/>
@@ -129,7 +129,7 @@
                                     </button>
 
 
-                                    <!-- CAMBIAR ESTADO -->
+                                    <!-- DAR DE BAJA / ACTIVAR -->
                                     <form id="form-estado-{{ p.pk }}"
                                           method="POST"
                                           action="{% url 'cambiar_estado_proveedor' p.pk %}"
@@ -150,36 +150,53 @@
                                         <button type="submit"
                                             id="btn-estado-{{ p.pk }}"
                                             class="pv-accion pv-accion-icono {% if p.estado_proveedor %}pv-baja{% else %}pv-activar{% endif %}"
+                                            title="{% if p.estado_proveedor %}Dar de baja{% else %}Activar{% endif %}"
                                             aria-label="{% if p.estado_proveedor %}Dar de baja proveedor{% else %}Activar proveedor{% endif %}">
 
-                                        {% if p.estado_proveedor %}
+                                            {% if p.estado_proveedor %}
+                                                <!-- Dar de baja: círculo tachado -->
+                                                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <circle cx="12" cy="12" r="9"/>
+                                                    <path d="m5.6 5.6 12.8 12.8"/>
+                                                </svg>
+                                            {% else %}
+                                                <!-- Activar -->
+                                                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M21.801 10A10 10 0 1 1 17 3.335"/>
+                                                    <path d="m9 11 3 3L22 4"/>
+                                                </svg>
+                                            {% endif %}
 
-                                         <!-- Papelera -->
+                                        </button>
+
+                                    </form>
+
+
+                                    <!-- ELIMINAR: solo si el proveedor nunca se usó
+                                         (sin remitos ni productos asociados) -->
+                                    {% if p.eliminable %}
+                                        <button type="button"
+                                            class="pv-accion pv-accion-icono pv-baja"
+                                            title="Eliminar proveedor"
+                                            aria-label="Eliminar proveedor"
+                                            onclick="abrirModalEliminar(
+                                                '{{ p.pk }}',
+                                                '{{ p.nombre_proveedor|escapejs }}'
+                                            )">
                                             <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path d="M3 6h18"/>
                                                 <path d="M8 6V4h8v2"/>
                                                 <path d="m19 6-1 14H6L5 6"/>
                                                 <path d="M10 11v5M14 11v5"/>
                                             </svg>
+                                        </button>
+                                    {% endif %}
 
-                                        {% else %}
+                                    {% endif %}
+                                </div>
+                            </td>
 
-                                        <!-- Activar: mismo ícono que Productos -->
-                                            <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M21.801 10A10 10 0 1 1 17 3.335"/>
-                                                <path d="m9 11 3 3L22 4"/>
-                                            </svg>
-
-                                        {% endif %}
-
-                                    </button>
-                                
-                                </form>
-                                {% endif %}
-                            </div>
-                        </td>
-
-                    </tr>
+                        </tr>
 
                     {% empty %}
 
@@ -199,7 +216,7 @@
             <span id="contadorProveedores">
                 {{ proveedores|length }} registro{{ proveedores|length|pluralize }} encontrado{{ proveedores|length|pluralize }}
             </span>
-            <span>Agroquímicos del Valle</span>
+            <span>Agroquímica del Valle</span>
         </div>
 
     </section>
@@ -240,8 +257,9 @@
                 </svg>
 
                 <span>
-                    Verificá que sea el proveedor correcto antes de
-                    confirmar la baja.
+                    El proveedor quedará inactivo y no aparecerá al registrar
+                    remitos ni productos. Su historial se conserva y se puede
+                    volver a activar.
                 </span>
             </div>
 
@@ -300,6 +318,73 @@
 </div>
 
 
+<!-- ===================== MODAL CONFIRMAR ELIMINACIÓN ===================== -->
+
+<div class="pv-modal" id="modalEliminarProveedor">
+
+    <div class="pv-modal-box"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloEliminarProveedor">
+
+        <div class="pv-modal-head">
+            <h2 id="tituloEliminarProveedor">Eliminar proveedor</h2>
+
+            <button type="button"
+                    class="pv-modal-x"
+                    onclick="cerrarModal('modalEliminarProveedor')"
+                    aria-label="Cerrar">
+
+                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="formEliminarProveedor" method="POST" action="">
+
+            {% csrf_token %}
+
+            <div class="pv-modal-body">
+
+                <div class="pv-aviso">
+                    <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                        <path d="M12 9v4"/>
+                        <path d="M12 17h.01"/>
+                    </svg>
+
+                    <span>
+                        Se va a eliminar <strong id="eliminar_nombre"></strong>.
+                        Esta acción no se puede deshacer. Solo se permite porque
+                        el proveedor no tiene remitos ni productos asociados.
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="pv-modal-pie">
+
+                <button type="button"
+                        class="pv-btn pv-btn-claro"
+                        onclick="cerrarModal('modalEliminarProveedor')">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        class="pv-btn pv-btn-peligro">
+                    Eliminar
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
 <!-- ===================== MODAL EDITAR PROVEEDOR ===================== -->
 
 <div class="pv-modal" id="modalEditarProveedor">
@@ -344,10 +429,6 @@
                     <input type="text"
                            id="edit_telefono"
                            name="telefono_proveedor">
-
-                    <input type="hidden"
-                           id="edit_estado"
-                           name="estado_proveedor">
                 </div>
 
                 <div class="pv-grupo">
@@ -446,7 +527,7 @@
                                         {{ p.email_proveedor|default:"--" }}
                                     </div>
                                 </div>
-                                
+
                             {% endif %}
                         {% endfor %}
 
@@ -658,28 +739,38 @@
     }
 
 
-    function abrirModalEditar(id, nombre, telefono, email, direccion, estado) {
+    function abrirModalEditar(id, nombre, telefono, email, direccion) {
         const formulario = document.getElementById('formEditarProveedor');
 
         if (!formulario) {
             return;
         }
 
-        formulario.action = '/proveedores/editar/' + id + '/';
+        const urlBase = "{% url 'editar_proveedor' 0 %}";
+        formulario.action = urlBase.replace('/0/', '/' + id + '/');
 
         document.getElementById('edit_nombre').value = nombre || '';
         document.getElementById('edit_telefono').value = telefono || '';
         document.getElementById('edit_email').value = email || '';
         document.getElementById('edit_direccion').value = direccion || '';
-        document.getElementById('edit_estado').value = 
-        (estado === 'true' || 
-        estado === 'True' ||
-        estado === '1' || 
-        estado === 'verdadero')
-            ? 'True'
-            : 'False';
 
         document.getElementById('modalEditarProveedor').style.display = 'flex';
+    }
+
+
+    function abrirModalEliminar(id, nombre) {
+        const formulario = document.getElementById('formEliminarProveedor');
+
+        if (!formulario) {
+            return;
+        }
+
+        const urlBase = "{% url 'eliminar_proveedor' 0 %}";
+        formulario.action = urlBase.replace('/0/', '/' + id + '/');
+
+        document.getElementById('eliminar_nombre').textContent = nombre || '';
+
+        document.getElementById('modalEliminarProveedor').style.display = 'flex';
     }
 
 
@@ -704,6 +795,7 @@
 
     [
         'modalConfirmarBaja',
+        'modalEliminarProveedor',
         'modalEditarProveedor',
         'modalCrearProveedor'
     ].forEach(function (id) {
@@ -731,6 +823,7 @@
     document.addEventListener('keydown', function (evento) {
         if (evento.key === 'Escape') {
             cancelarBajaProveedor();
+            cerrarModal('modalEliminarProveedor');
             cerrarModal('modalEditarProveedor');
             cerrarModal('modalCrearProveedor');
         }
@@ -745,7 +838,6 @@
         evento,
         id,
         nombre,
-        codigo,
         telefono,
         email,
         direccion
@@ -776,9 +868,6 @@
 
             document.getElementById('baja_nombre').textContent =
                 nombre || 'Sin nombre';
-
-            document.getElementById('baja_id').textContent =
-                codigo || '--';
 
             document.getElementById('baja_telefono').textContent =
                 telefono || '--';
@@ -832,13 +921,11 @@
        ICONOS DE LOS BOTONES
     ===================================================== */
 
-    function iconoPapelera() {
+    function iconoBaja() {
         return `
             <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M3 6h18"/>
-                <path d="M8 6V4h8v2"/>
-                <path d="m19 6-1 14H6L5 6"/>
-                <path d="M10 11v5M14 11v5"/>
+                <circle cx="12" cy="12" r="9"/>
+                <path d="m5.6 5.6 12.8 12.8"/>
             </svg>
         `;
     }
@@ -856,6 +943,7 @@
 
     /* =====================================================
        CAMBIAR ESTADO DEL PROVEEDOR
+       El servidor responde JSON: {ok, mensaje} o {ok: false, error}.
     ===================================================== */
 
     async function ejecutarCambioEstado(
@@ -877,10 +965,6 @@
             return;
         }
 
-        /*
-         * Establecer el estado que se enviará al servidor.
-         * El formulario conserva su token CSRF.
-         */
         campoEstado.value = esBaja ? 'inactivo' : 'activo';
         boton.disabled = true;
 
@@ -894,15 +978,26 @@
                 credentials: 'same-origin'
             });
 
-            if (!respuesta.ok) {
-                throw new Error('Error al cambiar el estado');
+            let datos = null;
+
+            try {
+                datos = await respuesta.json();
+            } catch (e) {
+                datos = null;
+            }
+
+            if (!respuesta.ok || !datos || !datos.ok) {
+                throw new Error(
+                    (datos && datos.error) ||
+                    'No se pudo cambiar el estado del proveedor.'
+                );
             }
 
             if (esBaja) {
-                /* Proveedor dado de baja: mostrar la tilde verde. */
                 boton.classList.remove('pv-baja');
                 boton.classList.add('pv-activar');
                 boton.innerHTML = iconoActivar();
+                boton.title = 'Activar';
                 boton.setAttribute('aria-label', 'Activar proveedor');
 
                 badge.classList.remove('pv-activo');
@@ -914,17 +1009,13 @@
                 /* Preparar el valor para la próxima operación. */
                 campoEstado.value = 'activo';
 
-                mostrarToast(
-                    'El proveedor "' + nombreProveedor +
-                    '" ha sido dado de baja.',
-                    'warning'
-                );
+                mostrarToast(datos.mensaje, 'warning');
 
             } else {
-                /* Proveedor activado: mostrar la papelera roja. */
                 boton.classList.remove('pv-activar');
                 boton.classList.add('pv-baja');
-                boton.innerHTML = iconoPapelera();
+                boton.innerHTML = iconoBaja();
+                boton.title = 'Dar de baja';
                 boton.setAttribute('aria-label', 'Dar de baja proveedor');
 
                 badge.classList.remove('pv-inactivo');
@@ -936,26 +1027,16 @@
                 /* Preparar el valor para la próxima operación. */
                 campoEstado.value = 'inactivo';
 
-                mostrarToast(
-                    'El proveedor "' + nombreProveedor +
-                    '" ha sido activado.',
-                    'success'
-                );
+                mostrarToast(datos.mensaje, 'success');
             }
 
         } catch (error) {
             console.error('Error al cambiar el estado:', error);
 
-            /*
-             * El campo oculto ya contiene el estado solicitado.
-             * Si falla fetch, enviar el formulario normalmente.
-             */
-            mostrarToast(
-                'No se pudo verificar el cambio. Se recargará la página.',
-                'warning'
-            );
+            /* Volver el campo al valor que corresponde al estado actual. */
+            campoEstado.value = esBaja ? 'inactivo' : 'activo';
 
-            formulario.submit();
+            mostrarToast(error.message, 'error');
 
         } finally {
             boton.disabled = false;

@@ -1,5 +1,5 @@
 /* ============================================================
-   PERFILES DE ACCESO  ·  Agroquímicos del Valle
+   PERFILES DE ACCESO  ·  Agroquímica del Valle
    Estilos de perfiles.html.
    Todas las clases empiezan con "pf-" para no pisar los estilos de base.css.
    Ubicación: inventario/static/inventario/styles/perfiles.css
@@ -53,14 +53,6 @@
     margin-bottom: 20px;
 }
 
-.pf-eyebrow {
-    font-size: 10px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--pf-suave);
-    margin-bottom: 8px;
-}
-
 .pf-title {
     font-family: 'Poppins', 'Inter', sans-serif;
     font-size: 30px;
@@ -68,12 +60,6 @@
     letter-spacing: -.02em;
     color: var(--pf-texto);
     margin: 0 0 6px;
-}
-
-.pf-sub {
-    font-size: 13px;
-    color: var(--pf-suave);
-    margin: 0;
 }
 
 
@@ -108,49 +94,6 @@
     cursor: not-allowed;
 }
 .pf-btn-peligro:disabled:hover { background: var(--pf-rojo); }
-
-
-/* ---------- PESTAÑAS (Tipos de producto | Subtipos) ---------- */
-.pf-tabs {
-    display: flex;
-    gap: 26px;
-    margin-bottom: 18px;
-    border-bottom: 1px solid var(--pf-borde);
-}
-
-.pf-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 2px 12px;
-    margin-bottom: -1px;
-    font-size: 13px;
-    color: var(--pf-suave);
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
-    transition: color .15s;
-}
-
-.pf-tab:hover { color: var(--pf-texto); }
-
-.pf-tab.activa {
-    color: var(--pf-verde);
-    font-weight: 600;
-    border-bottom-color: var(--pf-verde);
-}
-
-.pf-contador {
-    min-width: 20px;
-    padding: 1px 7px;
-    border-radius: 10px;
-    background: #eef2ef;
-    font-size: 10.5px;
-    font-weight: 600;
-    text-align: center;
-    color: var(--pf-suave);
-}
-
-.pf-tab.activa .pf-contador { background: #e2f0e8; color: var(--pf-verde); }
 
 
 /* ---------- BÚSQUEDA ---------- */
@@ -227,14 +170,6 @@
 .pf-table tr.inactivo .pf-chip   { opacity: .6; }
 
 .pf-nombre { font-weight: 700; color: var(--pf-titulo); }
-.pf-muted  { color: var(--pf-suave); }
-
-.pf-codigo {
-    display: block;
-    margin-top: 2px;
-    font-size: 10.5px;
-    color: var(--pf-suave);
-}
 
 .pf-vacio {
     text-align: center;
@@ -332,7 +267,7 @@
 
 /* ---------- POPOVER DE PERMISOS ----------
    position: fixed para que el scroll de la tabla no lo recorte.
-   Lo posiciona el JavaScript (togglePopover).
+   Lo posiciona el JavaScript (abrirPermisos).
    z-index alto para quedar por encima del layout de base.css. */
 .pf-popover {
     position: fixed;
@@ -504,7 +439,15 @@
 .pf-toast.warning { border-left-color: #f59f00; }
 .pf-toast.error   { border-left-color: var(--pf-rojo); }
 
-.pf-toast-x       { cursor: pointer; font-weight: 700; color: #8a9e93; }
+.pf-toast-x {
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: 700;
+    color: #8a9e93;
+}
 .pf-toast-x:hover { color: var(--pf-texto); }
 
 @keyframes pf-entrada-toast {
@@ -512,17 +455,12 @@
     to   { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes pf-fadeout {
-    from { opacity: 1; transform: translateX(0); }
-    to   { opacity: 0; transform: translateX(20px); }
-}
-
 
 /* ============================================================
    MODALES
    ============================================================ */
 .pf-modal {
-    display: none;                /* el JS lo cambia a flex */
+    display: none;                /* el JS le agrega la clase .show */
     position: fixed;
     inset: 0;
     z-index: 9999;                /* por encima del menú lateral y la barra superior */
@@ -590,8 +528,7 @@
     color: #1f3a2c;
 }
 
-.pf-grupo input,
-.pf-grupo select {
+.pf-grupo input {
     width: 100%;
     height: 38px;
     padding: 0 12px;
@@ -607,18 +544,10 @@
 
 .pf-grupo input::placeholder { color: #a3b0a9; }
 
-.pf-grupo input:focus,
-.pf-grupo select:focus {
+.pf-grupo input:focus {
     border-color: #6fb28b;
     box-shadow: 0 0 0 3px rgba(24, 90, 56, .14);
 }
-
-.pf-grupo input[readonly] {
-    background: #f3f6f4;
-    color: #5c7367;
-    cursor: default;
-}
-.pf-grupo input[readonly]:focus { border-color: var(--pf-borde-campo); box-shadow: none; }
 
 /* Los checkbox no deben heredar el alto/ancho de los campos de texto */
 .pf-grupo input[type="checkbox"] { width: 15px; height: 15px; padding: 0; }
@@ -648,6 +577,19 @@
     padding-right: 4px;
 }
 
+/* Título de cada módulo (USUARIOS, PRODUCTOS...) dentro de la lista */
+.pf-permisos-modulo {
+    margin-top: 8px;
+    padding: 0 2px;
+    color: var(--pf-verde);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.pf-permisos-modulo:first-child { margin-top: 0; }
+
 .pf-permiso {
     display: flex;
     align-items: flex-start;
@@ -662,6 +604,12 @@
 
 .pf-permiso:hover { background: #f0f7f3; border-color: #cbd9d1; }
 
+/* Permiso tildado: se resalta para ver rápido qué tiene el perfil */
+.pf-permiso:has(input:checked) {
+    background: #eef6f1;
+    border-color: #b9d7c5;
+}
+
 .pf-permiso input[type="checkbox"] {
     flex-shrink: 0;
     width: 15px;
@@ -673,27 +621,10 @@
 
 .pf-permiso-info { display: flex; flex-direction: column; gap: 2px; }
 .pf-permiso-info strong { font-size: 12px; color: var(--pf-texto); }
-.pf-permiso-info small  { font-size: 11px; line-height: 1.4; color: var(--pf-suave); }
+.pf-permiso-info small  { font-size: 11px; font-weight: 400; line-height: 1.4; color: var(--pf-suave); }
 
 
-/* ---------- MODALES DE BAJA (confirmar y bloqueada) ---------- */
-
-/* Aviso del modal "No se puede dar de baja" */
-.pf-aviso {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    padding: 10px 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #991b1b;
-}
-
-/* Aviso rojo del modal "Confirmar baja" */
+/* ---------- MODAL CONFIRMAR BAJA ---------- */
 .pf-aviso-peligro {
     display: flex;
     align-items: center;

@@ -8,6 +8,7 @@ Desde la pantalla de Perfiles solo se ASIGNAN estos permisos.
   - "Consultar X"  -> ver el listado / detalle del módulo.
   - "Gestionar X"  -> crear, editar, cambiar estado y eliminar. Incluye consultar.
   - Acciones sensibles (anular remitos, atender alertas) tienen permiso propio.
+  - Usuarios solo tiene "Gestionar usuarios": quien ve la lista es quien la administra.
 El perfil "Administrador" siempre tiene todo.
 """
 
@@ -18,10 +19,9 @@ from django.urls import NoReverseMatch, reverse
 CATALOGO = {
     'usuarios': {
         'titulo': 'Usuarios',
-        'consultar': ('Consultar usuarios',
-                      'Ver el listado de usuarios del sistema.'),
+        # Sin "consultar": ver la lista de usuarios requiere gestionarlos.
         'gestionar': ('Gestionar usuarios',
-                      'Crear, editar, dar de baja, activar y eliminar usuarios, y restablecer contraseñas.'),
+                      'Ver, crear, editar, dar de baja, activar y eliminar usuarios, y restablecer contraseñas.'),
     },
     'productos': {
         'titulo': 'Productos',

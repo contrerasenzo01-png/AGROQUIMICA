@@ -45,29 +45,27 @@
             <input type="text"
                    name="q"
                    value="{{ busqueda|default:'' }}"
-                   placeholder="Buscar por lote, producto o proveedor..."
+                   placeholder="Buscar por lote, producto, proveedor o remito..."
                    aria-label="Buscar lotes">
         </div>
 
-        <select name="marca"
+        <select name="proveedor"
                 class="lt-select"
-                aria-label="Filtrar por marca">
+                aria-label="Filtrar por proveedor">
 
-            <option value="">Todas las marcas</option>
+            <option value="">Todos los proveedores</option>
 
-            {% for marca in marcas %}
-            <option value="{{ marca }}"
-                    {% if marca_filtro == marca %}selected{% endif %}>
-                {{ marca }}
+            {% for proveedor in proveedores %}
+            <option value="{{ proveedor.ID_Proveedor }}"
+                    {% if proveedor_filtro == proveedor.ID_Proveedor|stringformat:"s" %}selected{% endif %}>
+                {{ proveedor.nombre_proveedor }}
             </option>
             {% endfor %}
         </select>
 
-        
         <button type="submit" class="lt-btn lt-btn-primary">
             Buscar
         </button>
-
 
     </form>
 
@@ -82,8 +80,8 @@
                     <tr>
                         <th>Número de lote</th>
                         <th>Producto</th>
-                        <th>Marca</th>
                         <th>Proveedor</th>
+                        <th>Remito</th>
                         <th>Fecha de ingreso</th>
                         <th>Fecha de vencimiento</th>
                         <th>Cantidad ingresada</th>
@@ -106,15 +104,15 @@
                         </td>
 
                         <td>
-                            {{ l.ID_Producto.Marca|default:"Sin marca" }}
-                        </td>
-
-                        <td class="lt-muted">
                             {% if l.ID_Remito and l.ID_Remito.ID_Proveedor %}
                                 {{ l.ID_Remito.ID_Proveedor.nombre_proveedor }}
                             {% else %}
-                                Sin atribuir
+                                <span class="lt-muted">Sin atribuir</span>
                             {% endif %}
+                        </td>
+
+                        <td class="lt-muted">
+                            {{ l.ID_Remito.Numero_remito|default:"—" }}
                         </td>
 
                         <td class="lt-muted">
@@ -160,7 +158,6 @@
                                 {{ l.Cantidad_actual }}
                             </span>
                         </td>
-
 
                     </tr>
 

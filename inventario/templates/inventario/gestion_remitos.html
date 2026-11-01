@@ -6,136 +6,6 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/styles/gestion_remitos.css' %}">
-
-<style>
-    /* REMITOS ANULADOS */
-    .rm-anulado td { opacity: .6; }
-    .rm-anulado td:last-child { opacity: 1; }
-
-    .rm-icon-btn.rm-anular { color: #b91c1c; }
-    .rm-icon-btn.rm-anular:hover {
-        background: #fef2f2;
-        border-color: #fecaca;
-    }
-
-    .rm-banner-anulado {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        border-radius: 10px;
-        padding: 10px 14px;
-        margin-bottom: 12px;
-        color: #991b1b;
-        font-size: 13px;
-        line-height: 1.5;
-    }
-
-    .rm-banner-anulado strong { font-weight: 600; }
-
-    /* MODAL DE ANULACIÓN */
-    .rm-anular-aviso {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #991b1b;
-        border-radius: 12px;
-        padding: 14px 16px;
-        margin-bottom: 16px;
-    }
-
-    .rm-anular-aviso svg {
-        flex: none;
-        width: 22px;
-        height: 22px;
-        stroke: currentColor;
-        fill: none;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-
-    .rm-anular-aviso strong {
-        display: block;
-        font-size: 15px;
-        margin-bottom: 2px;
-    }
-
-    .rm-anular-aviso span {
-        font-size: 13px;
-        color: #b91c1c;
-    }
-
-    .rm-anular-resumen {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px 16px;
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 14px 16px;
-        margin-bottom: 14px;
-    }
-
-    .rm-anular-resumen small {
-        display: block;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        color: #6b7280;
-    }
-
-    .rm-anular-resumen b {
-        font-size: 14px;
-        color: #111827;
-    }
-
-    .rm-anular-lista {
-        margin: 0 0 16px;
-        padding-left: 18px;
-        font-size: 13px;
-        color: #4b5563;
-        line-height: 1.7;
-    }
-
-    #anular_motivo {
-        width: 100%;
-        min-height: 100px;
-        resize: vertical;
-        padding: 10px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        font: inherit;
-        box-sizing: border-box;
-    }
-
-    #anular_motivo:focus {
-        outline: none;
-        border-color: #dc2626;
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, .15);
-    }
-
-    .rm-anular-pie-texto {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 6px;
-        color: #6b7280;
-        font-size: 12px;
-    }
-
-    .rm-btn-anular {
-        background: #b91c1c;
-        color: #fff;
-        border: 1px solid #b91c1c;
-    }
-
-    .rm-btn-anular:hover:not(:disabled) { background: #991b1b; }
-
-    .rm-btn-anular:disabled {
-        opacity: .5;
-        cursor: not-allowed;
-    }
-</style>
 {% endblock %}
 
 {% block contenido %}
@@ -386,6 +256,9 @@
                                     <div class="rm-detalle-header">
                                         <h3>
                                             Lotes del remito {{ remito.Numero_remito }}
+                                            <span class="rm-detalle-proveedor">
+                                                · Proveedor: <strong>{{ remito.ID_Proveedor.nombre_proveedor }}</strong>
+                                            </span>
                                         </h3>
                                     </div>
 
@@ -408,7 +281,6 @@
                                                 <tr>
                                                     <th>Número de lote</th>
                                                     <th>Producto</th>
-                                                    <th>Marca</th>
                                                     <th>Vencimiento</th>
                                                     <th>Cajas</th>
                                                     <th>Unidades por caja</th>
@@ -440,10 +312,6 @@
 
                                                         <td>
                                                             {{ lote.ID_Producto.Nombre_producto }}
-                                                        </td>
-
-                                                        <td>
-                                                            {{ lote.ID_Producto.Marca|default:"Sin marca" }}
                                                         </td>
 
                                                         <td>
@@ -501,7 +369,7 @@
                                                     </tr>
                                                 {% empty %}
                                                     <tr>
-                                                        <td colspan="10" class="rm-vacio">
+                                                        <td colspan="9" class="rm-vacio">
                                                             Este remito todavía no tiene lotes asociados.
                                                         </td>
                                                     </tr>
@@ -661,7 +529,7 @@
                                     <option value="{{ producto.ID_Producto }}"
                                             data-unidades="{{ producto.Unidades_por_presentacion }}"
                                             data-proveedores="{% for pr in producto.proveedores.all %}{{ pr.ID_Proveedor }}{% if not forloop.last %},{% endif %}{% endfor %}">
-                                        {{ producto.Nombre_producto }}{% if producto.Marca %} · {{ producto.Marca }}{% endif %}
+                                        {{ producto.Nombre_producto }}{% if producto.Cantidad_presentacion %} · {{ producto.Unidades_por_presentacion }} x {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}{% endif %}
                                     </option>
                                 {% endfor %}
                             </select>
@@ -861,7 +729,7 @@
                             <option value="">Seleccioná un producto</option>
                             {% for producto in productos_alta %}
                                 <option value="{{ producto.ID_Producto }}">
-                                    {{ producto.Nombre_producto }}{% if producto.Marca %} · {{ producto.Marca }}{% endif %}
+                                    {{ producto.Nombre_producto }}{% if producto.Cantidad_presentacion %} · {{ producto.Unidades_por_presentacion }} x {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}{% endif %}
                                 </option>
                             {% endfor %}
                         </select>

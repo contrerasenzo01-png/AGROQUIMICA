@@ -8,47 +8,6 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}">
-    <style>
-        .pr-header-acciones { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-
-        .pr-btn-rojo          { background: #b91c1c; border-color: #b91c1c; color: #fff; }
-        .pr-btn-rojo:hover    { background: #991b1b; border-color: #991b1b; }
-        .pr-btn-rojo:disabled { opacity: .45; cursor: not-allowed; }
-
-        .pr-modal-egreso { max-width: 640px; max-height: 96vh; }
-        .pr-modal-egreso .pr-modal-body { padding-top: 16px; }
-        .pr-modal-egreso .pr-grupo { margin-bottom: 12px; }
-        .pr-modal-egreso textarea {
-            width: 100%; padding: 10px 12px; resize: none;
-            border: 1px solid #dde7e0; border-radius: 8px;
-            font-family: inherit; outline: none;
-        }
-
-        /* Resumen del lote: etiqueta arriba, dato abajo */
-        .eg-datos {
-            background: #f3f7f5;
-            border: 1px solid #e3eae6;
-            border-radius: 12px;
-            padding: 14px 18px;
-        }
-        .eg-datos-titulo { margin: 0 0 10px; color: #6b7c73; }
-        .eg-datos-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
-        .eg-dato         { display: flex; flex-direction: column; gap: 2px; }
-        .eg-dato-label   { display: block; font-size: 13px; color: #6b7c73; }
-        .eg-dato-valor   { display: block; font-size: 14px; font-weight: 700; color: #1c2a23; }
-
-        /* Cómo quedan lote y stock */
-        .eg-resultado { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .eg-res {
-            display: flex; flex-direction: column; gap: 2px;
-            padding: 10px 16px; border-radius: 12px;
-            background: #e8f5ee; color: #1b7a4a;
-        }
-        .eg-res-label { display: block; font-size: 12px; }
-        .eg-res-valor { display: block; font-size: 24px; font-weight: 700; line-height: 1.2; }
-        .eg-res.eg-alerta { background: #fef3c7; color: #b45309; }
-        .eg-res.eg-error  { background: #fee2e2; color: #b91c1c; }
-    </style>
 {% endblock %}
 
 {% block contenido %}
@@ -158,7 +117,7 @@
                    name="q"
                    value="{{ busqueda }}"
                    onkeyup="filtrarProductos()"
-                   placeholder="Buscar por nombre, marca o subtipo...">
+                   placeholder="Buscar por nombre o subtipo...">
 
         </div>
 
@@ -217,7 +176,6 @@
 
                         <th>Producto</th>
                         <th>Tipo de producto</th>
-                        <th>Marca</th>
                         <th>Subtipo</th>
                         <th>Precio</th>
                         <th>Cantidad presentación</th>
@@ -241,7 +199,7 @@
                             class="producto-card {% if producto.Estado_producto != 'Activo' %}inactivo{% endif %}"
                             data-tipo="{{ producto.ID_Tipo_producto.ID_Tipo_producto }}"
                             data-estado="{{ producto.Estado_producto }}"
-                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {{ producto.Marca|default:''|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %}">
+                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %}">
 
                             <!-- ===================== PRODUCTO ===================== -->
 
@@ -279,17 +237,6 @@
 
                                 <span class="pr-tipo">
                                     {{ producto.ID_Tipo_producto.Nombre_tipo_producto }}
-                                </span>
-
-                            </td>
-
-
-                            <!-- ===================== MARCA ===================== -->
-
-                            <td>
-
-                                <span class="pr-tipo">
-                                    {{ producto.Marca|default:"Sin marca" }}
                                 </span>
 
                             </td>
@@ -444,7 +391,6 @@
                                                 '{{ producto.ID_Producto }}',
                                                 '{{ producto.ID_Tipo_producto.ID_Tipo_producto }}',
                                                 '{{ producto.Nombre_producto|escapejs }}',
-                                                '{{ producto.Marca|default:''|escapejs }}',
                                                 '{{ producto.Descripcion_producto|default:''|escapejs }}',
                                                 '{{ producto.Precio|unlocalize }}',
                                                 '{{ producto.Cantidad_presentacion|default_if_none:''|unlocalize }}',
@@ -502,7 +448,7 @@
                             class="pr-fila-lotes"
                             style="display: none;">
 
-                            <td colspan="12">
+                            <td colspan="11">
 
                                 <div class="pr-lotes-contenido">
 
@@ -588,7 +534,7 @@
 
                         <tr>
 
-                            <td colspan="12" class="pr-vacio">
+                            <td colspan="11" class="pr-vacio">
                                 No se encontraron productos.
                             </td>
 
@@ -666,7 +612,7 @@
 
                     <!-- NOMBRE -->
 
-                    <div class="pr-grupo">
+                    <div class="pr-grupo pr-full">
 
                         <label>
                             Nombre del producto
@@ -675,22 +621,6 @@
                         <input type="text"
                                name="Nombre_producto"
                                placeholder="Ej. Glifosato 48%"
-                               required>
-
-                    </div>
-
-
-                    <!-- MARCA -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Marca
-                        </label>
-
-                        <input type="text"
-                               name="Marca"
-                               placeholder="Marca comercial"
                                required>
 
                     </div>
@@ -885,33 +815,28 @@
                     <div class="pr-grupo pr-full">
 
                         <label>
-                            Proveedores que lo suministran
+                            Proveedor que lo suministra
                         </label>
 
-                        <div style="border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; max-height: 130px; overflow-y: auto;">
+                        <select name="proveedores"
+                                required>
+
+                            <option value="">
+                                Seleccione un proveedor
+                            </option>
 
                             {% for prov in proveedores_activos %}
 
-                                <label style="display: flex; align-items: center; gap: 8px; font-weight: 400; padding: 2px 0;">
-                                    <input type="checkbox"
-                                           name="proveedores"
-                                           value="{{ prov.ID_Proveedor }}"
-                                           style="width: auto;">
+                                <option value="{{ prov.ID_Proveedor }}">
                                     {{ prov.nombre_proveedor }}
-                                </label>
-
-                            {% empty %}
-
-                                <span class="pr-hint">
-                                    No hay proveedores activos. Registrá uno primero.
-                                </span>
+                                </option>
 
                             {% endfor %}
 
-                        </div>
+                        </select>
 
                         <span class="pr-hint">
-                            Solo estos proveedores podrán ingresar este producto en un remito.
+                            Solo este proveedor podrá ingresar el producto en un remito.
                         </span>
 
                     </div>
@@ -1009,7 +934,7 @@
 
                     <!-- CÓDIGO -->
 
-                    <div class="pr-grupo">
+                    <div class="pr-grupo" style="display: none;">
 
                         <label>
                             Código
@@ -1018,6 +943,22 @@
                         <input type="text"
                                id="edit_id"
                                readonly>
+
+                    </div>
+
+
+                    <!-- NOMBRE -->
+
+                    <div class="pr-grupo">
+
+                        <label>
+                            Nombre del producto
+                        </label>
+
+                        <input type="text"
+                               id="edit_nombre"
+                               name="Nombre_producto"
+                               required>
 
                     </div>
 
@@ -1042,37 +983,6 @@
                             </option>
 
                         </select>
-
-                    </div>
-
-
-                    <!-- NOMBRE -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Nombre del producto
-                        </label>
-
-                        <input type="text"
-                               id="edit_nombre"
-                               name="Nombre_producto"
-                               required>
-
-                    </div>
-
-
-                    <!-- MARCA -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Marca
-                        </label>
-
-                        <input type="text"
-                               id="edit_marca"
-                               name="Marca">
 
                     </div>
 
@@ -1255,33 +1165,29 @@
                     <div class="pr-grupo pr-full">
 
                         <label>
-                            Proveedores que lo suministran
+                            Proveedor que lo suministra
                         </label>
 
-                        <div style="border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; max-height: 130px; overflow-y: auto;">
+                        <select name="proveedores"
+                                id="edit_proveedor"
+                                required>
+
+                            <option value="">
+                                Seleccione un proveedor
+                            </option>
 
                             {% for prov in proveedores_activos %}
 
-                                <label style="display: flex; align-items: center; gap: 8px; font-weight: 400; padding: 2px 0;">
-                                    <input type="checkbox"
-                                           name="proveedores"
-                                           value="{{ prov.ID_Proveedor }}"
-                                           style="width: auto;">
+                                <option value="{{ prov.ID_Proveedor }}">
                                     {{ prov.nombre_proveedor }}
-                                </label>
-
-                            {% empty %}
-
-                                <span class="pr-hint">
-                                    No hay proveedores activos. Registrá uno primero.
-                                </span>
+                                </option>
 
                             {% endfor %}
 
-                        </div>
+                        </select>
 
                         <span class="pr-hint">
-                            Solo estos proveedores podrán ingresar este producto en un remito.
+                            Solo este proveedor podrá ingresar el producto en un remito.
                         </span>
 
                     </div>
@@ -1495,7 +1401,7 @@
 
         DATOS_EGRESO.forEach(function (p, i) {
             selProd.add(new Option(
-                p.nombre + (p.marca ? ' - ' + p.marca : ''), i
+                p.nombre, i
             ));
         });
 
@@ -1824,7 +1730,6 @@ function toggleLotes(productoId, boton) {
         id,
         tipo,
         nombre,
-        marca,
         descripcion,
         precio,
         cantidad,
@@ -1865,12 +1770,6 @@ function toggleLotes(productoId, boton) {
 
 
         document.getElementById(
-            'edit_marca'
-        ).value =
-            marca;
-
-
-        document.getElementById(
             'edit_descripcion'
         ).value =
             descripcion;
@@ -1900,16 +1799,10 @@ function toggleLotes(productoId, boton) {
             .split(',')
             .filter(Boolean);
 
-        document
-            .querySelectorAll(
-                '#formEditarProducto input[name="proveedores"]'
-            )
-            .forEach(function (casilla) {
-
-                casilla.checked =
-                    idsProveedores.includes(casilla.value);
-
-            });
+        document.getElementById(
+            'edit_proveedor'
+        ).value =
+            idsProveedores[0] || '';
 
 
         document.getElementById(

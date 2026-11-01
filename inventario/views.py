@@ -1,11 +1,10 @@
-import time
 import time as time_module
-from datetime import datetime, date, time as datetime_time
-from django.utils.http import url_has_allowed_host_and_scheme
+import unicodedata
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
-import unicodedata
+
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
@@ -19,7 +18,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
-from django.db.models import Count, Prefetch, ProtectedError, Q, Sum
+from django.db.models import Count, Prefetch, ProtectedError, Q, RestrictedError, Sum
 from django.db.models.functions import Coalesce
 
 from reportlab.lib import colors
@@ -35,7 +34,7 @@ from .auditoria import (
 from .forms import ProveedorForm
 from .permissions import (
     usuario_con_acceso, usuario_con_accion, puede, puede_accion,
-    catalogo_plano,
+    catalogo_plano, PERFILES_ADMIN,
 )
 
 from .models import (
@@ -59,10 +58,9 @@ from .models import (
 
 # ============================================================
 # CONTROL DE ACCESO
+# Los permisos se verifican en permissions.py.
+# PERFILES_ADMIN se importa de ahí para tenerlo en un solo lugar.
 # ============================================================
-
-PERFILES_ADMIN = ('Administrador',)
-
 
 def usuario_autenticado(request):
     """Devuelve el usuario logueado si está activo y tiene perfil activo."""
@@ -88,33 +86,6 @@ def usuario_autenticado(request):
         return None
 
     if not usuario.ID_Perfil.Estado_perfil:
-        return None
-
-    return usuario
-
-
-def usuario_es_administrador(request):
-    """Verifica que el usuario tenga un perfil administrativo."""
-
-    usuario = usuario_autenticado(request)
-
-    if not usuario:
-        return None
-
-    if usuario.ID_Perfil.Nombre_perfil not in PERFILES_ADMIN:
-        return None
-
-    return usuario
-
-def usuario_es_vendedor(request):
-    """Verifica que el usuario tenga el perfil Vendedor."""
-
-    usuario = usuario_autenticado(request)
-
-    if not usuario:
-        return None
-
-    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor':
         return None
 
     return usuario
@@ -300,6 +271,26 @@ def gestion_proveedores(request):
             Q(telefono_proveedor__icontains=busqueda)
         )
 
+    # Un proveedor solo se puede eliminar si nunca se usó:
+    # sin remitos y sin productos asociados. Si no, se da de baja.
+    con_remitos = set(
+        Remitos.objects.values_list('ID_Proveedor', flat=True)
+    )
+
+    con_productos = set(
+        Productos.objects.filter(
+            proveedores__isnull=False
+        ).values_list('proveedores', flat=True)
+    )
+
+    proveedores = list(proveedores)
+
+    for proveedor in proveedores:
+        proveedor.eliminable = (
+            proveedor.pk not in con_remitos
+            and proveedor.pk not in con_productos
+        )
+
     total_proveedores = Proveedores.objects.count()
 
     proveedores_activos = Proveedores.objects.filter(
@@ -477,59 +468,134 @@ def editar_proveedor(request, pk):
     return redirect('gestion_proveedores')
 
 
-def cambiar_estado_proveedor(request, pk):
+@require_POST
+def eliminar_proveedor(request, pk):
+    """Elimina un proveedor solo si nunca se usó.
+    Si tiene remitos o productos, se debe dar de baja."""
 
     usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
 
-    proveedor = get_object_or_404(
-        Proveedores,
-        ID_Proveedor=pk
-    )
+    proveedor = get_object_or_404(Proveedores, ID_Proveedor=pk)
+    nombre = proveedor.nombre_proveedor
+
+    if Remitos.objects.filter(ID_Proveedor=proveedor).exists():
+        messages.error(
+            request,
+            f'No se puede eliminar el proveedor "{nombre}" porque tiene '
+            'remitos registrados. Podés darlo de baja.'
+        )
+        return redirect('gestion_proveedores')
+
+    if Productos.objects.filter(proveedores=proveedor).exists():
+        messages.error(
+            request,
+            f'No se puede eliminar el proveedor "{nombre}" porque tiene '
+            'productos asociados. Podés darlo de baja.'
+        )
+        return redirect('gestion_proveedores')
+
+    try:
+        with transaction.atomic():
+            registrar_auditoria(
+                usuario, 'Proveedores', proveedor, 'ELIMINACION',
+                snapshot(proveedor), {}
+            )
+            proveedor.delete()
+
+    except (ProtectedError, RestrictedError, IntegrityError):
+        messages.error(
+            request,
+            f'No se puede eliminar el proveedor "{nombre}" porque tiene '
+            'registros asociados. Podés darlo de baja.'
+        )
+        return redirect('gestion_proveedores')
+
+    messages.success(request, f'El proveedor "{nombre}" fue eliminado.')
+
+    return redirect('gestion_proveedores')
+
+
+def cambiar_estado_proveedor(request, pk):
+    """Da de baja o activa un proveedor.
+
+    La pantalla lo llama con JavaScript (fetch): en ese caso responde
+    JSON y no guarda un mensaje, porque si no aparecería repetido
+    la próxima vez que se cargue la página.
+    """
+
+    es_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    def responder_error(texto, status):
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': texto}, status=status)
+
+        messages.error(request, texto)
+        return redirect('gestion_proveedores')
+
+    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
+
+    if not usuario:
+        if es_ajax:
+            return JsonResponse(
+                {'ok': False,
+                 'error': 'No tenés permiso para cambiar el estado de proveedores.'},
+                status=403
+            )
+        return redirect('panel_principal')
 
     if request.method != 'POST':
         return redirect('gestion_proveedores')
+
+    proveedor = Proveedores.objects.filter(ID_Proveedor=pk).first()
+
+    if not proveedor:
+        return responder_error('El proveedor seleccionado no existe.', 404)
 
     estado_solicitado = request.POST.get(
         'estado',
         ''
     ).strip().lower()
 
+    if estado_solicitado not in ('activo', 'inactivo'):
+        return responder_error('El estado solicitado no es válido.', 400)
+
     antes = snapshot(proveedor)
 
     if estado_solicitado == 'inactivo':
-
         proveedor.estado_proveedor = False
-
         mensaje = (
             f'El proveedor "{proveedor.nombre_proveedor}" '
             'fue dado de baja correctamente.'
         )
-
-    elif estado_solicitado == 'activo':
-
+    else:
         proveedor.estado_proveedor = True
-
         mensaje = (
             f'El proveedor "{proveedor.nombre_proveedor}" '
             'fue activado correctamente.'
         )
 
-    else:
-        messages.error(
-            request,
-            'El estado solicitado no es válido.'
-        )
-
-        return redirect('gestion_proveedores')
-
     proveedor.save(
         update_fields=['estado_proveedor']
     )
 
-    registrar_auditoria(usuario, 'Proveedores', proveedor, 'MODIFICACION', antes, snapshot(proveedor))
+    registrar_auditoria(
+        usuario,
+        'Proveedores',
+        proveedor,
+        'MODIFICACION',
+        antes,
+        snapshot(proveedor)
+    )
+
+    if es_ajax:
+        return JsonResponse({
+            'ok': True,
+            'mensaje': mensaje,
+            'activo': proveedor.estado_proveedor,
+        })
 
     messages.success(request, mensaje)
 
@@ -1106,7 +1172,8 @@ def eliminar_subtipo(request, pk):
 
 def gestion_usuarios(request):
 
-    usuario = usuario_con_acceso(request, 'usuarios')
+    # No existe "Consultar usuarios": ver la lista requiere "Gestionar usuarios".
+    usuario = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -1131,7 +1198,10 @@ def gestion_usuarios(request):
 
         usuarios = usuarios.filter(filtros)
 
-    perfiles = Perfiles.objects.all()
+    # Solo perfiles activos: crear_usuario rechaza los inactivos.
+    perfiles = Perfiles.objects.filter(
+        Estado_perfil=True
+    ).order_by('Nombre_perfil')
 
     return render(
         request,
@@ -1315,74 +1385,68 @@ def crear_usuario(request):
 
 
 def editar_usuario(request, pk):
+    """Modifica el email de un usuario desde el modal de usuarios.html."""
 
     usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
     if not usuario_admin:
         return redirect('panel_principal')
 
-    usuario = get_object_or_404(
+    # La edición se hace desde el modal: no hay pantalla propia.
+    if request.method != 'POST':
+        return redirect('gestion_usuarios')
+
+    usuario_editado = get_object_or_404(
         Usuarios,
         ID_Usuario=pk
     )
 
-    antes = snapshot(usuario)
+    antes = snapshot(usuario_editado)
 
-    if request.method == 'POST':
+    nuevo_email = request.POST.get(
+        'Email_usuario',
+        ''
+    ).strip()
 
-        nuevo_email = request.POST.get(
-            'Email_usuario',
-            ''
-        ).strip()
-
-        if not nuevo_email:
-            messages.error(
-                request,
-                'El correo electrónico es obligatorio.'
-            )
-
-            return render(
-                request,
-                'inventario/editar_usuario.html',
-                {'usuario': usuario}
-            )
-
-        email_existente = Usuarios.objects.filter(
-            Email_usuario__iexact=nuevo_email
-        ).exclude(
-            ID_Usuario=pk
-        ).exists()
-
-        if email_existente:
-            messages.error(
-                request,
-                'Ya existe otro usuario con ese correo electrónico.'
-            )
-
-            return render(
-                request,
-                'inventario/editar_usuario.html',
-                {'usuario': usuario}
-            )
-
-        usuario.Email_usuario = nuevo_email
-        usuario.save()
-
-        registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'MODIFICACION', antes, snapshot(usuario))
-
-        messages.success(
+    if not nuevo_email:
+        messages.error(
             request,
-            f'El usuario {usuario.Usuario} '
-            'ha sido modificado correctamente.'
+            'El correo electrónico es obligatorio.'
         )
-
         return redirect('gestion_usuarios')
 
-    return render(
-        request,
-        'inventario/editar_usuario.html',
-        {'usuario': usuario}
+    email_existente = Usuarios.objects.filter(
+        Email_usuario__iexact=nuevo_email
+    ).exclude(
+        ID_Usuario=pk
+    ).exists()
+
+    if email_existente:
+        messages.error(
+            request,
+            'Ya existe otro usuario con ese correo electrónico.'
+        )
+        return redirect('gestion_usuarios')
+
+    usuario_editado.Email_usuario = nuevo_email
+    usuario_editado.save()
+
+    registrar_auditoria(
+        usuario_admin,
+        'Usuarios',
+        usuario_editado,
+        'MODIFICACION',
+        antes,
+        snapshot(usuario_editado)
     )
+
+    messages.success(
+        request,
+        f'El usuario {usuario_editado.Usuario} '
+        'ha sido modificado correctamente.'
+    )
+
+    return redirect('gestion_usuarios')
 
 
 def dar_baja_usuario(request, pk):
@@ -1579,17 +1643,61 @@ def cambiar_contrasena(request):
 
 
 # ============================================================
-# GESTIÓN DE PERFILES
+# SINCRONIZACIÓN DE PERMISOS
+# El catálogo de permisos vive en el código (permissions.py).
+# Esta función crea en la base los que todavía no existen,
+# así todos aparecen en "Perfiles de acceso" y se pueden asignar.
+# Los permisos NO se crean ni se eliminan desde la interfaz.
 # ============================================================
 
-def _snapshot_perfil(perfil):
-    datos = snapshot(perfil)
-    datos['permisos'] = ', '.join(sorted(
-        PerfilesXPermisos.objects
-        .filter(ID_Perfil=perfil)
-        .values_list('ID_Permiso__Nombre_permiso', flat=True)
-    ))
-    return datos
+def sincronizar_permisos():
+    """Crea en la base los permisos del catálogo que todavía no existen."""
+
+    existentes = {
+        nombre.strip().lower()
+        for nombre in Permisos.objects.values_list(
+            'Nombre_permiso', flat=True
+        )
+    }
+
+    for nombre, descripcion, grupo in catalogo_plano():
+        if nombre.strip().lower() not in existentes:
+            Permisos.objects.create(Nombre_permiso=nombre.strip())
+            existentes.add(nombre.strip().lower())
+
+
+def _permisos_agrupados():
+    """Permisos del catálogo agrupados por módulo, con su ID en la base.
+
+    La descripción sale del catálogo, igual que en "Permisos del sistema",
+    así el texto es el mismo en las dos pantallas.
+    """
+
+    en_bd = {
+        p.Nombre_permiso.strip().lower(): p
+        for p in Permisos.objects.all()
+    }
+
+    grupos = {}
+
+    for nombre, descripcion, grupo in catalogo_plano():
+        permiso = en_bd.get(nombre.strip().lower())
+
+        if not permiso:
+            continue
+
+        grupos.setdefault(grupo, []).append({
+            'id': permiso.ID_Permiso,
+            'nombre': nombre,
+            'descripcion': descripcion,
+        })
+
+    return grupos
+
+
+# ============================================================
+# GESTIÓN DE PERFILES
+# ============================================================
 
 def _permisos_de(perfil):
     return set(
@@ -1603,6 +1711,8 @@ def gestion_perfiles(request):
 
     if not usuario:
         return redirect('panel_principal')
+
+    sincronizar_permisos()
 
     busqueda = request.GET.get('q', '').strip()
 
@@ -1621,14 +1731,12 @@ def gestion_perfiles(request):
             Nombre_perfil__icontains=busqueda
         )
 
-    permisos = Permisos.objects.all()
-
     return render(
         request,
         'inventario/perfiles.html',
         {
             'perfiles': perfiles,
-            'permisos': permisos,
+            'grupos_permisos': _permisos_agrupados().items(),
             'busqueda': busqueda,
             'usuario': usuario,
             'perfiles_admin': PERFILES_ADMIN,
@@ -1861,7 +1969,7 @@ def cambiar_estado_perfil(request, id):
 
     return redirect('gestion_perfiles')
 # ============================================================
-# GESTIÓN DE PERMISOS
+# GESTIÓN DE PERMISOS (solo lectura)
 # ============================================================
 
 def gestion_permisos(request):
@@ -1874,6 +1982,8 @@ def gestion_permisos(request):
             'No tenés permiso para consultar los permisos del sistema.'
         )
         return redirect('panel_principal')
+
+    sincronizar_permisos()
 
     busqueda = request.GET.get('q', '').strip()
     filtro = busqueda.lower()
@@ -1890,13 +2000,16 @@ def gestion_permisos(request):
         if filtro and filtro not in nombre.lower() and filtro not in descripcion.lower():
             continue
 
-        permiso = en_bd.get(nombre.lower())
+        permiso = en_bd.get(nombre.strip().lower())
 
         grupos.setdefault(grupo, []).append({
             'nombre': nombre,
             'descripcion': descripcion,
             'sincronizado': permiso is not None,
-            'perfiles': list(permiso.perfiles.all()) if permiso else [],
+            'perfiles': (
+                sorted(permiso.perfiles.all(), key=lambda p: p.Nombre_perfil.lower())
+                if permiso else []
+            ),
         })
         total += 1
 
@@ -1953,7 +2066,6 @@ def _leer_datos_producto(request, estado_por_defecto):
         'ID_Subtipo', ''
     ).strip()
 
-    marca = request.POST.get('Marca', '').strip()
     nombre = request.POST.get('Nombre_producto', '').strip()
     descripcion = request.POST.get(
         'Descripcion_producto', ''
@@ -2137,7 +2249,6 @@ def _leer_datos_producto(request, estado_por_defecto):
         'stock_minimo': stock_minimo,
         'tipo': tipo,
         'subtipo': subtipo,
-        'marca': marca or None,
         'nombre': nombre,
         'descripcion': descripcion or None,
         'precio': precio,
@@ -2151,10 +2262,14 @@ def _leer_datos_producto(request, estado_por_defecto):
     return datos, None
 
 
-def _producto_duplicado(nombre, marca, cantidad_presentacion,
+def _producto_duplicado(nombre, cantidad_presentacion, unidad_medida,
                         unidades, excluir_pk=None):
-    """Comprueba si existe otro producto con el mismo nombre, marca
-    y presentación (cantidad y unidades por presentación)."""
+    """Comprueba si existe otro producto con el mismo nombre y la misma
+    presentación (cantidad, unidad de medida y unidades por presentación).
+
+    El sistema no usa marca: un mismo producto puede venir de varios
+    proveedores, y el proveedor queda registrado en cada lote.
+    """
 
     productos = Productos.objects.filter(
         Nombre_producto__iexact=nombre,
@@ -2162,13 +2277,14 @@ def _producto_duplicado(nombre, marca, cantidad_presentacion,
         Unidades_por_presentacion=unidades,
     )
 
-    if marca:
+    if unidad_medida:
         productos = productos.filter(
-            Marca__iexact=marca
+            Unidad_medida_producto__iexact=unidad_medida
         )
     else:
         productos = productos.filter(
-            Q(Marca__isnull=True) | Q(Marca='')
+            Q(Unidad_medida_producto__isnull=True) |
+            Q(Unidad_medida_producto='')
         )
 
     if excluir_pk is not None:
@@ -2211,7 +2327,9 @@ def gestion_productos(request):
             to_attr='lotes_ordenados'
         )
     ).annotate(
-        num_lotes=Count('lotes')
+        # distinct: la búsqueda por proveedor agrega un JOIN que
+        # sin esto multiplicaría la cantidad de lotes.
+        num_lotes=Count('lotes', distinct=True)
     )
 
     # BÚSQUEDA
@@ -2219,7 +2337,7 @@ def gestion_productos(request):
         productos = productos.filter(
             Q(Nombre_producto__icontains=busqueda) |
             Q(Descripcion_producto__icontains=busqueda) |
-            Q(Marca__icontains=busqueda) |
+            Q(proveedores__nombre_proveedor__icontains=busqueda) |
             Q(
                 ID_Tipo_producto__Nombre_tipo_producto__icontains=busqueda
             ) |
@@ -2305,13 +2423,13 @@ def crear_producto(request):
 
     if _producto_duplicado(
         datos['nombre'],
-        datos['marca'],
         datos['cantidad_presentacion'],
+        datos['unidad_medida'],
         datos['unidades_por_presentacion']
     ):
         messages.error(
             request,
-            'Ya existe un producto con esos datos.'
+            'Ya existe un producto con ese nombre y esa presentación.'
         )
         return redirect('gestion_productos')
 
@@ -2320,7 +2438,6 @@ def crear_producto(request):
         producto = Productos.objects.create(
             ID_Tipo_producto=datos['tipo'],
             ID_Subtipo=datos['subtipo'],
-            Marca=datos['marca'],
             Nombre_producto=datos['nombre'],
             Descripcion_producto=datos['descripcion'],
             Precio=datos['precio'],
@@ -2409,14 +2526,14 @@ def editar_producto(request, pk):
 
     if _producto_duplicado(
         datos['nombre'],
-        datos['marca'],
         datos['cantidad_presentacion'],
+        datos['unidad_medida'],
         datos['unidades_por_presentacion'],
         excluir_pk=pk
     ):
         messages.error(
             request,
-            'Ya existe otro producto con esos datos.'
+            'Ya existe otro producto con ese nombre y esa presentación.'
         )
         return redirect('gestion_productos')
 
@@ -2424,7 +2541,6 @@ def editar_producto(request, pk):
 
         producto.ID_Tipo_producto = datos['tipo']
         producto.ID_Subtipo = datos['subtipo']
-        producto.Marca = datos['marca']
         producto.Nombre_producto = datos['nombre']
         producto.Descripcion_producto = datos['descripcion']
         producto.Precio = datos['precio']
@@ -2531,7 +2647,7 @@ def eliminar_producto(request, pk):
             # Eliminar el producto.
             producto.delete()
 
-    except ProtectedError:
+    except (ProtectedError, RestrictedError, IntegrityError):
         messages.error(
             request,
             f'No se puede eliminar el producto "{nombre}" porque tiene otros registros asociados.'
@@ -2564,7 +2680,7 @@ def registrar_ingreso_lote(request):
         return redirect('panel_principal')
 
     busqueda = request.GET.get('q', '').strip()
-    marca_filtro = request.GET.get('marca', '').strip()
+    proveedor_filtro = request.GET.get('proveedor', '').strip()
 
     lotes = Lotes.objects.select_related(
         'ID_Producto',
@@ -2580,20 +2696,18 @@ def registrar_ingreso_lote(request):
             Q(ID_Remito__Numero_remito__icontains=busqueda)
         )
 
-    if marca_filtro:
-        lotes = lotes.filter(ID_Producto__Marca=marca_filtro)
+    if proveedor_filtro.isdigit():
+        lotes = lotes.filter(ID_Remito__ID_Proveedor_id=proveedor_filtro)
+    else:
+        proveedor_filtro = ''
 
     hoy = timezone.localdate()
 
 
-    marcas = (
-        Productos.objects
-        .exclude(Marca__isnull=True)
-        .exclude(Marca__exact='')
-        .values_list('Marca', flat=True)
-        .distinct()
-        .order_by('Marca')
-    )
+    # Proveedores que tienen al menos un remito (los únicos con lotes).
+    proveedores = Proveedores.objects.filter(
+        remitos__isnull=False
+    ).distinct().order_by('nombre_proveedor')
 
     return render(
         request,
@@ -2601,9 +2715,9 @@ def registrar_ingreso_lote(request):
         {
             'usuario': usuario,
             'lotes': lotes,
-            'marcas': marcas,
+            'proveedores': proveedores,
             'busqueda': busqueda,
-            'marca_filtro': marca_filtro,
+            'proveedor_filtro': proveedor_filtro,
             'hoy': hoy,
             'limite': hoy + timedelta(days=30),
         }
@@ -3298,7 +3412,6 @@ def comprobante_movimiento_pdf(request, id_movimiento):
 
         filas.extend([
             ('Producto:', producto.Nombre_producto),
-            ('Marca:', producto.Marca or 'No especificada'),
         ])
 
         if producto.ID_Tipo_producto:
@@ -4275,33 +4388,6 @@ def gestion_remitos(request):
 
 
 @require_POST
-def eliminar_proveedor(request, pk):
-
-    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
-    if not usuario:
-        return redirect('panel_principal')
-
-    proveedor = get_object_or_404(Proveedores, ID_Proveedor=pk)
-    nombre = proveedor.nombre_proveedor
-
-    try:
-        with transaction.atomic():
-            registrar_auditoria(usuario, 'Proveedores', proveedor, 'ELIMINACION',snapshot(proveedor), {})
-            proveedor.delete()
-    except ProtectedError:
-        messages.error(
-            request,
-            f'No se puede eliminar el proveedor "{nombre}": '
-            'tiene remitos registrados.'
-        )
-        return redirect('gestion_proveedores')
-
-    messages.success(request, f'El proveedor "{nombre}" fue eliminado.')
-
-    return redirect('gestion_proveedores')
-
-
-@require_POST
 def eliminar_usuario(request, pk):
 
     admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
@@ -4629,7 +4715,6 @@ def _datos_egreso():
         datos.append({
             'id': p.ID_Producto,
             'nombre': p.Nombre_producto,
-            'marca': p.Marca or '',
             'stock': stock.Cantidad_stock if stock else 0,
             'stock_minimo': stock.Stock_minimo if stock else 0,
             'lotes': [
@@ -4892,7 +4977,7 @@ def bloqueo_sesion(request):
         else:
             request.session['bloqueada'] = False
             request.session['bloqueo_intentos'] = 0
-            request.session['ultima_actividad'] = time.time()
+            request.session['ultima_actividad'] = time_module.time()
             request.session.cycle_key()
 
             if es_ajax:
