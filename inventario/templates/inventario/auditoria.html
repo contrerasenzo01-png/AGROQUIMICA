@@ -49,6 +49,11 @@
                     <option value="ANULACION" {% if accion == 'ANULACION' %}selected{% endif %}>Anulación</option>
                     <option value="INICIO_SESION" {% if accion == 'INICIO_SESION' %}selected{% endif %}>Inicio de sesión</option>
                     <option value="CIERRE_SESION" {% if accion == 'CIERRE_SESION' %}selected{% endif %}>Cierre de sesión</option>
+                    <option value="EGRESO_STOCK" {% if accion == 'EGRESO_STOCK' %}selected{% endif %}>Egreso de stock</option>
+                    <option value="INGRESO_LOTE" {% if accion == 'INGRESO_LOTE' %}selected{% endif %}>Ingreso de lote</option>
+                    <option value="DESCARGA_PDF" {% if accion == 'DESCARGA_PDF' %}selected{% endif %}>Descarga de PDF</option>
+                    <option value="ASIGNACION_PERFIL" {% if accion == 'ASIGNACION_PERFIL' %}selected{% endif %}>Asignación de perfil</option>
+                    <option value="ASIGNACION_PERMISOS" {% if accion == 'ASIGNACION_PERMISOS' %}selected{% endif %}>Asignación de permisos</option>
                 </select>
             </div>
 
@@ -152,6 +157,16 @@
                                 <span class="al-badge aud-ini">Inicio de sesión</span>
                             {% elif log.Accion == 'CIERRE_SESION' %}
                                 <span class="al-badge aud-cie">Cierre de sesión</span>
+                            {% elif log.Accion == 'EGRESO_STOCK' %}
+                                <span class="al-badge aud-egr">Egreso de stock</span>
+                            {% elif log.Accion == 'INGRESO_LOTE' %}
+                                <span class="al-badge aud-ing">Ingreso de lote</span>
+                            {% elif log.Accion == 'DESCARGA_PDF' %}
+                                <span class="al-badge aud-pdf">Descarga de PDF</span>
+                            {% elif log.Accion == 'ASIGNACION_PERFIL' %}
+                                <span class="al-badge aud-asp">Asignación de perfil</span>
+                            {% elif log.Accion == 'ASIGNACION_PERMISOS' %}
+                                <span class="al-badge aud-asm">Asignación de permisos</span>
                             {% else %}
                                 <span class="al-badge">{{ log.Accion }}</span>
                             {% endif %}

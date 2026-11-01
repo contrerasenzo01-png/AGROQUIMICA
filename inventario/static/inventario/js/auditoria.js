@@ -11,7 +11,12 @@ const NOMBRES_ACCION = {
     ELIMINACION: 'Eliminación',
     ANULACION: 'Anulación',
     INICIO_SESION: 'Inicio de sesión',
-    CIERRE_SESION: 'Cierre de sesión'
+    CIERRE_SESION: 'Cierre de sesión',
+    EGRESO_STOCK: 'Egreso de stock',
+    INGRESO_LOTE: 'Ingreso de lote',
+    DESCARGA_PDF: 'Descarga de PDF',
+    ASIGNACION_PERFIL: 'Asignación de perfil',
+    ASIGNACION_PERMISOS: 'Asignación de permisos'
 };
 
 // Clase de la insignia de cada acción (las mismas de la tabla).
@@ -21,7 +26,12 @@ const CLASES_ACCION = {
     ELIMINACION: 'aud-eli',
     ANULACION: 'aud-anu',
     INICIO_SESION: 'aud-ini',
-    CIERRE_SESION: 'aud-cie'
+    CIERRE_SESION: 'aud-cie',
+    EGRESO_STOCK: 'aud-egr',
+    INGRESO_LOTE: 'aud-ing',
+    DESCARGA_PDF: 'aud-pdf',
+    ASIGNACION_PERFIL: 'aud-asp',
+    ASIGNACION_PERMISOS: 'aud-asm'
 };
 
 const MESES = [
@@ -112,6 +122,25 @@ const ETIQUETAS_CAMPO = {
     Estado_tipo_producto: 'Estado',
     Nombre_subtipo: 'Nombre',
     Descripcion_subtipo: 'Descripción',
+    // Auditoría de stock, PDF y permisos
+    Lote: 'Número de lote',
+    Cantidad: 'Cantidad',
+    Lote_antes: 'Cantidad del lote antes',
+    Lote_despues: 'Cantidad del lote después',
+    Stock_antes: 'Stock antes',
+    Stock_despues: 'Stock después',
+    Observaciones: 'Observaciones',
+    Documento: 'Documento',
+    Archivo: 'Archivo',
+    Tipo_movimiento: 'Tipo de movimiento',
+    Perfil: 'Perfil',
+    Permisos: 'Permisos',
+    Agregados: 'Permisos agregados',
+    Quitados: 'Permisos quitados',
+    Cantidad_lotes: 'Cantidad de lotes',
+    Lotes_revertidos: 'Lotes revertidos',
+    Atendida: 'Atendida',
+    Fecha_hora_atencion: 'Fecha de atención',
     // Otros
     Nota: 'Nota',
     accion: 'Acción'

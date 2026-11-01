@@ -28,7 +28,10 @@ from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
 from .reportes import generar_reportes, datos_evolucion_rango
-from .auditoria import snapshot, registrar_auditoria
+from .auditoria import (
+    snapshot, registrar_auditoria,
+    registrar_asignacion_perfil, registrar_asignacion_permisos,
+)
 from .forms import ProveedorForm
 from .permissions import (
     usuario_con_acceso, usuario_con_accion, puede, puede_accion,
@@ -379,7 +382,8 @@ def crear_proveedor(request):
 
         return redirect('gestion_proveedores')
 
-    form.save()
+    proveedor =form.save()
+    registrar_auditoria(usuario, 'Proveedores', proveedor, 'CREACION', {}, snapshot(proveedor))
 
     messages.success(
         request,
@@ -615,10 +619,12 @@ def crear_tipo_producto(request):
         )
         return redirect('gestion_tipos_productos')
 
-    TiposProductos.objects.create(
+    tipo = TiposProductos.objects.create(
         Nombre_tipo_producto=nombre,
         Estado_tipo_producto=True
     )
+
+    registrar_auditoria(usuario, 'Tipos de productos', tipo, 'CREACION', {}, snapshot(tipo))
 
     messages.success(
         request,
@@ -779,7 +785,7 @@ def eliminar_tipo_producto(request, pk):
                     f'tiene {cantidad_subtipos} subtipo(s) asociado(s).'
                 )
                 return redirect('gestion_tipos_productos')
-
+            registrar_auditoria(usuario, 'Tipos de productos', tipo, 'ELIMINACION', snapshot(tipo), {})
             tipo.delete()
 
         messages.success(
@@ -926,7 +932,8 @@ def crear_subtipo(request):
                 ).strip() or None
             )
 
-        Subtipos.objects.create(**datos_subtipo)
+        subtipo = Subtipos.objects.create(**datos_subtipo)
+        registrar_auditoria(usuario, 'Subtipos', subtipo, 'CREACION', {}, snapshot(subtipo))
 
         messages.success(
             request,
@@ -1075,6 +1082,7 @@ def eliminar_subtipo(request, pk):
 
     try:
         with transaction.atomic():
+            registrar_auditoria(usuario, 'Subtipos', subtipo, 'ELIMINACION', snapshot(subtipo), {})
             subtipo.delete()
     except ProtectedError:
         messages.error(
@@ -1139,6 +1147,8 @@ def gestion_usuarios(request):
 
 
 def crear_usuario(request):
+
+    # crear_usuario: después del Usuarios.objects.create(...)
 
     usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
@@ -1288,6 +1298,10 @@ def crear_usuario(request):
             Estado_usuario=True,
             Cambiar_contrasena=True
         )
+
+        registrar_auditoria(usuario_admin, 'Usuarios', nuevo, 'CREACION', {}, snapshot(nuevo))
+        registrar_asignacion_perfil(usuario_admin, nuevo, None, perfil)
+
 
         messages.success(
             request,
@@ -1540,9 +1554,15 @@ def cambiar_contrasena(request):
                 {'usuario': usuario}
             )
 
+        # cambiar_contrasena (la propia):
+        antes = snapshot(usuario)
+        antes['Contrasena'] = 'anterior'
         usuario.Contrasena = make_password(nueva_contrasena)
         usuario.Cambiar_contrasena = False
         usuario.save()
+        despues = snapshot(usuario)
+        despues['Contrasena'] = 'cambiada por el usuario'
+        registrar_auditoria(usuario, 'Usuarios', usuario, 'MODIFICACION', antes, despues)
 
         messages.success(
             request,
@@ -1570,6 +1590,12 @@ def _snapshot_perfil(perfil):
         .values_list('ID_Permiso__Nombre_permiso', flat=True)
     ))
     return datos
+
+def _permisos_de(perfil):
+    return set(
+        PerfilesXPermisos.objects.filter(ID_Perfil=perfil)
+        .values_list('ID_Permiso__Nombre_permiso', flat=True)
+    )
 
 def gestion_perfiles(request):
 
@@ -1661,6 +1687,8 @@ def crear_perfil(request):
                     ID_Perfil=perfil,
                     ID_Permiso=permiso
                 )
+            registrar_auditoria(usuario, 'Perfiles', perfil, 'CREACION', {}, snapshot(perfil))
+            registrar_asignacion_permisos(usuario, perfil, set(), _permisos_de(perfil))
 
         messages.success(
             request,
@@ -1713,7 +1741,8 @@ def editar_perfil(request, pk):
 
         permisos_ids = request.POST.getlist('permisos')
 
-        antes = _snapshot_perfil(perfil)
+        antes = snapshot(perfil)
+        permisos_antes = _permisos_de(perfil)
 
         with transaction.atomic():
 
@@ -1736,7 +1765,8 @@ def editar_perfil(request, pk):
                     ID_Permiso=permiso
                 )
 
-            registrar_auditoria(usuario, 'Perfiles', perfil, 'MODIFICACION', antes, _snapshot_perfil(perfil))
+            registrar_auditoria(usuario, 'Perfiles', perfil, 'MODIFICACION', antes, snapshot(perfil))
+            registrar_asignacion_permisos(usuario, perfil, permisos_antes, _permisos_de(perfil))
 
         messages.success(
             request,
@@ -2918,6 +2948,7 @@ def atender_alerta(request, id_alerta):
     )
 
     if not alerta.Atendida:
+        antes = snapshot(alerta)
         alerta.Atendida = True
         alerta.ID_Usuario = usuario
         alerta.Fecha_hora_atencion = timezone.now()
@@ -2927,6 +2958,7 @@ def atender_alerta(request, id_alerta):
             'ID_Usuario',
             'Fecha_hora_atencion',
         ])
+        registrar_auditoria(usuario, 'Historial de alertas', alerta, 'MODIFICACION', antes, snapshot(alerta))
 
     return redirect('historial_alertas')
 
@@ -3340,6 +3372,15 @@ def comprobante_movimiento_pdf(request, id_movimiento):
     pdf = buffer.getvalue()
     buffer.close()
 
+    registrar_auditoria(
+        usuario, 'Movimientos de Stock', movimiento, 'DESCARGA_PDF', {},
+        {
+            'Documento': 'Comprobante de movimiento de stock',
+            'Archivo': f'comprobante_movimiento_{id_movimiento}.pdf',
+            'Tipo_movimiento': movimiento.ID_Tipo_movimiento.Nombre_tipo_movimiento,
+        }
+    )
+
     respuesta = HttpResponse(
         pdf,
         content_type='application/pdf'
@@ -3592,6 +3633,8 @@ def gestion_remitos(request):
                         Numero_remito=numero_remito,
                         Fecha_remito=fecha_remito
                     )
+                    registrar_auditoria(usuario, 'Remitos', remito, 'CREACION', {},
+                      dict(snapshot(remito), Cantidad_lotes=len(lotes_validados)))
 
                     for datos in lotes_validados:
                         lote = Lotes.objects.create(
@@ -3615,7 +3658,7 @@ def gestion_remitos(request):
                                 }
                             )
                         )
-
+                        stock_antes = stock.Cantidad_stock
                         stock.Cantidad_stock += datos['cantidad']
                         stock.save(update_fields=['Cantidad_stock'])
 
@@ -3628,7 +3671,10 @@ def gestion_remitos(request):
                                 f'Entrada por remito {numero_remito}'
                             )
                         )
-
+                        registrar_auditoria(
+                        usuario, 'Lotes', lote, 'INGRESO_LOTE', {}, dict(snapshot(lote),
+                        Stock_antes=stock_antes,
+                        Stock_despues=stock.Cantidad_stock))
                 messages.success(
                     request,
                     'El remito, sus lotes, el stock y los movimientos '
@@ -4123,6 +4169,9 @@ def gestion_remitos(request):
                     despues = snapshot(remito)
                     despues['Estado_remito'] = 'Anulado'
                     despues['Motivo_anulacion'] = motivo
+                    despues['Lotes_revertidos'] = '; '.join(
+                    f'{l.ID_Producto.Nombre_producto} lote {l.Numero_lote}: {l.Cantidad_ingresada} u.'
+                    for l in lotes_remito)
 
                     registrar_auditoria(
                         usuario,
@@ -4228,7 +4277,8 @@ def gestion_remitos(request):
 @require_POST
 def eliminar_proveedor(request, pk):
 
-    if not usuario_con_acceso(request, 'proveedores', gestionar=True):
+    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
+    if not usuario:
         return redirect('panel_principal')
 
     proveedor = get_object_or_404(Proveedores, ID_Proveedor=pk)
@@ -4236,6 +4286,7 @@ def eliminar_proveedor(request, pk):
 
     try:
         with transaction.atomic():
+            registrar_auditoria(usuario, 'Proveedores', proveedor, 'ELIMINACION',snapshot(proveedor), {})
             proveedor.delete()
     except ProtectedError:
         messages.error(
@@ -4268,12 +4319,13 @@ def eliminar_usuario(request, pk):
 
     try:
         with transaction.atomic():
+            registrar_auditoria(admin, 'Usuarios', usuario, 'ELIMINACION', snapshot(usuario), {})
             usuario.delete()
     except ProtectedError:
         messages.error(
             request,
             f'No se puede eliminar al usuario "{nombre}": tiene '
-            'movimientos o alertas registrados.'
+            'registros de actividad asociados.'
         )
         return redirect('gestion_usuarios')
 
@@ -4309,7 +4361,9 @@ def eliminar_perfil(request, pk):
 
     try:
         with transaction.atomic():
-            perfil.delete()     # sus permisos asignados se borran en cascada
+            registrar_auditoria(usuario, 'Perfiles', perfil, 'ELIMINACION',
+                        dict(snapshot(perfil), Permisos=', '.join(sorted(_permisos_de(perfil)))), {})
+            perfil.delete()    # sus permisos asignados se borran en cascada
     except ProtectedError:
         messages.error(
             request,
@@ -4356,8 +4410,6 @@ def gestion_auditoria(request):
 
     logs = LogAuditoria.objects.select_related(
         'ID_Usuario__ID_Perfil'
-    ).exclude(
-        Accion='EGRESO_STOCK'
     ).order_by('-Fecha_hora')
     
     if entidad:
@@ -4388,9 +4440,7 @@ def gestion_auditoria(request):
         {
             'usuario': usuario,
             'pagina': pagina,
-            'entidades': LogAuditoria.objects.exclude(
-                Accion='EGRESO_STOCK'
-            ).order_by('Seccion').values_list(
+            'entidades': LogAuditoria.objects.order_by('Seccion').values_list(
                 'Seccion', flat=True
             ).distinct(),
             'usuarios': Usuarios.objects.order_by(
@@ -4417,6 +4467,8 @@ _REFERENCIAS_AUDITORIA = {
         Usuarios,
         lambda o: f'{o.Apellido_usuario}, {o.Nombre_usuario}'
     ),
+    'ID_Usuario': (Usuarios, lambda o: f'{o.Apellido_usuario}, {o.Nombre_usuario}'),
+    'ID_Stock': (Stock, lambda o: o.ID_Producto.Nombre_producto),
 }
 
 
@@ -4455,14 +4507,16 @@ def detalle_auditoria(request, id_log):
     #   datos   -> altas y eliminaciones: los datos del registro
     #   cambios -> modificaciones y anulaciones: valor anterior y nuevo
     #   ninguno -> inicio y cierre de sesión: nada más que los datos básicos
-    if log.Accion == 'CREACION':
+    ACCIONES_DATOS = ('CREACION', 'EGRESO_STOCK', 'INGRESO_LOTE', 'DESCARGA_PDF')
+
+    if log.Accion in ACCIONES_DATOS:
         modo, origen = 'datos', actuales
     elif log.Accion == 'ELIMINACION':
         modo, origen = 'datos', anteriores
     elif log.Accion in ('INICIO_SESION', 'CIERRE_SESION'):
         modo, origen = 'ninguno', {}
     else:
-        modo, origen = 'cambios', {}
+        modo, origen = 'cambios', {}   # MODIFICACION, ANULACION, ASIGNACION_*
 
     return JsonResponse({
         'id': log.ID_Log,
@@ -4685,6 +4739,9 @@ def registrar_egreso(request):
                 )
                 return redirect('gestion_productos')
 
+            lote_antes = lote.Cantidad_actual
+            stock_antes = stock.Cantidad_stock
+
             lote.Cantidad_actual -= cantidad
             lote.save(update_fields=['Cantidad_actual'])
 
@@ -4695,12 +4752,26 @@ def registrar_egreso(request):
             if descripcion:
                 detalle = f'{TIPO_EGRESO}. {descripcion}'
 
-            MovimientosStock.objects.create(
+            movimiento = MovimientosStock.objects.create(
                 ID_Usuario=usuario,
                 ID_Tipo_movimiento=tipo_egreso,
                 ID_Lote=lote,
                 Cantidad_movimiento_stock=cantidad,
                 Observaciones=detalle[:255]
+            )
+
+            registrar_auditoria(
+                usuario, 'Movimientos de Stock', movimiento, 'EGRESO_STOCK', {},
+                {
+                    'ID_Producto': producto.pk,
+                    'Lote': lote.Numero_lote,
+                    'Cantidad': cantidad,
+                    'Lote_antes': lote_antes,
+                    'Lote_despues': lote.Cantidad_actual,
+                    'Stock_antes': stock_antes,
+                    'Stock_despues': stock.Cantidad_stock,
+                    'Observaciones': detalle[:255],
+                }
             )
 
             stock_bajo = _alerta_stock_bajo(stock, producto)
@@ -4726,6 +4797,8 @@ def registrar_egreso(request):
             f'Atención: "{producto.Nombre_producto}" está en o por '
             f'debajo del stock mínimo ({stock.Stock_minimo}).'
         )
+
+    
 
     return redirect('gestion_productos')
 

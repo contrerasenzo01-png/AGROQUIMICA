@@ -34,6 +34,13 @@
     color: #4b5563;
     background: #f1f3f2;
 }
+
+.aud-egr { color: #b45309; background: #ffedd5; }
+.aud-ing { color: #0e7490; background: #cffafe; }
+.aud-pdf { color: #a21caf; background: #fae8ff; }
+.aud-asp { color: #4d7c0f; background: #ecfccb; }
+.aud-asm { color: #0f766e; background: #ccfbf1; }
+
 /* ---------- Cambios (anterior → actual) ---------- */
 
 .aud-cambios {

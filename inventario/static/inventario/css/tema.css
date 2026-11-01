@@ -493,6 +493,32 @@ html.modo-oscuro .aud-mod, html.modo-oscuro .chip-perfil-2 {
     border-color: var(--d-blue-bd) !important;
 }
 html.modo-oscuro .aud-ini { background: var(--d-vio-bg) !important; color: var(--d-vio-tx) !important; }
+/* Acciones de auditoría nuevas */
+html.modo-oscuro .aud-egr {
+    background: #3a2410 !important;
+    color: #fb923c !important;
+    border-color: #5e3a17 !important;
+}
+html.modo-oscuro .aud-ing {
+    background: #0f2f36 !important;
+    color: #22d3ee !important;
+    border-color: #1b5360 !important;
+}
+html.modo-oscuro .aud-pdf {
+    background: #35163d !important;
+    color: #e879f9 !important;
+    border-color: #5a2766 !important;
+}
+html.modo-oscuro .aud-asp {
+    background: #25300f !important;
+    color: #a3e635 !important;
+    border-color: #3f5418 !important;
+}
+html.modo-oscuro .aud-asm {
+    background: #0f2f2b !important;
+    color: #2dd4bf !important;
+    border-color: #1b5a52 !important;
+}
 
 /* Ícono de producto y filas inactivas */
 html.modo-oscuro .pr-prod-icono { background: #2a2315 !important; color: #d9a05b !important; }

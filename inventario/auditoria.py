@@ -5,7 +5,7 @@ from django.apps import apps
 
 from .models import LogAuditoria
 
-CAMPOS_EXCLUIDOS = {'Contrasena'}   # nunca guardar el hash
+CAMPOS_EXCLUIDOS = {'Contrasena','Fecha_ultima_modificacion'}   # nunca guardar el hash
 
 
 def _serializar(valor):
@@ -55,4 +55,40 @@ def registrar_auditoria(usuario, entidad, objeto, accion, antes, despues):
         Accion=accion,
         Valores_anteriores=antes,
         Valores_actuales=despues,
+    )
+
+def registrar_asignacion_perfil(admin, usuario_obj, perfil_anterior, perfil_nuevo):
+    """Quién le asignó qué perfil a un usuario."""
+    return LogAuditoria.objects.create(
+        ID_Usuario=admin,
+        Seccion='Usuarios',
+        ID_Registro=usuario_obj.pk,
+        Accion='ASIGNACION_PERFIL',
+        Valores_anteriores={
+            'Perfil': perfil_anterior.Nombre_perfil if perfil_anterior else 'Sin perfil'
+        },
+        Valores_actuales={
+            'Perfil': perfil_nuevo.Nombre_perfil,
+            'Usuario': usuario_obj.Usuario,
+        },
+    )
+
+
+def registrar_asignacion_permisos(admin, perfil, antes_set, despues_set):
+    """Permisos agregados y quitados a un perfil."""
+    antes_set, despues_set = set(antes_set), set(despues_set)
+    if antes_set == despues_set:
+        return None
+
+    return LogAuditoria.objects.create(
+        ID_Usuario=admin,
+        Seccion='Perfiles',
+        ID_Registro=perfil.pk,
+        Accion='ASIGNACION_PERMISOS',
+        Valores_anteriores={'Permisos': ', '.join(sorted(antes_set)) or 'Ninguno'},
+        Valores_actuales={
+            'Permisos': ', '.join(sorted(despues_set)) or 'Ninguno',
+            'Agregados': ', '.join(sorted(despues_set - antes_set)) or '—',
+            'Quitados': ', '.join(sorted(antes_set - despues_set)) or '—',
+        },
     )
