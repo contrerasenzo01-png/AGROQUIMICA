@@ -1,0 +1,207 @@
+.cfm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(17, 24, 17, 0.45);
+    backdrop-filter: blur(2px);
+}
+
+.cfm-overlay.cfm-visible {
+    display: flex;
+    animation: cfm-fade 0.15s ease-out;
+}
+
+.cfm-caja {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    animation: cfm-subir 0.18s ease-out;
+}
+
+.cfm-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px 8px;
+}
+
+.cfm-icono {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #eaf4e6;
+    color: #2e7d32;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.cfm-titulo {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2d1f;
+}
+
+.cfm-mensaje {
+    margin: 0;
+    padding: 8px 24px 20px 76px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4a5a4a;
+    white-space: pre-line;
+}
+
+.cfm-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 24px;
+    background: #f6fbf4;
+    border-top: 1px solid #dcebd9;
+}
+
+.cfm-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cfm-cancelar {
+    background: #fff;
+    color: #33463a;
+    border: 1px solid #c9d6c9;
+}
+
+.cfm-cancelar:hover { background: #eef3ee; }
+
+.cfm-aceptar { background: #2e7d32; color: #fff; }
+.cfm-aceptar:hover { background: #256528; }
+
+/* Acciones destructivas (eliminar, anular, dar de baja) */
+.cfm-peligro .cfm-icono { background: #fdecea; color: #c62828; }
+.cfm-peligro .cfm-aceptar { background: #c62828; }
+.cfm-peligro .cfm-aceptar:hover { background: #a81f1f; }
+
+@keyframes cfm-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes cfm-subir {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ---------- Bloqueo por inactividad ---------- */
+
+.lck-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(17, 24, 17, 0.7);
+    backdrop-filter: blur(8px);
+}
+
+.lck-overlay.lck-visible { display: flex; }
+
+.lck-caja {
+    width: 100%;
+    max-width: 400px;
+    padding: 28px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    font-family: 'Inter', sans-serif;
+}
+
+.lck-caja h3 {
+    margin: 0 0 8px;
+    font-size: 19px;
+    color: #1f2d1f;
+}
+
+.lck-caja p {
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4a5a4a;
+}
+
+.lck-campo { margin-bottom: 14px; }
+
+.lck-campo label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #33463a;
+}
+
+.lck-campo input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #c9d6c9;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.lck-campo input:focus {
+    outline: none;
+    border-color: #2e7d32;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+}
+
+.lck-btn {
+    width: 100%;
+    padding: 11px;
+    border: 0;
+    border-radius: 10px;
+    background: #2e7d32;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.lck-btn:hover { background: #256528; }
+.lck-btn:disabled { opacity: 0.6; cursor: default; }
+
+.lck-error {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fdecea;
+    color: #a81f1f;
+    font-size: 13px;
+}
+
+.lck-link {
+    display: block;
+    margin-top: 14px;
+    text-align: center;
+    font-size: 13px;
+    color: #4a5a4a;
+}
