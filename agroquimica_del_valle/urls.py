@@ -80,9 +80,6 @@ urlpatterns = [
 
     # Permisos
     path('permisos/', views.gestion_permisos, name='gestion_permisos'),
-    path('permisos/crear/', views.crear_permiso, name='crear_permiso'),
-    path('permisos/editar/<int:pk>/', views.editar_permiso, name='editar_permiso'),
-    path('permisos/eliminar/<int:pk>/', views.eliminar_permiso, name='eliminar_permiso'),
     
     # Auditoría (solo administrador)
     path('auditoria/', views.gestion_auditoria, name='gestion_auditoria'),
@@ -94,4 +91,8 @@ urlpatterns = [
     # Reportes (solo administrador)
     path('reportes/', views.gestion_reportes, name='gestion_reportes'),
     path('reportes/evolucion/', views.datos_evolucion, name='datos_evolucion'),
+
+    # Bloqueo por inactividad
+    path('bloqueo/', views.bloqueo_sesion, name='bloqueo'),
+    path('sesion/ping/', views.sesion_ping, name='sesion_ping'),
 ]

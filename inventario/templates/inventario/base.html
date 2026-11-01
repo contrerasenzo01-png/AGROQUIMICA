@@ -5,6 +5,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- MODO OSCURO: se aplica antes de pintar para evitar parpadeo -->
+    <script>
+        try {
+            if (localStorage.getItem('av:tema') === 'oscuro') {
+                document.documentElement.classList.add('modo-oscuro');
+            }
+        } catch (e) {}
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -21,6 +31,8 @@
 
     <link rel="stylesheet" href="{% static 'inventario/css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/css/topbar.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/confirmar.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/tema.css' %}">
 
     {% block extra_css %}
     {% endblock %}
@@ -73,6 +85,14 @@
                     </span>
                 </div>
 
+                <button
+                    class="topbar-tema"
+                    id="btnTema"
+                    type="button"
+                    aria-label="Cambiar a modo oscuro"
+                    title="Cambiar a modo oscuro">
+                </button>
+
             </header>
 
             <!-- CONTENIDO -->
@@ -87,6 +107,16 @@
 
     </div>
 
+
+    <!-- CONFIRMACIONES, BLOQUEO POR INACTIVIDAD Y TEMA -->
+    {{ rutas_denegadas|json_script:"rutas-denegadas" }}
+    <script src="{% static 'inventario/js/confirmar.js' %}"></script>
+    <script src="{% static 'inventario/js/inactividad.js' %}"
+            data-limite-ms="{{ inactividad_ms }}"
+            data-bloqueo-url="{% url 'bloqueo' %}"
+            data-ping-url="{% url 'sesion_ping' %}"
+            data-login-url="{% url 'login' %}"></script>
+    <script src="{% static 'inventario/js/tema.js' %}"></script>
 
     {% block extra_js %}
     {% endblock %}

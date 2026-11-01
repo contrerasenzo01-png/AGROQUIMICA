@@ -1,0 +1,29 @@
+/* Modo oscuro: invierte los colores de toda la página y deja las imágenes como están. */
+html.modo-oscuro {
+    background: #fff;
+    filter: invert(0.92) hue-rotate(180deg);
+}
+
+html.modo-oscuro img,
+html.modo-oscuro video,
+html.modo-oscuro iframe {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+.topbar-tema {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.topbar-tema:hover {
+    background: rgba(0, 0, 0, 0.07);
+}

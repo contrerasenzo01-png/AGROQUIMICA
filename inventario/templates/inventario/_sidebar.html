@@ -1,4 +1,4 @@
-{% load static %}
+{% load static permisos_tags %}
 
 <!-- ==========================================
      ICONOS SVG
@@ -129,329 +129,36 @@
     </div>
 
 
-    <!-- MENÚ SEGÚN PERFIL -->
-    {% with perfil=usuario.ID_Perfil.Nombre_perfil|default:""|lower %}
+        <!-- MENÚ SEGÚN PERMISOS -->
+    {% menu_lateral usuario as menu %}
 
     <nav class="sidebar-nav">
 
-        <!-- PANEL PRINCIPAL: TODOS LOS PERFILES -->
         <div class="nav-item">
             <a href="{% url 'panel_principal' %}"
                class="nav-link {% if activo == 'panel' %}active{% endif %}">
-                <svg class="nav-icon">
-                    <use href="#i-panel"></use>
-                </svg>
+                <svg class="nav-icon"><use href="#i-panel"></use></svg>
                 <span>Panel Principal</span>
             </a>
         </div>
 
-
-        <!-- ==========================================
-             ADMINISTRADOR / JEFE
-             ========================================== -->
-
-        {% if perfil == 'administrador' or perfil == 'jefe' %}
-
+        {% for seccion in menu %}
             <div class="nav-section">
-                <span class="nav-section-title">ADMINISTRACIÓN</span>
+                <span class="nav-section-title">{{ seccion.titulo }}</span>
             </div>
 
-            <!-- USUARIOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_usuarios' %}"
-                   class="nav-link {% if activo == 'usuarios' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-users"></use>
-                    </svg>
-                    <span>Usuarios del sistema</span>
-                </a>
-            </div>
-
-
-
-            <div class="nav-section">
-                <span class="nav-section-title">INVENTARIO</span>
-            </div>
-
-
-            <!-- PRODUCTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_productos' %}"
-                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-                    <span>Productos y stock</span>
-                </a>
-            </div>
-
-            <!-- TIPOS DE PRODUCTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_tipos_productos' %}"
-                   class="nav-link {% if activo == 'tipos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-layers"></use>
-                    </svg>
-                    <span>Tipos de productos</span>
-                </a>
-            </div>
-
-            <!-- SUBTIPOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_subtipos' %}"
-                   class="nav-link {% if activo == 'subtipos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-tags"></use>
-                    </svg>
-                    <span>Subtipos</span>
-                </a>
-            </div>
-
-            <!-- PROVEEDORES -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_proveedores' %}"
-                   class="nav-link {% if activo == 'proveedores' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-truck"></use>
-                    </svg>
-                    <span>Proveedores</span>
-                </a>
-            </div>
-
-            <!-- REMITOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_remitos' %}"
-                   class="nav-link {% if activo == 'remitos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-inbox"></use>
-                    </svg>
-                    <span>Remitos</span>
-                </a>
-            </div>
-
-            <!-- LOTES -->
-            <div class="nav-item">
-                <a href="{% url 'registrar_ingreso_lote' %}"
-                   class="nav-link {% if activo == 'lotes' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-                    <span>Lotes</span>
-                </a>
-            </div>
-
-            <!-- MOVIMIENTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_movimientos_stock' %}"
-                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-swap"></use>
-                    </svg>
-                    <span>Movimientos de stock</span>
-                </a>
-            </div>
-
-            <!-- ALERTAS -->
-            <div class="nav-item">
-                <a href="{% url 'historial_alertas' %}"
-                   class="nav-link {% if activo == 'alertas' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-bell"></use>
-                    </svg>
-                    <span>Historial de alertas</span>
-                </a>
-            </div>
-
-
-            <!-- ANÁLISIS: SOLO ADMINISTRADOR -->
-            {% if perfil == 'administrador' %}
-                <div class="nav-section">
-                    <span class="nav-section-title">ANÁLISIS</span>
-                </div>
-
+            {% for item in seccion.items %}
                 <div class="nav-item">
-                    <a href="{% url 'gestion_reportes' %}"
-                       class="nav-link {% if activo == 'reportes' %}active{% endif %}">
-                        <svg class="nav-icon">
-                            <use href="#i-chart"></use>
-                        </svg>
-                        <span>Reportes</span>
+                    <a href="{% url item.url %}"
+                       class="nav-link {% if activo == item.modulo or activo == item.url %}active{% endif %}">
+                        <svg class="nav-icon"><use href="#{{ item.icono }}"></use></svg>
+                        <span>{{ item.texto }}</span>
                     </a>
                 </div>
-            {% endif %}
-
-
-            <div class="nav-section">
-                <span class="nav-section-title">SEGURIDAD</span>
-            </div>
-
-            <!-- PERFILES -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_perfiles' %}"
-                   class="nav-link {% if activo == 'perfiles' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-shield"></use>
-                    </svg>
-                    <span>Perfiles de acceso</span>
-                </a>
-            </div>
-
-            <!-- PERMISOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_permisos' %}"
-                   class="nav-link {% if activo == 'permisos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-key"></use>
-                    </svg>
-                    <span>Permisos del sistema</span>
-                </a>
-            </div>
-
-            <!-- AUDITORÍA: SOLO ADMINISTRADOR -->
-            {% if perfil == 'administrador' %}
-                <div class="nav-item">
-                    <a href="{% url 'gestion_auditoria' %}"
-                       class="nav-link {% if activo == 'auditoria' %}active{% endif %}">
-                        <svg class="nav-icon">
-                            <use href="#i-shield"></use>
-                        </svg>
-                        <span>Auditoría</span>
-                    </a>
-                </div>
-            {% endif %}
-
-        <!-- ==========================================
-             SECRETARIA
-             ========================================== -->
-        {% elif perfil == 'secretaria' %}
-
-            <div class="nav-section">
-                <span class="nav-section-title">ENTRADAS DE PRODUCTOS</span>
-            </div>
-
-            <!-- REMITOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_remitos' %}"
-                   class="nav-link {% if activo == 'remitos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-inbox"></use>
-                    </svg>
-                    <span>Remitos</span>
-                </a>
-            </div>
-
-            
-            <!-- PROVEEDORES -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_proveedores' %}"
-                   class="nav-link {% if activo == 'proveedores' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-truck"></use>
-                    </svg>
-                    <span>Consultar proveedores</span>
-                </a>
-            </div>
-
-
-            <div class="nav-section">
-                <span class="nav-section-title">CONSULTAS DE STOCK</span>
-            </div>
-
-            <!-- PRODUCTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_productos' %}"
-                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-                    <span>Consultar productos</span>
-                </a>
-            </div>
-
-            <!-- MOVIMIENTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_movimientos_stock' %}"
-                   class="nav-link {% if activo == 'movimientos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-swap"></use>
-                    </svg>
-                    <span>Movimientos de stock</span>
-                </a>
-            </div>
-
-
-        
-        <!-- ==========================================
-             VENDEDOR
-             ========================================== -->
-
-        {% elif perfil == 'vendedor' %}
-
-            <div class="nav-section">
-                <span class="nav-section-title">CONSULTAS DE STOCK</span>
-            </div>
-
-            <!-- PRODUCTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_productos' %}"
-                   class="nav-link {% if activo == 'productos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-                    <span>Productos y stock</span>
-                </a>
-            </div>
-
-            <!-- LOTES -->
-            <div class="nav-item">
-                <a href="{% url 'registrar_ingreso_lote' %}"
-                   class="nav-link {% if activo == 'lotes' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-package"></use>
-                    </svg>
-                    <span>Consultar lotes</span>
-                </a>
-            </div>
-
-            <!-- TIPOS DE PRODUCTOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_tipos_productos' %}"
-                   class="nav-link {% if activo == 'tipos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-layers"></use>
-                    </svg>
-                    <span>Tipos de productos</span>
-                </a>
-            </div>
-
-            <!-- SUBTIPOS -->
-            <div class="nav-item">
-                <a href="{% url 'gestion_subtipos' %}"
-                   class="nav-link {% if activo == 'subtipos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-tags"></use>
-                    </svg>
-                    <span>Subtipos</span>
-                </a>
-            </div>
-
-            <!-- MIS PERMISOS -->
-            <div class="nav-item">
-                <a href="{% url 'mis_permisos' %}"
-                   class="nav-link {% if activo == 'mis_permisos' %}active{% endif %}">
-                    <svg class="nav-icon">
-                        <use href="#i-key"></use>
-                    </svg>
-                    <span>Mis permisos</span>
-                </a>
-            </div>
-
-        {% endif %}
-
+            {% endfor %}
+        {% endfor %}
 
     </nav>
-
-    {% endwith %}
 
 
     <!-- ==========================================

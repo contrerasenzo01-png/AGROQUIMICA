@@ -61,9 +61,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'inventario.middleware.SesionInactivaMiddleware',
+    'inventario.middleware.VolverAlModuloMiddleware',
 ]
 
 ROOT_URLCONF = 'agroquimica_del_valle.urls'
+
+# Minutos sin actividad antes de pedir usuario y contraseña de nuevo.
+INACTIVIDAD_SEGUNDOS = 15 * 60
 
 TEMPLATES = [
     {
@@ -75,6 +80,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'inventario.context_processors.configuracion_sesion',
             ],
         },
     },
@@ -144,3 +150,4 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+

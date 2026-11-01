@@ -1,3 +1,7 @@
+import time
+import time as time_module
+from datetime import datetime, date, time as datetime_time
+from django.utils.http import url_has_allowed_host_and_scheme
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -26,7 +30,10 @@ from reportlab.pdfgen import canvas
 from .reportes import generar_reportes, datos_evolucion_rango
 from .auditoria import snapshot, registrar_auditoria
 from .forms import ProveedorForm
-from .permissions import usuario_con_acceso, puede
+from .permissions import (
+    usuario_con_acceso, usuario_con_accion, puede, puede_accion,
+    catalogo_plano,
+)
 
 from .models import (
     TiposProductos,
@@ -148,6 +155,8 @@ def login_view(request):
             ):
 
                 request.session['usuario_id'] = usuario.ID_Usuario
+                request.session['bloqueada'] = False
+                request.session['ultima_actividad'] = time_module.time()
                 request.session['usuario_nombre'] = usuario.Usuario
                 request.session['perfil_id'] = usuario.ID_Perfil.ID_Perfil
                 request.session['perfil_nombre'] = (
@@ -324,7 +333,7 @@ def gestion_proveedores(request):
 
 def crear_proveedor(request):
 
-    usuario = usuario_con_acceso(request, 'proveedores')
+    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
 
     if not usuario:
         messages.error(
@@ -382,7 +391,7 @@ def crear_proveedor(request):
 
 def editar_proveedor(request, pk):
 
-    usuario = usuario_con_acceso(request, 'proveedores')
+    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
 
     if not usuario:
         messages.error(
@@ -466,7 +475,7 @@ def editar_proveedor(request, pk):
 
 def cambiar_estado_proveedor(request, pk):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -732,13 +741,6 @@ def eliminar_tipo_producto(request, pk):
         )
         return redirect('panel_principal')
 
-    if not usuario_es_administrador(request):
-        messages.error(
-            request,
-            'No tenés permiso para eliminar tipos de productos.'
-        )
-        return redirect('gestion_tipos_productos')
-
     if request.method != 'POST':
         return redirect('gestion_tipos_productos')
 
@@ -853,7 +855,7 @@ def gestion_subtipos(request):
 
 def crear_subtipo(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'subtipos', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -936,7 +938,7 @@ def crear_subtipo(request):
 
 def editar_subtipo(request, pk):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'subtipos', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -1048,7 +1050,7 @@ def editar_subtipo(request, pk):
 def eliminar_subtipo(request, pk):
     """Elimina un subtipo solo si no tiene productos asociados."""
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'subtipos', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -1096,7 +1098,7 @@ def eliminar_subtipo(request, pk):
 
 def gestion_usuarios(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'usuarios')
 
     if not usuario:
         return redirect('panel_principal')
@@ -1138,7 +1140,7 @@ def gestion_usuarios(request):
 
 def crear_usuario(request):
 
-    usuario_admin = usuario_es_administrador(request)
+    usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
     if not usuario_admin:
         return redirect('panel_principal')
@@ -1300,7 +1302,7 @@ def crear_usuario(request):
 
 def editar_usuario(request, pk):
 
-    usuario_admin = usuario_es_administrador(request)
+    usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
     if not usuario_admin:
         return redirect('panel_principal')
@@ -1371,7 +1373,7 @@ def editar_usuario(request, pk):
 
 def dar_baja_usuario(request, pk):
 
-    usuario_admin = usuario_es_administrador(request)
+    usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
     if not usuario_admin:
         return redirect('panel_principal')
@@ -1409,7 +1411,7 @@ def dar_baja_usuario(request, pk):
 
 def activar_usuario(request, id):
 
-    usuario_admin = usuario_es_administrador(request)
+    usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
     if not usuario_admin:
         return redirect('panel_principal')
@@ -1447,7 +1449,7 @@ def activar_usuario(request, id):
 
 def restablecer_contrasena(request, pk):
 
-    usuario_admin = usuario_es_administrador(request)
+    usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
     if not usuario_admin:
         return redirect('panel_principal')
@@ -1571,7 +1573,7 @@ def _snapshot_perfil(perfil):
 
 def gestion_perfiles(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'perfiles')
 
     if not usuario:
         return redirect('panel_principal')
@@ -1610,7 +1612,7 @@ def gestion_perfiles(request):
 
 def crear_perfil(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'perfiles', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -1670,7 +1672,7 @@ def crear_perfil(request):
 
 def editar_perfil(request, pk):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'perfiles', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -1750,7 +1752,7 @@ def editar_perfil(request, pk):
 
 def cambiar_estado_perfil(request, id):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'perfiles', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -1834,182 +1836,51 @@ def cambiar_estado_perfil(request, id):
 
 def gestion_permisos(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'permisos')
 
     if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para consultar los permisos del sistema.'
+        )
         return redirect('panel_principal')
 
     busqueda = request.GET.get('q', '').strip()
+    filtro = busqueda.lower()
 
-    permisos = Permisos.objects.prefetch_related(
-        'perfiles'
-    ).all()
+    en_bd = {
+        p.Nombre_permiso.strip().lower(): p
+        for p in Permisos.objects.prefetch_related('perfiles')
+    }
 
-    if busqueda:
-        permisos = permisos.filter(
-            Q(Nombre_permiso__icontains=busqueda) |
-            Q(Descripcion_permiso__icontains=busqueda)
-        )
+    grupos = {}
+    total = 0
+
+    for nombre, descripcion, grupo in catalogo_plano():
+        if filtro and filtro not in nombre.lower() and filtro not in descripcion.lower():
+            continue
+
+        permiso = en_bd.get(nombre.lower())
+
+        grupos.setdefault(grupo, []).append({
+            'nombre': nombre,
+            'descripcion': descripcion,
+            'sincronizado': permiso is not None,
+            'perfiles': list(permiso.perfiles.all()) if permiso else [],
+        })
+        total += 1
 
     return render(
         request,
         'inventario/permisos.html',
         {
-            'permisos': permisos,
+            'grupos': grupos.items(),
+            'total': total,
             'busqueda': busqueda,
-            'usuario': usuario
+            'usuario': usuario,
+            'activo': 'permisos',
         }
     )
-
-
-def crear_permiso(request):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    if request.method == 'POST':
-
-        nombre_permiso = request.POST.get(
-            'Nombre_permiso',
-            ''
-        ).strip()
-
-        descripcion_permiso = request.POST.get(
-            'Descripcion_permiso',
-            ''
-        ).strip()
-
-        if not nombre_permiso:
-            messages.error(
-                request,
-                'Debe ingresar el nombre del permiso.'
-            )
-
-            return redirect('gestion_permisos')
-
-        if Permisos.objects.filter(
-            Nombre_permiso__iexact=nombre_permiso
-        ).exists():
-            messages.error(
-                request,
-                'Ya existe un permiso con ese nombre.'
-            )
-
-            return redirect('gestion_permisos')
-
-        Permisos.objects.create(
-            Nombre_permiso=nombre_permiso,
-            Descripcion_permiso=descripcion_permiso
-        )
-
-        messages.success(
-            request,
-            'Permiso creado correctamente.'
-        )
-
-    return redirect('gestion_permisos')
-
-
-def editar_permiso(request, pk):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    permiso = get_object_or_404(
-        Permisos,
-        ID_Permiso=pk
-    )
-
-    if request.method == 'POST':
-
-        nombre_permiso = request.POST.get(
-            'Nombre_permiso',
-            ''
-        ).strip()
-
-        descripcion_permiso = request.POST.get(
-            'Descripcion_permiso',
-            ''
-        ).strip()
-
-        if not nombre_permiso:
-            messages.error(
-                request,
-                'Debe ingresar el nombre del permiso.'
-            )
-
-            return redirect('gestion_permisos')
-
-        existe = Permisos.objects.filter(
-            Nombre_permiso__iexact=nombre_permiso
-        ).exclude(
-            ID_Permiso=pk
-        ).exists()
-
-        if existe:
-            messages.error(
-                request,
-                'Ya existe otro permiso con ese nombre.'
-            )
-
-            return redirect('gestion_permisos')
-
-        antes = snapshot(permiso)
-
-        permiso.Nombre_permiso = nombre_permiso
-        permiso.Descripcion_permiso = descripcion_permiso
-        permiso.save()
-
-        registrar_auditoria(usuario, 'Permisos', permiso, 'MODIFICACION', antes, snapshot(permiso))
-
-        messages.success(
-            request,
-            'Permiso modificado correctamente.'
-        )
-
-    return redirect('gestion_permisos')
-
-
-@require_POST
-def eliminar_permiso(request, pk):
-
-    usuario = usuario_es_administrador(request)
-
-    if not usuario:
-        return redirect('panel_principal')
-
-    permiso = get_object_or_404(
-        Permisos,
-        ID_Permiso=pk
-    )
-
-    nombre_permiso = permiso.Nombre_permiso
-
-    perfiles_asignados = list(
-        permiso.perfiles.values_list('Nombre_perfil', flat=True)
-    )
-
-    if perfiles_asignados:
-        messages.error(
-            request,
-            f'No se puede eliminar el permiso "{nombre_permiso}": '
-            f'está asignado a {", ".join(perfiles_asignados)}. '
-            'Quítelo primero desde Editar perfil.'
-        )
-        return redirect('gestion_permisos')
-
-    permiso.delete()
-
-    messages.success(
-        request,
-        f'El permiso "{nombre_permiso}" fue eliminado correctamente.'
-    )
-
-    return redirect('gestion_permisos')
 
 
 
@@ -2022,10 +1893,6 @@ def mis_permisos(request):
 
     if not usuario:
         return redirect('login')
-
-    # Solo permite acceder al perfil de Vendedor.
-    if usuario.ID_Perfil.Nombre_perfil != 'Vendedor':
-        return redirect('panel_principal')
 
     # Obtiene los permisos asignados al perfil del usuario.
     permisos = usuario.ID_Perfil.permisos.all()
@@ -2289,7 +2156,11 @@ def gestion_productos(request):
     usuario = usuario_con_acceso(request, 'productos')
 
     if not usuario:
-        return redirect('login')
+        messages.error(
+            request,
+            'No tenés permiso para consultar productos.'
+        )
+        return redirect('panel_principal')
 
     busqueda = request.GET.get('q', '').strip()
     tipo_id = request.GET.get('tipo', '').strip()
@@ -2582,7 +2453,7 @@ def editar_producto(request, pk):
 def eliminar_producto(request, pk):
     """Elimina un producto únicamente si no tiene lotes asociados."""
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'productos', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -3036,7 +2907,7 @@ def gestion_alertas(request):
 
 @require_POST
 def atender_alerta(request, id_alerta):
-    usuario = usuario_es_administrador(request)
+    uusuario = usuario_con_accion(request, 'atender_alertas')
 
     if not usuario:
         return redirect('panel_principal')
@@ -3487,13 +3358,13 @@ def gestion_remitos(request):
     usuario = usuario_con_acceso(
         request,
         'remitos',
-        gestionar=True
+        gestionar=(request.method == 'POST')
     )
 
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para gestionar remitos.'
+            'No tenés permiso para esta operación sobre remitos.'
         )
         return redirect('panel_principal')
 
@@ -4142,7 +4013,7 @@ def gestion_remitos(request):
             remito_id = request.POST.get('ID_Remito', '').strip()
             motivo = request.POST.get('Motivo_anulacion', '').strip()
 
-            if usuario.ID_Perfil.Nombre_perfil not in PERFILES_ADMIN:
+            if not puede_accion(usuario, 'anular_remitos'):
                 messages.error(
                     request,
                     'No tenés permiso para anular remitos.'
@@ -4346,7 +4217,8 @@ def gestion_remitos(request):
             'busqueda': busqueda,
             'proveedor_filtro': proveedor_filtro,
             'estado_filtro': estado_filtro,
-            'puede_anular': usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN,
+            'puede_anular': puede_accion(usuario, 'anular_remitos'),
+            'puede_gestionar': puede(usuario, 'remitos', gestionar=True),
             'hoy': hoy,
         }
     )
@@ -4356,7 +4228,7 @@ def gestion_remitos(request):
 @require_POST
 def eliminar_proveedor(request, pk):
 
-    if not usuario_es_administrador(request):
+    if not usuario_con_acceso(request, 'proveedores', gestionar=True):
         return redirect('panel_principal')
 
     proveedor = get_object_or_404(Proveedores, ID_Proveedor=pk)
@@ -4381,7 +4253,7 @@ def eliminar_proveedor(request, pk):
 @require_POST
 def eliminar_usuario(request, pk):
 
-    admin = usuario_es_administrador(request)
+    admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
     if not admin:
         return redirect('panel_principal')
@@ -4413,7 +4285,7 @@ def eliminar_usuario(request, pk):
 @require_POST
 def eliminar_perfil(request, pk):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'perfiles', gestionar=True)
 
     if not usuario:
         return redirect('panel_principal')
@@ -4467,12 +4339,12 @@ def _inicio_dia(d):
 
 def gestion_auditoria(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'auditoria')
 
     if not usuario:
         messages.error(
             request,
-            'Solo el administrador puede consultar la auditoría.'
+            'No tenés permiso para consultar la auditoría.'
         )
         return redirect('panel_principal')
 
@@ -4563,7 +4435,7 @@ def _valor_visible_auditoria(campo, valor):
 
 
 def detalle_auditoria(request, id_log):
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'auditoria')
 
     if not usuario:
         return JsonResponse(
@@ -4863,12 +4735,12 @@ def registrar_egreso(request):
 
 def gestion_reportes(request):
 
-    usuario = usuario_es_administrador(request)
+    usuario = usuario_con_acceso(request, 'reportes')
 
     if not usuario:
         messages.error(
             request,
-            'Solo el administrador puede consultar los reportes.'
+            'No tenés permiso para consultar los reportes.'
         )
         return redirect('panel_principal')
 
@@ -4885,7 +4757,7 @@ def gestion_reportes(request):
 def datos_evolucion(request):
     """Ventas e ingresos entre dos fechas (JSON, solo Administrador)."""
 
-    if not usuario_es_administrador(request):
+    if not usuario_con_acceso(request, 'reportes'):
         return JsonResponse(
             {'error': 'No tenés permiso para consultar los reportes.'},
             status=403
@@ -4909,3 +4781,81 @@ def datos_evolucion(request):
         return JsonResponse({'error': str(e)}, status=400)
 
     return JsonResponse(datos)
+
+# ============================================================
+# BLOQUEO POR INACTIVIDAD
+# ============================================================
+
+def bloqueo_sesion(request):
+
+    usuario = usuario_autenticado(request)
+
+    if not usuario:
+        return redirect('login')
+
+    siguiente = (
+        request.GET.get('next') or request.POST.get('next') or ''
+    )
+
+    if not siguiente or not url_has_allowed_host_and_scheme(
+        siguiente, allowed_hosts={request.get_host()}
+    ):
+        siguiente = reverse('panel_principal')
+
+    es_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    error = None
+
+    if request.method == 'POST':
+
+        usuario_ingresado = request.POST.get('usuario', '').strip()
+        password = request.POST.get('password', '')
+
+        if usuario_ingresado.lower() != usuario.Usuario.lower():
+            error = 'Ingresá con el mismo usuario de la sesión bloqueada.'
+
+        elif not check_password(password, usuario.Contrasena):
+            error = 'Usuario o contraseña incorrectos.'
+
+        else:
+            request.session['bloqueada'] = False
+            request.session['bloqueo_intentos'] = 0
+            request.session['ultima_actividad'] = time.time()
+            request.session.cycle_key()
+
+            if es_ajax:
+                return JsonResponse({'ok': True})
+
+            return redirect(siguiente)
+
+        intentos = request.session.get('bloqueo_intentos', 0) + 1
+        request.session['bloqueo_intentos'] = intentos
+
+        if intentos >= 5:
+            request.session.flush()
+
+            if es_ajax:
+                return JsonResponse(
+                    {'ok': False, 'cerrada': True,
+                     'error': 'Demasiados intentos. Se cerró la sesión.'},
+                    status=403
+                )
+
+            return redirect('login')
+
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': error}, status=400)
+
+    return render(
+        request,
+        'inventario/bloqueo.html',
+        {'usuario': usuario, 'error': error, 'siguiente': siguiente}
+    )
+
+
+def sesion_ping(request):
+    """Mantiene viva la sesión mientras el usuario está activo en pantalla."""
+
+    if not usuario_autenticado(request):
+        return JsonResponse({'ok': False}, status=401)
+
+    return JsonResponse({'ok': True})
