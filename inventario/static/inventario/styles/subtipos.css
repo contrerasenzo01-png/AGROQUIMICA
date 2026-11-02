@@ -367,12 +367,13 @@
 .ts-table th {
     padding: 13px 17px;
     border-bottom: 1px solid #e1e9e4;
+    background: #185a38;
     text-align: left;
     white-space: nowrap;
     font-family: 'Inter', sans-serif;
     font-size: 10.5px;
     font-weight: 600;
-    color: #718279;
+    color: #ffffff;
 }
 
 .ts-table td {
@@ -381,7 +382,7 @@
     vertical-align: middle;
     font-family: 'Inter', sans-serif;
     font-size: 12.5px;
-    color: #34483d;
+    color: #ffffff;
 }
 
 .ts-table tbody tr:last-child td {

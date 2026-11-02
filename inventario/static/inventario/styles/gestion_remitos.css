@@ -382,6 +382,7 @@
     text-transform: uppercase;
     white-space: nowrap;
     border-bottom: 1px solid #e4ebe6;
+    background: #185a38;
 }
 
 .rm-table tbody td {
@@ -1520,7 +1521,7 @@
 .rm-subtitle {
     font-size: 13px !important;
     margin: 0 !important;
-    color: #718279 !important;
+    color: white !important;
 }
 
 /* ---------- Botones ---------- */
@@ -1553,7 +1554,7 @@
     border-radius: 12px !important;
     box-shadow: none !important;
 }
-.rm-barra-dato { font-size: 12px !important; color: #718279 !important; }
+.rm-barra-dato { font-size: 12px !important; color: rgb(0, 0, 0) !important; }
 .rm-barra-dato strong { font-size: 15px !important; color: #17382a !important; }
 
 /* ---------- Búsqueda y filtros ---------- */
@@ -1595,7 +1596,7 @@
     font-weight: 600 !important;
     text-transform: none !important;
     letter-spacing: 0 !important;
-    color: #718279 !important;
+    color: white !important;
     border-bottom: 1px solid #e1e9e4 !important;
 }
 .rm-table tbody td {
