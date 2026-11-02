@@ -69,30 +69,74 @@
 
         <div class="page-area">
 
-            <!-- TOPBAR -->
+            <!-- TOPBAR: ubicación actual a la izquierda; fecha, alertas y tema a la derecha -->
             <header class="topbar">
 
-                <button
-                    class="topbar-menu"
-                    id="topbarMenuToggle"
-                    type="button"
-                    aria-label="Cerrar menú">
-                    ☰
-                </button>
+                <div class="topbar-left">
+                    <button
+                        class="topbar-icon-btn"
+                        id="topbarMenuToggle"
+                        type="button"
+                        aria-label="Mostrar u ocultar el menú">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="4" y1="7" x2="20" y2="7"></line>
+                            <line x1="4" y1="12" x2="14" y2="12"></line>
+                            <line x1="4" y1="17" x2="20" y2="17"></line>
+                        </svg>
+                    </button>
 
-                <div class="topbar-brand">
-                    <span class="topbar-title">
-                        Agroquímica del Valle
-                    </span>
+                    <nav aria-label="Ubicación actual">
+                        <ol class="topbar-crumbs">
+                            {% for tramo in topbar_ubicacion %}
+                                {% if forloop.last %}
+                                    <li class="topbar-crumb" aria-current="page">{{ tramo.nombre }}</li>
+                                {% else %}
+                                    <li class="topbar-crumb">
+                                        {% if tramo.url %}<a href="{{ tramo.url }}">{{ tramo.nombre }}</a>{% else %}{{ tramo.nombre }}{% endif %}
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ol>
+                    </nav>
                 </div>
 
-                <button
-                    class="topbar-tema"
-                    id="btnTema"
-                    type="button"
-                    aria-label="Cambiar a modo oscuro"
-                    title="Cambiar a modo oscuro">
-                </button>
+                <div class="topbar-right">
+
+                    <div class="topbar-date">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span>{% now "j \d\e F \d\e Y" %}</span>
+                    </div>
+
+                    <span class="topbar-sep" aria-hidden="true"></span>
+
+                    {% if puede_ver_alertas %}
+                    <a class="topbar-icon-btn" href="{{ url_alertas }}"
+                       aria-label="Alertas{% if alertas_pendientes %}: {{ alertas_pendientes }} sin atender{% endif %}">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        {% if alertas_pendientes %}
+                        <span class="topbar-badge">{% if alertas_pendientes > 99 %}99+{% else %}{{ alertas_pendientes }}{% endif %}</span>
+                        {% endif %}
+                    </a>
+                    {% endif %}
+
+                    <!-- tema.js dibuja el ícono (sol/luna) dentro de este botón -->
+                    <button
+                        class="topbar-icon-btn topbar-tema"
+                        id="btnTema"
+                        type="button"
+                        aria-label="Cambiar a modo oscuro"
+                        title="Cambiar a modo oscuro">
+                    </button>
+
+                </div>
 
             </header>
 

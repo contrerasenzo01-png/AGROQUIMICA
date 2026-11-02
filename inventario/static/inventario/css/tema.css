@@ -137,16 +137,6 @@ html.modo-oscuro .sidebar {
     border-right: 1px solid var(--d-border);
 }
 
-html.modo-oscuro .topbar {
-    background: #111a15;
-    border-bottom-color: var(--d-border);
-}
-html.modo-oscuro .topbar-title { color: var(--d-title); }
-html.modo-oscuro .topbar-menu { color: #8fd0a8; }
-html.modo-oscuro .topbar-menu:hover { background: var(--d-surface-3); }
-html.modo-oscuro .topbar-user-info strong { color: var(--d-title); }
-html.modo-oscuro .topbar-user-info span { color: var(--d-text-3); }
-html.modo-oscuro .topbar-avatar { background: var(--d-green-bg); border-color: var(--d-green-bd); color: var(--d-green-tx); }
 
 
 /* ============================================================

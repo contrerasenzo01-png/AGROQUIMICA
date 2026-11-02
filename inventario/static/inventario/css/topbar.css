@@ -1,208 +1,261 @@
 /* ==========================================
-   TOPBAR
+   TOPBAR · Agroquímica del Valle
+   Barra baja, translúcida, fija arriba.
+   Izquierda: menú + ubicación. Derecha: fecha, alertas, tema.
    ========================================== */
+
+:root {
+    --tb-bg: rgba(255, 255, 255, 0.82);
+    --tb-borde: #e1e9e4;
+    --tb-texto: #1b3a2b;
+    --tb-suave: #7b8e82;
+    --tb-icono: #2d5b43;
+    --tb-hover: #eef4f0;
+    --tb-chip-bg: #f4f8f5;
+    --tb-acento: #185a38;
+    --tb-alerta: #d92d20;
+    --tb-anillo: rgba(24, 90, 56, 0.35);
+}
+
+/* Modo oscuro: usa la misma clase que tema.js (html.modo-oscuro)
+   y la paleta de tema.css */
+html.modo-oscuro {
+    --tb-bg: rgba(17, 26, 21, 0.82);
+    --tb-borde: #263830;
+    --tb-texto: #eef6f1;
+    --tb-suave: #7f9387;
+    --tb-icono: #8fd0a8;
+    --tb-hover: #223029;
+    --tb-chip-bg: #1a2620;
+    --tb-acento: #4ade80;
+    --tb-anillo: rgba(74, 222, 128, 0.4);
+}
+
+
+/* ------------------------------------------
+   BARRA
+   ------------------------------------------ */
 
 .topbar {
     position: sticky;
     top: 0;
+    z-index: 1500;
 
     width: 100%;
-    height: 60px;
-
+    height: 56px;
     box-sizing: border-box;
-
-    background-color: #ffffff;
-
-    border-bottom: 1px solid #e1e9e4;
+    padding: 0 20px;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
 
-    padding: 0 24px;
+    background-color: var(--tb-bg);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
+    backdrop-filter: saturate(160%) blur(10px);
+    border-bottom: 1px solid var(--tb-borde);
 
     font-family: 'Inter', sans-serif;
-
-    z-index: 1500;
+    color: var(--tb-texto);
 }
 
+.topbar-left,
+.topbar-right {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
 
-/* ==========================================
-   BOTÓN DEL MENÚ
-   ========================================== */
+.topbar-left { gap: 10px; flex: 1; }
+.topbar-right { gap: 8px; flex-shrink: 0; }
 
-.topbar-menu {
-    width: 38px;
-    height: 38px;
+
+/* ------------------------------------------
+   BOTONES DE ÍCONO (menú, alertas, tema)
+   ------------------------------------------ */
+
+.topbar-icon-btn {
+    position: relative;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    flex-shrink: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
     border: none;
-    border-radius: 7px;
-
-    background-color: transparent;
-
-    color: #2d5b43;
-
-    font-family: 'Inter', sans-serif;
-    font-size: 23px;
-    line-height: 1;
-
+    border-radius: 9px;
+    background: transparent;
+    color: var(--tb-icono);
+    text-decoration: none;
     cursor: pointer;
+
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.topbar-icon-btn:hover { background-color: var(--tb-hover); }
+.topbar-icon-btn:active { transform: scale(0.95); }
+
+.topbar-icon-btn:focus-visible,
+.topbar-crumb a:focus-visible {
+    outline: 2px solid var(--tb-anillo);
+    outline-offset: 2px;
+}
+
+.topbar-icon-btn svg { display: block; }
+
+/* El botón de tema (#btnTema) trae estilos propios de tema.css;
+   acá se alinea con el resto de los botones de la barra */
+.topbar .topbar-tema {
+    margin-left: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    color: var(--tb-icono);
+}
+.topbar .topbar-tema:hover,
+html.modo-oscuro .topbar .topbar-tema:hover { background-color: var(--tb-hover); }
+
+
+/* Contador de alertas sin atender */
+.topbar-badge {
+    position: absolute;
+    top: 3px;
+    right: 2px;
+
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    box-sizing: border-box;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    padding: 0;
+    border-radius: 999px;
+    border: 2px solid var(--tb-bg);
+    background-color: var(--tb-alerta);
+    color: #fff;
 
-    transition:
-        background-color 0.18s ease,
-        transform 0.18s ease;
-}
-
-.topbar-menu:hover {
-    background-color: #f1f5f3;
-}
-
-.topbar-menu:active {
-    transform: scale(0.95);
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1;
 }
 
 
-/* ==========================================
-   NOMBRE DEL SISTEMA
-   ========================================== */
+/* ------------------------------------------
+   UBICACIÓN (reemplaza el nombre de la empresa)
+   ------------------------------------------ */
 
-.topbar-brand {
-    flex: 1;
-
-    margin-left: 14px;
-
+.topbar-crumbs {
     display: flex;
     align-items: center;
+    gap: 6px;
+    min-width: 0;
+
+    margin: 0;
+    padding: 0 0 0 4px;
+    list-style: none;
+
+    font-size: 13px;
 }
 
-.topbar-title {
-    font-family: 'Poppins', sans-serif;
+.topbar-crumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 
-    font-size: 15px;
+    color: var(--tb-suave);
+    white-space: nowrap;
+}
+
+.topbar-crumb a {
+    color: inherit;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.topbar-crumb a:hover { color: var(--tb-texto); }
+
+.topbar-crumb + .topbar-crumb::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    flex-shrink: 0;
+    border-top: 1.5px solid var(--tb-suave);
+    border-right: 1.5px solid var(--tb-suave);
+    transform: rotate(45deg);
+    opacity: 0.7;
+    margin-right: 2px;
+}
+
+.topbar-crumb[aria-current="page"] {
+    color: var(--tb-texto);
+    font-family: 'Poppins', 'Inter', sans-serif;
     font-weight: 600;
-
-    color: #1b3a2b;
-}
-
-
-/* ==========================================
-   INFORMACIÓN DEL USUARIO
-   ========================================== */
-
-.topbar-user {
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-}
-
-.topbar-user-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-
-    line-height: 1.2;
-}
-
-.topbar-user-info strong {
-    max-width: 220px;
+    font-size: 14px;
 
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 12px;
-    font-weight: 600;
-
-    color: #1b3a2b;
-}
-
-.topbar-user-info span {
-    margin-top: 3px;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 11px;
-
-    color: #7b8e82;
 }
 
 
-/* ==========================================
-   AVATAR
-   ========================================== */
+/* ------------------------------------------
+   FECHA
+   ------------------------------------------ */
 
-.topbar-avatar {
-    width: 34px;
-    height: 34px;
-
-    flex-shrink: 0;
-
-    border-radius: 50%;
-
-    background-color: #e3efe7;
-
-    color: #1b5e3a;
-
-    font-family: 'Inter', sans-serif;
-
-    font-size: 12px;
-    font-weight: 700;
-
-    display: flex;
+.topbar-date {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 7px;
 
-    border: 1px solid #d0e2d6;
+    height: 32px;
+    padding: 0 11px;
+    box-sizing: border-box;
 
-    user-select: none;
+    border: 1px solid var(--tb-borde);
+    border-radius: 8px;
+    background-color: var(--tb-chip-bg);
+    color: var(--tb-suave);
+
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.topbar-date svg { color: var(--tb-acento); flex-shrink: 0; }
+
+.topbar-sep {
+    width: 1px;
+    height: 20px;
+    margin: 0 4px;
+    background-color: var(--tb-borde);
 }
 
 
-/* ==========================================
+/* ------------------------------------------
    RESPONSIVE
-   ========================================== */
+   ------------------------------------------ */
 
-@media (max-width: 700px) {
-
-    .topbar {
-        padding: 0 16px;
-    }
-
-    .topbar-title {
-        font-size: 14px;
-    }
-
-    .topbar-user-info {
-        display: none;
-    }
+@media (max-width: 800px) {
+    .topbar-date span { display: none; }
+    .topbar-date { width: 36px; height: 36px; padding: 0; justify-content: center; border-color: transparent; background: transparent; }
 }
 
+@media (max-width: 560px) {
+    .topbar { padding: 0 12px; height: 52px; }
+    .topbar-sep, .topbar-date { display: none; }
 
-@media (max-width: 450px) {
+    /* En pantallas chicas solo se ve la sección actual */
+    .topbar-crumb:not([aria-current="page"]) { display: none; }
+    .topbar-crumb[aria-current="page"]::before { display: none; }
+}
 
-    .topbar {
-        height: 56px;
-    }
-
-    .topbar-brand {
-        margin-left: 8px;
-    }
-
-    .topbar-title {
-        font-size: 13px;
-    }
-
-    .topbar-avatar {
-        width: 32px;
-        height: 32px;
-    }
+@media (prefers-reduced-motion: reduce) {
+    .topbar-icon-btn { transition: none; }
 }
