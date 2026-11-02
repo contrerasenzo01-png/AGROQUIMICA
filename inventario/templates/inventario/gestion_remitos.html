@@ -206,6 +206,18 @@
                                         </svg>
                                     </button>
 
+                                    <!-- DESCARGAR PDF DEL REMITO -->
+                                    <a href="{% url 'remito_pdf' remito.ID_Remito %}"
+                                       class="rm-icon-btn rm-descargar"
+                                       title="Descargar remito en PDF"
+                                       aria-label="Descargar remito en PDF">
+                                        <svg class="rm-icon" viewBox="0 0 24 24">
+                                            <path d="M12 3v12"/>
+                                            <path d="m7 10 5 5 5-5"/>
+                                            <path d="M5 21h14"/>
+                                        </svg>
+                                    </a>
+
                                     {% if remito.Estado_remito == 'Confirmado' %}
                                         {% if perm.remitos_gestionar %}
                                         <button type="button"

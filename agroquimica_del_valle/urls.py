@@ -19,6 +19,7 @@ urlpatterns = [
 
     # Remitos
     path('remitos/', views.gestion_remitos, name='gestion_remitos'),
+    path('remitos/<int:id_remito>/pdf/', views.remito_pdf, name='remito_pdf'),
 
     # Tipos de productos
     path('tipos-productos/', views.gestion_tipos_productos, name='gestion_tipos_productos'),
@@ -80,7 +81,7 @@ urlpatterns = [
 
     # Permisos
     path('permisos/', views.gestion_permisos, name='gestion_permisos'),
-    
+
     # Auditoría (solo administrador)
     path('auditoria/', views.gestion_auditoria, name='gestion_auditoria'),
     path(

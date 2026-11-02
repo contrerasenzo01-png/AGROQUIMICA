@@ -1,3 +1,4 @@
+import re
 import time as time_module
 import unicodedata
 from datetime import date, datetime, time, timedelta
@@ -27,6 +28,7 @@ from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
 from .reportes import generar_reportes, datos_evolucion_rango
+from .pdf_remito import generar_pdf_remito
 from .auditoria import (
     snapshot, registrar_auditoria,
     registrar_asignacion_perfil, registrar_asignacion_permisos,
@@ -3502,6 +3504,90 @@ def comprobante_movimiento_pdf(request, id_movimiento):
     respuesta['Content-Disposition'] = (
         f'inline; filename="comprobante_movimiento_{id_movimiento}.pdf"'
     )
+    respuesta['Content-Length'] = len(pdf)
+
+    return respuesta
+
+
+
+# ============================================================
+# PDF DEL REMITO CON SUS LOTES
+# ============================================================
+
+LOGO_REMITO_STATIC = 'inventario/images/logo_agroquimica.png'
+
+
+def remito_pdf(request, id_remito):
+    """Descarga el remito con sus lotes en PDF.
+
+    Lo puede descargar cualquiera que pueda consultar remitos.
+    """
+
+    usuario = usuario_con_acceso(request, 'remitos')
+
+    if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para consultar remitos.'
+        )
+        return redirect('panel_principal')
+
+    remito = get_object_or_404(
+        Remitos.objects.select_related(
+            'ID_Proveedor',
+            'ID_Usuario_anulacion',
+        ),
+        ID_Remito=id_remito
+    )
+
+    lotes = list(
+        Lotes.objects.filter(
+            ID_Remito=remito
+        ).select_related(
+            'ID_Producto'
+        ).order_by('ID_Lote')
+    )
+
+    # Quién registró el ingreso: el usuario del primer movimiento de entrada.
+    entrada = MovimientosStock.objects.filter(
+        ID_Lote__ID_Remito=remito,
+        ID_Tipo_movimiento__Nombre_tipo_movimiento__iexact='Entrada de lote'
+    ).select_related(
+        'ID_Usuario'
+    ).order_by('Fecha_hora_movimiento').first()
+
+    registrado_por = None
+
+    if entrada and entrada.ID_Usuario:
+        registrado_por = (
+            f'{entrada.ID_Usuario.Nombre_usuario} '
+            f'{entrada.ID_Usuario.Apellido_usuario}'
+        )
+
+    pdf = generar_pdf_remito(
+        remito,
+        lotes,
+        registrado_por=registrado_por,
+        logo_path=finders.find(LOGO_REMITO_STATIC),
+        emitido=timezone.localtime().strftime('%d/%m/%Y %H:%M'),
+    )
+
+    # Nombre del archivo sin caracteres raros: remito_R-0001-000009.pdf
+    numero_archivo = re.sub(r'[^A-Za-z0-9_-]', '_', remito.Numero_remito)
+    nombre_archivo = f'remito_{numero_archivo}.pdf'
+
+    registrar_auditoria(
+        usuario, 'Remitos', remito, 'DESCARGA_PDF', {},
+        {
+            'Documento': 'Remito con sus lotes',
+            'Archivo': nombre_archivo,
+            'Numero_remito': remito.Numero_remito,
+            'Cantidad_lotes': len(lotes),
+        }
+    )
+
+    respuesta = HttpResponse(pdf, content_type='application/pdf')
+    respuesta['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
     respuesta['Content-Length'] = len(pdf)
 
     return respuesta

@@ -1813,3 +1813,13 @@
         margin: 4px 0 0;
     }
 }
+
+
+/* ---------- Botón para descargar el remito en PDF ---------- */
+.rm-icon-btn.rm-descargar { text-decoration: none; }
+
+.rm-icon-btn.rm-descargar:hover {
+    color: var(--rm-verde) !important;
+    background: var(--rm-verde-claro);
+    border-color: #c8e0ce !important;
+}
