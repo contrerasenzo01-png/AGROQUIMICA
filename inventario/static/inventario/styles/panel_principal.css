@@ -1,4 +1,11 @@
 /* ==========================================
+   PANEL PRINCIPAL · Agroquímica del Valle
+   El panel lo dibuja React (react/panel_principal.jsx).
+   Las clases nuevas empiezan con "pp-".
+   ========================================== */
+
+
+/* ==========================================
    CONFIGURACIÓN GENERAL
    ========================================== */
 
@@ -6,6 +13,12 @@ body {
     background-color: #ffffff;
     color: #1c2a23;
     font-family: 'Inter', sans-serif;
+}
+
+.pp-cargando {
+    padding: 30px 0;
+    font-size: 13px;
+    color: #5c7367;
 }
 
 
@@ -19,7 +32,6 @@ body {
 
 .header h1 {
     font-family: 'Poppins', sans-serif;
-
     font-size: 20px;
     color: #0b311e;
     font-weight: 700;
@@ -27,7 +39,6 @@ body {
 
 .subtitle {
     font-family: 'Inter', sans-serif;
-
     font-size: 12px;
     color: #5c7367;
     margin-top: 4px;
@@ -40,7 +51,7 @@ body {
 
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
     margin-bottom: 20px;
     width: 100%;
@@ -48,15 +59,28 @@ body {
 
 .metric-card {
     background-color: #ffffff;
-    border: 1px solid #ffffff;
+    border: 1px solid #e3eae6;
     border-radius: 8px;
     padding: 15px;
     min-width: 0;
 }
 
+/* Tarjeta que lleva al módulo */
+.pp-metric-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+
+.pp-metric-link:hover {
+    border-color: #b9d7c5;
+    box-shadow: 0 4px 14px rgba(15, 58, 36, .08);
+    transform: translateY(-1px);
+}
+
 .metric-title {
     font-family: 'Inter', sans-serif;
-
     font-size: 11px;
     font-weight: 600;
     color: #8a9e93;
@@ -64,31 +88,25 @@ body {
 
 .metric-value {
     font-family: 'Poppins', sans-serif;
-
     font-size: 22px;
     font-weight: 700;
     margin-top: 5px;
 }
 
-.metric-value.green {
-    color: #1b5e3a;
-}
+.metric-value.green  { color: #1b5e3a; }
+.metric-value.blue   { color: #01543d; }
+.metric-value.red    { color: #00973f; }
+.metric-value.orange { color: #7e8500; }
 
-.metric-value.blue {
-    color: #01543d;
-}
-
-.metric-value.red {
-    color: #00973f;
-}
-
-.metric-value.orange {
-    color: #7e8500;
+.pp-metric-detalle {
+    margin-top: 2px;
+    font-size: 11px;
+    color: #8a9e93;
 }
 
 
 /* ==========================================
-   GRÁFICO Y ALERTAS
+   GRÁFICO Y PANEL DE ATENCIÓN
    ========================================== */
 
 .panels-grid {
@@ -109,33 +127,229 @@ body {
 
 .card-panel h2 {
     font-family: 'Poppins', sans-serif;
-
     font-size: 13px;
     color: #0b311e;
-    margin-bottom: 12px;
+    margin: 0;
     font-weight: 600;
 }
 
+/* Título del panel con enlace o filtros a la derecha */
+.pp-panel-cab {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
 
-/* ==========================================
-   GRÁFICO
-   ========================================== */
+.pp-ver-todo {
+    font-size: 12px;
+    font-weight: 600;
+    color: #185a38;
+    text-decoration: none;
+    white-space: nowrap;
+}
 
-.chart-container {
-    width: 100%;
-    height: 180px;
-    position: relative;
+.pp-ver-todo:hover { text-decoration: underline; }
+
+.pp-vacio {
+    margin: 6px 0;
+    padding: 14px;
+    border: 1px dashed #d6e2da;
+    border-radius: 6px;
+    font-size: 12px;
+    text-align: center;
+    color: #5c7367;
+}
+
+.pp-vacio-ok {
+    border-color: #bfe3cc;
+    background: #f3faf5;
+    color: #1b6b44;
+}
+
+.pp-nota {
+    margin: 10px 0 0;
+    font-size: 11px;
+    color: #8a9e93;
+}
+
+/* Texto chico debajo de un dato */
+.pp-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 400;
+    color: #6b7c73;
 }
 
 
 /* ==========================================
-   LISTA DE STOCK BAJO
+   GRÁFICO DE BARRAS
+   ========================================== */
+
+.pp-barras {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pp-barra-fila {
+    display: grid;
+    grid-template-columns: minmax(80px, 30%) 1fr 32px;
+    align-items: center;
+    gap: 10px;
+}
+
+.pp-barra-nombre {
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1c2a23;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pp-barra-pista {
+    height: 12px;
+    overflow: hidden;
+    background: #eef3f0;
+    border-radius: 999px;
+}
+
+.pp-barra {
+    display: block;
+    height: 100%;
+    min-width: 6px;
+    border-radius: 999px;
+    transition: width .6s ease;
+}
+
+/* Colores de la marca, en orden */
+.pp-color-0 { background: #185a38; }
+.pp-color-1 { background: #2e9d66; }
+.pp-color-2 { background: #f5c400; }
+.pp-color-3 { background: #8bc34a; }
+.pp-color-4 { background: #0f766e; }
+
+.pp-barra-valor {
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+    color: #1c2a23;
+}
+
+
+/* ==========================================
+   PESTAÑAS Y FILTROS
+   ========================================== */
+
+.pp-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 3px;
+    background: #f1f5f3;
+    border-radius: 8px;
+}
+
+.pp-tab {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 10px;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5c7367;
+    cursor: pointer;
+}
+
+.pp-tab.activa {
+    background: #ffffff;
+    color: #0b311e;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+
+.pp-tab-contador {
+    min-width: 20px;
+    padding: 1px 6px;
+    background: #e2ece6;
+    border-radius: 999px;
+    font-size: 10.5px;
+    color: #185a38;
+}
+
+.pp-filtro-dias {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #5c7367;
+}
+
+.pp-filtro-dias select {
+    padding: 6px 10px;
+    background: #ffffff;
+    border: 1px solid #dde7e0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    color: #1c2a23;
+    cursor: pointer;
+}
+
+/* Chips de filtro de movimientos */
+.pp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.pp-chip {
+    padding: 5px 11px;
+    background: #ffffff;
+    border: 1px solid #dde7e0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #5c7367;
+    cursor: pointer;
+}
+
+.pp-chip:hover { background: #f1f5f3; }
+
+.pp-chip.activa {
+    background: #185a38;
+    border-color: #185a38;
+    color: #ffffff;
+}
+
+.pp-chips .pp-ver-todo { margin-left: 6px; }
+
+
+/* ==========================================
+   LISTA DE STOCK BAJO Y POR VENCER
    ========================================== */
 
 .stock-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
 }
 
 .stock-item {
@@ -151,9 +365,31 @@ body {
     gap: 10px;
 }
 
+.pp-item-link {
+    color: inherit;
+    text-decoration: none;
+    transition: filter .15s;
+}
+
+.pp-item-link:hover { filter: brightness(.97); }
+
+/* Lotes por vencer: ámbar; vencidos: rojo */
+.stock-item.pp-vence {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+}
+
+.stock-item.pp-vence .stock-qty { color: #b45309; }
+
+.stock-item.pp-vence.pp-vencido {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+}
+
+.stock-item.pp-vence.pp-vencido .stock-qty { color: #b91c1c; }
+
 .stock-name {
     font-family: 'Inter', sans-serif;
-
     font-size: 12px;
     font-weight: 600;
     color: #1c2a23;
@@ -161,7 +397,6 @@ body {
 
 .stock-qty {
     font-family: 'Inter', sans-serif;
-
     font-size: 11px;
     font-weight: 700;
     color: #b91c1c;
@@ -181,7 +416,6 @@ body {
 .custom-table {
     width: 100%;
     border-collapse: collapse;
-
     font-family: 'Inter', sans-serif;
     font-size: 12px;
 }
@@ -208,6 +442,7 @@ body {
 .id-mov {
     font-weight: 700;
     color: #1c2a23;
+    white-space: nowrap;
 }
 
 .qty-negative {
@@ -224,6 +459,22 @@ body {
     color: #5c7367;
 }
 
+.pp-celda-accion { text-align: right; }
+
+.pp-btn-pdf {
+    display: inline-block;
+    padding: 4px 9px;
+    background: #ffffff;
+    border: 1px solid #dde7e0;
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #185a38;
+    text-decoration: none;
+}
+
+.pp-btn-pdf:hover { background: #eaf4ee; }
+
 
 /* ==========================================
    ETIQUETAS DE MOVIMIENTOS
@@ -231,14 +482,10 @@ body {
 
 .badge-tag {
     display: inline-block;
-
     padding: 3px 8px;
-
     border-radius: 4px;
-
     font-family: 'Inter', sans-serif;
     font-size: 11px;
-
     white-space: nowrap;
 }
 
@@ -260,34 +507,115 @@ body {
     color: #b45309;
 }
 
+.badge-tag.anulacion {
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+}
+
+
+/* ==========================================
+   MODO OSCURO (clases nuevas del panel)
+   El resto lo cubre tema.css.
+   ========================================== */
+
+html.modo-oscuro .pp-cargando,
+html.modo-oscuro .pp-metric-detalle,
+html.modo-oscuro .pp-nota,
+html.modo-oscuro .pp-sub,
+html.modo-oscuro .pp-filtro-dias { color: var(--d-text-3); }
+
+html.modo-oscuro .pp-metric-link:hover {
+    border-color: var(--d-green-bd) !important;
+    box-shadow: none;
+}
+
+html.modo-oscuro .pp-ver-todo { color: var(--d-green); }
+
+html.modo-oscuro .pp-vacio {
+    border-color: var(--d-border-2);
+    color: var(--d-text-2);
+}
+
+html.modo-oscuro .pp-vacio-ok {
+    background: var(--d-green-bg);
+    border-color: var(--d-green-bd);
+    color: var(--d-green-tx);
+}
+
+html.modo-oscuro .pp-barra-nombre,
+html.modo-oscuro .pp-barra-valor { color: var(--d-text); }
+
+html.modo-oscuro .pp-barra-pista { background: var(--d-surface-3); }
+html.modo-oscuro .pp-color-0 { background: #2e9d66; }
+
+html.modo-oscuro .pp-tabs { background: var(--d-surface-2); }
+html.modo-oscuro .pp-tab { color: var(--d-text-2); }
+html.modo-oscuro .pp-tab.activa { background: var(--d-surface-3); color: var(--d-title); box-shadow: none; }
+html.modo-oscuro .pp-tab-contador { background: var(--d-green-bg); color: var(--d-green-tx); }
+
+html.modo-oscuro .pp-chip {
+    background: var(--d-surface-2);
+    border-color: var(--d-border-2);
+    color: var(--d-text-2);
+}
+
+html.modo-oscuro .pp-chip:hover { background: var(--d-surface-3); }
+
+html.modo-oscuro .pp-chip.activa {
+    background: var(--d-green-btn);
+    border-color: var(--d-green-btn);
+    color: #ffffff;
+}
+
+/* Por vencer en ámbar (tema.css pinta .stock-item en rojo) */
+html.modo-oscuro .stock-item.pp-vence {
+    background: var(--d-amb-bg) !important;
+    border-color: var(--d-amb-bd) !important;
+}
+
+html.modo-oscuro .stock-item.pp-vence .stock-qty { color: var(--d-amb-tx) !important; }
+
+html.modo-oscuro .stock-item.pp-vence.pp-vencido {
+    background: var(--d-red-bg) !important;
+    border-color: var(--d-red-bd) !important;
+}
+
+html.modo-oscuro .stock-item.pp-vence.pp-vencido .stock-qty { color: var(--d-red-tx) !important; }
+
+html.modo-oscuro .badge-tag.anulacion {
+    background: var(--d-surface-3);
+    border-color: var(--d-border-2);
+    color: var(--d-text-2);
+}
+
+html.modo-oscuro .pp-btn-pdf {
+    background: var(--d-surface-2);
+    border-color: var(--d-border-2);
+    color: var(--d-green-tx);
+}
+
 
 /* ==========================================
    RESPONSIVE
    ========================================== */
 
 @media (max-width: 1100px) {
-
-    .metrics-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .panels-grid {
         grid-template-columns: 1fr;
     }
 }
 
-
 @media (max-width: 700px) {
-
     .metrics-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .panels-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 
     .card-panel {
         padding: 14px;
+    }
+
+    .pp-barra-fila {
+        grid-template-columns: 90px 1fr 28px;
     }
 }

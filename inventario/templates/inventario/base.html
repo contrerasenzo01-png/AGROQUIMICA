@@ -119,6 +119,11 @@
             data-login-url="{% url 'login' %}"></script>
     <script src="{% static 'inventario/js/tema.js' %}"></script>
 
+    <!-- REACT: solo se carga en las pantallas que lo usan.
+         Esas pantallas incluyen 'inventario/_react.html' en este bloque. -->
+    {% block react %}
+    {% endblock %}
+
     {% block extra_js %}
     {% endblock %}
 

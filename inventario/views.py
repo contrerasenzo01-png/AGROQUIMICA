@@ -19,7 +19,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
-from django.db.models import Count, Prefetch, ProtectedError, Q, RestrictedError, Sum
+from django.db.models import Count, F, Prefetch, ProtectedError, Q, RestrictedError, Sum
 from django.db.models.functions import Coalesce
 
 from reportlab.lib import colors
@@ -191,21 +191,225 @@ def cerrar_sesion(request):
 # PANEL PRINCIPAL
 # ============================================================
 
+def _clase_movimiento(nombre_tipo):
+    """Clase visual y signo de un movimiento según su tipo."""
+
+    nombre = (nombre_tipo or '').lower()
+
+    if 'entrada' in nombre:
+        return 'entrada', 1
+    if 'vencimiento' in nombre:
+        return 'vencimiento', -1
+    if 'anulaci' in nombre:
+        return 'anulacion', -1
+
+    return 'salida', -1
+
+
+def _datos_panel(usuario):
+    """Arma los datos del panel principal para el componente React.
+
+    Cada bloque solo se incluye si el perfil del usuario puede
+    ver ese módulo, así el panel respeta los mismos permisos
+    que el menú lateral.
+    """
+
+    ver_usuarios = puede(usuario, 'usuarios')
+    ver_productos = puede(usuario, 'productos')
+    ver_movimientos = puede(usuario, 'movimientos')
+    ver_alertas = puede(usuario, 'alertas')
+    ver_lotes = puede(usuario, 'lotes')
+    emitir_comprobantes = puede(usuario, 'comprobantes', gestionar=True)
+
+    # Actualiza las alertas de vencimiento y devuelve los lotes
+    # que vencen en los próximos 30 días (o ya vencieron con stock).
+    lotes_vencimiento = generar_alertas_vencimiento()
+
+    metricas = []
+    stock_bajo = []
+    por_vencer = []
+    grafico = []
+    movimientos = []
+
+    # ---------------- PRODUCTOS Y STOCK ----------------
+    if ver_productos:
+        stocks_bajos = Stock.objects.select_related(
+            'ID_Producto'
+        ).filter(
+            ID_Producto__Estado_producto='Activo',
+            Cantidad_stock__lte=F('Stock_minimo')
+        ).order_by('Cantidad_stock', 'ID_Producto__Nombre_producto')
+
+        stock_bajo = [
+            {
+                'id': s.ID_Producto_id,
+                'producto': s.ID_Producto.Nombre_producto,
+                'stock': s.Cantidad_stock,
+                'minimo': s.Stock_minimo,
+            }
+            for s in stocks_bajos
+        ]
+
+        productos_con_stock = Stock.objects.filter(
+            ID_Producto__Estado_producto='Activo',
+            Cantidad_stock__gt=0
+        ).count()
+
+        metricas.append({
+            'clave': 'productos',
+            'titulo': 'Productos con stock',
+            'valor': productos_con_stock,
+            'detalle': 'productos activos',
+            'color': 'blue',
+            'url': reverse('gestion_productos'),
+        })
+
+        metricas.append({
+            'clave': 'stock_bajo',
+            'titulo': 'Stock bajo / crítico',
+            'valor': len(stock_bajo),
+            'detalle': 'en o bajo el mínimo',
+            'color': 'red',
+            'url': reverse('gestion_productos'),
+        })
+
+        # Productos activos agrupados por subtipo (o por tipo si no tiene).
+        conteo = {}
+
+        for producto in Productos.objects.filter(
+            Estado_producto='Activo'
+        ).select_related('ID_Tipo_producto', 'ID_Subtipo'):
+            if producto.ID_Subtipo:
+                nombre = producto.ID_Subtipo.Nombre_subtipo
+            else:
+                nombre = producto.ID_Tipo_producto.Nombre_tipo_producto
+
+            conteo[nombre] = conteo.get(nombre, 0) + 1
+
+        grafico = sorted(
+            [{'nombre': n, 'cantidad': c} for n, c in conteo.items()],
+            key=lambda d: (-d['cantidad'], d['nombre'])
+        )
+
+    # ---------------- LOTES POR VENCER ----------------
+    if ver_productos or ver_lotes:
+        por_vencer = [
+            {
+                'id': item['lote'].ID_Lote,
+                'producto': item['producto'].Nombre_producto,
+                'lote': item['lote'].Numero_lote,
+                'dias': item['dias_restantes'],
+                'vence': item['lote'].Fecha_vencimiento.strftime('%d/%m/%Y'),
+                'cantidad': item['lote'].Cantidad_actual,
+            }
+            for item in lotes_vencimiento
+        ]
+
+        metricas.append({
+            'clave': 'por_vencer',
+            'titulo': 'Lotes por vencer',
+            'valor': len([l for l in por_vencer if l['dias'] >= 0]),
+            'detalle': 'en los próximos 30 días',
+            'color': 'orange',
+            'url': reverse('registrar_ingreso_lote') if ver_lotes else '',
+        })
+
+    # ---------------- ALERTAS ----------------
+    if ver_alertas:
+        metricas.append({
+            'clave': 'alertas',
+            'titulo': 'Alertas sin atender',
+            'valor': Alertas.objects.filter(Atendida=False).count(),
+            'detalle': 'stock bajo y vencimientos',
+            'color': 'orange',
+            'url': reverse('historial_alertas'),
+        })
+
+    # ---------------- USUARIOS ----------------
+    if ver_usuarios:
+        metricas.insert(0, {
+            'clave': 'usuarios',
+            'titulo': 'Usuarios activos',
+            'valor': Usuarios.objects.filter(Estado_usuario=True).count(),
+            'detalle': 'con acceso al sistema',
+            'color': 'green',
+            'url': reverse('gestion_usuarios'),
+        })
+
+    # ---------------- ÚLTIMOS MOVIMIENTOS ----------------
+    if ver_movimientos:
+        ultimos = MovimientosStock.objects.select_related(
+            'ID_Tipo_movimiento',
+            'ID_Lote',
+            'ID_Lote__ID_Producto',
+            'ID_Usuario',
+        ).order_by('-Fecha_hora_movimiento')[:8]
+
+        for mov in ultimos:
+            nombre_tipo = mov.ID_Tipo_movimiento.Nombre_tipo_movimiento
+            clase, signo = _clase_movimiento(nombre_tipo)
+            fecha = timezone.localtime(mov.Fecha_hora_movimiento)
+
+            movimientos.append({
+                'id': mov.ID_Movimiento_stock,
+                'fecha': fecha.strftime('%d/%m/%Y'),
+                'hora': fecha.strftime('%H:%M'),
+                'producto': (
+                    mov.ID_Lote.ID_Producto.Nombre_producto
+                    if mov.ID_Lote else '—'
+                ),
+                'lote': mov.ID_Lote.Numero_lote if mov.ID_Lote else '',
+                'tipo': nombre_tipo,
+                'clase': clase,
+                'cantidad': signo * mov.Cantidad_movimiento_stock,
+                'observaciones': mov.Observaciones or '',
+                'usuario': mov.ID_Usuario.Usuario if mov.ID_Usuario else '',
+                'comprobante': (
+                    reverse('comprobante_movimiento_pdf', args=[mov.ID_Movimiento_stock])
+                    if emitir_comprobantes else ''
+                ),
+            })
+
+    return {
+        'usuario': {
+            'nombre': usuario.Nombre_usuario,
+            'perfil': usuario.ID_Perfil.Nombre_perfil,
+        },
+        'permisos': {
+            'productos': ver_productos,
+            'movimientos': ver_movimientos,
+            'lotes': ver_lotes,
+            'alertas': ver_alertas,
+        },
+        'urls': {
+            'productos': reverse('gestion_productos'),
+            'movimientos': reverse('gestion_movimientos_stock'),
+            'lotes': reverse('registrar_ingreso_lote'),
+            'alertas': reverse('historial_alertas'),
+        },
+        'metricas': metricas,
+        'grafico': grafico,
+        'stock_bajo': stock_bajo,
+        'por_vencer': por_vencer,
+        'movimientos': movimientos,
+    }
+
+
 def panel_principal(request):
+    """Panel principal. La pantalla la dibuja un componente React
+    (static/inventario/react/panel_principal.jsx) con estos datos."""
 
     usuario = usuario_autenticado(request)
 
     if not usuario:
         return redirect('login')
 
-    alertas_vencimiento = generar_alertas_vencimiento()
-
     return render(
         request,
         'inventario/panel_principal.html',
         {
             'usuario': usuario,
-            'alertas_vencimiento': alertas_vencimiento
+            'datos_panel': _datos_panel(usuario),
         }
     )
 

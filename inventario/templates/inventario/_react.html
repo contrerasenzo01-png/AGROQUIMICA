@@ -1,0 +1,11 @@
+{% comment %}
+    React, ReactDOM y Babel.
+    Solo se cargan en las pantallas que lo piden con:
+
+        {% block react %}{% include 'inventario/_react.html' %}{% endblock %}
+
+    Las versiones están fijas para que una actualización no rompa el sistema.
+{% endcomment %}
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
