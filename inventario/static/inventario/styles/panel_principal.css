@@ -1,18 +1,39 @@
 /* ==========================================
    PANEL PRINCIPAL · Agroquímica del Valle
-   El panel lo dibuja React (react/panel_principal.jsx).
-   Las clases nuevas empiezan con "pp-".
+   El panel lo dibuja React con clases de Bootstrap 5.3
+   (react/panel_principal.jsx).
+
+   Este archivo:
+   1. Evita que Bootstrap cambie el menú y la barra superior.
+   2. Adapta Bootstrap a los colores de la agroquímica.
+   3. Ajusta el modo oscuro.
+   Las clases propias empiezan con "pp-".
    ========================================== */
 
 
 /* ==========================================
-   CONFIGURACIÓN GENERAL
+   1. CONVIVENCIA CON EL RESTO DEL SISTEMA
    ========================================== */
 
+/* Bootstrap sube el interlineado de toda la página: se deja como en
+   las demás pantallas para que el menú no cambie de alto. */
 body {
     background-color: #ffffff;
     color: #1c2a23;
     font-family: 'Inter', sans-serif;
+    line-height: normal;
+}
+
+/* Bootstrap también usa la clase .nav-link: sin esto, el ítem del
+   menú lateral se pondría azul al hacerle clic. */
+.sidebar .nav-link,
+.sidebar .nav-link:focus,
+.sidebar .nav-link:hover {
+    color: #ffffff;
+}
+
+.sidebar .nav-link:focus-visible {
+    box-shadow: 0 0 0 2px rgba(245, 196, 0, .6);
 }
 
 .pp-cargando {
@@ -23,599 +44,250 @@ body {
 
 
 /* ==========================================
-   ENCABEZADO
+   2. BOOTSTRAP CON LOS COLORES DE LA MARCA
+   Solo dentro del panel (.pp-panel).
    ========================================== */
 
-.header {
-    margin-bottom: 20px;
+.pp-panel {
+    line-height: 1.5;
+
+    --bs-body-font-family: 'Inter', sans-serif;
+    --bs-body-color: #1c2a23;
+    --bs-secondary-color: #6b7c73;
+    --bs-emphasis-color: #0b311e;
+    --bs-border-color: #e3eae6;
+    --bs-tertiary-bg: #f6f9f7;
+
+    /* Verde de la agroquímica en lugar del verde de Bootstrap */
+    --bs-success: #1b7a4a;
+    --bs-success-rgb: 27, 122, 74;
+    --bs-success-text-emphasis: #145236;
+    --bs-success-bg-subtle: #e6f4ec;
+    --bs-success-border-subtle: #bfe3cc;
+    --bs-link-color-rgb: 24, 90, 56;
+
+    --bs-card-border-color: #e3eae6;
+    --bs-card-border-radius: 12px;
 }
 
-.header h1 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 20px;
-    color: #0b311e;
-    font-weight: 700;
+.pp-panel .card {
+    --bs-card-cap-bg: transparent;
+    border-color: #e3eae6;
+    border-radius: 12px;
 }
 
-.subtitle {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    color: #5c7367;
-    margin-top: 4px;
+/* Botones verdes con el color de la marca */
+.pp-panel .btn-success {
+    --bs-btn-bg: #185a38;
+    --bs-btn-border-color: #185a38;
+    --bs-btn-hover-bg: #134a2e;
+    --bs-btn-hover-border-color: #134a2e;
+    --bs-btn-active-bg: #0f3a24;
+    --bs-btn-active-border-color: #0f3a24;
 }
+
+.pp-panel .btn-outline-success {
+    --bs-btn-color: #185a38;
+    --bs-btn-border-color: #cfe3d7;
+    --bs-btn-hover-bg: #eaf4ee;
+    --bs-btn-hover-color: #185a38;
+    --bs-btn-hover-border-color: #b9d7c5;
+    --bs-btn-active-bg: #185a38;
+    --bs-btn-active-border-color: #185a38;
+}
+
+.pp-panel .link-success { color: #185a38 !important; }
+.pp-panel .link-success:hover { text-decoration: underline !important; }
 
 
 /* ==========================================
-   GRID DE MÉTRICAS
+   TARJETAS DE MÉTRICAS
    ========================================== */
 
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-    width: 100%;
-}
-
-.metric-card {
-    background-color: #ffffff;
-    border: 1px solid #e3eae6;
-    border-radius: 8px;
-    padding: 15px;
-    min-width: 0;
-}
-
-/* Tarjeta que lleva al módulo */
-.pp-metric-link {
-    display: block;
+.pp-metrica {
     color: inherit;
     text-decoration: none;
+}
+
+.pp-metrica-link {
     transition: border-color .15s, box-shadow .15s, transform .15s;
 }
 
-.pp-metric-link:hover {
+.pp-metrica-link:hover {
     border-color: #b9d7c5;
-    box-shadow: 0 4px 14px rgba(15, 58, 36, .08);
-    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(15, 58, 36, .08);
+    transform: translateY(-2px);
 }
 
-.metric-title {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    color: #8a9e93;
+.pp-metrica-icono {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
 }
 
-.metric-value {
+.pp-metrica-valor {
     font-family: 'Poppins', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    margin-top: 5px;
+    color: var(--bs-emphasis-color);
 }
 
-.metric-value.green  { color: #1b5e3a; }
-.metric-value.blue   { color: #01543d; }
-.metric-value.red    { color: #00973f; }
-.metric-value.orange { color: #7e8500; }
-
-.pp-metric-detalle {
-    margin-top: 2px;
-    font-size: 11px;
-    color: #8a9e93;
+.pp-svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 
 /* ==========================================
-   GRÁFICO Y PANEL DE ATENCIÓN
+   GRÁFICO (barras de progreso)
    ========================================== */
 
-.panels-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 20px;
-    margin-bottom: 20px;
-    width: 100%;
-}
-
-.card-panel {
-    background-color: #ffffff;
-    border: 1px solid #cecece;
-    border-radius: 8px;
-    padding: 16px;
-    min-width: 0;
-}
-
-.card-panel h2 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 13px;
-    color: #0b311e;
-    margin: 0;
-    font-weight: 600;
-}
-
-/* Título del panel con enlace o filtros a la derecha */
-.pp-panel-cab {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.pp-ver-todo {
-    font-size: 12px;
-    font-weight: 600;
-    color: #185a38;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.pp-ver-todo:hover { text-decoration: underline; }
-
-.pp-vacio {
-    margin: 6px 0;
-    padding: 14px;
-    border: 1px dashed #d6e2da;
-    border-radius: 6px;
-    font-size: 12px;
-    text-align: center;
-    color: #5c7367;
-}
-
-.pp-vacio-ok {
-    border-color: #bfe3cc;
-    background: #f3faf5;
-    color: #1b6b44;
-}
-
-.pp-nota {
-    margin: 10px 0 0;
-    font-size: 11px;
-    color: #8a9e93;
-}
-
-/* Texto chico debajo de un dato */
-.pp-sub {
-    display: block;
-    margin-top: 2px;
-    font-size: 11px;
-    font-weight: 400;
-    color: #6b7c73;
-}
-
-
-/* ==========================================
-   GRÁFICO DE BARRAS
-   ========================================== */
-
-.pp-barras {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.pp-barra-fila {
-    display: grid;
-    grid-template-columns: minmax(80px, 30%) 1fr 32px;
-    align-items: center;
-    gap: 10px;
-}
-
-.pp-barra-nombre {
-    overflow: hidden;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1c2a23;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pp-barra-pista {
-    height: 12px;
-    overflow: hidden;
-    background: #eef3f0;
+.pp-progreso {
+    height: 10px;
     border-radius: 999px;
+    background-color: #eef3f0;
 }
 
-.pp-barra {
-    display: block;
-    height: 100%;
-    min-width: 6px;
+.pp-progreso .progress-bar {
     border-radius: 999px;
     transition: width .6s ease;
 }
 
 /* Colores de la marca, en orden */
-.pp-color-0 { background: #185a38; }
-.pp-color-1 { background: #2e9d66; }
-.pp-color-2 { background: #f5c400; }
-.pp-color-3 { background: #8bc34a; }
-.pp-color-4 { background: #0f766e; }
-
-.pp-barra-valor {
-    font-size: 12px;
-    font-weight: 700;
-    text-align: right;
-    color: #1c2a23;
-}
+.pp-barra-0 { background-color: #185a38; }
+.pp-barra-1 { background-color: #2e9d66; }
+.pp-barra-2 { background-color: #f5c400; }
+.pp-barra-3 { background-color: #8bc34a; }
+.pp-barra-4 { background-color: #0f766e; }
 
 
 /* ==========================================
-   PESTAÑAS Y FILTROS
+   PESTAÑAS, LISTAS Y TABLA
    ========================================== */
 
-.pp-tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
-    padding: 3px;
-    background: #f1f5f3;
-    border-radius: 8px;
+/* Número dentro de las pestañas */
+.pp-contador {
+    background-color: rgba(255, 255, 255, .25);
+    color: inherit;
 }
 
-.pp-tab {
-    display: inline-flex;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 7px 10px;
-    background: transparent;
-    border: 0;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    color: #5c7367;
-    cursor: pointer;
-}
-
-.pp-tab.activa {
-    background: #ffffff;
-    color: #0b311e;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
-}
-
-.pp-tab-contador {
-    min-width: 20px;
-    padding: 1px 6px;
-    background: #e2ece6;
-    border-radius: 999px;
-    font-size: 10.5px;
+.btn-outline-success .pp-contador {
+    background-color: #e6f4ec;
     color: #185a38;
 }
 
-.pp-filtro-dias {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    font-size: 12px;
-    color: #5c7367;
-}
-
-.pp-filtro-dias select {
-    padding: 6px 10px;
-    background: #ffffff;
-    border: 1px solid #dde7e0;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 12px;
-    color: #1c2a23;
-    cursor: pointer;
-}
-
-/* Chips de filtro de movimientos */
-.pp-chips {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-}
-
-.pp-chip {
-    padding: 5px 11px;
-    background: #ffffff;
-    border: 1px solid #dde7e0;
-    border-radius: 999px;
-    font-family: inherit;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #5c7367;
-    cursor: pointer;
-}
-
-.pp-chip:hover { background: #f1f5f3; }
-
-.pp-chip.activa {
-    background: #185a38;
-    border-color: #185a38;
-    color: #ffffff;
-}
-
-.pp-chips .pp-ver-todo { margin-left: 6px; }
-
-
-/* ==========================================
-   LISTA DE STOCK BAJO Y POR VENCER
-   ========================================== */
-
-.stock-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 260px;
+.pp-lista {
+    max-height: 280px;
     overflow-y: auto;
 }
 
-.stock-item {
-    background-color: #fef2f2;
-    border: 1px solid #fee2e2;
-    padding: 10px 12px;
-    border-radius: 6px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    gap: 10px;
-}
-
-.pp-item-link {
-    color: inherit;
-    text-decoration: none;
-    transition: filter .15s;
-}
-
-.pp-item-link:hover { filter: brightness(.97); }
-
-/* Lotes por vencer: ámbar; vencidos: rojo */
-.stock-item.pp-vence {
-    background-color: #fffbeb;
-    border-color: #fde68a;
-}
-
-.stock-item.pp-vence .stock-qty { color: #b45309; }
-
-.stock-item.pp-vence.pp-vencido {
-    background-color: #fef2f2;
-    border-color: #fecaca;
-}
-
-.stock-item.pp-vence.pp-vencido .stock-qty { color: #b91c1c; }
-
-.stock-name {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1c2a23;
-}
-
-.stock-qty {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    color: #b91c1c;
+.pp-tabla thead th {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
     white-space: nowrap;
+}
+
+.pp-tabla td,
+.pp-tabla th {
+    padding: .7rem 1rem;
 }
 
 
 /* ==========================================
-   TABLA DE MOVIMIENTOS
+   3. MODO OSCURO
+   tema.js pone data-bs-theme="dark" junto con .modo-oscuro.
+   Acá se reemplazan los grises de Bootstrap por los verdes oscuros
+   del sistema.
    ========================================== */
 
-.table-container {
-    width: 100%;
-    overflow-x: auto;
+html.modo-oscuro .pp-panel {
+    --bs-body-bg: var(--d-surface);
+    --bs-body-color: var(--d-text);
+    --bs-secondary-color: var(--d-text-2);
+    --bs-emphasis-color: var(--d-title);
+    --bs-border-color: var(--d-border);
+    --bs-tertiary-bg: var(--d-surface-2);
+    --bs-secondary-bg: var(--d-surface-3);
+
+    --bs-success: #4ade80;
+    --bs-success-rgb: 74, 222, 128;
+    --bs-success-text-emphasis: var(--d-green-tx);
+    --bs-success-bg-subtle: var(--d-green-bg);
+    --bs-success-border-subtle: var(--d-green-bd);
+
+    --bs-card-border-color: var(--d-border);
+    --bs-list-group-bg: var(--d-surface);
+    --bs-list-group-border-color: var(--d-border);
+    --bs-list-group-action-hover-bg: var(--d-hover);
 }
 
-.custom-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
+html.modo-oscuro .pp-cargando { color: var(--d-text-3); }
+
+html.modo-oscuro .pp-panel .list-group-item {
+    background-color: var(--d-surface);
+    border-color: var(--d-border);
+    color: var(--d-text);
 }
 
-.custom-table th {
-    border-bottom: 1px solid #e2ece6;
-    text-align: left;
-    color: #8a9e93;
-    padding: 0 10px 10px 0;
-    font-weight: 600;
-    white-space: nowrap;
+html.modo-oscuro .pp-panel .list-group-item-action:hover {
+    background-color: var(--d-hover);
 }
 
-.custom-table td {
-    padding: 10px 10px 10px 0;
-    border-bottom: 1px solid #f0f4f2;
-    vertical-align: middle;
+html.modo-oscuro .pp-panel .table {
+    --bs-table-bg: var(--d-surface);
+    --bs-table-color: var(--d-text);
+    --bs-table-border-color: var(--d-border);
+    --bs-table-hover-bg: var(--d-hover);
+    --bs-table-hover-color: var(--d-text);
 }
 
-.custom-table tr:last-child td {
-    border-bottom: none;
-}
-
-.id-mov {
-    font-weight: 700;
-    color: #1c2a23;
-    white-space: nowrap;
-}
-
-.qty-negative {
-    font-weight: 700;
-    color: #b91c1c;
-}
-
-.qty-positive {
-    font-weight: 700;
-    color: #1b5e3a;
-}
-
-.obs-text {
-    color: #5c7367;
-}
-
-.pp-celda-accion { text-align: right; }
-
-.pp-btn-pdf {
-    display: inline-block;
-    padding: 4px 9px;
-    background: #ffffff;
-    border: 1px solid #dde7e0;
-    border-radius: 6px;
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #185a38;
-    text-decoration: none;
-}
-
-.pp-btn-pdf:hover { background: #eaf4ee; }
-
-
-/* ==========================================
-   ETIQUETAS DE MOVIMIENTOS
-   ========================================== */
-
-.badge-tag {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    white-space: nowrap;
-}
-
-.badge-tag.salida {
-    background-color: #fef2f2;
-    border: 1px solid #fca5a5;
-    color: #ef4444;
-}
-
-.badge-tag.entrada {
-    background-color: #f0fdf4;
-    border: 1px solid #86efac;
-    color: #15803d;
-}
-
-.badge-tag.vencimiento {
-    background-color: #fffbe3;
-    border: 1px solid #fde047;
-    color: #b45309;
-}
-
-.badge-tag.anulacion {
-    background-color: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    color: #475569;
-}
-
-
-/* ==========================================
-   MODO OSCURO (clases nuevas del panel)
-   El resto lo cubre tema.css.
-   ========================================== */
-
-html.modo-oscuro .pp-cargando,
-html.modo-oscuro .pp-metric-detalle,
-html.modo-oscuro .pp-nota,
-html.modo-oscuro .pp-sub,
-html.modo-oscuro .pp-filtro-dias { color: var(--d-text-3); }
-
-html.modo-oscuro .pp-metric-link:hover {
+html.modo-oscuro .pp-metrica-link:hover {
     border-color: var(--d-green-bd) !important;
     box-shadow: none;
 }
 
-html.modo-oscuro .pp-ver-todo { color: var(--d-green); }
+html.modo-oscuro .pp-progreso { background-color: var(--d-surface-3); }
+html.modo-oscuro .pp-barra-0 { background-color: #2e9d66; }
 
-html.modo-oscuro .pp-vacio {
-    border-color: var(--d-border-2);
-    color: var(--d-text-2);
+/* tema.css pinta todos los .btn de gris en modo oscuro:
+   dentro del panel se recuperan los verdes. */
+html.modo-oscuro .pp-panel .btn-success {
+    background: var(--d-green-btn) !important;
+    border-color: var(--d-green-btn) !important;
+    color: #ffffff !important;
 }
 
-html.modo-oscuro .pp-vacio-ok {
-    background: var(--d-green-bg);
-    border-color: var(--d-green-bd);
+html.modo-oscuro .pp-panel .btn-success:hover {
+    background: var(--d-green-btn-h) !important;
+    border-color: var(--d-green-btn-h) !important;
+}
+
+html.modo-oscuro .pp-panel .btn-outline-success {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border-2) !important;
+    color: var(--d-green-tx) !important;
+}
+
+html.modo-oscuro .pp-panel .btn-outline-success:hover {
+    background: var(--d-surface-3) !important;
+}
+
+html.modo-oscuro .pp-panel .link-success { color: var(--d-green) !important; }
+
+html.modo-oscuro .btn-outline-success .pp-contador {
+    background-color: var(--d-green-bg);
     color: var(--d-green-tx);
 }
 
-html.modo-oscuro .pp-barra-nombre,
-html.modo-oscuro .pp-barra-valor { color: var(--d-text); }
-
-html.modo-oscuro .pp-barra-pista { background: var(--d-surface-3); }
-html.modo-oscuro .pp-color-0 { background: #2e9d66; }
-
-html.modo-oscuro .pp-tabs { background: var(--d-surface-2); }
-html.modo-oscuro .pp-tab { color: var(--d-text-2); }
-html.modo-oscuro .pp-tab.activa { background: var(--d-surface-3); color: var(--d-title); box-shadow: none; }
-html.modo-oscuro .pp-tab-contador { background: var(--d-green-bg); color: var(--d-green-tx); }
-
-html.modo-oscuro .pp-chip {
-    background: var(--d-surface-2);
+html.modo-oscuro .pp-panel .alert-light {
+    background-color: var(--d-surface-2);
     border-color: var(--d-border-2);
     color: var(--d-text-2);
-}
-
-html.modo-oscuro .pp-chip:hover { background: var(--d-surface-3); }
-
-html.modo-oscuro .pp-chip.activa {
-    background: var(--d-green-btn);
-    border-color: var(--d-green-btn);
-    color: #ffffff;
-}
-
-/* Por vencer en ámbar (tema.css pinta .stock-item en rojo) */
-html.modo-oscuro .stock-item.pp-vence {
-    background: var(--d-amb-bg) !important;
-    border-color: var(--d-amb-bd) !important;
-}
-
-html.modo-oscuro .stock-item.pp-vence .stock-qty { color: var(--d-amb-tx) !important; }
-
-html.modo-oscuro .stock-item.pp-vence.pp-vencido {
-    background: var(--d-red-bg) !important;
-    border-color: var(--d-red-bd) !important;
-}
-
-html.modo-oscuro .stock-item.pp-vence.pp-vencido .stock-qty { color: var(--d-red-tx) !important; }
-
-html.modo-oscuro .badge-tag.anulacion {
-    background: var(--d-surface-3);
-    border-color: var(--d-border-2);
-    color: var(--d-text-2);
-}
-
-html.modo-oscuro .pp-btn-pdf {
-    background: var(--d-surface-2);
-    border-color: var(--d-border-2);
-    color: var(--d-green-tx);
-}
-
-
-/* ==========================================
-   RESPONSIVE
-   ========================================== */
-
-@media (max-width: 1100px) {
-    .panels-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 700px) {
-    .metrics-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .card-panel {
-        padding: 14px;
-    }
-
-    .pp-barra-fila {
-        grid-template-columns: 90px 1fr 28px;
-    }
 }

@@ -3,116 +3,148 @@
 
 {% block title %}Permisos del sistema - Agroquímica del Valle{% endblock %}
 
+{% block css_librerias %}
+    <!-- Bootstrap 5.3: solo el CSS y solo en esta pantalla -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          crossorigin="anonymous">
+{% endblock %}
+
 {% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/css/bootstrap_ajustes.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/styles/permisos.css' %}">
-    <style>
-        .tabla-permisos {
-            width: 100%;
-            table-layout: fixed;
-        }
-
-        .tabla-permisos th,
-        .tabla-permisos td {
-            text-align: left;
-            vertical-align: middle;
-        }
-
-        .tabla-permisos .grupo-fila td {
-            padding: 10px 16px;
-            background: #eaf4e6;
-            color: #1b5e20;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-        }
-
-        .tabla-permisos .chip {
-            display: inline-block;
-            margin: 2px 4px 2px 0;
-        }
-    </style>
 {% endblock %}
 
 {% block contenido %}
 
-<div class="page-header">
-    <div>
-        <div class="page-title">Permisos del sistema</div>
-        <div class="page-sub">
-            {{ total }} permiso{{ total|pluralize }} disponible{{ total|pluralize }}.
-            Se asignan a cada perfil desde "Perfiles de acceso".
+<div class="bs-pantalla pm-page">
+
+    <!-- ===================== ENCABEZADO ===================== -->
+
+    <header class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <h1 class="mb-1">Permisos del sistema</h1>
+            
         </div>
-    </div>
-</div>
 
-{% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-            <div class="message {{ message.tags }}">{{ message }}</div>
+        {% if perm.perfiles_ver %}
+            <a href="{% url 'gestion_perfiles' %}" class="btn btn-success">
+                Ir a Perfiles de acceso
+            </a>
+        {% endif %}
+    </header>
+
+
+    <!-- ===================== MENSAJES ===================== -->
+
+    {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} small py-2">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+
+    <!-- ===================== BUSCADOR ===================== -->
+
+    <form method="GET" class="pm-buscador mb-4" role="search">
+        <div class="input-group">
+            <span class="input-group-text" aria-hidden="true">
+                <svg class="pm-svg" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m21 21-4.3-4.3"/>
+                </svg>
+            </span>
+
+            <input type="text"
+                   name="q"
+                   value="{{ busqueda }}"
+                   class="form-control"
+                   placeholder="Buscar por nombre o por lo que permite..."
+                   aria-label="Buscar permiso">
+
+            <button type="submit" class="btn btn-success">Buscar</button>
+
+            {% if busqueda %}
+                <a href="{% url 'gestion_permisos' %}" class="btn btn-outline-success">Limpiar</a>
+            {% endif %}
+        </div>
+    </form>
+
+
+    <!-- ===================== TARJETAS POR MÓDULO ===================== -->
+
+    <div class="row g-4">
+
+        {% for modulo in modulos %}
+            <div class="col-12 col-lg-6 col-xxl-4">
+                <article class="card h-100 pm-card">
+                    <div class="card-body d-flex flex-column">
+
+                        <!-- Ícono y cantidad de permisos -->
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="pm-icono" aria-hidden="true">
+                                <svg class="pm-svg"><use href="#{{ modulo.icono }}"></use></svg>
+                            </span>
+
+                            <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle pm-insignia">
+                                {{ modulo.permisos|length }} permiso{{ modulo.permisos|length|pluralize }}
+                            </span>
+                        </div>
+
+                        <!-- Nombre del módulo -->
+                        <h2 class="pm-titulo mb-1">{{ modulo.nombre }}</h2>
+                        <p class="small text-body-secondary mb-3">
+                            {% if modulo.cantidad_perfiles %}
+                                Asignado a {{ modulo.cantidad_perfiles }} perfil{{ modulo.cantidad_perfiles|pluralize:"es" }}
+                            {% else %}
+                                Todavía no está asignado a ningún perfil
+                            {% endif %}
+                        </p>
+
+                        <!-- Permisos del módulo -->
+                        <ul class="list-unstyled mb-0 pm-lista">
+                            {% for permiso in modulo.permisos %}
+                                <li class="pm-permiso">
+                                    <svg class="pm-check" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M20 6 9 17l-5-5"/>
+                                    </svg>
+
+                                    <div class="pm-permiso-texto">
+                                        <div class="perm-name">{{ permiso.nombre }}</div>
+                                        <div class="perm-desc">{{ permiso.descripcion }}</div>
+
+                                        <div class="d-flex flex-wrap gap-1 mt-2">
+                                            {% if not permiso.sincronizado %}
+                                                <span class="badge rounded-pill text-bg-light border">Pendiente de sincronizar</span>
+                                            {% else %}
+                                                {% for perfil in permiso.perfiles %}
+                                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle">
+                                                        {{ perfil.Nombre_perfil }}
+                                                    </span>
+                                                {% empty %}
+                                                    <span class="badge rounded-pill pm-sin-perfil">Ningún perfil</span>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                    </div>
+                </article>
+            </div>
+
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-light text-center border mb-0">
+                    No se encontraron permisos{% if busqueda %} para "{{ busqueda }}"{% endif %}.
+                </div>
+            </div>
         {% endfor %}
+
     </div>
-{% endif %}
 
-<form method="GET" class="toolbar">
-    <input type="text" name="q" value="{{ busqueda }}" class="search-box" placeholder="Buscar permiso...">
-    <button type="submit" class="search-button">Buscar</button>
-</form>
-
-<div class="card">
-    <div class="table-wrap">
-        <table class="custom-table tabla-permisos">
-            <colgroup>
-                <col style="width: 28%">
-                <col style="width: 42%">
-                <col style="width: 30%">
-            </colgroup>
-
-            <thead>
-                <tr>
-                    <th>Permiso</th>
-                    <th>Qué permite</th>
-                    <th>Perfiles que lo tienen</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for grupo, permisos in grupos %}
-
-                    <tr class="grupo-fila">
-                        <td colspan="3">{{ grupo }}</td>
-                    </tr>
-
-                    {% for permiso in permisos %}
-                        <tr>
-                            <td><span class="perm-name">{{ permiso.nombre }}</span></td>
-
-                            <td><span class="perm-desc">{{ permiso.descripcion }}</span></td>
-
-                            <td>
-                                {% if not permiso.sincronizado %}
-                                    <span class="perm-desc">Pendiente de sincronizar</span>
-                                {% else %}
-                                    {% for perfil in permiso.perfiles %}
-                                        <span class="chip chip-perfil-{% if forloop.counter > 3 %}3{% else %}{{ forloop.counter }}{% endif %}">{{ perfil.Nombre_perfil }}</span>
-                                    {% empty %}
-                                        <span class="perm-desc">Ningún perfil</span>
-                                    {% endfor %}
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-
-                {% empty %}
-                    <tr>
-                        <td colspan="3" class="tabla-vacia">
-                            <span class="perm-desc">No se encontraron permisos.</span>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
 </div>
 
 {% endblock %}

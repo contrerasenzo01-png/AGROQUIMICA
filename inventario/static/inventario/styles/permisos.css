@@ -1,76 +1,24 @@
+/* ============================================================
+   PERMISOS DEL SISTEMA · Agroquímica del Valle
+   Tarjetas por módulo, con Bootstrap 5.3.
+   Los ajustes generales de Bootstrap están en
+   css/bootstrap_ajustes.css. Las clases propias empiezan con "pm-".
+   ============================================================ */
+
 body {
     background-color: #ffffff;
     color: #1c2a23;
     font-family: 'Inter', sans-serif;
 }
 
-
-/* ==========================================
-   ENCABEZADO
-   ========================================== */
-
-.page-header {
-    width: 100%;
-    margin-bottom: 20px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.page-title {
-    font-family: 'Poppins', sans-serif;
-    font-size: 24px;
-    color: #0b311e;
-    font-weight: 700;
-}
-
-.page-sub {
-    font-size: 12px;
-    color: #5c7367;
-    margin-top: 4px;
-}
-
-
-/* ==========================================
-   MENSAJES
-   ========================================== */
-
-.messages {
-    width: 100%;
-    margin-bottom: 15px;
-}
-
-.message {
-    padding: 10px 14px;
-    border-radius: 7px;
-
-    font-size: 12px;
-
-    margin-bottom: 8px;
-
-    background-color: #ffffff;
-    border: 1px solid #e2ece6;
-}
-
-.message.success {
-    color: #15803d;
-    border-left: 4px solid #15803d;
-}
-
-.message.error {
-    color: #b91c1c;
-    border-left: 4px solid #b91c1c;
-}
-
-.message.warning {
-    color: #a16207;
-    border-left: 4px solid #f59e00;
-}
-
-.message.info {
-    color: #2563eb;
-    border-left: 4px solid #2563eb;
+.pm-svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 
@@ -78,259 +26,154 @@ body {
    BUSCADOR
    ========================================== */
 
-.toolbar {
-    width: 100%;
+.pm-buscador { max-width: 620px; }
 
-    display: flex;
-    align-items: center;
-
-    gap: 8px;
-    margin-bottom: 20px;
-}
-
-.search-box {
-    width: 100%;
-    max-width: 500px;
-
-    padding: 10px 14px;
-
-    border: 1px solid #d7e3dc;
-    border-radius: 7px;
-
+.pm-buscador .input-group-text {
     background-color: #ffffff;
-    color: #1c2a23;
-
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-
-    outline: none;
-}
-
-.search-box:focus {
-    border-color: #5c7367;
-}
-
-.search-button {
-    padding: 10px 16px;
-
-    border: 1px solid #d7e3dc;
-    border-radius: 7px;
-
-    background-color: #ffffff;
-    color: #0b311e;
-
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-
-    cursor: pointer;
-}
-
-.search-button:hover {
-    background-color: #e2ece6;
-}
-
-
-/* ==========================================
-   PANEL / TABLA
-   ========================================== */
-
-.card {
-    width: 100%;
-
-    background-color: #ffffff;
-
-    border: 1px solid #e2ece6;
-    border-radius: 10px;
-
-    margin-bottom: 12px;
-
-    overflow: hidden;
-}
-
-.table-wrap {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.custom-table {
-    width: 100%;
-
-    border-collapse: collapse;
-
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-
-    table-layout: auto;
-}
-
-.custom-table th {
-    border-bottom: 1px solid #e2ece6;
-
-    text-align: left;
-
     color: #8a9e93;
+}
 
-    padding: 12px 16px;
+.pm-buscador .form-control:focus {
+    border-color: #6fb28b;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .14);
+}
 
-    font-size: 11px;
+
+/* ==========================================
+   TARJETAS
+   ========================================== */
+
+.pm-card {
+    border: 1px solid #e3eae6;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(15, 58, 36, .05);
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.pm-card:hover {
+    box-shadow: 0 8px 22px rgba(15, 58, 36, .09);
+    transform: translateY(-2px);
+}
+
+.pm-card .card-body { padding: 24px; }
+
+/* Ícono del módulo */
+.pm-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background-color: #e6f4ec;
+    color: #1b6b44;
+}
+
+.pm-icono .pm-svg { width: 20px; height: 20px; }
+
+.pm-insignia {
+    font-size: 11px !important;
     font-weight: 600;
-
-    white-space: nowrap;
 }
 
-.custom-table td {
-    padding: 13px 16px;
-
-    border-bottom: 1px solid #f0f4f2;
-
-    vertical-align: middle;
-}
-
-.custom-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.custom-table tr:hover {
-    background-color: #f8faf9;
+/* Título: le gana a la tipografía unificada de sidebar.css */
+.main-content .pm-titulo {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: #0b311e;
 }
 
 
 /* ==========================================
-   TABLA DE PERMISOS
+   LISTA DE PERMISOS
    ========================================== */
 
-.tabla-permisos {
-    table-layout: fixed;
+.pm-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-.tabla-permisos th,
-.tabla-permisos td {
-    text-align: left;
-    vertical-align: middle;
+.pm-permiso {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
 }
 
-.col-permiso {
-    width: 28%;
+.pm-check {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    fill: none;
+    stroke: #2e9d66;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
-.col-descripcion {
-    width: 42%;
-}
-
-.col-perfiles {
-    width: 30%;
-}
-
-/* Fila de título de cada módulo (USUARIOS, PRODUCTOS...) */
-.tabla-permisos .grupo-fila td {
-    padding: 10px 16px;
-
-    background-color: #eaf4e6;
-    color: #1b5e20;
-
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.tabla-permisos .grupo-fila:hover {
-    background-color: transparent;
-}
-
-
-/* ==========================================
-   DATOS DE PERMISOS
-   ========================================== */
+.pm-permiso-texto { min-width: 0; }
 
 .perm-name {
+    font-size: 13px;
     font-weight: 600;
-    color: #0b311e;
+    color: #1c2a23;
 }
 
 .perm-desc {
-    color: #5c7367;
-    font-size: 11.5px;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #6b7c73;
+}
+
+.pm-sin-perfil {
+    background-color: #f1f5f3;
+    border: 1px dashed #cfdcd4;
+    color: #7b8e82;
+    font-weight: 500;
 }
 
 
 /* ==========================================
-   PERFILES ASOCIADOS
-   Todos los perfiles usan el mismo color.
+   MODO OSCURO
    ========================================== */
 
-.chip {
-    display: inline-block;
-
-    padding: 4px 8px;
-
-    border-radius: 5px;
-
-    font-size: 10.5px;
-    font-weight: 600;
-
-    margin: 2px 4px 2px 0;
+html.modo-oscuro .pm-card {
+    box-shadow: none;
 }
 
-.chip-perfil {
-    background-color: #f0fdf4;
-    border: 1px solid #86efac;
-    color: #15803d;
+html.modo-oscuro .pm-card:hover {
+    border-color: var(--d-green-bd) !important;
 }
 
-
-/* ==========================================
-   TABLA VACÍA
-   ========================================== */
-
-.tabla-vacia {
-    text-align: center;
-    padding: 30px 16px !important;
+html.modo-oscuro .pm-icono {
+    background-color: var(--d-green-bg);
+    color: var(--d-green-tx);
 }
 
+html.modo-oscuro .main-content .pm-titulo,
+html.modo-oscuro .perm-name { color: var(--d-title) !important; }
 
-/* ==========================================
-   RESPONSIVE
-   ========================================== */
+html.modo-oscuro .perm-desc { color: var(--d-text-2) !important; }
 
-@media (max-width: 900px) {
+html.modo-oscuro .pm-check { stroke: var(--d-green); }
 
-    .page-header {
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    .page-title {
-        font-size: 22px;
-    }
-
+html.modo-oscuro .pm-buscador .input-group-text {
+    background-color: var(--d-input);
+    border-color: var(--d-border-2);
+    color: var(--d-text-3);
 }
 
+html.modo-oscuro .pm-sin-perfil {
+    background-color: var(--d-surface-3);
+    border-color: var(--d-border-2);
+    color: var(--d-text-3);
+}
 
-@media (max-width: 700px) {
-
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-box {
-        max-width: none;
-    }
-
-    .search-button {
-        width: fit-content;
-    }
-
-    .custom-table {
-        min-width: 750px;
-    }
-
-    
+html.modo-oscuro .bs-pantalla .alert-light {
+    background-color: var(--d-surface-2);
+    border-color: var(--d-border-2) !important;
+    color: var(--d-text-2);
 }

@@ -18,6 +18,12 @@
 
     function oscuro() { return html.classList.contains('modo-oscuro'); }
 
+    /* Las pantallas con Bootstrap usan data-bs-theme para su modo oscuro:
+       se mantiene igual al tema del sistema. */
+    function sincronizarBootstrap() {
+        html.setAttribute('data-bs-theme', oscuro() ? 'dark' : 'light');
+    }
+
     function pintar() {
         if (!boton) { return; }
 
@@ -35,9 +41,11 @@
             try { localStorage.setItem(CLAVE, oscuro() ? 'oscuro' : 'claro'); }
             catch (e) { /* sin almacenamiento */ }
 
+            sincronizarBootstrap();
             pintar();
         });
     }
 
+    sincronizarBootstrap();
     pintar();
 })();

@@ -1,7 +1,8 @@
 /* ============================================================
    PANEL PRINCIPAL · Agroquímica del Valle
-   Componente React. Los datos los arma views.py (_datos_panel)
-   y llegan en el <script id="datos-panel"> del template.
+   Componente React con clases de Bootstrap 5.3.
+   Los datos los arma views.py (_datos_panel) y llegan en el
+   <script id="datos-panel"> del template.
    ============================================================ */
 
 const { useState, useMemo } = React;
@@ -45,6 +46,36 @@ function textoDias(dias) {
     return 'Vence en ' + dias + ' días';
 }
 
+/* Etiqueta suave de Bootstrap: fondo claro, texto y borde del mismo color */
+function claseEtiqueta(color) {
+    return `badge rounded-pill bg-${color}-subtle text-${color}-emphasis border border-${color}-subtle`;
+}
+
+/* Color de Bootstrap para cada tarjeta y cada tipo de movimiento */
+const COLOR_METRICA = { green: 'success', blue: 'info', red: 'danger', orange: 'warning' };
+const COLOR_MOVIMIENTO = { entrada: 'success', salida: 'danger', vencimiento: 'warning', anulacion: 'secondary' };
+
+
+/* ------------------------------------------------------------
+   ÍCONOS (línea, del mismo estilo que el menú)
+   ------------------------------------------------------------ */
+
+const TRAZOS = {
+    usuarios: ['M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', 'M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', 'M22 21v-2a4 4 0 0 0-3-3.87', 'M16 3.13a4 4 0 0 1 0 7.75'],
+    productos: ['m21 16-9 5-9-5V8l9-5 9 5v8Z', 'm3.3 7.8 8.7 5 8.7-5', 'M12 22V12.8'],
+    stock_bajo: ['M22 17 13.5 8.5 8.5 13.5 2 7', 'M16 17h6v-6'],
+    por_vencer: ['M8 2v4', 'M16 2v4', 'M3 10h18', 'M21 12V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7', 'M18 15v3l2 1'],
+    alertas: ['M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9', 'M13.73 21a2 2 0 0 1-3.46 0'],
+};
+
+function Icono({ nombre }) {
+    return (
+        <svg className="pp-svg" viewBox="0 0 24 24" aria-hidden="true">
+            {(TRAZOS[nombre] || TRAZOS.productos).map((d, i) => <path key={i} d={d} />)}
+        </svg>
+    );
+}
+
 
 /* ------------------------------------------------------------
    ENCABEZADO
@@ -52,48 +83,55 @@ function textoDias(dias) {
 
 function Encabezado({ usuario }) {
     return (
-        <header className="header">
-            <h1>Panel Principal</h1>
-            <div className="subtitle">
+        <header className="mb-4">
+            <h1 className="mb-1">Panel Principal</h1>
+            <p className="text-body-secondary small mb-0">
                 {saludoSegunHora()}, {usuario.nombre} · {fechaDeHoy()}
-            </div>
+            </p>
         </header>
     );
 }
 
 
 /* ------------------------------------------------------------
-   TARJETAS DE MÉTRICAS
+   TARJETAS DE MÉTRICAS (grilla de Bootstrap)
    ------------------------------------------------------------ */
 
 function TarjetaMetrica({ metrica }) {
-    const contenido = (
-        <>
-            <div className="metric-title">{metrica.titulo}</div>
-            <div className={'metric-value ' + metrica.color}>
-                {formatearNumero(metrica.valor)}
-            </div>
-            <div className="pp-metric-detalle">{metrica.detalle}</div>
-        </>
+    const color = COLOR_METRICA[metrica.color] || 'success';
+    const Elemento = metrica.url ? 'a' : 'div';
+
+    return (
+        <div className="col-12 col-sm-6 col-xl">
+            <Elemento
+                href={metrica.url || undefined}
+                className={'card h-100 pp-metrica' + (metrica.url ? ' pp-metrica-link' : '')}
+            >
+                <div className="card-body d-flex align-items-start gap-3">
+                    <span className={`pp-metrica-icono bg-${color}-subtle text-${color}-emphasis`}>
+                        <Icono nombre={metrica.clave} />
+                    </span>
+
+                    <div className="overflow-hidden">
+                        <div className="small fw-semibold text-body-secondary text-truncate">
+                            {metrica.titulo}
+                        </div>
+                        <div className="fs-3 fw-bold lh-sm pp-metrica-valor">
+                            {formatearNumero(metrica.valor)}
+                        </div>
+                        <div className="small text-body-secondary">{metrica.detalle}</div>
+                    </div>
+                </div>
+            </Elemento>
+        </div>
     );
-
-    // Si el usuario puede entrar al módulo, la tarjeta es un enlace.
-    if (metrica.url) {
-        return (
-            <a className="metric-card pp-metric-link" href={metrica.url}>
-                {contenido}
-            </a>
-        );
-    }
-
-    return <div className="metric-card">{contenido}</div>;
 }
 
 function Metricas({ metricas }) {
     if (!metricas.length) return null;
 
     return (
-        <section className="metrics-grid">
+        <section className="row g-3 mb-4">
             {metricas.map(m => <TarjetaMetrica key={m.clave} metrica={m} />)}
         </section>
     );
@@ -101,7 +139,37 @@ function Metricas({ metricas }) {
 
 
 /* ------------------------------------------------------------
-   GRÁFICO: PRODUCTOS POR SUBTIPO
+   ENCABEZADO DE TARJETA
+   ------------------------------------------------------------ */
+
+function CabeceraTarjeta({ titulo, children }) {
+    return (
+        <div className="card-header bg-transparent d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+            <h2 className="mb-0">{titulo}</h2>
+            {children}
+        </div>
+    );
+}
+
+function EnlaceVerTodo({ url, texto }) {
+    return (
+        <a className="link-success fw-semibold small text-decoration-none" href={url}>
+            {texto} →
+        </a>
+    );
+}
+
+function Vacio({ texto, ok }) {
+    return (
+        <div className={`alert ${ok ? 'alert-success' : 'alert-light'} small text-center py-2 mb-0`}>
+            {texto}
+        </div>
+    );
+}
+
+
+/* ------------------------------------------------------------
+   GRÁFICO: PRODUCTOS POR SUBTIPO (barras de progreso)
    ------------------------------------------------------------ */
 
 function GraficoProductos({ datos, url }) {
@@ -109,40 +177,45 @@ function GraficoProductos({ datos, url }) {
     const total = datos.reduce((suma, d) => suma + d.cantidad, 0);
 
     return (
-        <div className="card-panel">
-            <div className="pp-panel-cab">
-                <h2>Productos activos por subtipo</h2>
-                <a className="pp-ver-todo" href={url}>Ver productos →</a>
-            </div>
+        <div className="card h-100">
+            <CabeceraTarjeta titulo="Productos activos por subtipo">
+                <EnlaceVerTodo url={url} texto="Ver productos" />
+            </CabeceraTarjeta>
 
-            {datos.length === 0 ? (
-                <p className="pp-vacio">Todavía no hay productos activos.</p>
-            ) : (
-                <>
-                    <ul className="pp-barras">
+            <div className="card-body">
+                {datos.length === 0 ? (
+                    <Vacio texto="Todavía no hay productos activos." />
+                ) : (
+                    <>
                         {datos.map((d, i) => (
-                            <li key={d.nombre} className="pp-barra-fila">
-                                <span className="pp-barra-nombre" title={d.nombre}>
-                                    {d.nombre}
-                                </span>
+                            <div key={d.nombre} className="mb-3">
+                                <div className="d-flex justify-content-between small mb-1">
+                                    <span className="fw-semibold text-truncate me-2">{d.nombre}</span>
+                                    <span className="fw-bold">{d.cantidad}</span>
+                                </div>
 
-                                <span className="pp-barra-pista">
-                                    <span
-                                        className={'pp-barra pp-color-' + (i % 5)}
+                                <div
+                                    className="progress pp-progreso"
+                                    role="progressbar"
+                                    aria-label={d.nombre}
+                                    aria-valuenow={d.cantidad}
+                                    aria-valuemin="0"
+                                    aria-valuemax={maximo}
+                                >
+                                    <div
+                                        className={'progress-bar pp-barra-' + (i % 5)}
                                         style={{ width: (d.cantidad / maximo) * 100 + '%' }}
                                     />
-                                </span>
-
-                                <span className="pp-barra-valor">{d.cantidad}</span>
-                            </li>
+                                </div>
+                            </div>
                         ))}
-                    </ul>
 
-                    <p className="pp-nota">
-                        {total} producto{total === 1 ? '' : 's'} activo{total === 1 ? '' : 's'} en total
-                    </p>
-                </>
-            )}
+                        <p className="small text-body-secondary mb-0">
+                            {total} producto{total === 1 ? '' : 's'} activo{total === 1 ? '' : 's'} en total
+                        </p>
+                    </>
+                )}
+            </div>
         </div>
     );
 }
@@ -151,6 +224,20 @@ function GraficoProductos({ datos, url }) {
 /* ------------------------------------------------------------
    ATENCIÓN: STOCK BAJO Y LOTES POR VENCER
    ------------------------------------------------------------ */
+
+function BotonSegmento({ activo, onClick, children }) {
+    return (
+        <button
+            type="button"
+            role="tab"
+            aria-selected={activo}
+            className={'btn ' + (activo ? 'btn-success' : 'btn-outline-success')}
+            onClick={onClick}
+        >
+            {children}
+        </button>
+    );
+}
 
 function PanelAtencion({ stockBajo, porVencer, permisos, urls }) {
     const [pestana, setPestana] = useState(
@@ -164,77 +251,72 @@ function PanelAtencion({ stockBajo, porVencer, permisos, urls }) {
     );
 
     return (
-        <div className="card-panel">
-            <div className="pp-panel-cab">
-                <h2>Requieren atención</h2>
-            </div>
+        <div className="card h-100">
+            <CabeceraTarjeta titulo="Requieren atención" />
 
-            <div className="pp-tabs" role="tablist">
-                {permisos.productos && (
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={pestana === 'stock'}
-                        className={'pp-tab' + (pestana === 'stock' ? ' activa' : '')}
-                        onClick={() => setPestana('stock')}
-                    >
-                        Stock bajo
-                        <span className="pp-tab-contador">{stockBajo.length}</span>
-                    </button>
+            <div className="card-body">
+                <div className="btn-group btn-group-sm w-100 mb-3" role="tablist">
+                    {permisos.productos && (
+                        <BotonSegmento activo={pestana === 'stock'} onClick={() => setPestana('stock')}>
+                            Stock bajo
+                            <span className="badge rounded-pill pp-contador ms-2">{stockBajo.length}</span>
+                        </BotonSegmento>
+                    )}
+
+                    <BotonSegmento activo={pestana === 'vencer'} onClick={() => setPestana('vencer')}>
+                        Por vencer
+                        <span className="badge rounded-pill pp-contador ms-2">{porVencer.length}</span>
+                    </BotonSegmento>
+                </div>
+
+                {pestana === 'stock' && (
+                    <ListaStockBajo items={stockBajo} url={urls.productos} />
                 )}
 
-                <button
-                    type="button"
-                    role="tab"
-                    aria-selected={pestana === 'vencer'}
-                    className={'pp-tab' + (pestana === 'vencer' ? ' activa' : '')}
-                    onClick={() => setPestana('vencer')}
-                >
-                    Por vencer
-                    <span className="pp-tab-contador">{porVencer.length}</span>
-                </button>
+                {pestana === 'vencer' && (
+                    <>
+                        <div className="d-flex align-items-center gap-2 mb-3">
+                            <label htmlFor="pp-dias" className="small text-body-secondary mb-0">
+                                Mostrar
+                            </label>
+                            <select
+                                id="pp-dias"
+                                className="form-select form-select-sm w-auto"
+                                value={dias}
+                                onChange={e => setDias(Number(e.target.value))}
+                            >
+                                <option value={7}>Próximos 7 días</option>
+                                <option value={15}>Próximos 15 días</option>
+                                <option value={30}>Próximos 30 días</option>
+                            </select>
+                        </div>
+
+                        <ListaPorVencer
+                            items={lotesFiltrados}
+                            url={permisos.lotes ? urls.lotes : ''}
+                        />
+                    </>
+                )}
             </div>
-
-            {pestana === 'stock' && (
-                <ListaStockBajo items={stockBajo} url={urls.productos} />
-            )}
-
-            {pestana === 'vencer' && (
-                <>
-                    <div className="pp-filtro-dias">
-                        <label htmlFor="pp-dias">Mostrar</label>
-                        <select
-                            id="pp-dias"
-                            value={dias}
-                            onChange={e => setDias(Number(e.target.value))}
-                        >
-                            <option value={7}>Próximos 7 días</option>
-                            <option value={15}>Próximos 15 días</option>
-                            <option value={30}>Próximos 30 días</option>
-                        </select>
-                    </div>
-
-                    <ListaPorVencer
-                        items={lotesFiltrados}
-                        url={permisos.lotes ? urls.lotes : ''}
-                    />
-                </>
-            )}
         </div>
     );
 }
 
 function ListaStockBajo({ items, url }) {
     if (!items.length) {
-        return <p className="pp-vacio pp-vacio-ok">Ningún producto está por debajo de su stock mínimo.</p>;
+        return <Vacio ok texto="Ningún producto está por debajo de su stock mínimo." />;
     }
 
     return (
-        <div className="stock-list">
+        <div className="list-group pp-lista">
             {items.map(p => (
-                <a key={p.id} className="stock-item pp-item-link" href={url}>
-                    <span className="stock-name">{p.producto}</span>
-                    <span className="stock-qty">
+                <a
+                    key={p.id}
+                    href={url}
+                    className="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-2"
+                >
+                    <span className="fw-semibold small">{p.producto}</span>
+                    <span className={claseEtiqueta('danger')}>
                         {p.stock === 0 ? 'Sin stock' : formatearNumero(p.stock)} / mín. {formatearNumero(p.minimo)} un.
                     </span>
                 </a>
@@ -245,26 +327,31 @@ function ListaStockBajo({ items, url }) {
 
 function ListaPorVencer({ items, url }) {
     if (!items.length) {
-        return <p className="pp-vacio pp-vacio-ok">No hay lotes que venzan en ese período.</p>;
+        return <Vacio ok texto="No hay lotes que venzan en ese período." />;
     }
 
     const Elemento = url ? 'a' : 'div';
 
     return (
-        <div className="stock-list">
+        <div className="list-group pp-lista">
             {items.map(l => (
                 <Elemento
                     key={l.id}
-                    className={'stock-item pp-vence' + (l.dias < 0 ? ' pp-vencido' : '') + (url ? ' pp-item-link' : '')}
                     href={url || undefined}
+                    className={
+                        'list-group-item d-flex justify-content-between align-items-center gap-2' +
+                        (url ? ' list-group-item-action' : '')
+                    }
                 >
                     <span>
-                        <span className="stock-name">{l.producto}</span>
-                        <span className="pp-sub">
+                        <span className="fw-semibold small d-block">{l.producto}</span>
+                        <span className="small text-body-secondary">
                             Lote {l.lote} · {formatearNumero(l.cantidad)} un. · {l.vence}
                         </span>
                     </span>
-                    <span className="stock-qty">{textoDias(l.dias)}</span>
+                    <span className={claseEtiqueta(l.dias < 0 ? 'danger' : 'warning')}>
+                        {textoDias(l.dias)}
+                    </span>
                 </Elemento>
             ))}
         </div>
@@ -273,7 +360,7 @@ function ListaPorVencer({ items, url }) {
 
 
 /* ------------------------------------------------------------
-   ÚLTIMOS MOVIMIENTOS
+   ÚLTIMOS MOVIMIENTOS (tabla de Bootstrap)
    ------------------------------------------------------------ */
 
 const FILTROS_MOVIMIENTO = [
@@ -292,38 +379,40 @@ function TablaMovimientos({ movimientos, url }) {
     });
 
     return (
-        <section className="card-panel">
-            <div className="pp-panel-cab">
-                <h2>Últimos movimientos de stock</h2>
+        <section className="card">
+            <CabeceraTarjeta titulo="Últimos movimientos de stock">
+                <div className="d-flex flex-wrap align-items-center gap-3">
+                    <div className="btn-group btn-group-sm" role="group" aria-label="Filtrar movimientos">
+                        {FILTROS_MOVIMIENTO.map(f => (
+                            <button
+                                key={f.clave}
+                                type="button"
+                                className={'btn ' + (filtro === f.clave ? 'btn-success' : 'btn-outline-success')}
+                                onClick={() => setFiltro(f.clave)}
+                            >
+                                {f.texto}
+                            </button>
+                        ))}
+                    </div>
 
-                <div className="pp-chips">
-                    {FILTROS_MOVIMIENTO.map(f => (
-                        <button
-                            key={f.clave}
-                            type="button"
-                            className={'pp-chip' + (filtro === f.clave ? ' activa' : '')}
-                            onClick={() => setFiltro(f.clave)}
-                        >
-                            {f.texto}
-                        </button>
-                    ))}
-
-                    <a className="pp-ver-todo" href={url}>Ver todos →</a>
+                    <EnlaceVerTodo url={url} texto="Ver todos" />
                 </div>
-            </div>
+            </CabeceraTarjeta>
 
             {visibles.length === 0 ? (
-                <p className="pp-vacio">No hay movimientos para mostrar.</p>
+                <div className="card-body">
+                    <Vacio texto="No hay movimientos para mostrar." />
+                </div>
             ) : (
-                <div className="table-container">
-                    <table className="custom-table">
+                <div className="table-responsive">
+                    <table className="table table-hover align-middle mb-0 pp-tabla">
                         <thead>
                             <tr>
                                 <th>N.º</th>
                                 <th>Fecha</th>
                                 <th>Producto</th>
                                 <th>Tipo</th>
-                                <th>Cantidad</th>
+                                <th className="text-end">Cantidad</th>
                                 <th>Observaciones</th>
                                 <th></th>
                             </tr>
@@ -332,32 +421,36 @@ function TablaMovimientos({ movimientos, url }) {
                         <tbody>
                             {visibles.map(m => (
                                 <tr key={m.id}>
-                                    <td className="id-mov">MOV-{String(m.id).padStart(4, '0')}</td>
+                                    <td className="fw-bold text-nowrap">
+                                        MOV-{String(m.id).padStart(4, '0')}
+                                    </td>
 
-                                    <td>
+                                    <td className="text-nowrap">
                                         {m.fecha}
-                                        <span className="pp-sub">{m.hora} · {m.usuario}</span>
+                                        <div className="small text-body-secondary">{m.hora} · {m.usuario}</div>
                                     </td>
 
                                     <td>
                                         {m.producto}
-                                        {m.lote && <span className="pp-sub">Lote {m.lote}</span>}
+                                        {m.lote && <div className="small text-body-secondary">Lote {m.lote}</div>}
                                     </td>
 
                                     <td>
-                                        <span className={'badge-tag ' + m.clase}>{m.tipo}</span>
+                                        <span className={claseEtiqueta(COLOR_MOVIMIENTO[m.clase] || 'secondary')}>
+                                            {m.tipo}
+                                        </span>
                                     </td>
 
-                                    <td className={m.cantidad > 0 ? 'qty-positive' : 'qty-negative'}>
+                                    <td className={'text-end fw-bold ' + (m.cantidad > 0 ? 'text-success' : 'text-danger')}>
                                         {m.cantidad > 0 ? '+' : ''}{formatearNumero(m.cantidad)}
                                     </td>
 
-                                    <td className="obs-text">{m.observaciones || '—'}</td>
+                                    <td className="text-body-secondary">{m.observaciones || '—'}</td>
 
-                                    <td className="pp-celda-accion">
+                                    <td className="text-end">
                                         {m.comprobante && (
                                             <a
-                                                className="pp-btn-pdf"
+                                                className="btn btn-sm btn-outline-success"
                                                 href={m.comprobante}
                                                 target="_blank"
                                                 rel="noopener"
@@ -389,24 +482,28 @@ function Panel() {
     const muestraAtencion = permisos.productos || permisos.lotes;
 
     return (
-        <>
+        <div className="container-fluid px-0">
             <Encabezado usuario={usuario} />
 
             <Metricas metricas={DATOS.metricas} />
 
             {(permisos.productos || muestraAtencion) && (
-                <section className="panels-grid">
+                <section className="row g-3 mb-4">
                     {permisos.productos && (
-                        <GraficoProductos datos={DATOS.grafico} url={urls.productos} />
+                        <div className={'col-12' + (muestraAtencion ? ' col-xl-6' : '')}>
+                            <GraficoProductos datos={DATOS.grafico} url={urls.productos} />
+                        </div>
                     )}
 
                     {muestraAtencion && (
-                        <PanelAtencion
-                            stockBajo={DATOS.stock_bajo}
-                            porVencer={DATOS.por_vencer}
-                            permisos={permisos}
-                            urls={urls}
-                        />
+                        <div className={'col-12' + (permisos.productos ? ' col-xl-6' : '')}>
+                            <PanelAtencion
+                                stockBajo={DATOS.stock_bajo}
+                                porVencer={DATOS.por_vencer}
+                                permisos={permisos}
+                                urls={urls}
+                            />
+                        </div>
                     )}
                 </section>
             )}
@@ -414,7 +511,7 @@ function Panel() {
             {permisos.movimientos && (
                 <TablaMovimientos movimientos={DATOS.movimientos} url={urls.movimientos} />
             )}
-        </>
+        </div>
     );
 }
 

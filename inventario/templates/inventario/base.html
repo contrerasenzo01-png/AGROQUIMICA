@@ -11,6 +11,8 @@
         try {
             if (localStorage.getItem('av:tema') === 'oscuro') {
                 document.documentElement.classList.add('modo-oscuro');
+                // Tema oscuro también para las pantallas que usan Bootstrap
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
             }
         } catch (e) {}
     </script>
@@ -28,6 +30,11 @@
             Agroquímica del Valle
         {% endblock %}
     </title>
+
+    <!-- LIBRERÍAS DE ESTILOS (por ejemplo, Bootstrap en el panel principal).
+         Van antes de los CSS propios: ante un conflicto ganan los del sistema. -->
+    {% block css_librerias %}
+    {% endblock %}
 
     <link rel="stylesheet" href="{% static 'inventario/css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/css/topbar.css' %}">
@@ -69,27 +76,40 @@
 
         <div class="page-area">
 
-            <!-- TOPBAR: ubicación actual a la izquierda; fecha, alertas y tema a la derecha -->
-            <header class="topbar">
+            <!-- TOPBAR: ubicación actual a la izquierda; fecha, alertas y tema a la derecha.
+                 Los datos (ruta, fecha y alertas) los arma context_processors.py -->
+            <header class="topbar" id="topbar">
 
                 <div class="topbar-left">
                     <button
-                        class="topbar-icon-btn"
+                        class="topbar-icon-btn topbar-menu-btn"
                         id="topbarMenuToggle"
                         type="button"
-                        aria-label="Mostrar u ocultar el menú">
+                        aria-label="Mostrar u ocultar el menú"
+                        aria-controls="sidebar"
+                        aria-expanded="true">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <line x1="4" y1="7" x2="20" y2="7"></line>
-                            <line x1="4" y1="12" x2="14" y2="12"></line>
-                            <line x1="4" y1="17" x2="20" y2="17"></line>
+                            <line class="tb-linea tb-linea-1" x1="4" y1="7" x2="20" y2="7"></line>
+                            <line class="tb-linea tb-linea-2" x1="4" y1="12" x2="14" y2="12"></line>
+                            <line class="tb-linea tb-linea-3" x1="4" y1="17" x2="20" y2="17"></line>
                         </svg>
                     </button>
 
                     <nav aria-label="Ubicación actual">
                         <ol class="topbar-crumbs">
+                            <li class="topbar-crumb topbar-crumb-inicio">
+                                <a href="{% url 'panel_principal' %}" title="Panel principal" aria-label="Panel principal">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="m3 10 9-7 9 7"></path>
+                                        <path d="M5 9v11h14V9"></path>
+                                        <path d="M10 20v-6h4v6"></path>
+                                    </svg>
+                                </a>
+                            </li>
+
                             {% for tramo in topbar_ubicacion %}
                                 {% if forloop.last %}
-                                    <li class="topbar-crumb" aria-current="page">{{ tramo.nombre }}</li>
+                                    <li class="topbar-crumb topbar-crumb-actual" aria-current="page">{{ tramo.nombre }}</li>
                                 {% else %}
                                     <li class="topbar-crumb">
                                         {% if tramo.url %}<a href="{{ tramo.url }}">{{ tramo.nombre }}</a>{% else %}{{ tramo.nombre }}{% endif %}
@@ -109,13 +129,15 @@
                             <line x1="8" y1="2" x2="8" y2="6"></line>
                             <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
-                        <span>{% now "j \d\e F \d\e Y" %}</span>
+                        <span>{{ topbar_fecha }}</span>
                     </div>
 
                     <span class="topbar-sep" aria-hidden="true"></span>
 
                     {% if puede_ver_alertas %}
-                    <a class="topbar-icon-btn" href="{{ url_alertas }}"
+                    <a class="topbar-icon-btn topbar-alertas{% if alertas_pendientes %} tiene-alertas{% endif %}"
+                       href="{{ url_alertas }}"
+                       title="{% if alertas_pendientes %}{{ alertas_pendientes }} alerta{{ alertas_pendientes|pluralize }} sin atender{% else %}Sin alertas pendientes{% endif %}"
                        aria-label="Alertas{% if alertas_pendientes %}: {{ alertas_pendientes }} sin atender{% endif %}">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -172,23 +194,40 @@
     {% endblock %}
 
 
-    <!-- FUNCIONAMIENTO DEL BOTÓN DEL MENÚ -->
+    <!-- BOTÓN DEL MENÚ Y SOMBRA DEL TOPBAR AL BAJAR -->
     <script>
 
         document.addEventListener('DOMContentLoaded', function () {
 
             const menu = document.getElementById('topbarMenuToggle');
             const sidebar = document.getElementById('sidebar');
+            const topbar = document.getElementById('topbar');
 
-            if (!menu || !sidebar) {
-                return;
+            // Mostrar u ocultar el menú lateral (el ícono se anima con CSS)
+            if (menu && sidebar) {
+                const actualizarBoton = function () {
+                    const oculto = sidebar.classList.contains('sidebar-hidden');
+                    menu.classList.toggle('menu-cerrado', oculto);
+                    menu.setAttribute('aria-expanded', oculto ? 'false' : 'true');
+                };
+
+                menu.addEventListener('click', function () {
+                    sidebar.classList.toggle('sidebar-hidden');
+                    actualizarBoton();
+                });
+
+                actualizarBoton();
             }
 
-            menu.addEventListener('click', function () {
+            // El topbar toma sombra cuando la página se desplaza
+            if (topbar) {
+                const marcarScroll = function () {
+                    topbar.classList.toggle('topbar-con-scroll', window.scrollY > 4);
+                };
 
-                sidebar.classList.toggle('sidebar-hidden');
-
-            });
+                window.addEventListener('scroll', marcarScroll, { passive: true });
+                marcarScroll();
+            }
 
         });
 

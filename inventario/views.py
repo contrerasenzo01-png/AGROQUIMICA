@@ -2178,6 +2178,33 @@ def cambiar_estado_perfil(request, id):
 # GESTIÓN DE PERMISOS (solo lectura)
 # ============================================================
 
+# Ícono de cada módulo en las tarjetas de "Permisos del sistema".
+# Son los mismos íconos del menú lateral (_sidebar.html).
+ICONOS_MODULO = (
+    ('usuario', 'i-users'),
+    ('subtipo', 'i-tags'),
+    ('tipo', 'i-layers'),
+    ('producto', 'i-package'),
+    ('proveedor', 'i-truck'),
+    ('remito', 'i-inbox'),
+    ('lote', 'i-package'),
+    ('movimiento', 'i-swap'),
+    ('alerta', 'i-bell'),
+    ('reporte', 'i-chart'),
+    ('seguridad', 'i-shield'),
+)
+
+
+def _icono_modulo(nombre):
+    nombre = nombre.lower()
+
+    for palabra, icono in ICONOS_MODULO:
+        if palabra in nombre:
+            return icono
+
+    return 'i-key'
+
+
 def gestion_permisos(request):
 
     usuario = usuario_con_acceso(request, 'permisos')
@@ -2219,12 +2246,31 @@ def gestion_permisos(request):
         })
         total += 1
 
+    # Una tarjeta por módulo: ícono, permisos y cuántos perfiles
+    # distintos tienen al menos uno de esos permisos.
+    modulos = []
+
+    for nombre_grupo, permisos_grupo in grupos.items():
+        perfiles_distintos = {
+            perfil.ID_Perfil
+            for permiso in permisos_grupo
+            for perfil in permiso['perfiles']
+        }
+
+        modulos.append({
+            'nombre': nombre_grupo,
+            'icono': _icono_modulo(nombre_grupo),
+            'permisos': permisos_grupo,
+            'cantidad_perfiles': len(perfiles_distintos),
+        })
+
     return render(
         request,
         'inventario/permisos.html',
         {
-            'grupos': grupos.items(),
+            'modulos': modulos,
             'total': total,
+            'total_modulos': len(modulos),
             'busqueda': busqueda,
             'usuario': usuario,
             'activo': 'permisos',

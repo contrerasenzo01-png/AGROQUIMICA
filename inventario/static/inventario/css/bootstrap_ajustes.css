@@ -1,0 +1,108 @@
+/* ============================================================
+   AJUSTES PARA LAS PANTALLAS QUE USAN BOOTSTRAP
+   Agroquímica del Valle
+
+   Bootstrap cambia algunos estilos de toda la página. Este archivo
+   los devuelve a como se ven en el resto del sistema, para que el
+   menú lateral y la barra superior no cambien de una pantalla a otra.
+
+   Cada pantalla con Bootstrap lo carga en {% block extra_css %}.
+   ============================================================ */
+
+/* Bootstrap sube el interlineado de toda la página:
+   se deja igual que en las pantallas sin Bootstrap. */
+body {
+    line-height: normal;
+}
+
+/* Bootstrap también usa la clase .nav-link: sin esto, el ítem
+   del menú lateral se pondría azul al hacerle clic. */
+.sidebar .nav-link,
+.sidebar .nav-link:focus,
+.sidebar .nav-link:hover {
+    color: #ffffff;
+}
+
+.sidebar .nav-link:focus-visible {
+    box-shadow: 0 0 0 2px rgba(245, 196, 0, .6);
+}
+
+/* El contenido de cada pantalla sí usa el interlineado de Bootstrap */
+.bs-pantalla {
+    line-height: 1.5;
+
+    --bs-body-font-family: 'Inter', sans-serif;
+    --bs-body-color: #1c2a23;
+    --bs-secondary-color: #6b7c73;
+    --bs-emphasis-color: #0b311e;
+    --bs-border-color: #e3eae6;
+    --bs-tertiary-bg: #f6f9f7;
+
+    /* Verde de la agroquímica en lugar del verde de Bootstrap */
+    --bs-success: #1b7a4a;
+    --bs-success-rgb: 27, 122, 74;
+    --bs-success-text-emphasis: #145236;
+    --bs-success-bg-subtle: #e6f4ec;
+    --bs-success-border-subtle: #bfe3cc;
+    --bs-link-color-rgb: 24, 90, 56;
+}
+
+.bs-pantalla .btn-success {
+    --bs-btn-bg: #185a38;
+    --bs-btn-border-color: #185a38;
+    --bs-btn-hover-bg: #134a2e;
+    --bs-btn-hover-border-color: #134a2e;
+    --bs-btn-active-bg: #0f3a24;
+    --bs-btn-active-border-color: #0f3a24;
+}
+
+.bs-pantalla .btn-outline-success {
+    --bs-btn-color: #185a38;
+    --bs-btn-border-color: #cfe3d7;
+    --bs-btn-hover-bg: #eaf4ee;
+    --bs-btn-hover-color: #185a38;
+    --bs-btn-hover-border-color: #b9d7c5;
+    --bs-btn-active-bg: #185a38;
+    --bs-btn-active-border-color: #185a38;
+}
+
+.bs-pantalla .link-success { color: #185a38 !important; }
+
+
+/* ============================================================
+   MODO OSCURO
+   tema.js pone data-bs-theme="dark" junto con .modo-oscuro;
+   acá los grises de Bootstrap pasan a los verdes del sistema.
+   ============================================================ */
+
+html.modo-oscuro .bs-pantalla {
+    --bs-body-bg: var(--d-surface);
+    --bs-body-color: var(--d-text);
+    --bs-secondary-color: var(--d-text-2);
+    --bs-emphasis-color: var(--d-title);
+    --bs-border-color: var(--d-border);
+    --bs-tertiary-bg: var(--d-surface-2);
+    --bs-secondary-bg: var(--d-surface-3);
+
+    --bs-success: #4ade80;
+    --bs-success-rgb: 74, 222, 128;
+    --bs-success-text-emphasis: var(--d-green-tx);
+    --bs-success-bg-subtle: var(--d-green-bg);
+    --bs-success-border-subtle: var(--d-green-bd);
+}
+
+/* tema.css pinta todos los .btn de gris en modo oscuro:
+   en las pantallas con Bootstrap se recuperan los verdes. */
+html.modo-oscuro .bs-pantalla .btn-success {
+    background: var(--d-green-btn) !important;
+    border-color: var(--d-green-btn) !important;
+    color: #ffffff !important;
+}
+
+html.modo-oscuro .bs-pantalla .btn-outline-success {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border-2) !important;
+    color: var(--d-green-tx) !important;
+}
+
+html.modo-oscuro .bs-pantalla .link-success { color: var(--d-green) !important; }
