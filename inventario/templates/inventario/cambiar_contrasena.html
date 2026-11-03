@@ -9,31 +9,65 @@
 
     <title>Cambiar contraseña - Agroquímica del Valle</title>
 
-    <link rel="stylesheet" href="{% static 'inventario/styles/login.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'inventario/styles/cambiar_contrasena.css' %}">
 </head>
 
 <body>
 
-    <div class="login-container">
+    <main class="login-container">
 
-        <h1>Agroquímica del Valle</h1>
+        <header class="login-header">
+            <h1>Agroquímica del Valle</h1>
+            <p class="subtitle">Sistema de gestión de stock</p>
+        </header>
 
-        <div class="subtitle">
-            Cambio de contraseña
-        </div>
+        <section class="card">
 
-        <div class="card">
+            <div class="card-header">
+                <div class="icon-password">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="30"
+                         height="30"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
 
-            <h2>Debe cambiar su contraseña</h2>
+                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        <path d="M12 15v3"/>
 
-            <p>
-                Por seguridad, debe establecer una nueva contraseña
-                antes de ingresar al sistema.
-            </p>
+                    </svg>
+                </div>
+
+                <h2>Debe cambiar su contraseña</h2>
+
+                <p class="description">
+                    Por seguridad, debe establecer una nueva contraseña
+                    antes de ingresar al sistema.
+                </p>
+            </div>
 
             <form method="POST">
 
                 {% csrf_token %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="message-box">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if error %}
+                    <div class="message-box">
+                        {{ error }}
+                    </div>
+                {% endif %}
 
                 <div class="form-group">
 
@@ -50,7 +84,7 @@
                         required
                         minlength="8"
                         pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^\s]{8,}"
-                        title="Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número, sin espacios."
+                        title="Mínimo 8 caracteres, una mayúscula, una minúscula y un número, sin espacios."
                     >
 
                 </div>
@@ -73,38 +107,30 @@
 
                 </div>
 
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="error-box">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-
-                {% if error %}
-                    <div class="error-box">
-                        {{ error }}
-                    </div>
-                {% endif %}
-
-                <button
-                    type="submit"
-                    class="btn-submit"
-                >
+                <button type="submit" class="btn-submit">
                     Cambiar contraseña
                 </button>
 
                 <div class="footer-text">
-                    Mínimo 8 caracteres, con al menos una mayúscula,
-                    una minúscula y un número. No puede contener
-                    tu nombre de usuario.
+                    <strong>Requisitos de seguridad</strong>
+
+                    <ul>
+                        <li>Mínimo 8 caracteres.</li>
+                        <li>Una letra mayúscula y una minúscula.</li>
+                        <li>Al menos un número.</li>
+                        <li>No puede contener tu nombre de usuario.</li>
+                    </ul>
                 </div>
 
             </form>
 
-        </div>
+        </section>
 
-    </div>
+        <footer class="login-footer">
+            Agroquímica del Valle © 2026
+        </footer>
+
+    </main>
 
 </body>
 
