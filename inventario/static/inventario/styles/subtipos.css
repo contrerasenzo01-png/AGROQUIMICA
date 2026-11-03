@@ -965,3 +965,93 @@
     }
 
 }
+
+/* ============================================================
+   ELIMINAR SUBTIPO
+============================================================ */
+
+/* Botón de eliminar en la tabla */
+
+.ts-icon-btn.ts-baja {
+    background: #fff5f5;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.ts-icon-btn.ts-baja:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+/* Botón de confirmación del modal */
+
+.ts-btn-eliminar {
+    border-color: #b42318;
+    background: #b42318;
+    color: #ffffff;
+}
+
+.ts-btn-eliminar:hover {
+    border-color: #912018;
+    background: #912018;
+    color: #ffffff;
+}
+
+/* Modal de confirmación */
+
+.ts-modal-eliminar-box {
+    max-width: 460px;
+}
+
+.ts-eliminar-body {
+    text-align: center;
+    padding: 26px 24px 24px;
+}
+
+.ts-eliminar-icono {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 1px solid #fecdca;
+    border-radius: 50%;
+    background: #fee4e2;
+    color: #b42318;
+}
+
+.ts-eliminar-icono .ts-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.ts-eliminar-mensaje {
+    margin: 0 0 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.65;
+    color: #26352c;
+    overflow-wrap: anywhere;
+}
+
+.ts-eliminar-advertencia {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #b42318;
+}
+
+@media (max-width: 600px) {
+    .ts-eliminar-icono {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 17px;
+    }
+
+    .ts-eliminar-mensaje {
+        font-size: 14px;
+    }
+}

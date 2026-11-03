@@ -29,6 +29,8 @@ class TiposProductos(models.Model):
 class Subtipos(models.Model):
     ID_Subtipo = models.AutoField(primary_key=True)
 
+    # Si se elimina el tipo, sus subtipos se eliminan con él.
+    # La vista solo lo permite cuando ningún subtipo tiene productos.
     ID_Tipo_producto = models.ForeignKey(
         TiposProductos,
         on_delete=models.CASCADE,
@@ -257,7 +259,6 @@ class Usuarios(models.Model):
         on_delete=models.PROTECT,
         db_column='ID_Perfil',
         related_name='usuarios'
-
     )
 
     DNI = models.IntegerField(unique=True)
@@ -308,6 +309,7 @@ class Usuarios(models.Model):
 class Productos(models.Model):
     ID_Producto = models.AutoField(primary_key=True)
 
+    # Un tipo o subtipo con productos no se puede eliminar.
     ID_Tipo_producto = models.ForeignKey(
         TiposProductos,
         on_delete=models.PROTECT,
@@ -322,16 +324,13 @@ class Productos(models.Model):
         db_column='ID_Subtipo'
     )
 
-    Marca = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True
-    )
-
+    # El sistema no usa marca: un mismo producto puede venir de
+    # varios proveedores, y el proveedor queda registrado en cada lote.
     Nombre_producto = models.CharField(max_length=50)
 
-    Descripcion_producto = models.TextField(
-        max_length=100,
+    # CharField: en un TextField el límite no se aplica en la base.
+    Descripcion_producto = models.CharField(
+        max_length=200,
         blank=True,
         null=True
     )
@@ -390,6 +389,8 @@ class Productos(models.Model):
 class Lotes(models.Model):
     ID_Lote = models.AutoField(primary_key=True)
 
+    # Los lotes no se eliminan: conservan la trazabilidad
+    # (remito de origen, movimientos y auditoría).
     ID_Remito = models.ForeignKey(
         Remitos,
         on_delete=models.PROTECT,
@@ -438,13 +439,20 @@ class Lotes(models.Model):
 
     @property
     def estado_actual(self):
-        hoy = timezone.localdate()
+        """Estado del lote (baja lógica, el lote nunca se elimina).
 
-        if self.Fecha_vencimiento < hoy:
-            return 'Vencido'
+        El orden importa: un lote anulado o agotado se muestra así
+        aunque después pase su fecha de vencimiento.
+        """
+
+        if self.ID_Remito.Estado_remito == 'Anulado':
+            return 'Anulado'
 
         if self.Cantidad_actual <= 0:
             return 'Agotado'
+
+        if self.Fecha_vencimiento < timezone.localdate():
+            return 'Vencido'
 
         return 'Activo'
 
@@ -572,6 +580,7 @@ class MovimientosStock(models.Model):
             f"{self.Cantidad_movimiento_stock} unidades"
         )
 
+
 class LogAuditoria(models.Model):
     ID_Log = models.AutoField(primary_key=True)
 
@@ -585,7 +594,9 @@ class LogAuditoria(models.Model):
     Fecha_hora = models.DateTimeField(auto_now_add=True)
     Seccion = models.CharField(max_length=50)
     ID_Registro = models.IntegerField()
-    Accion = models.CharField(max_length=20)
+    # 30 caracteres: margen para acciones con nombre largo
+    # (por ejemplo RECUPERA_CONTRASENA o ASIGNACION_PERMISOS).
+    Accion = models.CharField(max_length=30)
     Valores_anteriores = models.JSONField(default=dict)
     Valores_actuales = models.JSONField(default=dict)
 

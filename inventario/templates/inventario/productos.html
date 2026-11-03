@@ -241,7 +241,7 @@
                             </td>
 
 
-                            <!-- ===================== SUBTIPOS DEL TIPO ===================== -->
+                            <!-- ===================== SUBTIPO ===================== -->
 
                             <td>
 
@@ -250,7 +250,7 @@
                                     {% if producto.ID_Subtipo %}
                                         {{ producto.ID_Subtipo.Nombre_subtipo }}
                                     {% else %}
-                                            Sin subtipo
+                                        Sin subtipo
                                     {% endif %}
 
                                 </span>
@@ -371,6 +371,7 @@
                                     {% endif %}
 
                                     {% if perm.productos_gestionar %}
+
                                     <!-- EDITAR -->
 
                                     <button type="button"
@@ -401,30 +402,35 @@
 
                                     <!-- ELIMINAR -->
 
-                                    <form method="POST"
-                                          action="{% url 'eliminar_producto' producto.ID_Producto %}"
-                                          class="pr-form-estado"
-                                          onsubmit="return confirm('¿Eliminar este producto definitivamente? Solo es posible si no tiene lotes asociados.');">
+                                    <button type="button"
+                                            class="pr-icon-btn pr-baja"
+                                            title="Eliminar producto"
+                                            aria-label="Eliminar producto"
+                                            data-id="{{ producto.ID_Producto }}"
+                                            data-nombre="{{ producto.Nombre_producto }}"
+                                            data-descripcion="{{ producto.Descripcion_producto|default:'' }}"
+                                            data-tipo="{{ producto.ID_Tipo_producto.Nombre_tipo_producto }}"
+                                            data-subtipo="{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo }}{% else %}Sin subtipo{% endif %}"
+                                            data-precio="$ {{ producto.Precio|floatformat:'-2g' }}"
+                                            data-presentacion="{{ producto.Cantidad_presentacion|floatformat:'-2' }} {{ producto.Unidad_medida_producto|default:'' }}"
+                                            data-stock="{% if producto.stock %}{{ producto.stock.Cantidad_stock }}{% else %}0{% endif %}"
+                                            data-estado="{{ producto.Estado_producto }}"
+                                            data-lotes="{{ producto.num_lotes|default:0 }}"
+                                            data-proveedores="{% for p in producto.proveedores.all %}{{ p.nombre_proveedor }}{% if not forloop.last %}|{% endif %}{% endfor %}"
+                                            onclick="abrirModalEliminar(this)">
 
-                                        {% csrf_token %}
+                                        <svg class="pr-icon" viewBox="0 0 24 24">
+                                            <path d="M3 6h18"/>
+                                            <path d="M8 6V4h8v2"/>
+                                            <path d="M19 6l-1 14H6L5 6"/>
+                                            <path d="M10 11v5"/>
+                                            <path d="M14 11v5"/>
+                                        </svg>
 
-                                        <button type="submit"
-                                                class="pr-icon-btn pr-baja"
-                                                title="Eliminar producto"
-                                                aria-label="Eliminar producto">
+                                    </button>
 
-                                            <svg class="pr-icon" viewBox="0 0 24 24">
-                                                <path d="M3 6h18"/>
-                                                <path d="M8 6V4h8v2"/>
-                                                <path d="M19 6l-1 14H6L5 6"/>
-                                                <path d="M10 11v5"/>
-                                                <path d="M14 11v5"/>
-                                            </svg>
-
-                                        </button>
-
-                                    </form>
                                     {% endif %}
+
                                 </div>
 
                             </td>
@@ -495,7 +501,6 @@
                                                         </td>
                                                     </tr>
 
-
                                                 {% empty %}
 
                                                     <tr>
@@ -517,7 +522,6 @@
                             </td>
 
                         </tr>
-
 
                     {% empty %}
 
@@ -626,6 +630,7 @@
 
                         <input type="text"
                                name="Descripcion_producto"
+                               maxlength="200"
                                placeholder="Características del producto">
 
                     </div>
@@ -768,6 +773,10 @@
                                 Kilogramos (kg)
                             </option>
 
+                            <option value="g">
+                                Gramos (g)
+                            </option>
+
                             <option value="litros">
                                 Litros (L)
                             </option>
@@ -904,19 +913,9 @@
 
                 <div class="pr-grid">
 
-                    <!-- CÓDIGO -->
+                    <!-- CÓDIGO (oculto) -->
 
-                    <div class="pr-grupo" style="display: none;">
-
-                        <label>
-                            Código
-                        </label>
-
-                        <input type="text"
-                               id="edit_id"
-                               readonly>
-
-                    </div>
+                    <input type="hidden" id="edit_id">
 
 
                     <!-- NOMBRE -->
@@ -969,7 +968,8 @@
 
                         <input type="text"
                                id="edit_descripcion"
-                               name="Descripcion_producto">
+                               name="Descripcion_producto"
+                               maxlength="200">
 
                     </div>
 
@@ -1104,6 +1104,10 @@
                                 Kilogramos (kg)
                             </option>
 
+                            <option value="g">
+                                Gramos (g)
+                            </option>
+
                             <option value="litros">
                                 Litros (L)
                             </option>
@@ -1180,6 +1184,155 @@
 </div>
 
 
+<!-- =====================================================
+     MODAL ELIMINAR PRODUCTO
+===================================================== -->
+
+<div class="pr-modal"
+     id="modalEliminarProducto">
+
+    <div class="pr-modal-box">
+
+        <div class="pr-modal-head">
+
+            <h2>
+                Eliminar producto
+            </h2>
+
+            <button type="button"
+                    class="pr-modal-x"
+                    onclick="cerrarModal('modalEliminarProducto')"
+                    aria-label="Cerrar">
+
+                <svg class="pr-icon" viewBox="0 0 24 24">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+
+            </button>
+
+        </div>
+
+
+        <form id="formEliminarProducto"
+              method="POST"
+              action="">
+
+            {% csrf_token %}
+
+            <div class="pr-modal-body">
+
+                <!-- ADVERTENCIA -->
+
+                <div class="pr-aviso-eliminar" id="el_aviso">
+
+                    <svg class="pr-icon" viewBox="0 0 24 24">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                        <path d="M12 9v4"/>
+                        <path d="M12 17h.01"/>
+                    </svg>
+
+                    <div>
+                        <strong id="el_aviso_titulo"></strong>
+                        <span id="el_aviso_texto"></span>
+                    </div>
+
+                </div>
+
+
+                <!-- DATOS DEL PRODUCTO -->
+
+                <div class="pr-ficha-cab">
+
+                    <div>
+                        <h3 id="el_nombre">—</h3>
+                        <p id="el_descripcion"></p>
+                    </div>
+
+                    <span class="pr-badge" id="el_estado"></span>
+
+                </div>
+
+
+                <div class="pr-ficha-grid">
+
+                    <div class="pr-ficha-dato">
+                        <span class="pr-ficha-label">Tipo de producto</span>
+                        <span class="pr-ficha-valor" id="el_tipo">—</span>
+                    </div>
+
+                    <div class="pr-ficha-dato">
+                        <span class="pr-ficha-label">Subtipo</span>
+                        <span class="pr-ficha-valor" id="el_subtipo">—</span>
+                    </div>
+
+                    <div class="pr-ficha-dato">
+                        <span class="pr-ficha-label">Precio</span>
+                        <span class="pr-ficha-valor" id="el_precio">—</span>
+                    </div>
+
+                    <div class="pr-ficha-dato">
+                        <span class="pr-ficha-label">Presentación</span>
+                        <span class="pr-ficha-valor" id="el_presentacion">—</span>
+                    </div>
+
+                    <div class="pr-ficha-dato">
+                        <span class="pr-ficha-label">Stock disponible</span>
+                        <span class="pr-ficha-valor" id="el_stock">—</span>
+                    </div>
+
+                    <div class="pr-ficha-dato">
+                        <span class="pr-ficha-label">Lotes asociados</span>
+                        <span class="pr-ficha-valor" id="el_lotes">—</span>
+                    </div>
+
+                    <div class="pr-ficha-dato pr-ficha-full">
+                        <span class="pr-ficha-label">Proveedores</span>
+                        <div class="pr-ficha-chips" id="el_proveedores"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="pr-modal-pie">
+
+                <button type="button"
+                        class="pr-btn pr-btn-claro"
+                        onclick="cerrarModal('modalEliminarProducto')">
+
+                    Cancelar
+
+                </button>
+
+
+                <button type="submit"
+                        id="el_confirmar"
+                        class="pr-btn pr-btn-rojo">
+
+                    <svg class="pr-icon" viewBox="0 0 24 24">
+                        <path d="M3 6h18"/>
+                        <path d="M8 6V4h8v2"/>
+                        <path d="M19 6l-1 14H6L5 6"/>
+                    </svg>
+
+                    Eliminar producto
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MODAL EGRESO POR VENTA
+===================================================== -->
+
 {% if puede_egresar %}
 
 {{ datos_egreso|json_script:"datosEgreso" }}
@@ -1215,12 +1368,12 @@
                     </div>
 
                     <div class="pr-grupo">
-                        <label>Fecha y hora (automático)</label>
+                        <label>Fecha y hora</label>
                         <input type="text" id="eg_fecha" readonly>
                     </div>
 
                     <div class="pr-grupo pr-full">
-                        <label>Usuario y perfil (automático, según la sesión)</label>
+                        <label>Usuario y perfil</label>
                         <input type="text"
                                value="{{ usuario.Nombre_usuario }} {{ usuario.Apellido_usuario }} - {{ usuario.ID_Perfil.Nombre_perfil }}"
                                readonly>
@@ -1238,7 +1391,7 @@
 
                     <div class="pr-grupo pr-full">
                         <div class="eg-datos">
-                            <p class="eg-datos-titulo">Datos del lote (solo lectura)</p>
+                            <p class="eg-datos-titulo">Datos del lote</p>
                             <div class="eg-datos-grid">
                                 <div class="eg-dato">
                                     <span class="eg-dato-label">Remito de origen</span>
@@ -1320,9 +1473,10 @@
 
 {% endif %}
 
-    {% block extra_js %}
+{% endblock contenido %}
 
 
+{% block extra_js %}
 
 <script>
 
@@ -1356,9 +1510,7 @@
         selProd.innerHTML = '';
 
         DATOS_EGRESO.forEach(function (p, i) {
-            selProd.add(new Option(
-                p.nombre, i
-            ));
+            selProd.add(new Option(p.nombre, i));
         });
 
         document.getElementById('eg_cantidad').value = '';
@@ -1458,42 +1610,39 @@
     });
 
 
-
     /* =====================================================
-   MOSTRAR Y OCULTAR LOTES DEL PRODUCTO
-===================================================== */
+       MOSTRAR Y OCULTAR LOTES DEL PRODUCTO
+    ===================================================== */
 
-function toggleLotes(productoId, boton) {
+    function toggleLotes(productoId, boton) {
 
-    const filaLotes = document.getElementById(
-        'lotes-' + productoId
-    );
+        const filaLotes = document.getElementById('lotes-' + productoId);
 
-    if (!filaLotes) {
-        return;
+        if (!filaLotes) {
+            return;
+        }
+
+        const estaAbierta = filaLotes.style.display === 'table-row';
+
+        if (estaAbierta) {
+
+            filaLotes.style.display = 'none';
+
+            boton.setAttribute('aria-expanded', 'false');
+            boton.title = 'Consultar lotes';
+            boton.setAttribute('aria-label', 'Consultar lotes');
+
+        } else {
+
+            filaLotes.style.display = 'table-row';
+
+            boton.setAttribute('aria-expanded', 'true');
+            boton.title = 'Ocultar lotes';
+            boton.setAttribute('aria-label', 'Ocultar lotes');
+
+        }
     }
 
-    const estaAbierta =
-        filaLotes.style.display === 'table-row';
-
-    if (estaAbierta) {
-
-        filaLotes.style.display = 'none';
-
-        boton.setAttribute('aria-expanded', 'false');
-        boton.title = 'Consultar lotes';
-        boton.setAttribute('aria-label', 'Consultar lotes');
-
-    } else {
-
-        filaLotes.style.display = 'table-row';
-
-        boton.setAttribute('aria-expanded', 'true');
-        boton.title = 'Ocultar lotes';
-        boton.setAttribute('aria-label', 'Ocultar lotes');
-
-    }
-}
 
     /* =====================================================
        BUSCAR Y FILTRAR
@@ -1501,56 +1650,35 @@ function toggleLotes(productoId, boton) {
 
     function filtrarProductos() {
 
-        const query =
-            document.getElementById('searchInput').value
-                .toLowerCase()
-                .trim();
+        const query = document.getElementById('searchInput').value
+            .toLowerCase()
+            .trim();
 
+        const tipo = document.getElementById('filtroTipo').value;
 
-        const tipo =
-            document.getElementById('filtroTipo').value;
-
-
-        const estado =
-            document.getElementById('filtroEstado').value;
-
+        const estado = document.getElementById('filtroEstado').value;
 
         let visibles = 0;
-
 
         document.querySelectorAll('.producto-card')
             .forEach(function (fila) {
 
-                const coincideTexto =
-                    fila.dataset.search
-                        .toLowerCase()
-                        .includes(query);
+                const coincideTexto = fila.dataset.search
+                    .toLowerCase()
+                    .includes(query);
 
+                const coincideTipo = !tipo || fila.dataset.tipo === tipo;
 
-                const coincideTipo =
-                    !tipo ||
-                    fila.dataset.tipo === tipo;
+                const coincideEstado = !estado || fila.dataset.estado === estado;
 
-
-                const coincideEstado =
-                    !estado ||
-                    fila.dataset.estado === estado;
-
-
-                const visible =
-                    coincideTexto &&
-                    coincideTipo &&
-                    coincideEstado;
-
+                const visible = coincideTexto && coincideTipo && coincideEstado;
 
                 fila.style.display = visible ? '' : 'none';
 
                 // Ocultar el detalle de lotes al filtrar
                 const idProducto = fila.id.replace('card-', '');
 
-                const filaLotes = document.getElementById(
-                    'lotes-' + idProducto
-                );
+                const filaLotes = document.getElementById('lotes-' + idProducto);
 
                 if (filaLotes) {
                     filaLotes.style.display = 'none';
@@ -1570,10 +1698,7 @@ function toggleLotes(productoId, boton) {
 
             });
 
-
-        document.getElementById(
-            'contadorProductos'
-        ).textContent =
+        document.getElementById('contadorProductos').textContent =
             visibles +
             ' producto' +
             (visibles === 1 ? '' : 's') +
@@ -1587,70 +1712,42 @@ function toggleLotes(productoId, boton) {
        MOSTRAR SUBTIPOS SEGÚN EL TIPO
     ===================================================== */
 
-    function actualizarSubtipos(
-        idSelectTipo,
-        idSelectSubtipo
-    ) {
+    function actualizarSubtipos(idSelectTipo, idSelectSubtipo) {
 
-        const tipo =
-            document.getElementById(
-                idSelectTipo
-            ).value;
+        const tipo = document.getElementById(idSelectTipo).value;
 
+        const selectSubtipo = document.getElementById(idSelectSubtipo);
 
-        const selectSubtipo =
-            document.getElementById(
-                idSelectSubtipo
-            );
-
-
-        const opciones =
-            selectSubtipo.querySelectorAll(
-                'option[data-tipo]'
-            );
-
+        const opciones = selectSubtipo.querySelectorAll('option[data-tipo]');
 
         opciones.forEach(function (opcion) {
 
-            const mostrar =
-                tipo !== '' &&
-                opcion.dataset.tipo === tipo;
+            const mostrar = tipo !== '' && opcion.dataset.tipo === tipo;
 
-
-            opcion.hidden =
-                !mostrar;
-
-
-            opcion.disabled =
-                !mostrar;
+            opcion.hidden = !mostrar;
+            opcion.disabled = !mostrar;
 
         });
 
-
-        const opcionSeleccionada =
-            selectSubtipo.options[
-                selectSubtipo.selectedIndex
-            ];
-
+        const opcionSeleccionada = selectSubtipo.options[selectSubtipo.selectedIndex];
 
         if (
             opcionSeleccionada &&
             opcionSeleccionada.dataset.tipo &&
             opcionSeleccionada.dataset.tipo !== tipo
         ) {
-
             selectSubtipo.value = '';
-
         }
 
     }
 
 
     /* =====================================================
-    CERRAR MODALES
+       CERRAR MODALES
     ===================================================== */
 
     function cerrarModal(idModal) {
+
         const modal = document.getElementById(idModal);
 
         if (modal) {
@@ -1665,15 +1762,9 @@ function toggleLotes(productoId, boton) {
 
     function abrirModalCrear() {
 
-        document.getElementById(
-            'modalCrearProducto'
-        ).style.display = 'flex';
+        document.getElementById('modalCrearProducto').style.display = 'flex';
 
-
-        actualizarSubtipos(
-            'crear_tipo',
-            'crear_subtipo'
-        );
+        actualizarSubtipos('crear_tipo', 'crear_subtipo');
 
     }
 
@@ -1696,50 +1787,15 @@ function toggleLotes(productoId, boton) {
         proveedoresIds
     ) {
 
-        document.getElementById(
-            'formEditarProducto'
-        ).action =
-            "{% url 'editar_producto' 0 %}"
-                .replace(
-                    '/0/',
-                    '/' + id + '/'
-                );
+        document.getElementById('formEditarProducto').action =
+            "{% url 'editar_producto' 0 %}".replace('/0/', '/' + id + '/');
 
-
-        document.getElementById(
-            'edit_id'
-        ).value =
-            'PROD' + id;
-
-
-        document.getElementById(
-            'edit_tipo'
-        ).value =
-            tipo;
-
-
-        document.getElementById(
-            'edit_nombre'
-        ).value =
-            nombre;
-
-
-        document.getElementById(
-            'edit_descripcion'
-        ).value =
-            descripcion;
-
-
-        document.getElementById(
-            'edit_precio'
-        ).value =
-            precio;
-
-
-        document.getElementById(
-            'edit_cantidad'
-        ).value =
-            cantidad;
+        document.getElementById('edit_id').value = 'PROD' + id;
+        document.getElementById('edit_tipo').value = tipo;
+        document.getElementById('edit_nombre').value = nombre;
+        document.getElementById('edit_descripcion').value = descripcion;
+        document.getElementById('edit_precio').value = precio;
+        document.getElementById('edit_cantidad').value = cantidad;
 
 
         /* PROVEEDORES QUE SUMINISTRAN EL PRODUCTO (pueden ser varios) */
@@ -1749,79 +1805,118 @@ function toggleLotes(productoId, boton) {
             .filter(Boolean);
 
         document
-            .querySelectorAll(
-                '#edit_proveedores input[name="proveedores"]'
-            )
+            .querySelectorAll('#edit_proveedores input[name="proveedores"]')
             .forEach(function (casilla) {
-
-                casilla.checked =
-                    idsProveedores.includes(casilla.value);
-
+                casilla.checked = idsProveedores.includes(casilla.value);
             });
 
 
-        document.getElementById(
-            'edit_stock_minimo'
-        ).value =
-            stockMinimo;
+        document.getElementById('edit_stock_minimo').value = stockMinimo;
+        document.getElementById('edit_estado').value = estado;
 
 
-        document.getElementById(
-            'edit_estado'
-        ).value =
-            estado;
-
-
-        const selectUnidad =
-            document.getElementById(
-                'edit_unidad'
-            );
-
+        const selectUnidad = document.getElementById('edit_unidad');
 
         if (
             unidad &&
-            !Array.from(
-                selectUnidad.options
-            ).some(function (opcion) {
-
+            !Array.from(selectUnidad.options).some(function (opcion) {
                 return opcion.value === unidad;
-
             })
         ) {
-
-            selectUnidad.add(
-                new Option(
-                    unidad,
-                    unidad
-                )
-            );
-
+            selectUnidad.add(new Option(unidad, unidad));
         }
 
-
-        selectUnidad.value =
-            unidad;
+        selectUnidad.value = unidad;
 
 
         /* SUBTIPOS SEGÚN EL TIPO DEL PRODUCTO */
 
-        actualizarSubtipos(
-            'edit_tipo',
-            'edit_subtipo'
-        );
-
-        /* MOSTRAR Y SELECCIONAR EL SUBTIPO DEL PRODUCTO */
+        actualizarSubtipos('edit_tipo', 'edit_subtipo');
 
 
-        document.getElementById(
-            'edit_subtipo'
-        ).value = subtipo || '';
+        /* SELECCIONAR EL SUBTIPO DEL PRODUCTO */
+
+        document.getElementById('edit_subtipo').value = subtipo || '';
 
 
-        document.getElementById(
-            'modalEditarProducto'
-        ).style.display =
-            'flex';
+        document.getElementById('modalEditarProducto').style.display = 'flex';
+
+    }
+
+
+    /* =====================================================
+       ELIMINAR PRODUCTO
+       Muestra los datos del producto y una advertencia.
+       Con stock o lotes asociados no se puede eliminar.
+    ===================================================== */
+
+    function abrirModalEliminar(boton) {
+
+        const d = boton.dataset;
+        const lotes = parseInt(d.lotes, 10) || 0;
+
+        document.getElementById('formEliminarProducto').action =
+            "{% url 'eliminar_producto' 0 %}".replace('/0/', '/' + d.id + '/');
+
+        document.getElementById('el_nombre').textContent = d.nombre;
+        document.getElementById('el_descripcion').textContent =
+            d.descripcion || 'Sin descripción';
+        document.getElementById('el_tipo').textContent = d.tipo;
+        document.getElementById('el_subtipo').textContent = d.subtipo;
+        document.getElementById('el_precio').textContent = d.precio;
+        document.getElementById('el_presentacion').textContent = d.presentacion;
+        document.getElementById('el_stock').textContent = d.stock + ' un.';
+        document.getElementById('el_lotes').textContent = lotes;
+
+        const estado = document.getElementById('el_estado');
+        estado.textContent = d.estado;
+        estado.className = 'pr-badge ' +
+            (d.estado === 'Activo' ? 'pr-activo' : 'pr-inactivo');
+
+        const chips = document.getElementById('el_proveedores');
+        chips.innerHTML = '';
+
+        const proveedores = (d.proveedores || '').split('|').filter(Boolean);
+
+        if (proveedores.length) {
+            proveedores.forEach(function (nombre) {
+                const chip = document.createElement('span');
+                chip.className = 'pr-ficha-chip';
+                chip.textContent = nombre;
+                chips.appendChild(chip);
+            });
+        } else {
+            const chip = document.createElement('span');
+            chip.className = 'pr-ficha-chip pr-ficha-chip-aviso';
+            chip.textContent = 'Sin proveedores';
+            chips.appendChild(chip);
+        }
+
+        const aviso = document.getElementById('el_aviso');
+        const titulo = document.getElementById('el_aviso_titulo');
+        const texto = document.getElementById('el_aviso_texto');
+        const confirmar = document.getElementById('el_confirmar');
+
+        const stock = parseInt(d.stock, 10) || 0;
+
+        if (stock > 0 || lotes > 0) {
+            aviso.className = 'pr-aviso-eliminar pr-aviso-bloqueo';
+            titulo.textContent = 'No se puede eliminar este producto.';
+            texto.textContent = stock > 0
+                ? 'Tiene ' + stock + ' unidades en stock. Para dejar de usarlo, cambiá su estado a Inactivo desde Editar.'
+                : 'Tiene ' + lotes + ' lote' + (lotes === 1 ? '' : 's') +
+                  ' asociado' + (lotes === 1 ? '' : 's') +
+                  '. Para conservar la trazabilidad, cambiá su estado a Inactivo desde Editar.';
+            confirmar.disabled = true;
+        } else {
+            aviso.className = 'pr-aviso-eliminar';
+            titulo.textContent = '¿Eliminar este producto definitivamente?';
+            texto.textContent =
+                'Esta acción no se puede deshacer.';
+            confirmar.disabled = false;
+        }
+
+        document.getElementById('modalEliminarProducto').style.display = 'flex';
 
     }
 
@@ -1854,24 +1949,23 @@ function toggleLotes(productoId, boton) {
         });
 
 
-        /* =====================================================
-         CERRAR MODALES AL HACER CLIC FUERA
-        ===================================================== */
+    /* =====================================================
+       CERRAR MODALES AL HACER CLIC FUERA
+    ===================================================== */
 
     [
         'modalCrearProducto',
-        'modalEditarProducto'
+        'modalEditarProducto',
+        'modalEliminarProducto'
     ].forEach(function (id) {
 
         const modal = document.getElementById(id);
 
         if (modal) {
             modal.addEventListener('click', function (e) {
-
                 if (e.target === this) {
                     cerrarModal(id);
                 }
-
             });
         }
 
@@ -1882,79 +1976,31 @@ function toggleLotes(productoId, boton) {
        TOASTS
     ===================================================== */
 
-    function mostrarToast(
-        mensaje,
-        tipo
-    ) {
+    function mostrarToast(mensaje, tipo) {
 
-        const container =
-            document.getElementById(
-                'toastContainer'
-            );
+        const container = document.getElementById('toastContainer');
 
+        const toast = document.createElement('div');
+        toast.className = 'pr-toast ' + (tipo || 'warning');
 
-        const toast =
-            document.createElement(
-                'div'
-            );
+        const texto = document.createElement('span');
+        texto.textContent = mensaje;
 
+        const cerrar = document.createElement('span');
+        cerrar.className = 'pr-toast-x';
+        cerrar.textContent = '✕';
+        cerrar.onclick = function () {
+            toast.remove();
+        };
 
-        toast.className =
-            'pr-toast ' +
-            (tipo || 'warning');
+        toast.appendChild(texto);
+        toast.appendChild(cerrar);
 
+        container.appendChild(toast);
 
-        const texto =
-            document.createElement(
-                'span'
-            );
-
-
-        texto.textContent =
-            mensaje;
-
-
-        const cerrar =
-            document.createElement(
-                'span'
-            );
-
-
-        cerrar.className =
-            'pr-toast-x';
-
-
-        cerrar.textContent =
-            '✕';
-
-
-        cerrar.onclick =
-            function () {
-                toast.remove();
-            };
-
-
-        toast.appendChild(
-            texto
-        );
-
-
-        toast.appendChild(
-            cerrar
-        );
-
-
-        container.appendChild(
-            toast
-        );
-
-
-        setTimeout(
-            function () {
-                toast.remove();
-            },
-            4000
-        );
+        setTimeout(function () {
+            toast.remove();
+        }, 4000);
 
     }
 
@@ -1963,28 +2009,20 @@ function toggleLotes(productoId, boton) {
        MENSAJES DJANGO
     ===================================================== */
 
-    document.addEventListener(
-        'DOMContentLoaded',
-        function () {
+    document.addEventListener('DOMContentLoaded', function () {
 
-            document
-                .querySelectorAll('.pr-toast')
-                .forEach(function (toast) {
+        document
+            .querySelectorAll('.pr-toast')
+            .forEach(function (toast) {
+                setTimeout(function () {
+                    toast.remove();
+                }, 4000);
+            });
 
-                    setTimeout(
-                        function () {
-                            toast.remove();
-                        },
-                        4000
-                    );
+    });
 
-                });
-
-        }
-    );
 
 </script>
 
 {% endblock extra_js %}
 
-{% endblock contenido %}

@@ -1,6 +1,6 @@
 /* ============================================================
    LOTES · Agroquímica del Valle
-   Estilos de registrar_ingreso_lote.html
+   Estilos de las pantallas de lotes
    Archivo: inventario/static/inventario/styles/ingreso_lote.css
    ============================================================ */
 
@@ -360,6 +360,8 @@
 
 /* ============================================================
    ESTADO DEL LOTE
+   Se calcula en models.py (Lotes.estado_actual):
+   Activo, Vencido, Agotado o Anulado.
    ============================================================ */
 
 .lt-estado {
@@ -370,6 +372,7 @@
     border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .lt-estado::before {
@@ -381,14 +384,16 @@
     background: currentColor;
 }
 
+/* Con stock y sin vencer: verde */
 .lt-estado-activo {
     background: #e8f5ee;
     color: #1b7a4a;
 }
 
-.lt-estado-inactivo {
-    background: #eef1ef;
-    color: #7b8a82;
+/* Fecha de vencimiento superada: rojo */
+.lt-estado-vencido {
+    background: #fef2f2;
+    color: #b91c1c;
 }
 
 /* Sin existencias: ámbar */
@@ -397,10 +402,10 @@
     color: #a16207;
 }
 
-/* Fecha de vencimiento superada: rojo */
-.lt-estado-vencido {
-    background: #fef2f2;
-    color: #b91c1c;
+/* Su remito fue anulado: gris */
+.lt-estado-anulado {
+    background: #eef1ef;
+    color: #65756c;
 }
 
 
@@ -695,10 +700,10 @@
 
 
 /* ============================================================
-   MODAL DE CONFIRMACIÓN DE BAJA DEL LOTE
+   MODAL DE CONFIRMACIÓN
    ============================================================ */
 
-/* Aviso sobre las consecuencias de dar de baja el lote */
+/* Aviso sobre las consecuencias de la acción */
 .lt-aviso {
     display: flex;
     align-items: flex-start;
@@ -756,7 +761,6 @@
     font-weight: 700;
 }
 
-/* Número y título del lote: mismos tamaños que proveedores */
 .lt-resumen-baja-cab h3 {
     margin: 0;
     color: var(--lt-texto);
@@ -789,7 +793,6 @@
     background: #fff;
 }
 
-/* Etiquetas: mismo tamaño que las etiquetas del resumen de proveedores */
 .lt-label-baja {
     display: block;
     margin-bottom: 2px;
@@ -799,7 +802,6 @@
     text-transform: uppercase;
 }
 
-/* Valores de producto, proveedor y cantidad */
 .lt-datos-baja strong,
 .lt-datos-baja .lt-valor-baja {
     overflow-wrap: anywhere;
@@ -928,7 +930,7 @@
 
 
 /* ============================================================
-   RESPONSIVE: MODAL DE BAJA EN CELULARES
+   RESPONSIVE: MODAL DE CONFIRMACIÓN EN CELULARES
    ============================================================ */
 
 @media (max-width: 500px) {

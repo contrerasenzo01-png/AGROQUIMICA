@@ -32,6 +32,7 @@
             <h1 class="pr-title">Gestión de tipos de producto</h1>
         </div>
 
+        {% if perm.tipos_gestionar %}
         <button type="button"
                 class="pr-btn pr-btn-primary"
                 onclick="abrirModalCrear()">
@@ -40,6 +41,7 @@
             </svg>
             Nuevo tipo
         </button>
+        {% endif %}
     </header>
 
     <!-- BÚSQUEDA -->
@@ -67,6 +69,7 @@
                     <tr>
                         <th>Tipo de producto</th>
                         <th>Productos asociados</th>
+                        <th>Subtipos</th>
                         <th>Estado</th>
                         <th style="text-align:right;">Acciones</th>
                     </tr>
@@ -75,7 +78,7 @@
                 <tbody id="listaTipos">
                     {% for tipo in tipos_productos %}
                         <tr id="card-{{ tipo.ID_Tipo_producto }}"
-                            class="tipo-card"
+                            class="tipo-card {% if not tipo.Estado_tipo_producto %}inactivo{% endif %}"
                             data-search="{{ tipo.Nombre_tipo_producto|lower }}">
 
                             <!-- NOMBRE -->
@@ -102,6 +105,13 @@
                             <td>
                                 <span class="pr-badge">
                                     {{ tipo.cantidad_productos }}
+                                </span>
+                            </td>
+
+                            <!-- SUBTIPOS -->
+                            <td>
+                                <span class="pr-badge">
+                                    {{ tipo.cantidad_subtipos }}
                                 </span>
                             </td>
 
@@ -141,7 +151,7 @@
                                     <!-- ELIMINAR: ABRE EL MODAL -->
                                     <button type="button"
                                             class="pr-icon-btn pr-baja"
-                                            title="Eliminar tipo de producto"
+                                            title="{% if tipo.cantidad_productos %}No se puede eliminar: tiene productos asociados{% else %}Eliminar tipo de producto{% endif %}"
                                             aria-label="Eliminar tipo de producto"
                                             onclick="abrirModalEliminarTipo(
                                                 '{{ tipo.ID_Tipo_producto }}',
@@ -164,7 +174,7 @@
 
                     {% empty %}
                         <tr>
-                            <td colspan="4">
+                            <td colspan="5" class="pr-vacio">
                                 No hay tipos de productos registrados.
                             </td>
                         </tr>
@@ -194,7 +204,7 @@
 
         <div class="pr-modal-head">
             <h2>Nuevo tipo de producto</h2>
-            {% if perm.tipos_gestionar %}
+
             <button type="button"
                     class="pr-modal-x"
                     onclick="cerrarModal('modalCrearTipo')"
@@ -203,7 +213,6 @@
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
             </button>
-            {% endif %}
         </div>
 
         <form method="POST" action="{% url 'crear_tipo_producto' %}">
@@ -353,6 +362,9 @@
                 ¿Deseas eliminar este tipo de producto definitivamente?
             </p>
 
+            <!-- SOLO SE MUESTRA SI EL TIPO TIENE SUBTIPOS -->
+            <p id="avisoSubtiposTipo" class="pr-eliminar-subtipos" hidden></p>
+
             <p class="pr-eliminar-advertencia">
                 Esta acción no se puede deshacer.
             </p>
@@ -475,6 +487,7 @@
        ABRIR MODAL CREAR
     ===================================================== */
     function abrirModalCrear() {
+        document.getElementById('nuevo_nombre').value = '';
         document.getElementById('modalCrearTipo').style.display = 'flex';
     }
 
@@ -495,6 +508,8 @@
 
     /* =====================================================
        ABRIR MODAL ELIMINAR
+       Solo se bloquea si el tipo tiene productos.
+       Si tiene subtipos (sin productos), se eliminan con él.
     ===================================================== */
     function abrirModalEliminarTipo(
         id,
@@ -504,15 +519,9 @@
     ) {
         if (cantidadProductos > 0) {
             mostrarToast(
-                'No se puede eliminar este tipo porque tiene productos asociados.',
-                'warning'
-            );
-            return;
-        }
-
-        if (cantidadSubtipos > 0) {
-            mostrarToast(
-                'No se puede eliminar este tipo porque tiene subtipos asociados.',
+                'No se puede eliminar el tipo "' + nombre + '" porque tiene ' +
+                cantidadProductos + ' producto' + (cantidadProductos === 1 ? '' : 's') +
+                ' asociado' + (cantidadProductos === 1 ? '' : 's') + '.',
                 'warning'
             );
             return;
@@ -521,6 +530,7 @@
         const modal = document.getElementById('modalEliminarTipo');
         const formulario = document.getElementById('formEliminarTipo');
         const mensaje = document.getElementById('mensajeEliminarTipo');
+        const avisoSubtipos = document.getElementById('avisoSubtiposTipo');
 
         const urlEliminar = "{% url 'eliminar_tipo_producto' 0 %}";
 
@@ -530,6 +540,17 @@
             '¿Deseas eliminar el tipo de producto "' +
             nombre +
             '" definitivamente?';
+
+        if (cantidadSubtipos > 0) {
+            avisoSubtipos.textContent =
+                cantidadSubtipos === 1
+                    ? 'También se eliminará su subtipo.'
+                    : 'También se eliminarán sus ' + cantidadSubtipos + ' subtipos.';
+            avisoSubtipos.hidden = false;
+        } else {
+            avisoSubtipos.textContent = '';
+            avisoSubtipos.hidden = true;
+        }
 
         modal.style.display = 'flex';
     }
@@ -545,4 +566,5 @@
         }
     }
 </script>
+
 {% endblock extra_js %}

@@ -1,4 +1,3 @@
-
 {% load static %}
 
 <!DOCTYPE html>
@@ -47,8 +46,11 @@
                         id="nueva_contrasena"
                         name="nueva_contrasena"
                         placeholder="Ingrese una nueva contraseña"
+                        autocomplete="new-password"
                         required
                         minlength="8"
+                        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^\s]{8,}"
+                        title="Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número, sin espacios."
                     >
 
                 </div>
@@ -64,11 +66,20 @@
                         id="confirmar_contrasena"
                         name="confirmar_contrasena"
                         placeholder="Repita la nueva contraseña"
+                        autocomplete="new-password"
                         required
                         minlength="8"
                     >
 
                 </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="error-box">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
 
                 {% if error %}
                     <div class="error-box">
@@ -84,7 +95,9 @@
                 </button>
 
                 <div class="footer-text">
-                    La contraseña debe tener al menos 8 caracteres.
+                    Mínimo 8 caracteres, con al menos una mayúscula,
+                    una minúscula y un número. No puede contener
+                    tu nombre de usuario.
                 </div>
 
             </form>
@@ -96,4 +109,3 @@
 </body>
 
 </html>
-

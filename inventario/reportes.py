@@ -27,11 +27,6 @@ MAX_MESES_RANGO = 60
 # UTILIDADES
 # ============================================================
 
-def _etiqueta(producto, marca):
-    """Devuelve 'producto (marca)' o solo 'producto' si no hay marca."""
-    return f'{producto} ({marca})' if marca else producto
-
-
 def _periodos(hoy, cantidad=12):
     """Primer día de cada uno de los últimos `cantidad` meses."""
     periodos = []
@@ -78,7 +73,6 @@ def _datos_stock():
         ID_Producto__Estado_producto='Activo'
     ).values_list(
         'ID_Producto__Nombre_producto',
-        'ID_Producto__Marca',
         'Cantidad_stock',
         'Stock_minimo',
         'ID_Producto__ID_Tipo_producto',
@@ -87,13 +81,13 @@ def _datos_stock():
 
     datos = [
         {
-            'nombre': _etiqueta(producto, marca),
+            'nombre': producto,
             'stock': stock,
             'minimo': minimo,
             'tipo_id': tipo_id,
             'subtipo_id': subtipo_id,
         }
-        for producto, marca, stock, minimo, tipo_id, subtipo_id in filas
+        for producto, stock, minimo, tipo_id, subtipo_id in filas
     ]
 
     # Los más críticos primero (los que están más por debajo del mínimo).
@@ -285,7 +279,6 @@ def _datos_vencidos(hoy):
     ).values_list(
         'ID_Producto',
         'ID_Producto__Nombre_producto',
-        'ID_Producto__Marca',
         'ID_Producto__ID_Tipo_producto',
         'ID_Producto__ID_Subtipo',
         'Cantidad_actual',
@@ -293,10 +286,10 @@ def _datos_vencidos(hoy):
 
     totales = {}
 
-    for pid, producto, marca, tipo_id, subtipo_id, cantidad in filas:
+    for pid, producto, tipo_id, subtipo_id, cantidad in filas:
         if pid not in totales:
             totales[pid] = {
-                'nombre': _etiqueta(producto, marca),
+                'nombre': producto,
                 'tipo_id': tipo_id,
                 'subtipo_id': subtipo_id,
                 'unidades': 0,

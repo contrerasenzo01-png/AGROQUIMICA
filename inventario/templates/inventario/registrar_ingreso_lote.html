@@ -86,6 +86,7 @@
                         <th>Fecha de vencimiento</th>
                         <th>Cantidad ingresada</th>
                         <th>Cantidad actual</th>
+                        <th>Estado</th>
                     </tr>
                 </thead>
 
@@ -159,11 +160,17 @@
                             </span>
                         </td>
 
+                        <td>
+                            <span class="lt-estado lt-estado-{{ l.estado_actual|lower }}">
+                                {{ l.estado_actual }}
+                            </span>
+                        </td>
+
                     </tr>
 
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="lt-vacio">
+                        <td colspan="9" class="lt-vacio">
                             No se encontraron lotes.
                         </td>
                     </tr>

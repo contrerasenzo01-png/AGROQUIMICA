@@ -602,9 +602,9 @@
 }
 
 .pr-tipo   { display: block; font-size: 12px; }
-.pr-precio {color: black; }
+.pr-precio { color: black; }
 
-.pr-stock       { display: block; font-size: 13px; }
+.pr-stock         { display: block; font-size: 13px; }
 .pr-stock.pr-bajo { color: #dc2626; }
 
 .pr-minimo small { color: var(--pr-suave); font-size: 12px; }
@@ -733,8 +733,8 @@
    ============================================================ */
 .pr-header-acciones { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
-.pr-btn-rojo        { background: #b91c1c; border-color: #b91c1c; color: #fff; }
-.pr-btn-rojo:hover  { background: #991b1b; border-color: #991b1b; }
+.pr-btn-rojo          { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+.pr-btn-rojo:hover    { background: #991b1b; border-color: #991b1b; }
 .pr-btn-rojo:disabled { opacity: .45; cursor: not-allowed; }
 
 .pr-modal-egreso { max-width: 640px; max-height: 96vh; }
@@ -835,6 +835,35 @@
 .pr-table .pr-lotes-tabla th:last-child  { border-top-right-radius: 8px; }
 
 .pr-table .pr-lotes-tabla td { background: #fff; }
+
+
+/* ============================================================
+   ESTADO DE CADA LOTE (tabla desplegable de lotes)
+   La clase sale de lote.estado_actual en models.py:
+   Activo, Vencido, Agotado o Anulado.
+   ============================================================ */
+.pr-lote-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pr-lote-estado::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.pr-estado-activo  { background: #e8f5ee; color: #1b7a4a; }
+.pr-estado-vencido { background: #fee2e2; color: #b91c1c; }
+.pr-estado-agotado { background: #fff4df; color: #9a6700; }
+.pr-estado-anulado { background: #eef1ef; color: #65756c; }
 
 
 /* ============================================================
@@ -993,7 +1022,7 @@
     line-height: 1.5;
 }
 
-/* Con lotes asociados: aviso rojo, no se puede eliminar */
+/* Con stock o lotes asociados: aviso rojo, no se puede eliminar */
 .pr-aviso-eliminar.pr-aviso-bloqueo {
     background: #fdecec;
     border-color: #f5c2c2;
@@ -1008,4 +1037,83 @@
     }
 
     .pr-lotes-contenido { margin-left: 0; }
+}
+
+
+/* ============================================================
+   MODALES REGISTRAR Y EDITAR PRODUCTO: versión compacta
+   Misma estructura, menos alto y menos ancho.
+   ============================================================ */
+#modalCrearProducto .pr-modal-box,
+#modalEditarProducto .pr-modal-box {
+    max-width: 480px;
+    max-height: 86vh;
+}
+
+#modalCrearProducto .pr-modal-head,
+#modalEditarProducto .pr-modal-head {
+    padding: 14px 18px;
+}
+
+#modalCrearProducto .pr-modal-head h2,
+#modalEditarProducto .pr-modal-head h2 {
+    font-size: 15px;
+}
+
+#modalCrearProducto .pr-modal-body,
+#modalEditarProducto .pr-modal-body {
+    padding: 14px 18px 4px;
+}
+
+#modalCrearProducto .pr-grid,
+#modalEditarProducto .pr-grid {
+    gap: 0 12px;
+}
+
+#modalCrearProducto .pr-grupo,
+#modalEditarProducto .pr-grupo {
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+#modalCrearProducto .pr-grupo label,
+#modalEditarProducto .pr-grupo label {
+    font-size: 11px;
+}
+
+/* Los checkboxes de proveedores conservan su tamaño de 15px */
+#modalCrearProducto .pr-grupo input:not([type="checkbox"]),
+#modalCrearProducto .pr-grupo select,
+#modalEditarProducto .pr-grupo input:not([type="checkbox"]),
+#modalEditarProducto .pr-grupo select {
+    height: 33px;
+    font-size: 12px;
+}
+
+#modalCrearProducto .pr-hint,
+#modalEditarProducto .pr-hint {
+    font-size: 10.5px;
+}
+
+#modalCrearProducto .pr-lista-proveedores,
+#modalEditarProducto .pr-lista-proveedores {
+    max-height: 96px;
+    padding: 6px 10px;
+}
+
+#modalCrearProducto .pr-grupo .pr-proveedor-opcion,
+#modalEditarProducto .pr-grupo .pr-proveedor-opcion {
+    padding: 2px 0;
+    font-size: 12px;
+}
+
+#modalCrearProducto .pr-info {
+    margin-bottom: 10px;
+    padding: 8px 11px;
+    font-size: 11.5px;
+}
+
+#modalCrearProducto .pr-modal-pie,
+#modalEditarProducto .pr-modal-pie {
+    padding: 12px 18px;
 }

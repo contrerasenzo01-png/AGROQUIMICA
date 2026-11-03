@@ -190,8 +190,8 @@
                                     {% else %}
 
                                         <form method="POST"
-                                                action="{% url 'activar_usuario' usuario.ID_Usuario %}"
-                                                style="display: inline;">
+                                              action="{% url 'activar_usuario' usuario.ID_Usuario %}"
+                                              class="us-form-inline">
 
                                             {% csrf_token %}
 
@@ -295,8 +295,14 @@
 
                 <div class="us-grupo us-full">
                     <label>Contraseña</label>
-                    <input type="password" name="Contrasena" required>
-                    <span class="us-hint">Mínimo 8 caracteres. El usuario deberá cambiarla en su primer ingreso.</span>
+                    <input type="password"
+                           name="Contrasena"
+                           autocomplete="new-password"
+                           minlength="8"
+                           pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^\s]{8,}"
+                           title="Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número, sin espacios."
+                           required>
+                    <span class="us-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número. No puede contener el nombre de usuario. El usuario deberá cambiarla en su primer ingreso.</span>
                 </div>
 
                 <div class="us-grupo us-full">
@@ -426,12 +432,23 @@
 
                 <div class="us-grupo us-full">
                     <label>Nueva contraseña</label>
-                    <input type="password" name="nueva_contrasena" required>
+                    <input type="password"
+                           name="nueva_contrasena"
+                           autocomplete="new-password"
+                           minlength="8"
+                           pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^\s]{8,}"
+                           title="Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número, sin espacios."
+                           required>
+                    <span class="us-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número. No puede contener el nombre de usuario.</span>
                 </div>
 
                 <div class="us-grupo us-full">
                     <label>Confirmar contraseña</label>
-                    <input type="password" name="confirmar_contrasena" required>
+                    <input type="password"
+                           name="confirmar_contrasena"
+                           autocomplete="new-password"
+                           minlength="8"
+                           required>
                 </div>
 
             </div>
@@ -543,7 +560,7 @@
 
 
 <!-- ==========================================
-     JAVASCRIPT  (misma lógica que antes)
+     JAVASCRIPT
      ========================================== -->
 
 <script>
@@ -740,12 +757,12 @@ function generarUsuario() {
     const apellido = apellidoInput.value
         .trim()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+        .replace(/[̀-ͯ]/g, "");
 
     const nombre = nombreInput.value
         .trim()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+        .replace(/[̀-ͯ]/g, "");
 
     if (apellido && nombre) {
         usuarioPreview.value = apellido.toLowerCase() + nombre.charAt(0).toLowerCase();

@@ -588,7 +588,7 @@ def crear_proveedor(request):
 
         return redirect('gestion_proveedores')
 
-    proveedor =form.save()
+    proveedor = form.save()
     registrar_auditoria(usuario, 'Proveedores', proveedor, 'CREACION', {}, snapshot(proveedor))
 
     messages.success(
@@ -615,7 +615,7 @@ def editar_proveedor(request, pk):
         ID_Proveedor=pk
     )
 
-    antes = snapshot(proveedor)         # <-- NUEVO: antes del formulario
+    antes = snapshot(proveedor)
 
     estado_original = proveedor.estado_proveedor
 
@@ -942,7 +942,7 @@ def editar_tipo_producto(request, pk):
         ID_Tipo_producto=pk
     )
 
-    antes = snapshot(tipo)   
+    antes = snapshot(tipo)
 
     nombre = request.POST.get(
         'Nombre_tipo_producto',
@@ -1012,7 +1012,8 @@ def editar_tipo_producto(request, pk):
 
 # ============================================================
 # ELIMINAR TIPO DE PRODUCTO
-# No permite eliminar si tiene productos o subtipos asociados.
+# Solo se elimina si no tiene productos asociados.
+# Si tiene subtipos (sin productos), se eliminan junto con él.
 # ============================================================
 
 def eliminar_tipo_producto(request, pk):
@@ -1033,6 +1034,9 @@ def eliminar_tipo_producto(request, pk):
     if request.method != 'POST':
         return redirect('gestion_tipos_productos')
 
+    nombre = ''
+    cantidad_subtipos = 0
+
     try:
         with transaction.atomic():
 
@@ -1043,13 +1047,8 @@ def eliminar_tipo_producto(request, pk):
 
             nombre = tipo.Nombre_tipo_producto
 
-            # Contar los productos asociados al tipo.
+            # Regla principal: nada que tenga productos se elimina.
             cantidad_productos = Productos.objects.filter(
-                ID_Tipo_producto=tipo
-            ).count()
-
-            # Contar los subtipos asociados al tipo.
-            cantidad_subtipos = Subtipos.objects.filter(
                 ID_Tipo_producto=tipo
             ).count()
 
@@ -1061,27 +1060,58 @@ def eliminar_tipo_producto(request, pk):
                 )
                 return redirect('gestion_tipos_productos')
 
-            if cantidad_subtipos > 0:
+            subtipos = list(
+                Subtipos.objects.select_for_update().filter(
+                    ID_Tipo_producto=tipo
+                )
+            )
+
+            # Control extra: ningún subtipo del tipo puede tener productos.
+            if Productos.objects.filter(ID_Subtipo__in=subtipos).exists():
                 messages.error(
                     request,
                     f'No se puede eliminar el tipo "{nombre}" porque '
-                    f'tiene {cantidad_subtipos} subtipo(s) asociado(s).'
+                    'alguno de sus subtipos tiene productos asociados.'
                 )
                 return redirect('gestion_tipos_productos')
-            registrar_auditoria(usuario, 'Tipos de productos', tipo, 'ELIMINACION', snapshot(tipo), {})
+
+            cantidad_subtipos = len(subtipos)
+
+            # Auditoría: cada subtipo eliminado queda registrado.
+            for subtipo in subtipos:
+                registrar_auditoria(
+                    usuario, 'Subtipos', subtipo, 'ELIMINACION',
+                    dict(snapshot(subtipo), Motivo=f'Se eliminó el tipo "{nombre}"'),
+                    {}
+                )
+                subtipo.delete()
+
+            registrar_auditoria(
+                usuario, 'Tipos de productos', tipo, 'ELIMINACION',
+                dict(
+                    snapshot(tipo),
+                    Subtipos_eliminados=', '.join(
+                        sorted(s.Nombre_subtipo for s in subtipos)
+                    ) or 'Ninguno'
+                ),
+                {}
+            )
             tipo.delete()
 
-        messages.success(
-            request,
-            f'El tipo "{nombre}" fue eliminado correctamente.'
-        )
-
-    except ProtectedError:
+    except (ProtectedError, RestrictedError):
         messages.error(
             request,
             f'No se puede eliminar el tipo "{nombre}" porque '
             'tiene otros registros relacionados.'
         )
+        return redirect('gestion_tipos_productos')
+
+    mensaje = f'El tipo "{nombre}" fue eliminado correctamente.'
+
+    if cantidad_subtipos:
+        mensaje += f' También se eliminaron sus {cantidad_subtipos} subtipo(s).'
+
+    messages.success(request, mensaje)
 
     return redirect('gestion_tipos_productos')
 
@@ -1122,6 +1152,24 @@ def gestion_subtipos(request):
     if busqueda:
         subtipos = subtipos.filter(
             Nombre_subtipo__icontains=busqueda
+        )
+
+    # Cuántos productos usa cada subtipo:
+    # solo se puede eliminar si no tiene ninguno.
+    productos_por_subtipo = {}
+
+    for subtipo_id in Productos.objects.filter(
+        ID_Subtipo__isnull=False
+    ).values_list('ID_Subtipo', flat=True):
+        productos_por_subtipo[subtipo_id] = (
+            productos_por_subtipo.get(subtipo_id, 0) + 1
+        )
+
+    subtipos = list(subtipos)
+
+    for subtipo in subtipos:
+        subtipo.cantidad_productos = productos_por_subtipo.get(
+            subtipo.ID_Subtipo, 0
         )
 
     tipos_productos = TiposProductos.objects.order_by(
@@ -1184,7 +1232,7 @@ def crear_subtipo(request):
             messages.error(
                 request,
                 'No se pueden asociar subtipos a un tipo de producto inactivo.'
-        )
+            )
             return redirect('gestion_subtipos')
 
         existe = Subtipos.objects.filter(
@@ -1238,7 +1286,7 @@ def editar_subtipo(request, pk):
         ID_Subtipo=pk
     )
 
-    antes = snapshot(subtipo)  
+    antes = snapshot(subtipo)
 
     if request.method == 'POST':
 
@@ -1320,7 +1368,7 @@ def editar_subtipo(request, pk):
 
         subtipo.save()
 
-        registrar_auditoria(            # <-- NUEVO
+        registrar_auditoria(
             usuario,
             'Subtipos',
             subtipo,
@@ -1433,9 +1481,31 @@ def gestion_usuarios(request):
     )
 
 
-def crear_usuario(request):
+# ============================================================
+# REGLAS DE LA CONTRASEÑA
+# Se usan al crear un usuario, al restablecer, al cambiar
+# y al recuperar la contraseña por correo.
+# ============================================================
 
-    # crear_usuario: después del Usuarios.objects.create(...)
+def validar_contrasena(contrasena, usuario=''):
+    """Devuelve un mensaje de error, o None si la contraseña es válida."""
+
+    if len(contrasena) < 8:
+        return 'La contraseña debe tener al menos 8 caracteres.'
+    if ' ' in contrasena:
+        return 'La contraseña no puede tener espacios.'
+    if not re.search(r'[A-Z]', contrasena):
+        return 'La contraseña debe tener al menos una mayúscula.'
+    if not re.search(r'[a-z]', contrasena):
+        return 'La contraseña debe tener al menos una minúscula.'
+    if not re.search(r'\d', contrasena):
+        return 'La contraseña debe tener al menos un número.'
+    if usuario and usuario.lower() in contrasena.lower():
+        return 'La contraseña no puede contener el nombre de usuario.'
+    return None
+
+
+def crear_usuario(request):
 
     usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
 
@@ -1516,14 +1586,6 @@ def crear_usuario(request):
 
             return redirect('gestion_usuarios')
 
-        if len(contrasena) < 8:
-            messages.error(
-                request,
-                'La contraseña debe tener al menos 8 caracteres.'
-            )
-
-            return redirect('gestion_usuarios')
-
         if Usuarios.objects.filter(DNI=int(dni)).exists():
             messages.error(
                 request,
@@ -1572,6 +1634,14 @@ def crear_usuario(request):
                 f'El usuario {usuario_generado} ya existe.'
             )
 
+            return redirect('gestion_usuarios')
+
+        # Reglas de la contraseña (se valida acá porque necesita
+        # el nombre de usuario generado).
+        error = validar_contrasena(contrasena, usuario_generado)
+
+        if error:
+            messages.error(request, error)
             return redirect('gestion_usuarios')
 
         nuevo = Usuarios.objects.create(
@@ -1762,12 +1832,11 @@ def restablecer_contrasena(request, pk):
     if nueva_contrasena != confirmar_contrasena:
         messages.error(request, 'Las contraseñas no coinciden.')
         return redirect('gestion_usuarios')
-    
-    if len(nueva_contrasena) < 8:
-        messages.error(
-            request,
-            'La contraseña debe tener al menos 8 caracteres.'
-        )
+
+    error = validar_contrasena(nueva_contrasena, usuario.Usuario)
+
+    if error:
+        messages.error(request, error)
         return redirect('gestion_usuarios')
 
     antes = snapshot(usuario)
@@ -1820,11 +1889,10 @@ def cambiar_contrasena(request):
                 {'usuario': usuario}
             )
 
-        if len(nueva_contrasena) < 8:
-            messages.error(
-                request,
-                'La contraseña debe tener al menos 8 caracteres.'
-            )
+        error = validar_contrasena(nueva_contrasena, usuario.Usuario)
+
+        if error:
+            messages.error(request, error)
 
             return render(
                 request,
@@ -2828,7 +2896,7 @@ def editar_producto(request, pk):
         producto.Unidades_por_presentacion = datos['unidades_por_presentacion']
         producto.Unidad_medida_producto = datos['unidad_medida']
         producto.Estado_producto = datos['estado_producto']
-        
+
 
         producto.save()
         producto.proveedores.set(datos['proveedores'])
@@ -2880,7 +2948,7 @@ def editar_producto(request, pk):
 
 
 def eliminar_producto(request, pk):
-    """Elimina un producto únicamente si no tiene lotes asociados."""
+    """Elimina un producto únicamente si no tiene lotes ni stock."""
 
     usuario = usuario_con_acceso(request, 'productos', gestionar=True)
 
@@ -2902,6 +2970,17 @@ def eliminar_producto(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el producto "{nombre}" porque tiene lotes asociados.'
+        )
+        return redirect('gestion_productos')
+
+    # No permitir eliminar productos con stock.
+    stock = Stock.objects.filter(ID_Producto=producto).first()
+
+    if stock and stock.Cantidad_stock > 0:
+        messages.error(
+            request,
+            f'No se puede eliminar el producto "{nombre}" porque tiene '
+            f'{stock.Cantidad_stock} unidades en stock. Podés cambiar su estado a Inactivo.'
         )
         return redirect('gestion_productos')
 
@@ -3593,7 +3672,7 @@ def comprobante_movimiento_pdf(request, id_movimiento):
     usuario = usuario_con_acceso(
         request,
         'comprobantes',
-        gestionar=True  
+        gestionar=True
     )
 
     if not usuario:
@@ -3602,7 +3681,7 @@ def comprobante_movimiento_pdf(request, id_movimiento):
             'No tenés permiso para emitir comprobantes.'
         )
         return redirect('panel_principal')
-    
+
     movimiento = get_object_or_404(
         MovimientosStock.objects.select_related(
             'ID_Usuario',
@@ -3901,8 +3980,8 @@ def gestion_remitos(request):
                     'El proveedor seleccionado no existe o está inactivo.'
                 )
                 return redirect('gestion_remitos')
-            
-    
+
+
 
             # Validar los lotes antes de guardar.
             lotes_validados = []
@@ -3970,7 +4049,7 @@ def gestion_remitos(request):
                         'No se pueden registrar lotes ya vencidos.'
                     )
                     return redirect('gestion_remitos')
-                
+
                 if fecha_vencimiento < fecha_remito:
                     messages.error(
                         request,
@@ -3991,8 +4070,8 @@ def gestion_remitos(request):
                         'o está inactivo.'
                     )
                     return redirect('gestion_remitos')
-                
-                
+
+
                 # El producto debe ser suministrado por el proveedor del remito.
                 if not producto.proveedores.filter(
                     pk=proveedor.pk
@@ -4008,7 +4087,7 @@ def gestion_remitos(request):
                 # Unidades totales = cajas x unidades por caja.
                 cantidad = cajas * unidades_caja
 
-            # Verificar si el lote ya existe en la base de datos.
+                # Verificar si el lote ya existe en la base de datos.
                 if Lotes.objects.filter(
                     ID_Producto=producto,
                     Numero_lote=numero_lote
@@ -4099,9 +4178,13 @@ def gestion_remitos(request):
                             )
                         )
                         registrar_auditoria(
-                        usuario, 'Lotes', lote, 'INGRESO_LOTE', {}, dict(snapshot(lote),
-                        Stock_antes=stock_antes,
-                        Stock_despues=stock.Cantidad_stock))
+                            usuario, 'Lotes', lote, 'INGRESO_LOTE', {},
+                            dict(
+                                snapshot(lote),
+                                Stock_antes=stock_antes,
+                                Stock_despues=stock.Cantidad_stock
+                            )
+                        )
                 messages.success(
                     request,
                     'El remito, sus lotes, el stock y los movimientos '
@@ -4201,9 +4284,9 @@ def gestion_remitos(request):
                 )
 
             return redirect('gestion_remitos')
-        
-       
-      
+
+
+
         # ====================================================
         # EDITAR DATOS DEL LOTE
         # ====================================================
@@ -4604,8 +4687,9 @@ def gestion_remitos(request):
                     despues['Estado_remito'] = 'Anulado'
                     despues['Motivo_anulacion'] = motivo
                     despues['Lotes_revertidos'] = '; '.join(
-                    f'{l.ID_Producto.Nombre_producto} lote {l.Numero_lote}: {l.Cantidad_ingresada} u.'
-                    for l in lotes_remito)
+                        f'{l.ID_Producto.Nombre_producto} lote {l.Numero_lote}: {l.Cantidad_ingresada} u.'
+                        for l in lotes_remito
+                    )
 
                     registrar_auditoria(
                         usuario,
@@ -4768,8 +4852,11 @@ def eliminar_perfil(request, pk):
 
     try:
         with transaction.atomic():
-            registrar_auditoria(usuario, 'Perfiles', perfil, 'ELIMINACION',
-                        dict(snapshot(perfil), Permisos=', '.join(sorted(_permisos_de(perfil)))), {})
+            registrar_auditoria(
+                usuario, 'Perfiles', perfil, 'ELIMINACION',
+                dict(snapshot(perfil), Permisos=', '.join(sorted(_permisos_de(perfil)))),
+                {}
+            )
             perfil.delete()    # sus permisos asignados se borran en cascada
     except ProtectedError:
         messages.error(
@@ -4818,7 +4905,7 @@ def gestion_auditoria(request):
     logs = LogAuditoria.objects.select_related(
         'ID_Usuario__ID_Perfil'
     ).order_by('-Fecha_hora')
-    
+
     if entidad:
         logs = logs.filter(Seccion=entidad)
 
@@ -5175,7 +5262,7 @@ def registrar_egreso(request):
             f'debajo del stock mínimo ({stock.Stock_minimo}).'
         )
 
-    
+
 
     return redirect('gestion_productos')
 
@@ -5384,8 +5471,8 @@ def recuperar_confirmar(request, uidb64, token):
 
         if nueva != confirmar:
             error = 'Las contraseñas no coinciden.'
-        elif len(nueva) < 8:
-            error = 'La contraseña debe tener al menos 8 caracteres.'
+        else:
+            error = validar_contrasena(nueva, usuario.Usuario)
 
         if error:
             return render(
