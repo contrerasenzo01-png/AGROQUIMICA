@@ -1,0 +1,67 @@
+{% extends 'inventario/acceso_base.html' %}
+
+{% block titulo %}Nueva contraseña{% endblock %}
+
+{% block formulario %}
+
+    <span class="form-eyebrow">RECUPERAR ACCESO</span>
+
+    {% if invalido %}
+
+        <h2>Enlace no válido</h2>
+
+        <div class="error-box" role="alert">
+            Este enlace venció o ya fue usado. Pedí uno nuevo para
+            restablecer tu contraseña.
+        </div>
+
+        <a href="{% url 'recuperar_contrasena' %}" class="link-volver">
+            Pedir un enlace nuevo
+        </a>
+
+    {% else %}
+
+        <h2>Elegí tu nueva contraseña</h2>
+
+        <p class="description">
+            La contraseña debe tener al menos 8 caracteres.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="nueva_contrasena">Nueva contraseña</label>
+                <input type="password"
+                       id="nueva_contrasena"
+                       name="nueva_contrasena"
+                       placeholder="Ingresá la nueva contraseña"
+                       autocomplete="new-password"
+                       minlength="8"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmar_contrasena">Confirmar contraseña</label>
+                <input type="password"
+                       id="confirmar_contrasena"
+                       name="confirmar_contrasena"
+                       placeholder="Repetí la nueva contraseña"
+                       autocomplete="new-password"
+                       minlength="8"
+                       required>
+            </div>
+
+            {% if error %}
+                <div class="error-box" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <button type="submit" class="btn-submit">
+                <span>Guardar contraseña</span>
+                <span class="arrow">›</span>
+            </button>
+        </form>
+
+    {% endif %}
+
+{% endblock %}

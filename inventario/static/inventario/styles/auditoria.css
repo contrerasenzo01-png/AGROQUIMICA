@@ -34,7 +34,9 @@
     color: #4b5563;
     background: #f1f3f2;
 }
-
+.al-badge.aud-baj { color: #be185d; background: #fce7f3; }
+.al-badge.aud-act { color: #047857; background: #d1fae5; }
+.al-badge.aud-rst { color: #854d0e; background: #fef9c3; }
 .aud-egr { color: #b45309; background: #ffedd5; }
 .aud-ing { color: #0e7490; background: #cffafe; }
 .aud-pdf { color: #a21caf; background: #fae8ff; }

@@ -142,6 +142,16 @@
 
                         </div>
 
+                        <div class="forgot-row">
+                            <a href="{% url 'recuperar_contrasena' %}">¿Olvidaste tu contraseña?</a>
+                        </div>
+
+                        {% for mensaje in messages %}
+                            {% if mensaje.level_tag == 'success' %}
+                                <div class="ok-box" role="status">{{ mensaje }}</div>
+                            {% endif %}
+                        {% endfor %}
+
 
                         <!-- MENSAJE DE ERROR -->
 

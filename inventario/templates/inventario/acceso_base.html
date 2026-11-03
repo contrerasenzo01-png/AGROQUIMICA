@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titulo %}Acceso{% endblock %} - Agroquímica del Valle</title>
+    <link rel="stylesheet" href="{% static 'inventario/styles/login.css' %}">
+</head>
+<body>
+    <main class="login-page">
+
+        <section class="left-panel">
+            <div class="left-content">
+                <h1><span>Agroquímica del Valle</span></h1>
+                <p>Sistema de gestión interno</p>
+            </div>
+            <div class="footer-left">
+                <span>Agroquímica del Valle</span>
+            </div>
+        </section>
+
+        <section class="right-panel">
+            <div class="login-container">
+                <div class="logo-container">
+                    <img src="{% static 'inventario/images/logo.png' %}"
+                         alt="Logo Agroquímicos del Valle">
+                </div>
+                <div class="login-content">
+                    {% block formulario %}{% endblock %}
+                </div>
+            </div>
+            <div class="footer-right">
+                © 2026 Agroquímicos del Valle. Todos los derechos reservados.
+            </div>
+        </section>
+
+    </main>
+</body>
+</html>

@@ -571,3 +571,45 @@ body {
         height: 115px;
     }
 }
+
+/* ==========================================
+   RECUPERAR CONTRASEÑA
+========================================== */
+
+.forgot-row {
+    margin: -6px 0 14px;
+    text-align: right;
+}
+
+.forgot-row a,
+.link-volver {
+    font-size: 12px;
+    font-weight: 600;
+    color: #317b57;
+    text-decoration: none;
+}
+
+.forgot-row a:hover,
+.link-volver:hover {
+    color: #17623c;
+    text-decoration: underline;
+}
+
+.link-volver {
+    display: block;
+    margin-top: 22px;
+    text-align: center;
+}
+
+.ok-box {
+    padding: 12px 14px;
+    margin-bottom: 15px;
+
+    background: #eaf4e6;
+    border: 1px solid #c9e2c5;
+    border-radius: 7px;
+
+    color: #1b5e20;
+    font-size: 12px;
+    line-height: 1.5;
+}

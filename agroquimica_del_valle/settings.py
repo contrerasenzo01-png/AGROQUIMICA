@@ -173,3 +173,6 @@ CORREO_ALERTAS = {
 
 # Dirección del sistema, para el botón "Ver alertas" del correo.
 SITIO_URL = os.getenv('SITIO_URL', 'http://127.0.0.1:8000')
+
+# Vencimiento del enlace de recuperación de contraseña (segundos).
+PASSWORD_RESET_TIMEOUT = 60 * 60

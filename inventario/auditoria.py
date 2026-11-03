@@ -92,3 +92,18 @@ def registrar_asignacion_permisos(admin, perfil, antes_set, despues_set):
             'Quitados': ', '.join(sorted(antes_set - despues_set)) or '—',
         },
     )
+
+def accion_por_estado(antes, despues, campo_estado, valor_activo):
+    """
+    Si lo único que cambió es el estado -> BAJA o ACTIVACION.
+    Si cambió cualquier otra cosa -> MODIFICACION.
+    """
+    campos = set(antes) | set(despues)
+    cambiados = {c for c in campos if antes.get(c) != despues.get(c)}
+
+    if cambiados == {campo_estado}:
+        if despues.get(campo_estado) == valor_activo:
+            return 'ACTIVACION'
+        return 'BAJA'
+
+    return 'MODIFICACION'

@@ -17,7 +17,11 @@ const NOMBRES_ACCION = {
     DESCARGA_PDF: 'Descarga de PDF',
     ASIGNACION_PERFIL: 'Asignación de perfil',
     ASIGNACION_PERMISOS: 'Asignación de permisos',
-    ATENCION_ALERTA: 'Atención de alerta'
+    ATENCION_ALERTA: 'Atención de alerta',
+    BAJA: 'Baja',
+    ACTIVACION: 'Activación',
+    RESET_CONTRASENA: 'Restablecimiento de contraseña',
+    RECUPERA_CONTRASENA: 'Recuperación de contraseña',
 };
 
 // Clase de la insignia de cada acción (las mismas de la tabla).
@@ -33,7 +37,11 @@ const CLASES_ACCION = {
     DESCARGA_PDF: 'aud-pdf',
     ASIGNACION_PERFIL: 'aud-asp',
     ASIGNACION_PERMISOS: 'aud-asm',
-    ATENCION_ALERTA: 'aud-ate'
+    ATENCION_ALERTA: 'aud-ate',
+    BAJA: 'aud-baj',
+    ACTIVACION: 'aud-act',
+    RESET_CONTRASENA: 'aud-rst',
+    RECUPERA_CONTRASENA: 'aud-rec'
 };
 
 const MESES = [
@@ -272,7 +280,10 @@ function inyectarEstilosAuditoria() {
         .al-badge.aud-cie { background: #ede9fe; color: #6d28d9; }
         .al-badge.aud-anu { background: #f1e7dc; color: #7a4a21; }
         .al-badge.aud-ate { background: #ccfbf1; color: #0f766e; }
-
+        .al-badge.aud-baj { background: #fce7f3; color: #be185d; }
+        .al-badge.aud-act { background: #d1fae5; color: #047857; }
+        .al-badge.aud-rst { background: #fef9c3; color: #854d0e; }
+        .al-badge.aud-rec { background: #e0e7ff; color: #3730a3; }
         /* ---------- Ventana más compacta ---------- */
         .aud-modal .aud-modal-contenido {
             width: min(500px, 92vw);

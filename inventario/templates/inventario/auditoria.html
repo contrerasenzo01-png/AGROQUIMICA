@@ -55,6 +55,10 @@
                     <option value="ASIGNACION_PERFIL" {% if accion == 'ASIGNACION_PERFIL' %}selected{% endif %}>Asignación de perfil</option>
                     <option value="ASIGNACION_PERMISOS" {% if accion == 'ASIGNACION_PERMISOS' %}selected{% endif %}>Asignación de permisos</option>
                     <option value="ATENCION_ALERTA" {% if accion == 'ATENCION_ALERTA' %}selected{% endif %}>Atención de alerta</option>
+                    <option value="BAJA" {% if accion == 'BAJA' %}selected{% endif %}>Baja</option>
+                    <option value="ACTIVACION" {% if accion == 'ACTIVACION' %}selected{% endif %}>Activación</option>
+                    <option value="RESET_CONTRASENA" {% if accion == 'RESET_CONTRASENA' %}selected{% endif %}>Restablecimiento de contraseña</option>
+                    <option value="RECUPERA_CONTRASENA" {% if accion == 'RECUPERA_CONTRASENA' %}selected{% endif %}>Recuperación de contraseña</option>
                 </select>
             </div>
 
@@ -170,6 +174,14 @@
                                 <span class="al-badge aud-asm">Asignación de permisos</span>
                             {% elif log.Accion == 'ATENCION_ALERTA' %}
                                 <span class="al-badge aud-ate">Atención de alerta</span>
+                            {% elif log.Accion == 'BAJA' %}
+                                <span class="al-badge aud-baj">Baja</span>
+                            {% elif log.Accion == 'ACTIVACION' %}
+                                <span class="al-badge aud-act">Activación</span>
+                            {% elif log.Accion == 'RESET_CONTRASENA' %}
+                                <span class="al-badge aud-res">Restablecimiento de contraseña</span>
+                            {% elif log.Accion == 'RECUPERA_CONTRASENA' %}
+                                <span class="al-badge aud-rec">Recuperación de contraseña</span>
                             {% else %}
                                 <span class="al-badge">{{ log.Accion }}</span>
                             {% endif %}

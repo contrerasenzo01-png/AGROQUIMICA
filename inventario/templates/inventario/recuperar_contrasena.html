@@ -1,0 +1,53 @@
+{% extends 'inventario/acceso_base.html' %}
+
+{% block titulo %}Recuperar contraseña{% endblock %}
+
+{% block formulario %}
+
+    <span class="form-eyebrow">RECUPERAR ACCESO</span>
+    <h2>¿Olvidaste tu contraseña?</h2>
+
+    {% if enviado %}
+
+        <div class="ok-box" role="status">
+            Si el correo está registrado, te enviamos un enlace para
+            restablecer tu contraseña. Revisá tu bandeja de entrada y la
+            carpeta de spam. El enlace vence en 1 hora.
+        </div>
+
+    {% else %}
+
+        <p class="description">
+            Ingresá el correo electrónico registrado en tu usuario y te
+            enviaremos un enlace para crear una nueva contraseña.
+        </p>
+
+        <form method="POST" action="{% url 'recuperar_contrasena' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="email">Correo electrónico</label>
+                <input type="email"
+                       id="email"
+                       name="email"
+                       value="{{ email|default:'' }}"
+                       placeholder="Ingresá tu correo"
+                       autocomplete="email"
+                       required>
+            </div>
+
+            {% if error %}
+                <div class="error-box" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <button type="submit" class="btn-submit">
+                <span>Enviar enlace</span>
+                <span class="arrow">›</span>
+            </button>
+        </form>
+
+    {% endif %}
+
+    <a href="{% url 'login' %}" class="link-volver">Volver al inicio de sesión</a>
+
+{% endblock %}

@@ -35,7 +35,7 @@ from .alertas import (
     revisar_vencimientos as generar_alertas_vencimiento,
 )
 from .auditoria import (
-    snapshot, registrar_auditoria,
+    snapshot, registrar_auditoria, accion_por_estado,
     registrar_asignacion_perfil, registrar_asignacion_permisos,
 )
 from .forms import ProveedorForm
@@ -62,6 +62,10 @@ from .models import (
     LogAuditoria,
 )
 
+from .recuperacion import (
+    enviar_correo_recuperacion, limite_superado,
+    token_valido, usuario_desde_uid, usuario_habilitado,
+)
 
 # ============================================================
 # CONTROL DE ACCESO
@@ -796,7 +800,7 @@ def cambiar_estado_proveedor(request, pk):
         usuario,
         'Proveedores',
         proveedor,
-        'MODIFICACION',
+        'ACTIVACION' if proveedor.estado_proveedor else 'BAJA',
         antes,
         snapshot(proveedor)
     )
@@ -986,13 +990,15 @@ def editar_tipo_producto(request, pk):
         ]
     )
 
-    registrar_auditoria(                # <-- NUEVO
+    despues = snapshot(tipo)
+
+    registrar_auditoria(
         usuario,
         'Tipos de productos',
         tipo,
-        'MODIFICACION',
+        accion_por_estado(antes, despues, 'Estado_tipo_producto', True),
         antes,
-        snapshot(tipo)
+        despues
     )
 
     messages.success(
@@ -1688,8 +1694,7 @@ def dar_baja_usuario(request, pk):
         usuario.Fecha_Baja = timezone.now().date()
         usuario.save()
 
-        registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'MODIFICACION', antes, snapshot(usuario))
-
+        registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'BAJA', antes, snapshot(usuario))
         messages.success(
             request,
             'Usuario dado de baja correctamente.'
@@ -1725,8 +1730,7 @@ def activar_usuario(request, id):
         usuario.Fecha_Baja = None
         usuario.save()
 
-        registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'MODIFICACION', antes, snapshot(usuario))
-
+        registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'ACTIVACION', antes, snapshot(usuario))
         messages.success(
             request,
             f'El usuario {usuario.Usuario} '
@@ -1775,8 +1779,7 @@ def restablecer_contrasena(request, pk):
 
     despues = snapshot(usuario)
     despues['Contrasena'] = 'restablecida'
-    registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'MODIFICACION', antes, despues)
-
+    registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'RESET_CONTRASENA', antes, despues)
     messages.success(
         request,
         f'La contraseña del usuario {usuario.Usuario} '
@@ -2157,8 +2160,7 @@ def cambiar_estado_perfil(request, id):
         perfil.Estado_perfil = False
         perfil.save(update_fields=['Estado_perfil'])
 
-        registrar_auditoria(usuario, 'Perfiles', perfil, 'MODIFICACION', antes, snapshot(perfil))
-
+        registrar_auditoria(usuario, 'Perfiles', perfil, 'BAJA', antes, snapshot(perfil))
         messages.success(
             request,
             f'El perfil "{perfil.Nombre_perfil}" '
@@ -2170,8 +2172,7 @@ def cambiar_estado_perfil(request, id):
         perfil.Estado_perfil = True
         perfil.save(update_fields=['Estado_perfil'])
 
-        registrar_auditoria(usuario, 'Perfiles', perfil, 'MODIFICACION', antes, snapshot(perfil))
-
+        registrar_auditoria(usuario, 'Perfiles', perfil, 'ACTIVACION', antes, snapshot(perfil))
         messages.success(
             request,
             f'El perfil "{perfil.Nombre_perfil}" '
@@ -2865,7 +2866,7 @@ def editar_producto(request, pk):
             usuario,
             'Productos',
             producto,
-            'MODIFICACION',
+            accion_por_estado(antes, despues, 'Estado_producto', 'Activo'),
             antes,
             despues
         )
@@ -5308,3 +5309,111 @@ def sesion_ping(request):
         return JsonResponse({'ok': False}, status=401)
 
     return JsonResponse({'ok': True})
+
+# ============================================================
+# RECUPERAR CONTRASEÑA (desde el login, sin sesión)
+# ============================================================
+
+def recuperar_contrasena(request):
+
+    if request.method != 'POST':
+        return render(request, 'inventario/recuperar_contrasena.html')
+
+    email = request.POST.get('email', '').strip()
+    contexto = {'email': email}
+
+    if not email or '@' not in email:
+        contexto['error'] = 'Ingresá un correo electrónico válido.'
+        return render(request, 'inventario/recuperar_contrasena.html', contexto)
+
+    if limite_superado(request, email):
+        contexto['error'] = (
+            'Hiciste demasiados pedidos. '
+            'Esperá un rato antes de volver a intentarlo.'
+        )
+        return render(request, 'inventario/recuperar_contrasena.html', contexto)
+
+    usuarios = list(
+        Usuarios.objects.select_related('ID_Perfil').filter(
+            Email_usuario__iexact=email
+        )
+    )
+
+    habilitados = [u for u in usuarios if usuario_habilitado(u)]
+
+    if habilitados:
+        for u in habilitados:
+            enviar_correo_recuperacion(u)
+        contexto['enviado'] = True
+
+    elif any(not u.Estado_usuario for u in usuarios):
+        contexto['error'] = (
+            'Tu usuario fue dado de baja. '
+            'Comunicate con un administrador.'
+        )
+
+    elif usuarios:
+        contexto['error'] = (
+            'Tu usuario no está habilitado para ingresar. '
+            'Comunicate con un administrador.'
+        )
+
+    else:
+        # Correo inexistente: misma respuesta que si se hubiera enviado.
+        contexto['enviado'] = True
+
+    return render(request, 'inventario/recuperar_contrasena.html', contexto)
+
+
+def recuperar_confirmar(request, uidb64, token):
+
+    usuario = usuario_desde_uid(uidb64)
+
+    if not usuario_habilitado(usuario) or not token_valido(usuario, token):
+        return render(
+            request,
+            'inventario/recuperar_confirmar.html',
+            {'invalido': True}
+        )
+
+    if request.method == 'POST':
+        nueva = request.POST.get('nueva_contrasena', '')
+        confirmar = request.POST.get('confirmar_contrasena', '')
+
+        error = None
+
+        if nueva != confirmar:
+            error = 'Las contraseñas no coinciden.'
+        elif len(nueva) < 8:
+            error = 'La contraseña debe tener al menos 8 caracteres.'
+
+        if error:
+            return render(
+                request,
+                'inventario/recuperar_confirmar.html',
+                {'error': error}
+            )
+
+        antes = snapshot(usuario)
+        antes['Contrasena'] = 'anterior'
+
+        usuario.Contrasena = make_password(nueva)
+        usuario.Cambiar_contrasena = False
+        usuario.save()
+
+        despues = snapshot(usuario)
+        despues['Contrasena'] = 'recuperada por correo'
+
+        registrar_auditoria(
+            usuario, 'Usuarios', usuario,
+            'RECUPERA_CONTRASENA', antes, despues
+        )
+
+        messages.success(
+            request,
+            'Tu contraseña se cambió correctamente. Ya podés ingresar.'
+        )
+
+        return redirect('login')
+
+    return render(request, 'inventario/recuperar_confirmar.html')
