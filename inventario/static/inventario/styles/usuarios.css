@@ -407,3 +407,101 @@
     .us-header { flex-direction: column; }
     .us-grid   { grid-template-columns: 1fr; }
 }
+
+/* ==========================================
+   FORMULARIO EN LÍNEA (ACTIVAR USUARIO)
+   ========================================== */
+
+.us-form-inline {
+    display: inline;
+}
+
+
+/* ==========================================
+   MODAL RESTABLECER: OPCIONES
+   ========================================== */
+
+#modalRestablecer .us-modal-head + .us-info {
+    margin: 18px 22px 0;
+}
+
+.us-opcion-reset {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.us-opcion-titulo,
+.us-opcion-texto,
+.us-opcion-aviso,
+.us-opcion-accion {
+    margin: 0 22px;
+}
+
+.us-opcion-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--us-titulo);
+}
+
+.us-recomendado {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e8f5ee;
+    color: #1b7a4a;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.us-opcion-texto {
+    font-size: 12px;
+    color: var(--us-suave);
+}
+
+.us-opcion-aviso {
+    display: none;
+    padding: 8px 10px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #991b1b;
+}
+
+.us-opcion-aviso.us-visible {
+    display: block;
+}
+
+.us-opcion-accion {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.us-opcion-accion .us-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.us-separador {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 22px 0;
+    font-size: 11px;
+    color: var(--us-suave);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.us-separador::before,
+.us-separador::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--us-borde);
+}

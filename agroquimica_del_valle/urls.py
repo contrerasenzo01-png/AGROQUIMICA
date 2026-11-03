@@ -40,6 +40,7 @@ urlpatterns = [
     path('usuarios/editar/<int:pk>/', views.editar_usuario, name='editar_usuario'),
     path('usuarios/baja/<int:pk>/', views.dar_baja_usuario, name='dar_baja_usuario'),
     path('usuarios/restablecer/<int:pk>/', views.restablecer_contrasena, name='restablecer_contrasena'),
+    path('usuarios/enviar-enlace/<int:pk>/', views.enviar_enlace_recuperacion, name='enviar_enlace_recuperacion'),
     path('usuarios/cambiar-contrasena/', views.cambiar_contrasena, name='cambiar_contrasena'),
     path('usuarios/activar/<int:id>/', views.activar_usuario, name='activar_usuario'),
     path('usuarios/eliminar/<int:pk>/', views.eliminar_usuario, name='eliminar_usuario'),

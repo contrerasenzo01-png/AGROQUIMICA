@@ -1810,6 +1810,51 @@ def activar_usuario(request, id):
     return redirect('gestion_usuarios')
 
 
+@require_POST
+def enviar_enlace_recuperacion(request, pk):
+
+    usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
+
+    if not usuario_admin:
+        return redirect('panel_principal')
+
+    usuario = get_object_or_404(
+        Usuarios,
+        ID_Usuario=pk
+    )
+
+    if not usuario_habilitado(usuario):
+        messages.error(
+            request,
+            f'El usuario {usuario.Usuario} está dado de baja. '
+            'Actívelo antes de enviarle el enlace.'
+        )
+        return redirect('gestion_usuarios')
+
+    if not usuario.Email_usuario:
+        messages.error(
+            request,
+            f'El usuario {usuario.Usuario} no tiene un correo registrado.'
+        )
+        return redirect('gestion_usuarios')
+
+    enviar_correo_recuperacion(usuario)
+
+    antes = snapshot(usuario)
+    antes['Contrasena'] = 'sin cambios'
+    despues = snapshot(usuario)
+    despues['Contrasena'] = f'enlace de recuperación enviado a {usuario.Email_usuario}'
+    registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'RESET_CONTRASENA', antes, despues)
+
+    messages.success(
+        request,
+        f'Se envió el enlace de recuperación a {usuario.Email_usuario}. '
+        'El enlace vence en 1 hora.'
+    )
+
+    return redirect('gestion_usuarios')
+
+
 def restablecer_contrasena(request, pk):
 
     usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)

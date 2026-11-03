@@ -157,7 +157,9 @@
                                     <button type="button" class="us-icon-btn" title="Restablecer contraseña" aria-label="Restablecer contraseña"
                                         onclick="abrirModalRestablecer(
                                             '{{ usuario.ID_Usuario }}',
-                                            '{{ usuario.Usuario|escapejs }}'
+                                            '{{ usuario.Usuario|escapejs }}',
+                                            '{{ usuario.Email_usuario|escapejs }}',
+                                            '{{ usuario.Estado_usuario|yesno:"1,0" }}'
                                         )">
                                         <svg class="us-icon" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
                                     </button>
@@ -420,15 +422,38 @@
             </button>
         </div>
 
-        <form method="POST" id="formRestablecer">
+        <div class="us-info us-full">
+            Usuario: <strong id="restablecerUsuario"></strong>
+        </div>
+
+        <!-- OPCIÓN 1: ENVIAR ENLACE POR CORREO (RECOMENDADO) -->
+        <form method="POST" id="formEnviarEnlace" class="us-opcion-reset">
 
             {% csrf_token %}
 
-            <div class="us-grid">
+            <h3 class="us-opcion-titulo">Enviar enlace por correo <span class="us-recomendado">Recomendado</span></h3>
+            <p class="us-opcion-texto">
+                El usuario recibe un enlace en <strong id="restablecerEmail"></strong> para crear su propia contraseña. Vence en 1 hora.
+            </p>
+            <p class="us-opcion-aviso" id="restablecerAvisoEnlace"></p>
 
-                <div class="us-info us-full">
-                    Usuario: <strong id="restablecerUsuario"></strong>
-                </div>
+            <div class="us-opcion-accion">
+                <button type="submit" class="us-btn us-btn-primary" id="btnEnviarEnlace">Enviar enlace</button>
+            </div>
+
+        </form>
+
+        <div class="us-separador"><span>o</span></div>
+
+        <!-- OPCIÓN 2: ASIGNAR CONTRASEÑA TEMPORAL -->
+        <form method="POST" id="formRestablecer" class="us-opcion-reset">
+
+            {% csrf_token %}
+
+            <h3 class="us-opcion-titulo">Asignar contraseña temporal</h3>
+            <p class="us-opcion-texto">Usala si el usuario no tiene acceso a su correo. Deberá cambiarla en su próximo ingreso.</p>
+
+            <div class="us-grid">
 
                 <div class="us-grupo us-full">
                     <label>Nueva contraseña</label>
@@ -455,7 +480,7 @@
 
             <div class="us-modal-pie">
                 <button type="button" class="us-btn us-btn-claro" onclick="cerrarModalRestablecer()">Cancelar</button>
-                <button type="submit" class="us-btn us-btn-primary">Restablecer contraseña</button>
+                <button type="submit" class="us-btn us-btn-primary">Asignar contraseña</button>
             </div>
 
         </form>
@@ -656,11 +681,30 @@ function cerrarModalEditar() {
 
 /* MODAL RESTABLECER CONTRASEÑA */
 
-function abrirModalRestablecer(idUsuario, nombreUsuario) {
+function abrirModalRestablecer(idUsuario, nombreUsuario, emailUsuario, activo) {
 
     document.getElementById('restablecerUsuario').textContent = nombreUsuario;
 
+    document.getElementById('restablecerEmail').textContent = emailUsuario || 'sin correo';
+
     document.getElementById('formRestablecer').action = '/usuarios/restablecer/' + idUsuario + '/';
+
+    document.getElementById('formEnviarEnlace').action = '/usuarios/enviar-enlace/' + idUsuario + '/';
+
+    const aviso = document.getElementById('restablecerAvisoEnlace');
+    const boton = document.getElementById('btnEnviarEnlace');
+
+    let motivo = '';
+
+    if (!emailUsuario) {
+        motivo = 'El usuario no tiene un correo registrado.';
+    } else if (activo !== '1') {
+        motivo = 'El usuario está dado de baja. Actívelo para enviarle el enlace.';
+    }
+
+    aviso.textContent = motivo;
+    aviso.classList.toggle('us-visible', motivo !== '');
+    boton.disabled = motivo !== '';
 
     document.getElementById('modalRestablecer').style.display = 'flex';
 
@@ -757,12 +801,12 @@ function generarUsuario() {
     const apellido = apellidoInput.value
         .trim()
         .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "");
+        .replace(/[\u0300-\u036f]/g, "");
 
     const nombre = nombreInput.value
         .trim()
         .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "");
+        .replace(/[\u0300-\u036f]/g, "");
 
     if (apellido && nombre) {
         usuarioPreview.value = apellido.toLowerCase() + nombre.charAt(0).toLowerCase();
