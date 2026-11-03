@@ -1,3 +1,4 @@
+
 console.log('auditoria.js se cargó correctamente');
 
 /* =========================================================
@@ -9,10 +10,12 @@ const NOMBRES_ACCION = {
     CREACION: 'Creación',
     MODIFICACION: 'Modificación',
     ELIMINACION: 'Eliminación',
-    ANULACION: 'Anulación',
+    ANULACION: 'Anulación de venta',
+    ANULACION_REMITO: 'Anulación de remito',
     INICIO_SESION: 'Inicio de sesión',
     CIERRE_SESION: 'Cierre de sesión',
     EGRESO_STOCK: 'Egreso de stock',
+    EGRESO_VENCIMIENTO: 'Egreso por vencimiento',
     INGRESO_LOTE: 'Ingreso de lote',
     DESCARGA_PDF: 'Descarga de PDF',
     ASIGNACION_PERFIL: 'Asignación de perfil',
@@ -22,18 +25,20 @@ const NOMBRES_ACCION = {
     ACTIVACION: 'Activación',
     RESET_CONTRASENA: 'Restablecimiento de contraseña',
     ENVIO_RECUPERACION: 'Envío de enlace de recuperación',
-    RECUPERA_CONTRASENA: 'Recuperación de contraseña',
+    RECUPERA_CONTRASENA: 'Recuperación de contraseña'
 };
 
-// Clase de la insignia de cada acción (las mismas de la tabla).
+// Clase de la insignia de cada acción.
 const CLASES_ACCION = {
     CREACION: 'aud-cre',
     MODIFICACION: 'aud-mod',
     ELIMINACION: 'aud-eli',
     ANULACION: 'aud-anu',
+    ANULACION_REMITO: 'aud-anu-remito',
     INICIO_SESION: 'aud-ini',
     CIERRE_SESION: 'aud-cie',
     EGRESO_STOCK: 'aud-egr',
+    EGRESO_VENCIMIENTO: 'aud-egr-ven',
     INGRESO_LOTE: 'aud-ing',
     DESCARGA_PDF: 'aud-pdf',
     ASIGNACION_PERFIL: 'aud-asp',
@@ -51,32 +56,38 @@ const MESES = [
     'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'
 ];
 
-// Íconos (trazos simples, se dibujan con el color del texto).
+// Íconos.
+
 const ICONOS = {
     usuario:
         '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>' +
         '<circle cx="12" cy="7" r="4"/>',
+
     perfil:
         '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 ' +
         '20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 ' +
         '1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>' +
         '<path d="m9 12 2 2 4-4"/>',
+
     seccion:
         '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 ' +
         '1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/>' +
         '<path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/>' +
         '<path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+
     id:
         '<line x1="4" x2="20" y1="9" y2="9"/>' +
         '<line x1="4" x2="20" y1="15" y2="15"/>' +
         '<line x1="10" x2="8" y1="3" y2="21"/>' +
         '<line x1="16" x2="14" y1="3" y2="21"/>',
+
     reloj:
         '<circle cx="12" cy="12" r="10"/>' +
         '<polyline points="12 6 12 12 16 14"/>'
 };
 
-// Nombre legible de los campos más comunes.
+
+// Nombre legible de los campos.
 const ETIQUETAS_CAMPO = {
     // Productos
     Nombre_producto: 'Nombre',
@@ -90,6 +101,7 @@ const ETIQUETAS_CAMPO = {
     Unidades_por_presentacion: 'Unidades por presentación',
     Estado_producto: 'Estado',
     Stock_minimo: 'Stock mínimo',
+
     // Lotes
     ID_Producto: 'Producto',
     ID_Remito: 'Remito',
@@ -100,6 +112,7 @@ const ETIQUETAS_CAMPO = {
     Cantidad_actual: 'Cantidad actual',
     Fecha_ingreso: 'Fecha de ingreso',
     Fecha_vencimiento: 'Fecha de vencimiento',
+
     // Remitos
     ID_Proveedor: 'Proveedor',
     Numero_remito: 'Número de remito',
@@ -108,12 +121,14 @@ const ETIQUETAS_CAMPO = {
     Fecha_anulacion: 'Fecha de anulación',
     Motivo_anulacion: 'Motivo de la anulación',
     ID_Usuario_anulacion: 'Anulado por',
+
     // Proveedores
     nombre_proveedor: 'Nombre',
     telefono_proveedor: 'Teléfono',
     email_proveedor: 'Email',
     direccion_proveedor: 'Dirección',
     estado_proveedor: 'Estado',
+
     // Usuarios
     ID_Perfil: 'Perfil',
     DNI: 'DNI',
@@ -125,6 +140,7 @@ const ETIQUETAS_CAMPO = {
     Fecha_ultima_modificacion: 'Última modificación',
     Fecha_Baja: 'Fecha de baja',
     Cambiar_contrasena: 'Debe cambiar la contraseña',
+
     // Perfiles, permisos, tipos y subtipos
     Nombre_perfil: 'Nombre',
     Estado_perfil: 'Estado',
@@ -134,6 +150,7 @@ const ETIQUETAS_CAMPO = {
     Estado_tipo_producto: 'Estado',
     Nombre_subtipo: 'Nombre',
     Descripcion_subtipo: 'Descripción',
+
     // Auditoría de stock, PDF y permisos
     Lote: 'Número de lote',
     Cantidad: 'Cantidad',
@@ -150,39 +167,46 @@ const ETIQUETAS_CAMPO = {
     Agregados: 'Permisos agregados',
     Quitados: 'Permisos quitados',
     Cantidad_lotes: 'Cantidad de lotes',
-    Lotes_revertidos: 'Lotes revertidos',
+    Lotes_revertidos: 'Cantidad de lotes revertidos',
+
     // Alertas
     Atendida: 'Atendida',
     Fecha_hora_atencion: 'Fecha de atención',
+
     // Recuperación de contraseña
     Correo: 'Correo',
+
     // Otros
     Nota: 'Nota',
     accion: 'Acción'
 };
 
-// Campos de la anulación de un remito. La fecha y el usuario ya figuran
-// arriba (momento y responsable de la acción), así que no se repiten.
+// Campos de la anulación de un remito.
 const CAMPOS_ANULACION = [
-    'Fecha_anulacion', 'Motivo_anulacion', 'ID_Usuario_anulacion'
+    'Fecha_anulacion',
+    'Motivo_anulacion',
+    'ID_Usuario_anulacion'
 ];
-const REPETIDOS_EN_ANULACION = ['Fecha_anulacion', 'ID_Usuario_anulacion'];
+
+// Campos que no deben repetirse en la tabla de cambios.
+const REPETIDOS_EN_ANULACION = [
+    'Fecha_anulacion',
+    'ID_Usuario_anulacion'
+];
 
 function estaVacio(valor) {
     return valor === null || valor === undefined || valor === '';
 }
 
-// Texto que se muestra cuando un valor está vacío.
 const SIN_VALOR = 'Sin valor';
 
-// Los campos con ID no se muestran, salvo los que el servidor ya
-// reemplazó por el nombre del registro relacionado.
+// Los campos con ID no se muestran, salvo los conocidos.
 function campoVisible(campo) {
     return !String(campo).startsWith('ID_') ||
            ETIQUETAS_CAMPO[campo] !== undefined;
 }
 
-// Nombre de un campo: el conocido, o el original con formato.
+// Nombre de un campo.
 function etiquetaCampo(campo) {
     if (ETIQUETAS_CAMPO[campo]) {
         return ETIQUETAS_CAMPO[campo];
@@ -207,14 +231,12 @@ function formatearValor(valor, campo) {
     }
 
     if (typeof valor === 'string') {
-        // Fecha: 2026-10-30
         const fecha = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 
         if (fecha) {
             return `${fecha[3]}/${fecha[2]}/${fecha[1]}`;
         }
 
-        // Fecha y hora con zona horaria: se muestra en la hora local.
         if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}.*(Z|[+-]\d{2}:\d{2})$/.test(valor)) {
             const momento = new Date(valor);
 
@@ -228,7 +250,6 @@ function formatearValor(valor, campo) {
             }
         }
 
-        // Fecha y hora sin zona: 2026-10-30T14:05:00...
         const fechaHora = valor.match(
             /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
         );
@@ -264,298 +285,6 @@ function fechaCorta(texto) {
 }
 
 /* =========================================================
-   ESTILOS (se agregan una sola vez)
-========================================================= */
-
-function inyectarEstilosAuditoria() {
-    if (document.getElementById('estilos-detalle-auditoria')) {
-        return;
-    }
-
-    const estilos = document.createElement('style');
-    estilos.id = 'estilos-detalle-auditoria';
-
-    estilos.textContent = `
-        /* ---------- Colores de cada acción (tabla y detalle) ---------- */
-        .al-badge.aud-ini { background: #dbeafe; color: #1d4ed8; }
-        .al-badge.aud-cre { background: #dcfce7; color: #166534; }
-        .al-badge.aud-mod { background: #ffedd5; color: #c2410c; }
-        .al-badge.aud-eli { background: #fee2e2; color: #b91c1c; }
-        .al-badge.aud-cie { background: #ede9fe; color: #6d28d9; }
-        .al-badge.aud-anu { background: #f1e7dc; color: #7a4a21; }
-        .al-badge.aud-ate { background: #ccfbf1; color: #0f766e; }
-        .al-badge.aud-baj { background: #fce7f3; color: #be185d; }
-        .al-badge.aud-act { background: #d1fae5; color: #047857; }
-        .al-badge.aud-res { background: #fef9c3; color: #854d0e; }
-        .al-badge.aud-rec { background: #e0e7ff; color: #3730a3; }
-        /* ---------- Ventana más compacta ---------- */
-        .aud-modal .aud-modal-contenido {
-            width: min(500px, 92vw);
-            max-width: 500px;
-            max-height: 88vh;
-            overflow-y: auto;
-            padding: 22px 26px;
-            border-radius: 16px;
-        }
-
-        .aud-modal .aud-modal-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            padding-bottom: 14px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #e3eae6;
-        }
-
-        .aud-modal .aud-modal-header h2 {
-            margin: 0;
-            font-size: 19px;
-            color: #14352a;
-        }
-
-        .aud-modal-sub {
-            margin: 2px 0 0;
-            font-size: 12px;
-            color: #6b7c73;
-        }
-
-        .aud-modal .aud-modal-cerrar {
-            flex: none;
-            width: 32px;
-            height: 32px;
-            display: grid;
-            place-items: center;
-            padding: 0;
-            border: none;
-            border-radius: 8px;
-            background: #eef3f0;
-            color: #3d4f45;
-            font-size: 20px;
-            line-height: 1;
-            cursor: pointer;
-        }
-
-        .aud-modal .aud-modal-cerrar:hover { background: #e1ebe5; }
-
-        .aud-modal .aud-modal-footer { margin-top: 18px; }
-
-        /* ---------- Contenido del detalle ---------- */
-        #contenidoDetalleAuditoria .aud-det {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-cab {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: flex-start;
-            margin: 0;
-            padding: 0 0 16px;
-            border-bottom: 1px solid #e3eae6;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-fecha {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin: 0;
-            font-size: 13px;
-            color: #6b7c73;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-fecha svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        #contenidoDetalleAuditoria svg {
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-bloque {
-            margin: 0;
-            padding: 0;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-bloque h4 {
-            margin: 0 0 12px;
-            padding: 0;
-            font-size: 14px;
-            font-weight: 700;
-            color: #14352a;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-lista {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px 12px;
-        }
-
-        @media (max-width: 460px) {
-            #contenidoDetalleAuditoria .aud-det-lista {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        #contenidoDetalleAuditoria .aud-det-fila {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-icono {
-            flex: none;
-            width: 30px;
-            height: 30px;
-            display: grid;
-            place-items: center;
-            border-radius: 8px;
-            background: #e7efe9;
-            color: #2f5d46;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-icono svg {
-            width: 15px;
-            height: 15px;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-fila small {
-            display: block;
-            margin: 0;
-            font-size: 11px;
-            line-height: 1.2;
-            color: #6b7c73;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-fila strong {
-            display: block;
-            margin: 0;
-            font-size: 13px;
-            line-height: 1.3;
-            color: #14352a;
-            word-break: break-word;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-nota {
-            margin: 0;
-            padding: 8px 12px;
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-            border-radius: 8px;
-            font-size: 12px;
-            line-height: 1.5;
-            color: #92400e;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-nota strong {
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-scroll {
-            max-height: 240px;
-            overflow: auto;
-            border: 1px solid #e3eae6;
-            border-radius: 8px;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-tabla {
-            width: 100%;
-            margin: 0;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-tabla th {
-            position: sticky;
-            top: 0;
-            padding: 10px 14px;
-            background: #f3f7f5;
-            border-bottom: 1px solid #e3eae6;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-            color: #6b7c73;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-tabla td {
-            padding: 10px 14px;
-            border-bottom: 1px solid #eef3f0;
-            vertical-align: top;
-            word-break: break-word;
-            color: #1c2a23;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-tabla tr:last-child td {
-            border-bottom: none;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-tabla td:first-child {
-            width: 36%;
-            font-weight: 600;
-            color: #3d4f45;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-antes {
-            color: #6b7c73;
-            text-decoration: line-through;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-despues {
-            font-weight: 600;
-            color: #14532d;
-        }
-
-        #contenidoDetalleAuditoria .aud-det-sinvalor {
-            color: #9aa8a0;
-            font-style: italic;
-            text-decoration: none;
-        }
-    `;
-
-    document.head.appendChild(estilos);
-}
-
-inyectarEstilosAuditoria();
-
-// Agrega el subtítulo debajo del título de la ventana.
-function prepararCabeceraModal() {
-    const titulo = document.getElementById('tituloModalAuditoria');
-
-    if (!titulo || !titulo.parentNode) {
-        return;
-    }
-
-    if (titulo.parentNode.querySelector('.aud-modal-sub')) {
-        return;
-    }
-
-    const envoltorio = document.createElement('div');
-    titulo.parentNode.insertBefore(envoltorio, titulo);
-    envoltorio.appendChild(titulo);
-
-    const subtitulo = document.createElement('p');
-    subtitulo.className = 'aud-modal-sub';
-    subtitulo.textContent = 'Información del registro de actividad';
-    envoltorio.appendChild(subtitulo);
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', prepararCabeceraModal);
-} else {
-    prepararCabeceraModal();
-}
-
-/* =========================================================
    ARMADO DEL DETALLE
 ========================================================= */
 
@@ -573,7 +302,7 @@ function crear(etiqueta, clase, texto) {
     return nodo;
 }
 
-// Ícono propio de la página (trazos fijos, no vienen del servidor).
+// Ícono propio de la página.
 function crearIcono(clase, nombre) {
     const nodo = crear('span', clase);
 
@@ -638,7 +367,7 @@ function armarDetalle(contenido, datos) {
 
     const detalle = crear('div', 'aud-det');
 
-    // Insignia de la acción, con la fecha y la hora debajo.
+    // Insignia de la acción.
     const cabecera = crear('div', 'aud-det-cab');
 
     cabecera.appendChild(
@@ -656,8 +385,8 @@ function armarDetalle(contenido, datos) {
             `${fechaCorta(datos.fecha)} · ${datos.hora} hs`
         )
     );
-    cabecera.appendChild(momento);
 
+    cabecera.appendChild(momento);
     detalle.appendChild(cabecera);
 
     // Datos básicos.
@@ -674,16 +403,17 @@ function armarDetalle(contenido, datos) {
     bloque.appendChild(lista);
     detalle.appendChild(bloque);
 
-    // Inicio y cierre de sesión: no hay datos que mostrar.
+    // Inicio y cierre de sesión.
     if (datos.modo === 'ninguno') {
         contenido.appendChild(detalle);
         return;
     }
 
-    // Altas y eliminaciones: los datos del registro.
+    // Altas y eliminaciones.
     if (datos.modo === 'datos') {
         const campos = datos.datos || [];
         const nota = campos.find(d => d.campo === 'Nota');
+
         const filas = campos.filter(
             d => d.campo !== 'Nota' &&
                  campoVisible(d.campo) &&
@@ -730,16 +460,24 @@ function armarDetalle(contenido, datos) {
         return;
     }
 
-    // Modificaciones, anulaciones y atención de alertas.
-    const esAnulacion = datos.accion === 'ANULACION';
+    // Modificaciones, anulaciones, atención de alertas y egresos.
+    const esAnulacion =
+        datos.accion === 'ANULACION' ||
+        datos.accion === 'ANULACION_REMITO';
+
     const esAtencion = datos.accion === 'ATENCION_ALERTA';
+    const esEgresoVencimiento = datos.accion === 'EGRESO_VENCIMIENTO';
 
     let tituloSeccion = 'Cambios realizados';
 
-    if (esAnulacion) {
-        tituloSeccion = 'Datos de la anulación';
+    if (datos.accion === 'ANULACION') {
+        tituloSeccion = 'Datos de la anulación de venta';
+    } else if (datos.accion === 'ANULACION_REMITO') {
+        tituloSeccion = 'Datos de la anulación del remito';
     } else if (esAtencion) {
         tituloSeccion = 'Datos de la atención';
+    } else if (esEgresoVencimiento) {
+        tituloSeccion = 'Datos del egreso por vencimiento';
     }
 
     const seccion = crear('section', 'aud-det-bloque');
@@ -758,8 +496,8 @@ function armarDetalle(contenido, datos) {
                 'No hay cambios de campos registrados.'
             )
         );
-    } else if (esAnulacion) {
-        // En una anulación solo importa lo que quedó registrado.
+    } else if (esAnulacion || esEgresoVencimiento) {
+        // En una anulación o egreso se muestran los datos finales.
         seccion.appendChild(
             crearTabla(
                 ['Campo', 'Detalle'],
@@ -798,17 +536,14 @@ function abrirDetalleAuditoria(boton) {
     const modal = document.getElementById('modalAuditoria');
     const contenido = document.getElementById('contenidoDetalleAuditoria');
 
-    // Verificar que existan los elementos del modal.
     if (!modal || !contenido) {
         console.error('No se encontró el modal o su contenido.');
         return;
     }
 
-    // Mostrar el modal.
     modal.classList.add('activo');
     modal.setAttribute('aria-hidden', 'false');
 
-    // Mostrar mensaje mientras se cargan los datos.
     contenido.textContent = 'Cargando detalle...';
 
     const url = boton.dataset.url;
@@ -854,14 +589,14 @@ function cerrarDetalleAuditoria() {
     modal.setAttribute('aria-hidden', 'true');
 }
 
-// Cerrar el modal al presionar Escape.
+// Cerrar al presionar Escape.
 document.addEventListener('keydown', evento => {
     if (evento.key === 'Escape') {
         cerrarDetalleAuditoria();
     }
 });
 
-// Cerrar el modal al hacer clic fuera de su contenido.
+// Cerrar al hacer clic fuera del contenido.
 document.addEventListener('click', evento => {
     const modal = document.getElementById('modalAuditoria');
 

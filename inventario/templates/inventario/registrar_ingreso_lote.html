@@ -87,6 +87,7 @@
                         <th>Cantidad ingresada</th>
                         <th>Cantidad actual</th>
                         <th>Estado</th>
+                        {% if perm.egresos_gestionar %}<th class="lt-col-acciones">Acciones</th>{% endif %}
                     </tr>
                 </thead>
 
@@ -166,11 +167,42 @@
                             </span>
                         </td>
 
+                        {% if perm.egresos_gestionar %}
+                        <td class="lt-col-acciones">
+                            {% if l.Fecha_vencimiento and l.Fecha_vencimiento < hoy and l.Cantidad_actual > 0 %}
+                            <div class="lt-acciones">
+                                <button type="button"
+                                        class="lt-btn-accion lt-btn-vencimiento"
+                                        title="Dar de baja por vencimiento"
+                                        data-url="{% url 'baja_lote_vencido' l.ID_Lote %}"
+                                        data-producto="{{ l.ID_Producto.Nombre_producto }}"
+                                        data-lote="{{ l.Numero_lote }}"
+                                        data-remito="{{ l.ID_Remito.Numero_remito|default:'—' }}"
+                                        data-proveedor="{% if l.ID_Remito and l.ID_Remito.ID_Proveedor %}{{ l.ID_Remito.ID_Proveedor.nombre_proveedor }}{% else %}Sin atribuir{% endif %}"
+                                        data-vence="{{ l.Fecha_vencimiento|date:'d/m/Y' }}"
+                                        data-cantidad="{{ l.Cantidad_actual }}"
+                                        onclick="abrirModalBajaVencimiento(this)">
+                                    <svg class="lt-icon" viewBox="0 0 24 24">
+                                        <path d="M3 6h18"/>
+                                        <path d="M8 6V4h8v2"/>
+                                        <path d="m19 6-1 14H6L5 6"/>
+                                        <path d="M10 11v5"/>
+                                        <path d="M14 11v5"/>
+                                    </svg>
+                                    Dar de baja
+                                </button>
+                            </div>
+                            {% else %}
+                                <span class="lt-muted">—</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+
                     </tr>
 
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="lt-vacio">
+                        <td colspan="{% if perm.egresos_gestionar %}10{% else %}9{% endif %}" class="lt-vacio">
                             No se encontraron lotes.
                         </td>
                     </tr>
@@ -193,4 +225,166 @@
 
 </div>
 
+{% if perm.egresos_gestionar %}
+<!-- MODAL DAR DE BAJA POR VENCIMIENTO -->
+<div class="lt-modal" id="modalBajaVencimiento" aria-hidden="true">
+    <div class="lt-modal-box"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloBajaVencimiento">
+
+        <div class="lt-modal-head">
+            <div>
+                <div class="lt-modal-eyebrow">Lotes</div>
+                <h2 id="tituloBajaVencimiento">Dar de baja por vencimiento</h2>
+            </div>
+
+            <button type="button"
+                    class="lt-modal-x"
+                    onclick="cerrarModalBajaVencimiento()"
+                    aria-label="Cerrar">&times;</button>
+        </div>
+
+        <form method="POST" id="formBajaVencimiento">
+            {% csrf_token %}
+
+            <div class="lt-modal-body">
+
+                <div class="lt-aviso">
+                    <svg class="lt-icon" viewBox="0 0 24 24">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                        <path d="M12 9v4"/>
+                        <path d="M12 17h.01"/>
+                    </svg>
+                    <div>
+                        Confirmá la baja solo cuando el lote ya fue retirado del
+                        depósito. Se descuenta todo lo que le quedaba, el lote queda
+                        en cero y no se puede deshacer.
+                    </div>
+                </div>
+
+                <div class="lt-resumen-baja">
+                    <div class="lt-resumen-baja-cab">
+                        <div class="lt-avatar-baja">!</div>
+                        <div>
+                            <h3 id="bvProducto">—</h3>
+                            <p>Lote vencido</p>
+                        </div>
+                    </div>
+
+                    <div class="lt-datos-baja">
+                        <div>
+                            <span class="lt-label-baja">Número de lote</span>
+                            <span class="lt-valor-baja" id="bvLote">—</span>
+                        </div>
+                        <div>
+                            <span class="lt-label-baja">Remito</span>
+                            <span class="lt-valor-baja" id="bvRemito">—</span>
+                        </div>
+                        <div>
+                            <span class="lt-label-baja">Proveedor</span>
+                            <span class="lt-valor-baja" id="bvProveedor">—</span>
+                        </div>
+                        <div>
+                            <span class="lt-label-baja">Fecha de vencimiento</span>
+                            <span class="lt-valor-baja" id="bvVence">—</span>
+                        </div>
+                        <div>
+                            <span class="lt-label-baja">Cantidad a dar de baja</span>
+                            <span class="lt-valor-baja" id="bvCantidad">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lt-campo">
+                    <label for="bvObservacion">Observación (opcional)</label>
+                    <textarea name="observacion"
+                              id="bvObservacion"
+                              maxlength="200"
+                              rows="3"
+                              placeholder="Ej.: Devuelto al proveedor / Enviado a disposición final"></textarea>
+                    <p class="lt-ayuda lt-ayuda-contador" id="bvContador">0 / 200</p>
+                </div>
+
+            </div>
+
+            <div class="lt-modal-pie">
+                <button type="button"
+                        class="lt-btn lt-btn-claro"
+                        onclick="cerrarModalBajaVencimiento()">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        class="lt-btn-peligro"
+                        id="btnConfirmarBajaVencimiento">
+                    Dar de baja
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if perm.egresos_gestionar %}
+<script>
+(function () {
+    'use strict';
+
+    const modal = document.getElementById('modalBajaVencimiento');
+    const form = document.getElementById('formBajaVencimiento');
+    const observacion = document.getElementById('bvObservacion');
+    const contador = document.getElementById('bvContador');
+    const btnConfirmar = document.getElementById('btnConfirmarBajaVencimiento');
+
+    observacion.addEventListener('input', function () {
+        contador.textContent = observacion.value.length + ' / 200';
+    });
+
+    form.addEventListener('submit', function () {
+        btnConfirmar.disabled = true;
+    });
+
+    window.abrirModalBajaVencimiento = function (boton) {
+        form.action = boton.dataset.url;
+
+        document.getElementById('bvProducto').textContent = boton.dataset.producto;
+        document.getElementById('bvLote').textContent = boton.dataset.lote;
+        document.getElementById('bvRemito').textContent = boton.dataset.remito;
+        document.getElementById('bvProveedor').textContent = boton.dataset.proveedor;
+        document.getElementById('bvVence').textContent = boton.dataset.vence;
+        document.getElementById('bvCantidad').textContent =
+            boton.dataset.cantidad + ' unidades';
+
+        observacion.value = '';
+        contador.textContent = '0 / 200';
+        btnConfirmar.disabled = false;
+
+        modal.classList.add('abierto');
+        modal.setAttribute('aria-hidden', 'false');
+        observacion.focus();
+    };
+
+    window.cerrarModalBajaVencimiento = function () {
+        modal.classList.remove('abierto');
+        modal.setAttribute('aria-hidden', 'true');
+    };
+
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            cerrarModalBajaVencimiento();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            cerrarModalBajaVencimiento();
+        }
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

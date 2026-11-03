@@ -3135,6 +3135,111 @@ def registrar_ingreso_lote(request):
         }
     )
 
+@transaction.atomic
+def baja_lote_vencido(request, id_lote):
+
+    usuario = usuario_con_acceso(request, 'egresos', gestionar=True)
+
+    if not usuario:
+        messages.error(request, "No tenés permisos para realizar esta operación.")
+        return redirect('panel_principal')
+
+    # La operación debe realizarse mediante POST
+    if request.method != 'POST':
+        return redirect('registrar_ingreso_lote')
+
+    # Buscar y bloquear el lote
+    lote = get_object_or_404(
+        Lotes.objects.select_for_update(),
+        ID_Lote=id_lote
+    )
+
+    # Verificar fecha de vencimiento
+    if not lote.Fecha_vencimiento:
+        messages.error(request, "El lote no tiene fecha de vencimiento registrada.")
+        return redirect('registrar_ingreso_lote')
+
+    if lote.Fecha_vencimiento >= timezone.localdate():
+        messages.error(request, "El lote todavía no se encuentra vencido.")
+        return redirect('registrar_ingreso_lote')
+
+    # Verificar cantidad disponible
+    cantidad = lote.Cantidad_actual
+
+    if cantidad <= 0:
+        messages.warning(request, "El lote no tiene unidades disponibles.")
+        return redirect('registrar_ingreso_lote')
+
+    # Buscar y bloquear el stock del producto
+    stock = Stock.objects.select_for_update().get(
+        ID_Producto=lote.ID_Producto
+    )
+
+    if stock.Cantidad_stock < cantidad:
+        messages.error(
+            request,
+            "La cantidad del lote supera el stock disponible del producto."
+        )
+        return redirect('registrar_ingreso_lote')
+
+    # Guardar cantidades anteriores para la auditoría
+    lote_antes = lote.Cantidad_actual
+    stock_antes = stock.Cantidad_stock
+    producto = lote.ID_Producto
+
+    # Buscar el tipo de movimiento
+    tipo_movimiento = get_object_or_404(
+        TiposMovimientos,
+        Nombre_tipo_movimiento__iexact='Salida por vencimiento de producto'
+    )
+
+    # Descontar cantidades
+    stock.Cantidad_stock -= cantidad
+    stock.save(update_fields=['Cantidad_stock'])
+
+    lote.Cantidad_actual = 0
+    lote.save(update_fields=['Cantidad_actual'])
+
+    detalle = f"Salida por vencimiento del lote {lote.Numero_lote}"
+
+    # Registrar movimiento de stock
+    movimiento = MovimientosStock.objects.create(
+        ID_Usuario=usuario,
+        ID_Tipo_movimiento=tipo_movimiento,
+        ID_Lote=lote,
+        Cantidad_movimiento_stock=cantidad,
+        Observaciones=detalle
+    )
+
+    # Registrar auditoría como egreso por vencimiento
+    registrar_auditoria(
+        usuario,
+        'Movimientos de Stock',
+        movimiento,
+        'EGRESO_VENCIMIENTO',
+        {},
+        {
+            'Tipo_movimiento': 'Salida por vencimiento de producto',
+            'ID_Producto': producto.pk,
+            'Lote': lote.Numero_lote,
+            'Fecha_vencimiento': lote.Fecha_vencimiento.strftime('%d/%m/%Y'),
+            'Cantidad': cantidad,
+            'Lote_antes': lote_antes,
+            'Lote_despues': lote.Cantidad_actual,
+            'Stock_antes': stock_antes,
+            'Stock_despues': stock.Cantidad_stock,
+            'Observaciones': detalle[:255],
+        }
+    )
+
+    messages.success(
+        request,
+        f"Se registró la baja por vencimiento del lote {lote.Numero_lote}."
+    )
+
+    return redirect('registrar_ingreso_lote')
+
+
 
 
 # ============================================================

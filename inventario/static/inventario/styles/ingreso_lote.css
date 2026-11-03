@@ -480,6 +480,18 @@
     border-color: #86efac;
 }
 
+/* Dar de baja por vencimiento: ámbar */
+.lt-btn-vencimiento {
+    border-color: #fde4b0;
+    background: #fff7e6;
+    color: #a16207;
+}
+
+.lt-btn-vencimiento:hover {
+    background: #ffedc2;
+    border-color: #f8d078;
+}
+
 
 /* ============================================================
    PIE DE TABLA
@@ -584,6 +596,7 @@
     border-radius: 6px;
     background: transparent;
     color: var(--lt-suave);
+    font-size: 20px;
     cursor: pointer;
 }
 
@@ -616,10 +629,10 @@
 }
 
 .lt-campo input,
-.lt-campo select {
+.lt-campo select,
+.lt-campo textarea {
     width: 100%;
     min-width: 0;
-    height: 38px;
     padding: 0 12px;
     border: 1px solid var(--lt-borde-campo);
     border-radius: 8px;
@@ -633,12 +646,26 @@
         box-shadow .15s;
 }
 
-.lt-campo input::placeholder {
+.lt-campo input,
+.lt-campo select {
+    height: 38px;
+}
+
+.lt-campo textarea {
+    min-height: 76px;
+    padding: 10px 12px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.lt-campo input::placeholder,
+.lt-campo textarea::placeholder {
     color: #a3b0a9;
 }
 
 .lt-campo input:focus,
-.lt-campo select:focus {
+.lt-campo select:focus,
+.lt-campo textarea:focus {
     border-color: #6fb28b;
     box-shadow: 0 0 0 3px rgba(24, 90, 56, .14);
 }
@@ -675,6 +702,12 @@
     font-size: 12px;
     line-height: 1.5;
     color: var(--lt-suave);
+}
+
+.lt-ayuda-contador {
+    margin: 0;
+    text-align: right;
+    font-size: 11px;
 }
 
 
@@ -835,6 +868,11 @@
 .lt-btn-peligro:hover {
     border-color: #991b1b;
     background: #991b1b;
+}
+
+.lt-btn-peligro:disabled {
+    opacity: .6;
+    cursor: not-allowed;
 }
 
 .lt-btn-peligro:focus-visible {

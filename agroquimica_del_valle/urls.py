@@ -69,6 +69,7 @@ urlpatterns = [
 
     # Lotes (solo consulta; el alta se hace desde Remitos)
     path('ingreso-lote/', views.registrar_ingreso_lote, name='registrar_ingreso_lote'),
+    path('lote/<int:id_lote>/baja-vencimiento/', views.baja_lote_vencido, name='baja_lote_vencido'),
 
 
     # Movimientos de stock
