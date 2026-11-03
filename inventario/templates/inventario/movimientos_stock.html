@@ -92,7 +92,7 @@
                     <th>Cantidad</th>
                     <th>Usuario</th>
                     <th>Observaciones</th>
-                    <th>Comprobante</th>
+                    {% if perm.comprobantes_gestionar %}<th>Comprobante</th>{% endif %}
                 </tr>
             </thead>
 
@@ -165,7 +165,7 @@
                                     {{ m.Observaciones|default:"—" }}
                                 </span>
                             </td>
-
+                            {% if perm.comprobantes_gestionar %}
                             <td>
                                 <a
                                     href="{% url 'comprobante_movimiento_pdf' m.ID_Movimiento_stock %}"
@@ -177,7 +177,7 @@
                                     📄 Generar PDF
                                 </a>
                             </td>
-
+                            {% endif %}
                         </tr>
 
                     {% endwith %}
@@ -185,7 +185,7 @@
                 {% empty %}
 
                     <tr>
-                        <td colspan="8" class="tabla-vacia">
+                        <td colspan="{% if perm.comprobantes_gestionar %}8{% else %}7{% endif %}" class="tabla-vacia">
                             No se encontraron movimientos de stock.
                         </td>
                     </tr>

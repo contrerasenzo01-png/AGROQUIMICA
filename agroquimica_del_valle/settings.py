@@ -68,7 +68,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'agroquimica_del_valle.urls'
 
 # Minutos sin actividad antes de pedir usuario y contraseña de nuevo.
-INACTIVIDAD_SEGUNDOS = 15 * 60
+INACTIVIDAD_SEGUNDOS = 30 * 60
 
 TEMPLATES = [
     {

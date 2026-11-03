@@ -576,9 +576,7 @@ html.modo-oscuro .metric-value.blue { color: #5eead4 !important; }
 html.modo-oscuro .metric-value.red { color: var(--d-green) !important; }
 html.modo-oscuro .metric-value.orange { color: #d4d94a !important; }
 
-/* Los gráficos se dibujan con colores para fondo claro:
-   se invierten solo ellos para que el texto se lea. */
-html.modo-oscuro .rep-chart { filter: invert(.92) hue-rotate(180deg); }
+
 html.modo-oscuro .rep-leyenda, html.modo-oscuro .rep-sin-stock { color: var(--d-text) !important; }
 
 html.modo-oscuro .tabla-permisos .grupo-fila td {

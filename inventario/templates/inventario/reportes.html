@@ -85,6 +85,58 @@
             text-align: center;
             color: #6b7c73;
         }
+
+        /* Leyenda del gráfico de stock (los colores cambian con el tema) */
+        .rep-sw-ok  { background: #2e7d32; }
+        .rep-sw-mal { background: #c62828; }
+
+        /* ---------- MODO OSCURO ---------- */
+        html.modo-oscuro .rep-btn-pdf,
+        html.modo-oscuro .rep-btn-principal {
+            background: #26905c;
+            border-color: #26905c;
+            color: #fff;
+        }
+        html.modo-oscuro .rep-btn-pdf:hover,
+        html.modo-oscuro .rep-btn-principal:hover {
+            background: #2fa86d;
+            border-color: #2fa86d;
+        }
+        html.modo-oscuro .rep-btn-sec {
+            background: #1a2620;
+            color: #6ee7a1;
+            border-color: #26905c;
+        }
+        html.modo-oscuro .rep-btn-sec:hover { background: #223029; }
+
+        html.modo-oscuro .rep-filtro { color: #a4b6ab; }
+        html.modo-oscuro .rep-filtro select,
+        html.modo-oscuro .rep-filtro input {
+            background: #111a15;
+            color: #e3ece6;
+            border-color: #324539;
+        }
+        html.modo-oscuro .rep-filtro input[type="date"] { color-scheme: dark; }
+
+        html.modo-oscuro .rep-nota,
+        html.modo-oscuro .rep-vacio { color: #a4b6ab; }
+        html.modo-oscuro .rep-error { color: #f87171; }
+
+        html.modo-oscuro .rep-sw-ok  { background: #3fb36f; }
+        html.modo-oscuro .rep-sw-mal { background: #ef5350; }
+        html.modo-oscuro .rep-leyenda i.rep-marca { background: #f1f5f2; }
+        html.modo-oscuro .rep-leyenda,
+        html.modo-oscuro .rep-sin-stock { color: #e3ece6; }
+
+        html.modo-oscuro .rep-chip {
+            background: #381616;
+            color: #f87171;
+        }
+
+        html.modo-oscuro .rep-tip { color: #e3ece6; }
+        html.modo-oscuro .rep-tip strong { color: #eef6f1; }
+        html.modo-oscuro .rep-tip-ok  { color: #6ee7a1; }
+        html.modo-oscuro .rep-tip-mal { color: #f87171; }
     </style>
 {% endblock %}
 
@@ -114,8 +166,8 @@
         </div>
 
         <div class="rep-leyenda">
-            <span><i style="background:#2e7d32"></i>Stock suficiente</span>
-            <span><i style="background:#c62828"></i>En el mínimo o por debajo</span>
+            <span><i class="rep-sw-ok"></i>Stock suficiente</span>
+            <span><i class="rep-sw-mal"></i>En el mínimo o por debajo</span>
             <span><i class="rep-marca"></i>Stock mínimo</span>
         </div>
         <div id="stock-sin-stock" class="rep-sin-stock" hidden></div>
@@ -192,37 +244,51 @@ document.addEventListener('DOMContentLoaded', function () {
     const D = JSON.parse(document.getElementById('datos-reportes').textContent);
     const URL_EVOLUCION = "{% url 'datos_evolucion' %}";
 
-    const VERDE = '#2e7d32';
-    const ROJO = '#c62828';
-    const AZUL = '#1565c0';
-    const TEXTO = '#1f2d26';
-    const GRIS = '#6b7c73';
-
-    const chartBase = {
-        fontFamily: 'Inter, sans-serif',
-        background: '#ffffff',
-        toolbar: { show: false },
-        zoom: { enabled: false },
-        animations: { enabled: true, speed: 500 },
+    // ------------------------------------------------------
+    // TEMA: los gráficos se dibujan con la paleta del modo activo.
+    // Los PDF siempre usan la paleta clara.
+    // ------------------------------------------------------
+    const CLARO = {
+        texto: '#1f2d26', gris: '#6b7c73', fondo: '#ffffff', grid: '#e8eeea',
+        verde: '#2e7d32', rojo: '#c62828', azul: '#1565c0', marca: '#0f1b14',
     };
 
-    const grid = { borderColor: '#e8eeea', strokeDashArray: 4 };
+    const OSCURO = {
+        texto: '#e3ece6', gris: '#a4b6ab', fondo: 'transparent', grid: '#2a3a32',
+        verde: '#3fb36f', rojo: '#ef5350', azul: '#64b5f6', marca: '#f1f5f2',
+    };
 
-    const etiquetasFuera = {
+    const esOscuro = () => document.documentElement.classList.contains('modo-oscuro');
+    const paleta = osc => (osc ? OSCURO : CLARO);
+    const modoTema = osc => ({ mode: osc ? 'dark' : 'light' });
+    const rejilla = P => ({ borderColor: P.grid, strokeDashArray: 4 });
+
+    function baseChart(P) {
+        return {
+            fontFamily: 'Inter, sans-serif',
+            background: P.fondo,
+            foreColor: P.texto,
+            toolbar: { show: false },
+            zoom: { enabled: false },
+            animations: { enabled: true, speed: 500 },
+        };
+    }
+
+    const etiquetasFuera = P => ({
         enabled: true,
         textAnchor: 'start',
         offsetX: 8,
-        style: { colors: [TEXTO], fontSize: '12px', fontWeight: 600 },
+        style: { colors: [P.texto], fontSize: '12px', fontWeight: 600 },
         background: { enabled: false },
         dropShadow: { enabled: false },
-    };
+    });
 
-    // Gráficos dibujados (id del contenedor -> instancia de ApexCharts)
+    // Gráficos dibujados (id -> instancia) y la función que arma
+    // sus opciones según el tema (id -> (oscuro) => opciones).
     const charts = {};
-    // Opciones con las que se dibujó cada uno (se reusan para el PDF)
-    const opcionesGraficos = {};
+    const constructores = {};
 
-    function dibujar(id, hayDatos, mensajeVacio, opciones) {
+    function dibujar(id, hayDatos, mensajeVacio, construir) {
         const el = document.getElementById(id);
 
         if (charts[id]) {
@@ -230,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function () {
             delete charts[id];
         }
 
-        delete opcionesGraficos[id];
+        delete constructores[id];
         el.innerHTML = '';
 
         if (!hayDatos) {
@@ -238,10 +304,34 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        opcionesGraficos[id] = opciones;
-        charts[id] = new ApexCharts(el, opciones);
+        constructores[id] = construir;
+        charts[id] = new ApexCharts(el, construir(esOscuro()));
         charts[id].render();
     }
+
+    // Al cambiar entre modo claro y oscuro se vuelven a dibujar.
+    let modoAnterior = esOscuro();
+
+    new MutationObserver(function () {
+        const ahora = esOscuro();
+
+        if (ahora === modoAnterior) { return; }
+
+        modoAnterior = ahora;
+
+        Object.keys(constructores).forEach(function (id) {
+            if (charts[id]) { charts[id].destroy(); }
+
+            charts[id] = new ApexCharts(
+                document.getElementById(id),
+                constructores[id](ahora)
+            );
+            charts[id].render();
+        });
+    }).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+    });
 
     function fechaLegible(iso) {
         const [a, m, d] = iso.split('-');
@@ -346,63 +436,69 @@ document.addEventListener('DOMContentLoaded', function () {
             filtroStock.activo()
                 ? 'No hay productos activos con stock registrado para ese filtro.'
                 : 'No hay productos activos con stock registrado.',
-            {
-                chart: {
-                    ...chartBase,
-                    type: 'bar',
-                    height: Math.max(260, lista.length * 46 + 70),
-                },
-                series: [{
-                    name: 'Stock actual',
-                    data: lista.map(p => ({
-                        x: p.nombre,
-                        y: p.stock,
-                        fillColor: p.stock <= p.minimo ? ROJO : VERDE,
-                        goals: [{
-                            name: 'Stock mínimo',
-                            value: p.minimo,
-                            strokeHeight: 16,
-                            strokeWidth: 3,
-                            strokeColor: '#0f1b14',
-                            strokeLineCap: 'round',
-                        }],
-                    })),
-                }],
-                plotOptions: {
-                    bar: {
-                        horizontal: true,
-                        barHeight: '60%',
-                        borderRadius: 4,
-                        dataLabels: { position: 'top' },
+            function (osc) {
+                const P = paleta(osc);
+
+                return {
+                    chart: {
+                        ...baseChart(P),
+                        type: 'bar',
+                        height: Math.max(260, lista.length * 46 + 70),
                     },
-                },
-                dataLabels: { enabled: false },
-                legend: { show: false },
-                grid: grid,
-                xaxis: {
-                    min: 0,
-                    max: Math.ceil(maxStock * 1.2) + 5,
-                    title: { text: 'Unidades' },
-                    labels: { style: { colors: GRIS } },
-                },
-                yaxis: {
-                    labels: { maxWidth: 280, style: { colors: TEXTO, fontSize: '12.5px' } },
-                },
-                tooltip: {
-                    custom: function ({ dataPointIndex }) {
-                        const p = lista[dataPointIndex];
-                        const critico = p.stock <= p.minimo;
-                        return `
-                            <div class="rep-tip">
-                                <strong>${p.nombre}</strong>
-                                <div>Stock actual: <b>${p.stock}</b></div>
-                                <div>Stock mínimo: <b>${p.minimo}</b></div>
-                                <div class="${critico ? 'rep-tip-mal' : 'rep-tip-ok'}">
-                                    ${critico ? 'Conviene reponer' : 'Stock suficiente'}
-                                </div>
-                            </div>`;
+                    theme: modoTema(osc),
+                    series: [{
+                        name: 'Stock actual',
+                        data: lista.map(p => ({
+                            x: p.nombre,
+                            y: p.stock,
+                            fillColor: p.stock <= p.minimo ? P.rojo : P.verde,
+                            goals: [{
+                                name: 'Stock mínimo',
+                                value: p.minimo,
+                                strokeHeight: 16,
+                                strokeWidth: 3,
+                                strokeColor: P.marca,
+                                strokeLineCap: 'round',
+                            }],
+                        })),
+                    }],
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            barHeight: '60%',
+                            borderRadius: 4,
+                            dataLabels: { position: 'top' },
+                        },
                     },
-                },
+                    dataLabels: { enabled: false },
+                    legend: { show: false },
+                    grid: rejilla(P),
+                    xaxis: {
+                        min: 0,
+                        max: Math.ceil(maxStock * 1.2) + 5,
+                        title: { text: 'Unidades', style: { color: P.gris } },
+                        labels: { style: { colors: P.gris } },
+                    },
+                    yaxis: {
+                        labels: { maxWidth: 280, style: { colors: P.texto, fontSize: '12.5px' } },
+                    },
+                    tooltip: {
+                        theme: osc ? 'dark' : 'light',
+                        custom: function ({ dataPointIndex }) {
+                            const p = lista[dataPointIndex];
+                            const critico = p.stock <= p.minimo;
+                            return `
+                                <div class="rep-tip">
+                                    <strong>${p.nombre}</strong>
+                                    <div>Stock actual: <b>${p.stock}</b></div>
+                                    <div>Stock mínimo: <b>${p.minimo}</b></div>
+                                    <div class="${critico ? 'rep-tip-mal' : 'rep-tip-ok'}">
+                                        ${critico ? 'Conviene reponer' : 'Stock suficiente'}
+                                    </div>
+                                </div>`;
+                        },
+                    },
+                };
             }
         );
     }
@@ -416,34 +512,42 @@ document.addEventListener('DOMContentLoaded', function () {
         'grafico-tramos',
         D.tramos.valores.some(v => v > 0),
         'No hay unidades que venzan en los próximos 90 días.',
-        {
-            chart: { ...chartBase, type: 'bar', height: 340 },
-            series: [{ name: 'Unidades', data: D.tramos.valores }],
-            colors: D.tramos.colores,
-            plotOptions: {
-                bar: {
-                    distributed: true,
-                    columnWidth: '50%',
-                    borderRadius: 6,
-                    dataLabels: { position: 'top' },
+        function (osc) {
+            const P = paleta(osc);
+
+            return {
+                chart: { ...baseChart(P), type: 'bar', height: 340 },
+                theme: modoTema(osc),
+                series: [{ name: 'Unidades', data: D.tramos.valores }],
+                colors: D.tramos.colores,
+                plotOptions: {
+                    bar: {
+                        distributed: true,
+                        columnWidth: '50%',
+                        borderRadius: 6,
+                        dataLabels: { position: 'top' },
+                    },
                 },
-            },
-            dataLabels: {
-                enabled: true,
-                offsetY: -22,
-                style: { colors: [TEXTO], fontSize: '12px', fontWeight: 600 },
-            },
-            legend: { show: false },
-            grid: grid,
-            xaxis: {
-                categories: D.tramos.etiquetas,
-                labels: { style: { colors: TEXTO, fontSize: '12.5px' } },
-            },
-            yaxis: {
-                title: { text: 'Unidades' },
-                labels: { style: { colors: GRIS } },
-            },
-            tooltip: { y: { formatter: v => v + ' unidades' } },
+                dataLabels: {
+                    enabled: true,
+                    offsetY: -22,
+                    style: { colors: [P.texto], fontSize: '12px', fontWeight: 600 },
+                },
+                legend: { show: false },
+                grid: rejilla(P),
+                xaxis: {
+                    categories: D.tramos.etiquetas,
+                    labels: { style: { colors: P.texto, fontSize: '12.5px' } },
+                },
+                yaxis: {
+                    title: { text: 'Unidades', style: { color: P.gris } },
+                    labels: { style: { colors: P.gris } },
+                },
+                tooltip: {
+                    theme: osc ? 'dark' : 'light',
+                    y: { formatter: v => v + ' unidades' },
+                },
+            };
         }
     );
 
@@ -482,41 +586,52 @@ document.addEventListener('DOMContentLoaded', function () {
             filtrado
                 ? 'No hay ventas ni ingresos en el período elegido.'
                 : 'Todavía no hay ventas ni ingresos en los últimos 12 meses.',
-            {
-                chart: { ...chartBase, type: 'line', height: 380 },
-                series: [
-                    { name: 'Unidades vendidas', data: datos.ventas },
-                    { name: 'Unidades ingresadas', data: datos.ingresos },
-                ],
-                colors: [VERDE, AZUL],
-                stroke: { curve: 'smooth', width: 3 },
-                markers: {
-                    size: porDia ? 3 : 5,
-                    strokeWidth: 0,
-                    hover: { size: 7 },
-                },
-                dataLabels: { enabled: false },
-                legend: { position: 'top', horizontalAlign: 'right', fontSize: '13px' },
-                grid: grid,
-                xaxis: {
-                    categories: datos.meses,
-                    labels: {
-                        style: { colors: TEXTO },
-                        rotate: porDia ? -45 : 0,
-                        hideOverlappingLabels: true,
+            function (osc) {
+                const P = paleta(osc);
+
+                return {
+                    chart: { ...baseChart(P), type: 'line', height: 380 },
+                    theme: modoTema(osc),
+                    series: [
+                        { name: 'Unidades vendidas', data: datos.ventas },
+                        { name: 'Unidades ingresadas', data: datos.ingresos },
+                    ],
+                    colors: [P.verde, P.azul],
+                    stroke: { curve: 'smooth', width: 3 },
+                    markers: {
+                        size: porDia ? 3 : 5,
+                        strokeWidth: 0,
+                        hover: { size: 7 },
                     },
-                },
-                yaxis: {
-                    min: 0,
-                    forceNiceScale: true,
-                    title: { text: 'Unidades' },
-                    labels: { style: { colors: GRIS }, formatter: v => Math.round(v) },
-                },
-                tooltip: {
-                    shared: true,
-                    intersect: false,
-                    y: { formatter: v => v + ' unidades' },
-                },
+                    dataLabels: { enabled: false },
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'right',
+                        fontSize: '13px',
+                        labels: { colors: P.texto },
+                    },
+                    grid: rejilla(P),
+                    xaxis: {
+                        categories: datos.meses,
+                        labels: {
+                            style: { colors: P.texto },
+                            rotate: porDia ? -45 : 0,
+                            hideOverlappingLabels: true,
+                        },
+                    },
+                    yaxis: {
+                        min: 0,
+                        forceNiceScale: true,
+                        title: { text: 'Unidades', style: { color: P.gris } },
+                        labels: { style: { colors: P.gris }, formatter: v => Math.round(v) },
+                    },
+                    tooltip: {
+                        theme: osc ? 'dark' : 'light',
+                        shared: true,
+                        intersect: false,
+                        y: { formatter: v => v + ' unidades' },
+                    },
+                };
             }
         );
     }
@@ -594,36 +709,44 @@ document.addEventListener('DOMContentLoaded', function () {
             filtroVencidos.activo()
                 ? 'No hay productos vencidos con unidades en stock para ese filtro.'
                 : 'No hay productos vencidos con unidades en stock.',
-            {
-                chart: {
-                    ...chartBase,
-                    type: 'bar',
-                    height: Math.max(260, lista.length * 46 + 70),
-                },
-                series: [{
-                    name: 'Unidades vencidas',
-                    data: lista.map(p => ({ x: p.nombre, y: p.unidades })),
-                }],
-                colors: [ROJO],
-                plotOptions: {
-                    bar: {
-                        horizontal: true,
-                        barHeight: '55%',
-                        borderRadius: 4,
-                        dataLabels: { position: 'top' },
+            function (osc) {
+                const P = paleta(osc);
+
+                return {
+                    chart: {
+                        ...baseChart(P),
+                        type: 'bar',
+                        height: Math.max(260, lista.length * 46 + 70),
                     },
-                },
-                dataLabels: etiquetasFuera,
-                legend: { show: false },
-                grid: grid,
-                xaxis: {
-                    title: { text: 'Unidades vencidas' },
-                    labels: { style: { colors: GRIS } },
-                },
-                yaxis: {
-                    labels: { maxWidth: 280, style: { colors: TEXTO, fontSize: '12.5px' } },
-                },
-                tooltip: { y: { formatter: v => v + ' unidades vencidas' } },
+                    theme: modoTema(osc),
+                    series: [{
+                        name: 'Unidades vencidas',
+                        data: lista.map(p => ({ x: p.nombre, y: p.unidades })),
+                    }],
+                    colors: [P.rojo],
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            barHeight: '55%',
+                            borderRadius: 4,
+                            dataLabels: { position: 'top' },
+                        },
+                    },
+                    dataLabels: etiquetasFuera(P),
+                    legend: { show: false },
+                    grid: rejilla(P),
+                    xaxis: {
+                        title: { text: 'Unidades vencidas', style: { color: P.gris } },
+                        labels: { style: { colors: P.gris } },
+                    },
+                    yaxis: {
+                        labels: { maxWidth: 280, style: { colors: P.texto, fontSize: '12.5px' } },
+                    },
+                    tooltip: {
+                        theme: osc ? 'dark' : 'light',
+                        y: { formatter: v => v + ' unidades vencidas' },
+                    },
+                };
             }
         );
     }
@@ -632,6 +755,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ------------------------------------------------------
     // PDF (uno por gráfico; incluye los filtros aplicados)
+    // Siempre se dibuja con la paleta clara.
     // ------------------------------------------------------
     function cargarImagen(uri) {
         return new Promise(function (resolve, reject) {
@@ -693,12 +817,14 @@ document.addEventListener('DOMContentLoaded', function () {
         return r.toDataURL('image/png');
     }
 
-    // Dibuja el gráfico en un contenedor oculto, con las proporciones
-    // justas para ocupar la hoja, y devuelve la imagen.
+    // Dibuja el gráfico (en modo claro) en un contenedor oculto, con las
+    // proporciones justas para ocupar la hoja, y devuelve la imagen.
     async function imagenParaPDF(chartId, ancho, alto) {
-        const opciones = opcionesGraficos[chartId];
+        const construir = constructores[chartId];
 
-        if (!opciones) return null;
+        if (!construir) return null;
+
+        const opciones = construir(false);
 
         const cont = document.createElement('div');
         cont.style.cssText =

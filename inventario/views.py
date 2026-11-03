@@ -36,7 +36,7 @@ from .auditoria import (
 from .forms import ProveedorForm
 from .permissions import (
     usuario_con_acceso, usuario_con_accion, puede, puede_accion,
-    catalogo_plano, PERFILES_ADMIN,
+    catalogo_plano, permisos_asignados, PERFILES_ADMIN,
 )
 
 from .models import (
@@ -2289,15 +2289,36 @@ def mis_permisos(request):
     if not usuario:
         return redirect('login')
 
-    # Obtiene los permisos asignados al perfil del usuario.
-    permisos = usuario.ID_Perfil.permisos.all()
+    es_admin = usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN
+    asignados = permisos_asignados(usuario)
+    catalogo = catalogo_plano()
+
+    grupos = {}
+
+    for nombre, descripcion, grupo in catalogo:
+        if es_admin or nombre.strip().lower() in asignados:
+            grupos.setdefault(grupo, []).append({
+                'nombre': nombre,
+                'descripcion': descripcion,
+            })
+
+    modulos = [
+        {'nombre': g, 'icono': _icono_modulo(g), 'permisos': p}
+        for g, p in grupos.items()
+    ]
+
+    total = sum(len(m['permisos']) for m in modulos)
 
     return render(
         request,
         'inventario/mis_permisos.html',
         {
             'usuario': usuario,
-            'permisos': permisos,
+            'modulos': modulos,
+            'total': total,
+            'total_catalogo': len(catalogo),
+            'porcentaje': round(total * 100 / len(catalogo)) if catalogo else 0,
+            'es_admin': es_admin,
             'activo': 'mis_permisos',
         }
     )
