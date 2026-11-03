@@ -1,127 +1,573 @@
+/* ==========================================
+   RESET GENERAL
+========================================== */
+
 * {
-    box-sizing: border-box;
+
     margin: 0;
     padding: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
 }
 
 body {
-  background: radial-gradient(circle at center, #1b4d3e 0%, #0d2820 100%);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #ffffff;
+    background: #ffffff;
+    color: #1c2a23;
 }
+
+/* ==========================================
+   CONTENEDOR PRINCIPAL
+========================================== */
+
+.login-page {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* ==========================================
+   PANEL IZQUIERDO
+========================================== */
+
+.left-panel {
+    width: 45%;
+    min-height: 100vh;
+    padding: 0 5.3%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    position: relative;
+    overflow: hidden;
+
+    background-color: #185a38;
+    background-image:
+        url("../images/hojas_agroquimica.svg"),
+        linear-gradient(
+            145deg,
+            #195a3c 0%,
+            #216c46 48%,
+            #12452f 100%
+        );
+
+    background-repeat: no-repeat, no-repeat;
+    background-position: right 10px bottom 10px, center;
+    background-size: 520px auto, cover;
+
+    color: #ffffff;
+}
+
+/* ==========================================
+   CÍRCULO DECORATIVO
+========================================== */
+
+.left-panel::before {
+    content: "";
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    right: -390px;
+    bottom: -340px;
+
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ==========================================
+   CONTENIDO IZQUIERDO
+========================================== */
+
+.left-content {
+    width: 100%;
+    max-width: 530px;
+
+    position: relative;
+    z-index: 1;
+
+    transform: translateY(-15px);
+}
+
+.eyebrow {
+    display: block;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+    color: #e5d66a;
+    margin-bottom: 25px;
+}
+
+.left-panel h1 {
+    font-size: clamp(32px, 3.1vw, 43px);
+    line-height: 1.3;
+    font-weight: 750;
+    letter-spacing: -1.5px;
+    color: #ffffff;
+    margin-bottom: 24px;
+}
+
+.left-panel h1 span {
+    color: #d6e9a8;
+}
+
+.left-panel p {
+    max-width: 390px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #e0eee4;
+    margin-bottom: 28px;
+}
+
+.left-panel ul {
+    list-style: none;
+}
+
+.left-panel ul li {
+    position: relative;
+    padding-left: 21px;
+    margin-bottom: 14px;
+    font-size: 10px;
+    font-weight: 500;
+    color: #e4eee5;
+}
+
+.left-panel ul li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #c6e39a;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* ==========================================
+   PIE DEL PANEL IZQUIERDO
+========================================== */
+
+.footer-left {
+    position: absolute;
+    bottom: 24px;
+    left: 5.3%;
+    right: 5.3%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    font-size: 8px;
+    font-weight: 600;
+    color: #c5dfcd;
+
+    z-index: 2;
+}
+
+/* ==========================================
+   PANEL DERECHO
+========================================== */
+
+.right-panel {
+    width: 55%;
+    min-height: 100vh;
+
+    background: #ffffff;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    padding: 45px 35px;
+}
+
+/* ==========================================
+   CONTENEDOR DEL LOGIN
+========================================== */
 
 .login-container {
-  width: 100%;
-  max-width: 400px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    width: 100%;
+    max-width: 380px;
+    margin-top: 0;
 }
 
-.logo-icon {
-  width: 48px;
-  height: 48px;
-  background-color: #3bb273;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 20px;
-  color: #ffffff;
-  margin-bottom: 16px;
+/* ==========================================
+   LOGO
+========================================== */
+
+.logo-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 28px;
 }
 
-h1 {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 4px;
-  text-align: center;
+.logo-container img {
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    display: block;
 }
 
-.subtitle {
-  font-size: 12px;
-  color: #52b788;
-  margin-bottom: 24px;
-  text-align: center;
+/* ==========================================
+   ENCABEZADO DEL FORMULARIO
+========================================== */
+
+.form-eyebrow {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+    color: #317b57;
+    margin-bottom: 16px;
 }
 
-.card {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 24px;
-  width: 100%;
-  backdrop-filter: blur(8px);
+.login-content {
+    width: 100%;
 }
+
+.login-content h2 {
+    font-size: 27px;
+    font-weight: 750;
+    letter-spacing: -0.7px;
+    color: #172c20;
+    margin-bottom: 12px;
+}
+
+.description {
+    font-size: 13px;
+    color: #829087;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+/* ==========================================
+   FORMULARIO
+========================================== */
 
 .form-group {
-  margin-bottom: 16px;
+    margin-bottom: 18px;
 }
 
-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: #92b4a7;
-  margin-bottom: 6px;
-  text-transform: uppercase;
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #405247;
+    margin-bottom: 9px;
 }
 
-input[type="text"],
-input[type="password"] {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background-color: rgba(0, 0, 0, 0.2);
-  color: #ffffff;
-  font-size: 14px;
-  outline: none;
+.form-group input {
+    width: 100%;
+    height: 46px;
+    padding: 0 13px;
+
+    background: #ffffff;
+    border: 1px solid #d2dfd5;
+    border-radius: 8px;
+
+    font-size: 13px;
+    color: #263b2d;
+
+    outline: none;
+    transition: all 0.2s ease;
+
+    box-shadow: 0 2px 8px rgba(20, 60, 35, 0.04);
 }
 
-input[type="text"]:focus,
-input[type="password"]:focus {
-  border-color: #3bb273;
+.form-group input::placeholder {
+    color: #a4ada6;
 }
+
+.form-group input:focus {
+    border-color: #39835a;
+    box-shadow: 0 0 0 3px rgba(57, 131, 90, 0.09);
+}
+
+/* ==========================================
+   CONTRASEÑA
+========================================== */
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 70px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 13px;
+
+    border: none;
+    background: transparent;
+
+    color: #64806e;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+    color: #17623c;
+}
+
+/* ==========================================
+   MENSAJE DE ERROR
+========================================== */
 
 .error-box {
-  background-color: rgba(180, 40, 40, 0.25);
-  border: 1px solid rgba(255, 80, 80, 0.3);
-  color: #ff8080;
-  font-size: 12px;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  text-align: left;
+    padding: 12px 14px;
+    margin-bottom: 15px;
+
+    background: #fff0ef;
+    border: 1px solid #f0c7c3;
+    border-radius: 7px;
+
+    color: #b63832;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
+/* ==========================================
+   BOTÓN INGRESAR
+========================================== */
+
 .btn-submit {
-  width: 100%;
-  padding: 12px;
-  background-color: #3bb273;
-  border: none;
-  border-radius: 6px;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  margin-bottom: 16px;
+    width: 100%;
+    height: 46px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 0 17px;
+
+    background: linear-gradient(
+        100deg,
+        #348b59,
+        #216b43
+    );
+
+    border: none;
+    border-radius: 7px;
+
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 750;
+
+    cursor: pointer;
+    margin-top: 20px;
+
+    box-shadow: 0 5px 12px rgba(28, 96, 56, 0.16);
+    transition: all 0.25s ease;
 }
 
 .btn-submit:hover {
-  background-color: #2e9b62;
+    background: linear-gradient(
+        100deg,
+        #28764a,
+        #155333
+    );
+
+    transform: translateY(-2px);
+    box-shadow: 0 7px 15px rgba(28, 96, 56, 0.22);
 }
 
-.footer-text {
-  font-size: 11px;
-  color: #6b9080;
-  text-align: center;
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.btn-submit .arrow {
+    font-size: 23px;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.btn-submit:focus-visible {
+    outline: 3px solid rgba(52, 139, 89, 0.25);
+    outline-offset: 3px;
+}
+
+/* ==========================================
+   TEXTO DE SEGURIDAD
+========================================== */
+
+.security-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    margin-top: 20px;
+
+    font-size: 10px;
+    color: #7e8d82;
+}
+
+.shield {
+    font-size: 14px;
+    color: #658573;
+}
+
+/* ==========================================
+   COPYRIGHT
+========================================== */
+
+.footer-right {
+    position: absolute;
+    bottom: 20px;
+
+    width: 100%;
+    padding: 0 15px;
+
+    text-align: center;
+
+    font-size: 8px;
+    color: #9aa49c;
+}
+
+/* ==========================================
+   TABLETS
+========================================== */
+
+@media (max-width: 900px) {
+
+    .left-panel {
+        width: 45%;
+        padding: 0 30px;
+        background-size: 420px auto, cover;
+    }
+
+    .right-panel {
+        width: 55%;
+        padding: 35px 25px;
+    }
+
+    .left-panel h1 {
+        font-size: 31px;
+    }
+
+    .login-container {
+        max-width: 340px;
+    }
+
+    .logo-container img {
+        width: 140px;
+        height: 140px;
+    }
+}
+
+/* ==========================================
+   CELULARES
+========================================== */
+
+@media (max-width: 650px) {
+
+    .login-page {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        width: 100%;
+        min-height: 390px;
+        padding: 45px 30px;
+
+        background-size: 340px auto, cover;
+    }
+
+    .left-content {
+        transform: none;
+    }
+
+    .left-panel h1 {
+        font-size: 30px;
+    }
+
+    .left-panel p {
+        font-size: 12px;
+    }
+
+    .footer-left {
+        left: 30px;
+        right: 30px;
+        bottom: 18px;
+    }
+
+    .right-panel {
+        width: 100%;
+        min-height: 580px;
+        padding: 45px 25px 65px;
+    }
+
+    .login-container {
+        max-width: 380px;
+        margin-top: 0;
+    }
+
+    .logo-container img {
+        width: 130px;
+        height: 130px;
+    }
+
+    .login-content h2 {
+        font-size: 24px;
+    }
+
+    .form-group input {
+        height: 44px;
+        font-size: 12px;
+    }
+
+    .btn-submit {
+        height: 45px;
+        font-size: 12px;
+    }
+
+    .footer-right {
+        bottom: 15px;
+    }
+}
+
+/* ==========================================
+   CELULARES PEQUEÑOS
+========================================== */
+
+@media (max-width: 380px) {
+
+    .left-panel {
+        min-height: 370px;
+        padding: 35px 22px;
+        background-size: 270px auto, cover;
+    }
+
+    .left-panel h1 {
+        font-size: 26px;
+    }
+
+    .right-panel {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .logo-container img {
+        width: 115px;
+        height: 115px;
+    }
 }

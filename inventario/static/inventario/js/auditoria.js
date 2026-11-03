@@ -16,7 +16,8 @@ const NOMBRES_ACCION = {
     INGRESO_LOTE: 'Ingreso de lote',
     DESCARGA_PDF: 'Descarga de PDF',
     ASIGNACION_PERFIL: 'Asignación de perfil',
-    ASIGNACION_PERMISOS: 'Asignación de permisos'
+    ASIGNACION_PERMISOS: 'Asignación de permisos',
+    ATENCION_ALERTA: 'Atención de alerta'
 };
 
 // Clase de la insignia de cada acción (las mismas de la tabla).
@@ -31,7 +32,8 @@ const CLASES_ACCION = {
     INGRESO_LOTE: 'aud-ing',
     DESCARGA_PDF: 'aud-pdf',
     ASIGNACION_PERFIL: 'aud-asp',
-    ASIGNACION_PERMISOS: 'aud-asm'
+    ASIGNACION_PERMISOS: 'aud-asm',
+    ATENCION_ALERTA: 'aud-ate'
 };
 
 const MESES = [
@@ -139,6 +141,7 @@ const ETIQUETAS_CAMPO = {
     Quitados: 'Permisos quitados',
     Cantidad_lotes: 'Cantidad de lotes',
     Lotes_revertidos: 'Lotes revertidos',
+    // Alertas
     Atendida: 'Atendida',
     Fecha_hora_atencion: 'Fecha de atención',
     // Otros
@@ -268,6 +271,7 @@ function inyectarEstilosAuditoria() {
         .al-badge.aud-eli { background: #fee2e2; color: #b91c1c; }
         .al-badge.aud-cie { background: #ede9fe; color: #6d28d9; }
         .al-badge.aud-anu { background: #f1e7dc; color: #7a4a21; }
+        .al-badge.aud-ate { background: #ccfbf1; color: #0f766e; }
 
         /* ---------- Ventana más compacta ---------- */
         .aud-modal .aud-modal-contenido {
@@ -711,18 +715,20 @@ function armarDetalle(contenido, datos) {
         return;
     }
 
-    // Modificaciones y anulaciones.
+    // Modificaciones, anulaciones y atención de alertas.
     const esAnulacion = datos.accion === 'ANULACION';
+    const esAtencion = datos.accion === 'ATENCION_ALERTA';
+
+    let tituloSeccion = 'Cambios realizados';
+
+    if (esAnulacion) {
+        tituloSeccion = 'Datos de la anulación';
+    } else if (esAtencion) {
+        tituloSeccion = 'Datos de la atención';
+    }
 
     const seccion = crear('section', 'aud-det-bloque');
-
-    seccion.appendChild(
-        crear(
-            'h4',
-            '',
-            esAnulacion ? 'Datos de la anulación' : 'Cambios realizados'
-        )
-    );
+    seccion.appendChild(crear('h4', '', tituloSeccion));
 
     const cambiosVisibles = (datos.cambios || []).filter(
         c => campoVisible(c.campo) &&

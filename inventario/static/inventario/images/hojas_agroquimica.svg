@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="100 -90 600 700"
+     width="600" height="700"
+     fill="none">
+
+  <g stroke= "#9ebe9960"
+     stroke-width="2.5"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     opacity="0.40">
+
+    <!-- Tallos -->
+    <path d="M600 600 C480 490 420 350 300 150"/>
+    <path d="M600 600 C520 430 510 280 480 100"/>
+    <path d="M600 600 C390 510 260 390 120 250"/>
+
+    <!-- Hoja grande superior -->
+    <path d="M300 150 C210 125 165 55 190 0 C270 15 320 75 300 150Z"/>
+    <path d="M300 150 C255 85 220 40 190 0"/>
+
+    <!-- Hoja grande lateral -->
+    <path d="M480 100 C405 35 410 -35 470 -75 C540 -15 545 50 480 100Z"/>
+    <path d="M480 100 C475 25 470 -25 470 -75"/>
+
+    <!-- Hoja central izquierda -->
+    <path d="M390 350 C275 355 210 290 225 205 C325 205 390 260 390 350Z"/>
+    <path d="M390 350 C320 285 270 240 225 205"/>
+
+    <!-- Hoja central derecha -->
+    <path d="M470 390 C450 275 510 205 590 200 C625 295 575 370 470 390Z"/>
+    <path d="M470 390 C515 310 555 245 590 200"/>
+
+    <!-- Hoja inferior izquierda -->
+    <path d="M500 510 C365 505 290 430 315 335 C425 350 495 415 500 510Z"/>
+    <path d="M500 510 C425 430 365 380 315 335"/>
+
+    <!-- Hoja inferior derecha -->
+    <path d="M540 550 C520 435 585 365 670 375 C690 475 630 540 540 550Z"/>
+    <path d="M540 550 C585 465 625 410 670 375"/>
+
+    <!-- Hoja lateral inferior -->
+    <path d="M390 600 C260 565 210 485 250 410 C355 440 410 510 390 600Z"/>
+    <path d="M390 600 C335 510 290 455 250 410"/>
+
+  </g>
+</svg>

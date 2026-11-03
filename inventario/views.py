@@ -3324,7 +3324,14 @@ def atender_alerta(request, id_alerta):
             'ID_Usuario',
             'Fecha_hora_atencion',
         ])
-        registrar_auditoria(usuario, 'Historial de alertas', alerta, 'MODIFICACION', antes, snapshot(alerta))
+        registrar_auditoria(
+            usuario,
+            'Historial de alertas',
+            alerta,
+            'ATENCION_ALERTA',
+            antes,
+            snapshot(alerta)
+        )
 
     return redirect('historial_alertas')
 

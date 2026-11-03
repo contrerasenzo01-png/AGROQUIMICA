@@ -54,6 +54,7 @@
                     <option value="DESCARGA_PDF" {% if accion == 'DESCARGA_PDF' %}selected{% endif %}>Descarga de PDF</option>
                     <option value="ASIGNACION_PERFIL" {% if accion == 'ASIGNACION_PERFIL' %}selected{% endif %}>Asignación de perfil</option>
                     <option value="ASIGNACION_PERMISOS" {% if accion == 'ASIGNACION_PERMISOS' %}selected{% endif %}>Asignación de permisos</option>
+                    <option value="ATENCION_ALERTA" {% if accion == 'ATENCION_ALERTA' %}selected{% endif %}>Atención de alerta</option>
                 </select>
             </div>
 
@@ -167,6 +168,8 @@
                                 <span class="al-badge aud-asp">Asignación de perfil</span>
                             {% elif log.Accion == 'ASIGNACION_PERMISOS' %}
                                 <span class="al-badge aud-asm">Asignación de permisos</span>
+                            {% elif log.Accion == 'ATENCION_ALERTA' %}
+                                <span class="al-badge aud-ate">Atención de alerta</span>
                             {% else %}
                                 <span class="al-badge">{{ log.Accion }}</span>
                             {% endif %}

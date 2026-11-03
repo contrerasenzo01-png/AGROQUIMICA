@@ -5,102 +5,226 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Agroquímicos del Valle - Login</title>
 
+    <!-- CSS -->
     <link rel="stylesheet" href="{% static 'inventario/styles/login.css' %}">
 </head>
 
 <body>
 
-    <div class="login-container">
+    <main class="login-page">
 
-     
+        <!-- =====================================
+             PANEL IZQUIERDO
+        ====================================== -->
 
-        <!-- TÍTULO -->
-        <h1>
-            Agroquímicos del Valle
-        </h1>
+        <section class="left-panel">
 
-        <div class="subtitle">
-            Sistema de Gestión Interno
-        </div>
+            <div class="left-content">
 
+                <h1>
+                    <span>
+                        Agroquímica del Valle
+                    </span>
+                </h1>
 
-        <!-- FORMULARIO -->
-        <div class="card">
-
-            <form method="POST">
-
-                {% csrf_token %}
+                <p>
+                   Sistema de gestión interno
+                </p>
 
 
-                <!-- USUARIO -->
-                <div class="form-group">
+            </div>
 
-                    <label for="usuario">
-                        Usuario
-                    </label>
+            <!-- Pie del panel izquierdo -->
 
-                    <input
-                        type="text"
-                        id="usuario"
-                        name="usuario"
-                        value="{{ request.POST.usuario|default:'' }}"
-                        required
-                        autocomplete="off"
+            <div class="footer-left">
+
+                <span>Agroquímica del Valle</span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             PANEL DERECHO
+        ====================================== -->
+
+        <section class="right-panel">
+
+            <div class="login-container">
+
+                <!-- LOGO -->
+
+                <div class="logo-container">
+
+                    <img
+                        src="{% static 'inventario/images/logo.png' %}"
+                        alt="Logo Agroquímicos del Valle"
                     >
 
                 </div>
 
 
-                <!-- CONTRASEÑA -->
-                <div class="form-group">
+                <!-- FORMULARIO -->
 
-                    <label for="password">
-                        Contraseña
-                    </label>
+                <div class="login-content">
 
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        placeholder="********"
-                        required
-                    >
+                    <span class="form-eyebrow">
+                        TU ESPACIO DE TRABAJO
+                    </span>
 
-                </div>
+                    <h2>Bienvenido de nuevo</h2>
+
+                    <p class="description">
+                        Ingresá tus credenciales para continuar.
+                    </p>
 
 
-                <!-- MENSAJE DE ERROR -->
-                {% if error %}
+                    <form method="POST" action="{% url 'login' %}">
 
-                    <div class="error-box">
-                        {{ error }}
+                        {% csrf_token %}
+
+
+                        <!-- USUARIO -->
+
+                        <div class="form-group">
+
+                            <label for="usuario">
+                                Usuario
+                            </label>
+
+                            <input
+                                type="text"
+                                id="usuario"
+                                name="usuario"
+                                value="{{ request.POST.usuario|default:'' }}"
+                                placeholder="Ingresá tu usuario"
+                                autocomplete="username"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- CONTRASEÑA -->
+
+                        <div class="form-group">
+
+                            <label for="password">
+                                Contraseña
+                            </label>
+
+                            <div class="password-wrapper">
+
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    placeholder="Ingresá tu contraseña"
+                                    autocomplete="current-password"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="toggle-password"
+                                    id="togglePassword"
+                                    aria-label="Mostrar contraseña"
+                                >
+                                    Mostrar
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- MENSAJE DE ERROR -->
+
+                        {% if error %}
+
+                            <div class="error-box" role="alert">
+                                {{ error }}
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- BOTÓN INGRESAR -->
+
+                        <button
+                            type="submit"
+                            class="btn-submit"
+                        >
+
+                            <span>Ingresar al sistema</span>
+
+                            <span class="arrow">›</span>
+
+                        </button>
+
+                    </form>
+
+
+                    <!-- INFORMACIÓN DE SEGURIDAD -->
+
+                    <div class="security-text">
+
+                        <span class="shield">♧</span>
+
+                        <span>
+                            Acceso exclusivo para personal autorizado
+                        </span>
+
                     </div>
 
-                {% endif %}
-
-
-                <!-- BOTÓN INGRESAR -->
-                <button
-                    type="submit"
-                    class="btn-submit"
-                >
-                    Ingresar al sistema
-                </button>
-
-                <!-- TEXTO INFORMATIVO -->
-                <div class="footer-text">
-                    Acceso restringido — solo personal autorizado
                 </div>
 
-            </form>
+            </div>
 
-        </div>
 
-    </div>
+            <!-- COPYRIGHT -->
+
+            <div class="footer-right">
+
+                © 2026 Agroquímicos del Valle. Todos los derechos reservados.
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================
+         MOSTRAR / OCULTAR CONTRASEÑA
+    ====================================== -->
+
+    <script>
+
+        const togglePassword = document.getElementById("togglePassword");
+        const password = document.getElementById("password");
+
+        togglePassword.addEventListener("click", function () {
+
+            const mostrar = password.type === "password";
+
+            password.type = mostrar ? "text" : "password";
+
+            togglePassword.textContent = mostrar ? "Ocultar" : "Mostrar";
+
+            togglePassword.setAttribute(
+                "aria-label",
+                mostrar ? "Ocultar contraseña" : "Mostrar contraseña"
+            );
+
+        });
+
+    </script>
 
 </body>
 
