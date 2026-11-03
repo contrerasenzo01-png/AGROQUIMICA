@@ -1840,11 +1840,13 @@ def enviar_enlace_recuperacion(request, pk):
 
     enviar_correo_recuperacion(usuario)
 
-    antes = snapshot(usuario)
-    antes['Contrasena'] = 'sin cambios'
-    despues = snapshot(usuario)
-    despues['Contrasena'] = f'enlace de recuperación enviado a {usuario.Email_usuario}'
-    registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'RESET_CONTRASENA', antes, despues)
+    # La contraseña no cambia: solo se registra a quién y a dónde se envió el enlace.
+    despues = {
+        'Usuario': usuario.Usuario,
+        'Correo': usuario.Email_usuario,
+        'Vigencia del enlace': '1 hora',
+    }
+    registrar_auditoria(usuario_admin, 'Usuarios', usuario, 'ENVIO_RECUPERACION', {}, despues)
 
     messages.success(
         request,
@@ -5046,7 +5048,10 @@ def detalle_auditoria(request, id_log):
     #   datos   -> altas y eliminaciones: los datos del registro
     #   cambios -> modificaciones y anulaciones: valor anterior y nuevo
     #   ninguno -> inicio y cierre de sesión: nada más que los datos básicos
-    ACCIONES_DATOS = ('CREACION', 'EGRESO_STOCK', 'INGRESO_LOTE', 'DESCARGA_PDF')
+    ACCIONES_DATOS = (
+        'CREACION', 'EGRESO_STOCK', 'INGRESO_LOTE', 'DESCARGA_PDF',
+        'ENVIO_RECUPERACION',
+    )
 
     if log.Accion in ACCIONES_DATOS:
         modo, origen = 'datos', actuales

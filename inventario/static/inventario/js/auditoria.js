@@ -21,6 +21,7 @@ const NOMBRES_ACCION = {
     BAJA: 'Baja',
     ACTIVACION: 'Activación',
     RESET_CONTRASENA: 'Restablecimiento de contraseña',
+    ENVIO_RECUPERACION: 'Envío de enlace de recuperación',
     RECUPERA_CONTRASENA: 'Recuperación de contraseña',
 };
 
@@ -40,7 +41,8 @@ const CLASES_ACCION = {
     ATENCION_ALERTA: 'aud-ate',
     BAJA: 'aud-baj',
     ACTIVACION: 'aud-act',
-    RESET_CONTRASENA: 'aud-rst',
+    RESET_CONTRASENA: 'aud-res',
+    ENVIO_RECUPERACION: 'aud-env',
     RECUPERA_CONTRASENA: 'aud-rec'
 };
 
@@ -152,6 +154,8 @@ const ETIQUETAS_CAMPO = {
     // Alertas
     Atendida: 'Atendida',
     Fecha_hora_atencion: 'Fecha de atención',
+    // Recuperación de contraseña
+    Correo: 'Correo',
     // Otros
     Nota: 'Nota',
     accion: 'Acción'
@@ -282,7 +286,7 @@ function inyectarEstilosAuditoria() {
         .al-badge.aud-ate { background: #ccfbf1; color: #0f766e; }
         .al-badge.aud-baj { background: #fce7f3; color: #be185d; }
         .al-badge.aud-act { background: #d1fae5; color: #047857; }
-        .al-badge.aud-rst { background: #fef9c3; color: #854d0e; }
+        .al-badge.aud-res { background: #fef9c3; color: #854d0e; }
         .al-badge.aud-rec { background: #e0e7ff; color: #3730a3; }
         /* ---------- Ventana más compacta ---------- */
         .aud-modal .aud-modal-contenido {

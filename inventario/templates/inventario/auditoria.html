@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}?v=2">
 {% endblock %}
 
 {% block contenido %}
@@ -58,6 +58,7 @@
                     <option value="BAJA" {% if accion == 'BAJA' %}selected{% endif %}>Baja</option>
                     <option value="ACTIVACION" {% if accion == 'ACTIVACION' %}selected{% endif %}>Activación</option>
                     <option value="RESET_CONTRASENA" {% if accion == 'RESET_CONTRASENA' %}selected{% endif %}>Restablecimiento de contraseña</option>
+                    <option value="ENVIO_RECUPERACION" {% if accion == 'ENVIO_RECUPERACION' %}selected{% endif %}>Envío de enlace de recuperación</option>
                     <option value="RECUPERA_CONTRASENA" {% if accion == 'RECUPERA_CONTRASENA' %}selected{% endif %}>Recuperación de contraseña</option>
                 </select>
             </div>
@@ -141,7 +142,7 @@
                                 Sistema
                             {% endif %}
                         </td>
-                    
+
                         <td>
                             {{ log.ID_Usuario.ID_Perfil.Nombre_perfil|default:"Sin perfil" }}
                         </td>
@@ -180,6 +181,8 @@
                                 <span class="al-badge aud-act">Activación</span>
                             {% elif log.Accion == 'RESET_CONTRASENA' %}
                                 <span class="al-badge aud-res">Restablecimiento de contraseña</span>
+                            {% elif log.Accion == 'ENVIO_RECUPERACION' %}
+                                <span class="al-badge aud-env">Envío de enlace de recuperación</span>
                             {% elif log.Accion == 'RECUPERA_CONTRASENA' %}
                                 <span class="al-badge aud-rec">Recuperación de contraseña</span>
                             {% else %}
