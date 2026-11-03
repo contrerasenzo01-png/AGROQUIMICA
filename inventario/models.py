@@ -570,6 +570,44 @@ class MovimientosStock(models.Model):
         blank=True
     )
 
+    # ---------------- ANULACIÓN DE EGRESOS ----------------
+    # Un egreso hecho por error no se borra: se marca como anulado
+    # y se genera un movimiento de "Anulación de egreso".
+
+    Anulado = models.BooleanField(default=False)
+
+    Fecha_anulacion = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    Motivo_anulacion = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True
+    )
+
+    ID_Usuario_anulacion = models.ForeignKey(
+        Usuarios,
+        on_delete=models.PROTECT,
+        db_column='ID_Usuario_anulacion',
+        related_name='movimientos_anulados',
+        null=True,
+        blank=True
+    )
+
+    # Solo en el movimiento de "Anulación de egreso": apunta al egreso
+    # original. Al ser OneToOne, un egreso no puede anularse dos veces
+    # ni siquiera si dos usuarios lo intentan a la vez.
+    ID_Movimiento_origen = models.OneToOneField(
+        'self',
+        on_delete=models.PROTECT,
+        db_column='ID_Movimiento_origen',
+        related_name='anulacion',
+        null=True,
+        blank=True
+    )
+
     class Meta:
         db_table = 'MOVIMIENTOS_STOCK'
         verbose_name_plural = "Movimientos de Stock"

@@ -140,6 +140,7 @@ def _datos_evolucion(periodos, tipo_venta):
 
     filas = MovimientosStock.objects.filter(
         Fecha_hora_movimiento__gte=desde,
+        Anulado=False,
         ID_Tipo_movimiento__Nombre_tipo_movimiento__in=[
             tipo_venta, TIPO_ENTRADA
         ]
@@ -227,6 +228,7 @@ def datos_evolucion_rango(desde, hasta, tipo_venta):
     filas = MovimientosStock.objects.filter(
         Fecha_hora_movimiento__gte=inicio,
         Fecha_hora_movimiento__lt=fin,
+        Anulado=False,
         ID_Tipo_movimiento__Nombre_tipo_movimiento__in=[
             tipo_venta, TIPO_ENTRADA
         ]

@@ -7,6 +7,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet"
+      href="{% static 'inventario/styles/gestion_remitos.css' %}">
+<link rel="stylesheet"
       href="{% static 'inventario/styles/movimientos_stock.css' %}">
 <style>
     .tag-venta {
@@ -16,6 +18,49 @@
         background: #fee2e2;
         color: #b91c1c;
     }
+
+    .tag-anulacion-egreso {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 6px;
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .tag-anulado {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: #e5e7eb;
+        color: #374151;
+        font-size: .75em;
+        font-weight: 600;
+    }
+
+    tr.mov-anulado td { opacity: .7; }
+    tr.mov-anulado .mov-cantidad { text-decoration: line-through; }
+
+    .mov-anulacion-detalle {
+        display: block;
+        margin-top: 4px;
+        font-size: .85em;
+        opacity: .85;
+    }
+
+    /* Modo oscuro (variables de tema.css) */
+    html.modo-oscuro .tag-venta {
+        background: var(--d-red-bg);
+        color: var(--d-red-tx);
+    }
+    html.modo-oscuro .tag-anulacion-egreso {
+        background: var(--d-green-bg);
+        color: var(--d-green-tx);
+    }
+    html.modo-oscuro .tag-anulado {
+        background: var(--d-surface-3);
+        color: var(--d-text-3);
+    }
 </style>
 {% endblock %}
 
@@ -24,7 +69,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Movimientos de stock</h1>
-        <p>Historial automático de ingresos de lotes, egresos por vencimiento y egresos por venta.</p>
+        <p>Historial automático de ingresos de lotes, egresos por vencimiento, egresos por venta y sus anulaciones.</p>
     </div>
 </div>
 
@@ -93,6 +138,7 @@
                     <th>Usuario</th>
                     <th>Observaciones</th>
                     {% if perm.comprobantes_gestionar %}<th>Comprobante</th>{% endif %}
+                    {% if puede_anular %}<th>Acciones</th>{% endif %}
                 </tr>
             </thead>
 
@@ -102,7 +148,7 @@
 
                     {% with tipo=m.ID_Tipo_movimiento.Nombre_tipo_movimiento %}
 
-                        <tr>
+                        <tr{% if m.Anulado %} class="mov-anulado"{% endif %}>
 
                             <td>
                                 <span class="mov-fecha">
@@ -134,13 +180,16 @@
                                     <span class="tag tag-entrada">Ingreso de lote</span>
                                 {% elif tipo == "Salida por vencimiento de producto" %}
                                     <span class="tag tag-vencimiento">Egreso por vencimiento</span>
+                                {% elif tipo == "Anulación de egreso" %}
+                                    <span class="tag-anulacion-egreso">{{ tipo }}</span>
                                 {% else %}
-                                    <span class="tag tag-venta">{{ tipo }}</span>
+                                    <span class="tag-venta">{{ tipo }}</span>
                                 {% endif %}
+                                {% if m.Anulado %}<span class="tag-anulado">Anulado</span>{% endif %}
                             </td>
 
                             <td>
-                                {% if tipo == "Entrada de lote" %}
+                                {% if tipo == "Entrada de lote" or tipo == "Anulación de egreso" %}
                                     <span class="mov-cantidad pos">
                                         +{{ m.Cantidad_movimiento_stock }}
                                     </span>
@@ -164,7 +213,16 @@
                                 <span class="mov-obs">
                                     {{ m.Observaciones|default:"—" }}
                                 </span>
+                                {% if m.Anulado %}
+                                    <span class="mov-anulacion-detalle">
+                                        Anulado el {{ m.Fecha_anulacion|date:"d/m/Y H:i" }}
+                                        por {{ m.ID_Usuario_anulacion.Apellido_usuario }}
+                                        {{ m.ID_Usuario_anulacion.Nombre_usuario }}.
+                                        Motivo: {{ m.Motivo_anulacion }}
+                                    </span>
+                                {% endif %}
                             </td>
+
                             {% if perm.comprobantes_gestionar %}
                             <td>
                                 <a
@@ -178,6 +236,32 @@
                                 </a>
                             </td>
                             {% endif %}
+
+                            {% if puede_anular %}
+                            <td>
+                                {% if tipo == "Egreso por venta" and not m.Anulado %}
+                                    <div class="rm-acciones">
+                                        <button type="button"
+                                                class="rm-icon-btn rm-anular"
+                                                title="Anular egreso"
+                                                aria-label="Anular egreso"
+                                                data-url="{% url 'anular_egreso' m.ID_Movimiento_stock %}"
+                                                data-producto="{{ m.ID_Lote.ID_Producto.Nombre_producto }}"
+                                                data-lote="{{ m.ID_Lote.Numero_lote }}"
+                                                data-cantidad="{{ m.Cantidad_movimiento_stock }}"
+                                                data-fecha="{{ m.Fecha_hora_movimiento|date:'d/m/Y H:i' }}"
+                                                onclick="abrirModalAnularEgreso(this)">
+                                            <svg class="rm-icon" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <path d="m4.9 4.9 14.2 14.2"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            {% endif %}
                         </tr>
 
                     {% endwith %}
@@ -185,7 +269,7 @@
                 {% empty %}
 
                     <tr>
-                        <td colspan="{% if perm.comprobantes_gestionar %}8{% else %}7{% endif %}" class="tabla-vacia">
+                        <td colspan="{% if perm.comprobantes_gestionar and puede_anular %}9{% elif perm.comprobantes_gestionar or puede_anular %}8{% else %}7{% endif %}" class="tabla-vacia">
                             No se encontraron movimientos de stock.
                         </td>
                     </tr>
@@ -208,4 +292,180 @@
 
 </div>
 
+{% if puede_anular %}
+<!-- MODAL ANULAR EGRESO -->
+<div class="rm-modal" id="modalAnularEgreso" aria-hidden="true">
+    <div class="rm-modal-box"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloAnularEgreso">
+
+        <div class="rm-modal-head">
+            <div>
+                <h2 id="tituloAnularEgreso">Anular egreso</h2>
+                <p>Esta acción no se puede deshacer.</p>
+            </div>
+
+            <button type="button"
+                    class="rm-modal-x"
+                    onclick="cerrarModalAnularEgreso()"
+                    aria-label="Cerrar">✕</button>
+        </div>
+
+        <form method="POST" id="formAnularEgreso">
+            {% csrf_token %}
+
+            <div class="rm-modal-body">
+
+                <div class="rm-anular-aviso">
+                    <svg viewBox="0 0 24 24">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                        <path d="M12 9v4"/>
+                        <path d="M12 17h.01"/>
+                    </svg>
+                    <div>
+                        <strong>Si anula este egreso debe justificarlo.</strong>
+                        <span>
+                            El egreso no se elimina: queda registrado como anulado
+                            con su motivo, fecha y usuario.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="rm-anular-resumen">
+                    <div>
+                        <small>Producto</small>
+                        <b id="anuEgProducto">—</b>
+                    </div>
+                    <div>
+                        <small>Lote</small>
+                        <b id="anuEgLote">—</b>
+                    </div>
+                    <div>
+                        <small>Unidades a devolver al stock</small>
+                        <b id="anuEgCantidad">—</b>
+                    </div>
+                    <div>
+                        <small>Fecha del egreso</small>
+                        <b id="anuEgFecha">—</b>
+                    </div>
+                </div>
+
+                <ul class="rm-anular-lista">
+                    <li>Se devuelven las unidades al lote y al stock del producto.</li>
+                    <li>Se genera un movimiento de "Anulación de egreso".</li>
+                    <li>La anulación queda registrada en la auditoría.</li>
+                    <li>No se puede anular si el lote ya venció.</li>
+                </ul>
+
+                <div class="rm-grupo rm-full">
+                    <label for="anuEgMotivo">Justificación de la anulación</label>
+                    <textarea name="Motivo_anulacion"
+                              id="anuEgMotivo"
+                              maxlength="200"
+                              rows="4"
+                              placeholder="Ej.: Se cargó una cantidad incorrecta en la venta."
+                              required></textarea>
+
+                    <div class="rm-anular-pie-texto">
+                        <span id="anuEgAyuda">Escribí al menos 10 caracteres.</span>
+                        <span id="anuEgContador">0 / 200</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="rm-modal-pie">
+                <button type="button"
+                        class="rm-btn rm-btn-light"
+                        onclick="cerrarModalAnularEgreso()">
+                    Cancelar
+                </button>
+
+                <button type="submit"
+                        class="rm-btn rm-btn-anular"
+                        id="btnConfirmarAnulacionEgreso"
+                        disabled>
+                    Anular egreso
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if puede_anular %}
+<script>
+(function () {
+    'use strict';
+
+    const modal = document.getElementById('modalAnularEgreso');
+    const form = document.getElementById('formAnularEgreso');
+    const motivo = document.getElementById('anuEgMotivo');
+    const contador = document.getElementById('anuEgContador');
+    const ayuda = document.getElementById('anuEgAyuda');
+    const btnConfirmar = document.getElementById('btnConfirmarAnulacionEgreso');
+
+    function validarMotivo() {
+        const largo = motivo.value.trim().length;
+
+        contador.textContent = motivo.value.length + ' / 200';
+
+        const valido = largo >= 10;
+        btnConfirmar.disabled = !valido;
+
+        ayuda.textContent = valido
+            ? 'Justificación lista.'
+            : 'Escribí al menos 10 caracteres.';
+    }
+
+    motivo.addEventListener('input', validarMotivo);
+
+    form.addEventListener('submit', function () {
+        btnConfirmar.disabled = true;
+    });
+
+    window.abrirModalAnularEgreso = function (boton) {
+        form.action = boton.dataset.url;
+
+        document.getElementById('anuEgProducto').textContent =
+            boton.dataset.producto;
+        document.getElementById('anuEgLote').textContent =
+            boton.dataset.lote;
+        document.getElementById('anuEgCantidad').textContent =
+            boton.dataset.cantidad;
+        document.getElementById('anuEgFecha').textContent =
+            boton.dataset.fecha;
+
+        motivo.value = '';
+        validarMotivo();
+
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+
+        motivo.focus();
+    };
+
+    window.cerrarModalAnularEgreso = function () {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+    };
+
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            cerrarModalAnularEgreso();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            cerrarModalAnularEgreso();
+        }
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

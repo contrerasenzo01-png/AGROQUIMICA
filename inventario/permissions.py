@@ -110,6 +110,9 @@ ACCIONES = {
                        'Anular un remito y revertir su ingreso de stock.', 'Remitos'),
     'atender_alertas': ('Atender alertas',
                         'Marcar alertas como atendidas.', 'Alertas'),
+    'anular_egresos': ('Anular egresos de stock',
+                       'Anular un egreso por venta registrado por error y devolver las unidades al stock.',
+                       'Movimientos de stock'),
 }
 
 # Derivado del catálogo: modulo -> (nombre_consultar, nombre_gestionar)
@@ -310,6 +313,7 @@ RUTAS_GESTION = {
 
 RUTAS_ACCION = {
     'atender_alertas': ['atender_alerta'],
+    'anular_egresos': ['anular_egreso'],
 }
 
 _MARCA = 987654321

@@ -74,6 +74,7 @@ urlpatterns = [
     # Movimientos de stock
     path('movimientos-stock/', views.gestion_movimientos_stock, name='gestion_movimientos_stock'),
     path('movimientos-stock/<int:id_movimiento>/comprobante/', views.comprobante_movimiento_pdf, name='comprobante_movimiento_pdf'),
+    path('movimientos-stock/<int:id_movimiento>/anular/', views.anular_egreso, name='anular_egreso'),
 
 
     # Alertas

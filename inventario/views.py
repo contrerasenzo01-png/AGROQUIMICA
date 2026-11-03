@@ -205,6 +205,9 @@ def _clase_movimiento(nombre_tipo):
 
     nombre = (nombre_tipo or '').lower()
 
+    # La anulación de un egreso DEVUELVE stock: suma, como una entrada.
+    if 'anulaci' in nombre and 'egreso' in nombre:
+        return 'entrada', 1
     if 'entrada' in nombre:
         return 'entrada', 1
     if 'vencimiento' in nombre:
@@ -3151,26 +3154,23 @@ def gestion_movimientos_stock(request):
     busqueda = request.GET.get('q', '').strip()
     tipo_sel = request.GET.get('tipo', '').strip()
 
-    # Asegura que los tipos existan en la base de datos.
-    for nombre_tipo in (
-        'Entrada de lote',
-        'Salida por vencimiento de producto',
-        TIPO_EGRESO,
-        TIPO_ANULACION_REMITO,
-    ):
-        TiposMovimientos.objects.get_or_create(
-            Nombre_tipo_movimiento=nombre_tipo
-        )
-
     tipos_visibles = [
         'Entrada de lote',
         'Salida por vencimiento de producto',
         TIPO_EGRESO,
         TIPO_ANULACION_REMITO,
+        TIPO_ANULACION_EGRESO,
     ]
+
+    # Asegura que los tipos existan en la base de datos.
+    for nombre_tipo in tipos_visibles:
+        TiposMovimientos.objects.get_or_create(
+            Nombre_tipo_movimiento=nombre_tipo
+        )
 
     movimientos = MovimientosStock.objects.select_related(
         'ID_Usuario',
+        'ID_Usuario_anulacion',
         'ID_Tipo_movimiento',
         'ID_Lote',
         'ID_Lote__ID_Producto',
@@ -3206,6 +3206,7 @@ def gestion_movimientos_stock(request):
             'tipo_sel': tipo_sel,
             'usuario': usuario,
             'activo': 'movimientos',
+            'puede_anular': puede_accion(usuario, 'anular_egresos'),
         }
     )
 
@@ -3828,6 +3829,14 @@ def comprobante_movimiento_pdf(request, id_movimiento):
             if movimiento.ID_Usuario else 'No disponible'
         ),
     ])
+
+    if movimiento.Anulado:
+        filas.append((
+            'Estado:',
+            'ANULADO el '
+            f'{timezone.localtime(movimiento.Fecha_anulacion).strftime("%d/%m/%Y %H:%M")}'
+            f'. Motivo: {movimiento.Motivo_anulacion}'
+        ))
 
     buffer = BytesIO()
 
@@ -5105,6 +5114,7 @@ def detalle_auditoria(request, id_log):
 
 TIPO_EGRESO = 'Egreso por venta'
 TIPO_ANULACION_REMITO = 'Anulación de remito'
+TIPO_ANULACION_EGRESO = 'Anulación de egreso'
 
 
 def egreso_productos(request):
@@ -5315,6 +5325,207 @@ def registrar_egreso(request):
 
 
     return redirect('gestion_productos')
+
+@require_POST
+def anular_egreso(request, id_movimiento):
+    """Anula un egreso por venta hecho por error.
+
+    No borra nada: marca el egreso como anulado, devuelve las unidades
+    al lote y al stock del producto, genera un movimiento de
+    "Anulación de egreso" y lo registra en la auditoría.
+    """
+
+    usuario = usuario_con_accion(request, 'anular_egresos')
+
+    if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para anular egresos de stock.'
+        )
+        return redirect('panel_principal')
+
+    motivo = request.POST.get('Motivo_anulacion', '').strip()
+
+    if len(motivo) < 10:
+        messages.error(
+            request,
+            'Si anula este egreso debe justificarlo '
+            '(mínimo 10 caracteres).'
+        )
+        return redirect('gestion_movimientos_stock')
+
+    if len(motivo) > 200:
+        messages.error(
+            request,
+            'La justificación no puede superar los 200 caracteres.'
+        )
+        return redirect('gestion_movimientos_stock')
+
+    tipo_egreso = TiposMovimientos.objects.filter(
+        Nombre_tipo_movimiento=TIPO_EGRESO
+    ).first()
+
+    hoy = timezone.localdate()
+
+    try:
+        with transaction.atomic():
+
+            # 1) Se bloquea el egreso: dos usuarios no pueden anularlo a la vez.
+            movimiento = MovimientosStock.objects.select_for_update().get(
+                ID_Movimiento_stock=id_movimiento
+            )
+
+            if (
+                not tipo_egreso
+                or movimiento.ID_Tipo_movimiento_id != tipo_egreso.pk
+                or not movimiento.ID_Lote_id
+            ):
+                messages.error(
+                    request,
+                    'Solo se pueden anular egresos por venta.'
+                )
+                return redirect('gestion_movimientos_stock')
+
+            if movimiento.Anulado:
+                messages.error(
+                    request,
+                    'Este egreso ya se encuentra anulado.'
+                )
+                return redirect('gestion_movimientos_stock')
+
+            # 2) Se bloquean stock y lote (mismo orden que registrar_egreso).
+            lote_base = Lotes.objects.get(ID_Lote=movimiento.ID_Lote_id)
+
+            stock = Stock.objects.select_for_update().filter(
+                ID_Producto_id=lote_base.ID_Producto_id
+            ).first()
+
+            lote = Lotes.objects.select_for_update().select_related(
+                'ID_Producto', 'ID_Remito'
+            ).get(ID_Lote=movimiento.ID_Lote_id)
+
+            producto = lote.ID_Producto
+            cantidad = movimiento.Cantidad_movimiento_stock
+
+            if not stock:
+                messages.error(
+                    request,
+                    'No se encontró el stock del producto.'
+                )
+                return redirect('gestion_movimientos_stock')
+
+            if lote.ID_Remito.Estado_remito == 'Anulado':
+                messages.error(
+                    request,
+                    'No se puede anular: el remito de este lote está anulado.'
+                )
+                return redirect('gestion_movimientos_stock')
+
+            if lote.Fecha_vencimiento < hoy:
+                messages.error(
+                    request,
+                    f'No se puede anular: el lote {lote.Numero_lote} ya '
+                    'venció y las unidades devueltas no serían utilizables.'
+                )
+                return redirect('gestion_movimientos_stock')
+
+            if lote.Cantidad_actual + cantidad > lote.Cantidad_ingresada:
+                messages.error(
+                    request,
+                    'No se puede anular: la devolución dejaría al lote '
+                    'con más unidades de las que ingresó.'
+                )
+                return redirect('gestion_movimientos_stock')
+
+            lote_antes = lote.Cantidad_actual
+            stock_antes = stock.Cantidad_stock
+
+            # 3) Se devuelven las unidades al lote y al stock.
+            lote.Cantidad_actual += cantidad
+            lote.save(update_fields=['Cantidad_actual'])
+
+            stock.Cantidad_stock += cantidad
+            stock.save(update_fields=['Cantidad_stock'])
+
+            # 4) Movimiento de anulación (suma) enlazado al egreso original.
+            tipo_anulacion, _ = TiposMovimientos.objects.get_or_create(
+                Nombre_tipo_movimiento=TIPO_ANULACION_EGRESO
+            )
+
+            contramovimiento = MovimientosStock.objects.create(
+                ID_Usuario=usuario,
+                ID_Tipo_movimiento=tipo_anulacion,
+                ID_Lote=lote,
+                Cantidad_movimiento_stock=cantidad,
+                ID_Movimiento_origen=movimiento,
+                Observaciones=(
+                    f'Anulación del egreso N.º '
+                    f'{movimiento.ID_Movimiento_stock}: {motivo}'
+                )[:255]
+            )
+
+            # 5) El egreso original queda marcado, no se borra.
+            movimiento.Anulado = True
+            movimiento.Fecha_anulacion = timezone.now()
+            movimiento.Motivo_anulacion = motivo
+            movimiento.ID_Usuario_anulacion = usuario
+            movimiento.save(update_fields=[
+                'Anulado',
+                'Fecha_anulacion',
+                'Motivo_anulacion',
+                'ID_Usuario_anulacion',
+            ])
+
+            # 6) Auditoría.
+            registrar_auditoria(
+                usuario,
+                'Movimientos de Stock',
+                movimiento,
+                'ANULACION',
+                {
+                    'Estado': 'Vigente',
+                    'Stock': stock_antes,
+                    'Cantidad_lote': lote_antes,
+                },
+                {
+                    'Estado': 'Anulado',
+                    'Motivo_anulacion': motivo,
+                    'ID_Producto': producto.pk,
+                    'Lote': lote.Numero_lote,
+                    'Cantidad_devuelta': cantidad,
+                    'Stock': stock.Cantidad_stock,
+                    'Cantidad_lote': lote.Cantidad_actual,
+                    'Movimiento_de_anulacion': contramovimiento.pk,
+                }
+            )
+
+    except MovimientosStock.DoesNotExist:
+        messages.error(request, 'El movimiento seleccionado no existe.')
+        return redirect('gestion_movimientos_stock')
+
+    except IntegrityError:
+        messages.error(
+            request,
+            'Este egreso ya fue anulado por otro usuario.'
+        )
+        return redirect('gestion_movimientos_stock')
+
+    except DatabaseError:
+        messages.error(
+            request,
+            'Ocurrió un error en la base de datos. '
+            'No se anuló el egreso.'
+        )
+        return redirect('gestion_movimientos_stock')
+
+    messages.success(
+        request,
+        f'Egreso anulado: se devolvieron {cantidad} unidad(es) de '
+        f'"{producto.Nombre_producto}" (lote {lote.Numero_lote}). '
+        f'Stock actual: {stock.Cantidad_stock}.'
+    )
+
+    return redirect('gestion_movimientos_stock')
 
 # ============================================================
 # REPORTES (solo Administrador)
