@@ -1,12 +1,13 @@
 /* ==========================================
    PANEL PRINCIPAL · Agroquímica del Valle
    El panel lo dibuja React con clases de Bootstrap 5.3
-   (react/panel_principal.jsx).
+   y gráficos de ApexCharts (react/panel_principal.jsx).
 
    Este archivo:
    1. Evita que Bootstrap cambie el menú y la barra superior.
    2. Adapta Bootstrap a los colores de la agroquímica.
-   3. Ajusta el modo oscuro.
+   3. Define las animaciones de entrada.
+   4. Ajusta el modo oscuro.
    Las clases propias empiezan con "pp-".
    ========================================== */
 
@@ -101,6 +102,51 @@ body {
 
 
 /* ==========================================
+   3. ANIMACIONES
+   .pp-aparecer: entrada suave (sube y se desvanece).
+   --pp-i escalona la entrada de cada elemento.
+   Se desactivan si la persona pidió menos movimiento.
+   ========================================== */
+
+@keyframes pp-aparecer {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.pp-aparecer {
+    animation: pp-aparecer .55s cubic-bezier(.22, .61, .36, 1) both;
+    animation-delay: calc(var(--pp-i, 0) * 80ms);
+}
+
+/* Filas de la tabla: entran una tras otra */
+.pp-tabla tbody tr {
+    animation: pp-aparecer .4s ease both;
+    animation-delay: calc(var(--pp-i, 0) * 35ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pp-aparecer,
+    .pp-tabla tbody tr {
+        animation: none;
+    }
+
+    .pp-metrica-link {
+        transition: none;
+    }
+
+    .pp-metrica-link:hover {
+        transform: none;
+    }
+}
+
+
+/* ==========================================
    TARJETAS DE MÉTRICAS
    ========================================== */
 
@@ -110,13 +156,13 @@ body {
 }
 
 .pp-metrica-link {
-    transition: border-color .15s, box-shadow .15s, transform .15s;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 
 .pp-metrica-link:hover {
     border-color: #b9d7c5;
-    box-shadow: 0 6px 18px rgba(15, 58, 36, .08);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(15, 58, 36, .1);
+    transform: translateY(-3px);
 }
 
 .pp-metrica-icono {
@@ -127,11 +173,17 @@ body {
     width: 42px;
     height: 42px;
     border-radius: 10px;
+    transition: transform .25s;
+}
+
+.pp-metrica-link:hover .pp-metrica-icono {
+    transform: scale(1.08) rotate(-4deg);
 }
 
 .pp-metrica-valor {
     font-family: 'Poppins', sans-serif;
     color: var(--bs-emphasis-color);
+    font-variant-numeric: tabular-nums;
 }
 
 .pp-svg {
@@ -146,26 +198,39 @@ body {
 
 
 /* ==========================================
-   GRÁFICO (barras de progreso)
+   GRÁFICOS (ApexCharts)
    ========================================== */
 
-.pp-progreso {
-    height: 10px;
-    border-radius: 999px;
-    background-color: #eef3f0;
+.pp-grafico {
+    width: 100%;
+    min-height: 120px;
 }
 
-.pp-progreso .progress-bar {
-    border-radius: 999px;
-    transition: width .6s ease;
+/* ApexCharts dibuja con la fuente del sistema */
+.pp-grafico .apexcharts-text,
+.pp-grafico .apexcharts-legend-text {
+    font-family: 'Inter', sans-serif !important;
 }
 
-/* Colores de la marca, en orden */
-.pp-barra-0 { background-color: #185a38; }
-.pp-barra-1 { background-color: #2e9d66; }
-.pp-barra-2 { background-color: #f5c400; }
-.pp-barra-3 { background-color: #8bc34a; }
-.pp-barra-4 { background-color: #0f766e; }
+/* El valor central del donut usa la tipografía de los títulos */
+.pp-grafico .apexcharts-datalabel-value {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* Tooltip con las esquinas y la sombra del resto del panel */
+.pp-grafico .apexcharts-tooltip {
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(15, 58, 36, .15);
+}
+
+.pp-grafico .apexcharts-legend-series {
+    cursor: pointer;
+}
+
+/* Las barras de stock bajo llevan a Productos al hacer clic */
+.pp-grafico .apexcharts-bar-area {
+    cursor: pointer;
+}
 
 
 /* ==========================================
@@ -201,10 +266,11 @@ body {
 
 
 /* ==========================================
-   3. MODO OSCURO
+   4. MODO OSCURO
    tema.js pone data-bs-theme="dark" junto con .modo-oscuro.
    Acá se reemplazan los grises de Bootstrap por los verdes oscuros
-   del sistema.
+   del sistema. Los colores de los gráficos se eligen en el .jsx
+   (coloresGrafico), con los mismos tonos de tema.css.
    ========================================== */
 
 html.modo-oscuro .pp-panel {
@@ -250,11 +316,12 @@ html.modo-oscuro .pp-panel .table {
 
 html.modo-oscuro .pp-metrica-link:hover {
     border-color: var(--d-green-bd) !important;
-    box-shadow: none;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
 }
 
-html.modo-oscuro .pp-progreso { background-color: var(--d-surface-3); }
-html.modo-oscuro .pp-barra-0 { background-color: #2e9d66; }
+html.modo-oscuro .pp-grafico .apexcharts-tooltip {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+}
 
 /* tema.css pinta todos los .btn de gris en modo oscuro:
    dentro del panel se recuperan los verdes. */

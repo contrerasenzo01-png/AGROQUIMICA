@@ -24,6 +24,14 @@
         html.setAttribute('data-bs-theme', oscuro() ? 'dark' : 'light');
     }
 
+    /* Avisa a quien lo necesite (por ejemplo, los gráficos del panel)
+       que el tema cambió, para que se repinten con los colores nuevos. */
+    function avisarCambio() {
+        try {
+            window.dispatchEvent(new CustomEvent('av:tema', { detail: { oscuro: oscuro() } }));
+        } catch (e) { /* navegador muy antiguo */ }
+    }
+
     function pintar() {
         if (!boton) { return; }
 
@@ -43,6 +51,7 @@
 
             sincronizarBootstrap();
             pintar();
+            avisarCambio();
         });
     }
 

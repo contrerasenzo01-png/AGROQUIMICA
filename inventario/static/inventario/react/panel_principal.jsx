@@ -1,11 +1,12 @@
 /* ============================================================
    PANEL PRINCIPAL · Agroquímica del Valle
-   Componente React con clases de Bootstrap 5.3.
+   Componente React con clases de Bootstrap 5.3 y gráficos
+   de ApexCharts (se cargan desde _react.html).
    Los datos los arma views.py (_datos_panel) y llegan en el
    <script id="datos-panel"> del template.
    ============================================================ */
 
-const { useState, useMemo } = React;
+const { useState, useMemo, useEffect, useRef } = React;
 
 const DATOS = JSON.parse(
     document.getElementById('datos-panel').textContent
@@ -55,6 +56,91 @@ function claseEtiqueta(color) {
 const COLOR_METRICA = { green: 'success', blue: 'info', red: 'danger', orange: 'warning' };
 const COLOR_MOVIMIENTO = { entrada: 'success', salida: 'danger', vencimiento: 'warning', anulacion: 'secondary' };
 
+function sinMovimientoReducido() {
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+
+/* ------------------------------------------------------------
+   TEMA (claro / oscuro)
+   tema.js avisa con el evento "av:tema" cuando se cambia el modo.
+   ------------------------------------------------------------ */
+
+function useTemaOscuro() {
+    const [oscuro, setOscuro] = useState(
+        () => document.documentElement.classList.contains('modo-oscuro')
+    );
+
+    useEffect(() => {
+        const alCambiar = () => {
+            setOscuro(document.documentElement.classList.contains('modo-oscuro'));
+        };
+
+        window.addEventListener('av:tema', alCambiar);
+        return () => window.removeEventListener('av:tema', alCambiar);
+    }, []);
+
+    return oscuro;
+}
+
+/* Colores de los gráficos según el tema (mismos tonos que panel_principal.css y tema.css) */
+function coloresGrafico(oscuro) {
+    return oscuro
+        ? {
+            texto: '#e3ece6',
+            texto2: '#a4b6ab',
+            borde: '#263830',
+            fondoTarjeta: '#151f1a',
+            peligro: '#f87171',
+            minimo: '#324539',
+            paleta: ['#2e9d66', '#f5c400', '#8bc34a', '#2dd4bf', '#7db8f5', '#fb923c', '#c4a7f5'],
+        }
+        : {
+            texto: '#1c2a23',
+            texto2: '#6b7c73',
+            borde: '#e3eae6',
+            fondoTarjeta: '#ffffff',
+            peligro: '#dc3545',
+            minimo: '#cfe3d7',
+            paleta: ['#185a38', '#2e9d66', '#f5c400', '#8bc34a', '#0f766e', '#3b82f6', '#a855f7'],
+        };
+}
+
+
+/* ------------------------------------------------------------
+   ANIMACIÓN DE NÚMEROS (de 0 al valor final)
+   ------------------------------------------------------------ */
+
+function useContador(objetivo, duracion = 900) {
+    const [valor, setValor] = useState(0);
+
+    useEffect(() => {
+        if (!sinMovimientoReducido()) {
+            setValor(objetivo);
+            return undefined;
+        }
+
+        let inicio = null;
+        let cuadro;
+
+        const paso = (marca) => {
+            if (inicio === null) inicio = marca;
+
+            const avance = Math.min((marca - inicio) / duracion, 1);
+            const suave = 1 - Math.pow(1 - avance, 3);   // frena al final
+
+            setValor(Math.round(objetivo * suave));
+
+            if (avance < 1) cuadro = requestAnimationFrame(paso);
+        };
+
+        cuadro = requestAnimationFrame(paso);
+        return () => cancelAnimationFrame(cuadro);
+    }, [objetivo, duracion]);
+
+    return valor;
+}
+
 
 /* ------------------------------------------------------------
    ÍCONOS (línea, del mismo estilo que el menú)
@@ -78,12 +164,200 @@ function Icono({ nombre }) {
 
 
 /* ------------------------------------------------------------
+   GRÁFICO GENÉRICO DE APEXCHARTS
+   Crea el gráfico una vez y, cuando cambian las opciones (por
+   ejemplo, al cambiar de tema), las actualiza sin repetir la
+   animación de entrada.
+   ------------------------------------------------------------ */
+
+function ApexGrafico({ opciones }) {
+    const contenedor = useRef(null);
+    const grafico = useRef(null);
+    const disponible = typeof ApexCharts !== 'undefined';
+
+    useEffect(() => {
+        if (!disponible || !contenedor.current) return undefined;
+
+        grafico.current = new ApexCharts(contenedor.current, opciones);
+        grafico.current.render();
+
+        return () => {
+            if (grafico.current) grafico.current.destroy();
+            grafico.current = null;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        if (grafico.current) {
+            grafico.current.updateOptions(opciones, false, false);
+        }
+    }, [opciones]);
+
+    if (!disponible) {
+        return <Vacio texto="No se pudo cargar la librería de gráficos." />;
+    }
+
+    return <div ref={contenedor} className="pp-grafico" />;
+}
+
+/* Animaciones comunes a todos los gráficos */
+function animacionesGrafico(velocidad) {
+    return {
+        enabled: sinMovimientoReducido(),
+        easing: 'easeinout',
+        speed: velocidad,
+        animateGradually: { enabled: true, delay: 120 },
+        dynamicAnimation: { enabled: true, speed: 350 },
+    };
+}
+
+const FUENTE_GRAFICO = 'Inter, sans-serif';
+
+
+/* ------------------------------------------------------------
+   OPCIONES: BARRAS DE PRODUCTOS POR SUBTIPO
+   Barras horizontales ordenadas de mayor a menor. El alto se
+   adapta a la cantidad de subtipos, así sigue siendo legible
+   aunque haya muchos.
+   ------------------------------------------------------------ */
+
+function opcionesBarrasSubtipo(datos, oscuro) {
+    const c = coloresGrafico(oscuro);
+
+    const ordenados = [...datos].sort((a, b) => b.cantidad - a.cantidad);
+    const maximo = ordenados.length ? ordenados[0].cantidad : 0;
+
+    return {
+        chart: {
+            type: 'bar',
+            height: Math.max(180, 60 + ordenados.length * 34),
+            background: 'transparent',
+            fontFamily: FUENTE_GRAFICO,
+            foreColor: c.texto2,
+            toolbar: { show: false },
+            animations: animacionesGrafico(900),
+        },
+        series: [{ name: 'Productos', data: ordenados.map(d => d.cantidad) }],
+        colors: [c.paleta[0]],
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                borderRadius: 4,
+                barHeight: '68%',
+                dataLabels: { position: 'top' },
+            },
+        },
+        dataLabels: {
+            enabled: true,
+            textAnchor: 'start',
+            offsetX: 6,
+            style: { fontSize: '12px', fontWeight: 600, colors: [c.texto] },
+            background: { enabled: false },
+            formatter: v => formatearNumero(v),
+        },
+        stroke: { show: false },
+        xaxis: {
+            categories: ordenados.map(d => d.nombre),
+            max: Math.ceil(maximo * 1.15) || undefined,
+            labels: { formatter: v => formatearNumero(Math.round(v)) },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            labels: { maxWidth: 160, style: { fontWeight: 600 } },
+        },
+        grid: {
+            borderColor: c.borde,
+            strokeDashArray: 3,
+            xaxis: { lines: { show: true } },
+            yaxis: { lines: { show: false } },
+        },
+        legend: { show: false },
+        states: {
+            hover: { filter: { type: 'lighten', value: 0.08 } },
+        },
+        tooltip: {
+            theme: oscuro ? 'dark' : 'light',
+            y: { formatter: v => v + (v === 1 ? ' producto' : ' productos') },
+        },
+    };
+}
+
+
+/* ------------------------------------------------------------
+   OPCIONES: BARRAS DE STOCK BAJO (stock actual vs. mínimo)
+   ------------------------------------------------------------ */
+
+function opcionesStockBajo(items, oscuro, alHacerClic) {
+    const c = coloresGrafico(oscuro);
+
+    return {
+        chart: {
+            type: 'bar',
+            height: 90 + items.length * 52,
+            background: 'transparent',
+            fontFamily: FUENTE_GRAFICO,
+            foreColor: c.texto2,
+            toolbar: { show: false },
+            animations: animacionesGrafico(900),
+            events: alHacerClic ? { dataPointSelection: alHacerClic } : {},
+        },
+        series: [
+            { name: 'Stock actual', data: items.map(p => p.stock) },
+            { name: 'Mínimo', data: items.map(p => p.minimo) },
+        ],
+        colors: [c.peligro, c.minimo],
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                borderRadius: 4,
+                barHeight: '66%',
+            },
+        },
+        dataLabels: { enabled: false },
+        stroke: { show: false },
+        xaxis: {
+            categories: items.map(p => p.producto),
+            labels: { formatter: v => formatearNumero(v) },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            labels: { maxWidth: 140, style: { fontWeight: 600 } },
+        },
+        grid: {
+            borderColor: c.borde,
+            strokeDashArray: 3,
+            xaxis: { lines: { show: true } },
+            yaxis: { lines: { show: false } },
+        },
+        legend: {
+            position: 'top',
+            horizontalAlign: 'left',
+            fontSize: '12px',
+            markers: { size: 6, offsetX: -2 },
+        },
+        states: {
+            hover: { filter: { type: 'lighten', value: 0.08 } },
+        },
+        tooltip: {
+            theme: oscuro ? 'dark' : 'light',
+            shared: true,
+            intersect: false,
+            y: { formatter: v => formatearNumero(v) + ' un.' },
+        },
+    };
+}
+
+
+/* ------------------------------------------------------------
    ENCABEZADO
    ------------------------------------------------------------ */
 
 function Encabezado({ usuario }) {
     return (
-        <header className="mb-4">
+        <header className="mb-4 pp-aparecer">
             <h1 className="mb-1">Panel Principal</h1>
             <p className="text-body-secondary small mb-0">
                 {saludoSegunHora()}, {usuario.nombre} · {fechaDeHoy()}
@@ -97,12 +371,13 @@ function Encabezado({ usuario }) {
    TARJETAS DE MÉTRICAS (grilla de Bootstrap)
    ------------------------------------------------------------ */
 
-function TarjetaMetrica({ metrica }) {
+function TarjetaMetrica({ metrica, indice }) {
     const color = COLOR_METRICA[metrica.color] || 'success';
     const Elemento = metrica.url ? 'a' : 'div';
+    const valorAnimado = useContador(Number(metrica.valor) || 0);
 
     return (
-        <div className="col-12 col-sm-6 col-xl">
+        <div className="col-12 col-sm-6 col-xl pp-aparecer" style={{ '--pp-i': indice }}>
             <Elemento
                 href={metrica.url || undefined}
                 className={'card h-100 pp-metrica' + (metrica.url ? ' pp-metrica-link' : '')}
@@ -117,7 +392,7 @@ function TarjetaMetrica({ metrica }) {
                             {metrica.titulo}
                         </div>
                         <div className="fs-3 fw-bold lh-sm pp-metrica-valor">
-                            {formatearNumero(metrica.valor)}
+                            {formatearNumero(valorAnimado)}
                         </div>
                         <div className="small text-body-secondary">{metrica.detalle}</div>
                     </div>
@@ -132,7 +407,7 @@ function Metricas({ metricas }) {
 
     return (
         <section className="row g-3 mb-4">
-            {metricas.map(m => <TarjetaMetrica key={m.clave} metrica={m} />)}
+            {metricas.map((m, i) => <TarjetaMetrica key={m.clave} metrica={m} indice={i} />)}
         </section>
     );
 }
@@ -169,12 +444,14 @@ function Vacio({ texto, ok }) {
 
 
 /* ------------------------------------------------------------
-   GRÁFICO: PRODUCTOS POR SUBTIPO (barras de progreso)
+   GRÁFICO: PRODUCTOS POR SUBTIPO (barras)
    ------------------------------------------------------------ */
 
 function GraficoProductos({ datos, url }) {
-    const maximo = Math.max(1, ...datos.map(d => d.cantidad));
+    const oscuro = useTemaOscuro();
     const total = datos.reduce((suma, d) => suma + d.cantidad, 0);
+
+    const opciones = useMemo(() => opcionesBarrasSubtipo(datos, oscuro), [datos, oscuro]);
 
     return (
         <div className="card h-100">
@@ -182,35 +459,14 @@ function GraficoProductos({ datos, url }) {
                 <EnlaceVerTodo url={url} texto="Ver productos" />
             </CabeceraTarjeta>
 
-            <div className="card-body">
+            <div className="card-body d-flex flex-column justify-content-center">
                 {datos.length === 0 ? (
                     <Vacio texto="Todavía no hay productos activos." />
                 ) : (
                     <>
-                        {datos.map((d, i) => (
-                            <div key={d.nombre} className="mb-3">
-                                <div className="d-flex justify-content-between small mb-1">
-                                    <span className="fw-semibold text-truncate me-2">{d.nombre}</span>
-                                    <span className="fw-bold">{d.cantidad}</span>
-                                </div>
+                        <ApexGrafico opciones={opciones} />
 
-                                <div
-                                    className="progress pp-progreso"
-                                    role="progressbar"
-                                    aria-label={d.nombre}
-                                    aria-valuenow={d.cantidad}
-                                    aria-valuemin="0"
-                                    aria-valuemax={maximo}
-                                >
-                                    <div
-                                        className={'progress-bar pp-barra-' + (i % 5)}
-                                        style={{ width: (d.cantidad / maximo) * 100 + '%' }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-
-                        <p className="small text-body-secondary mb-0">
+                        <p className="small text-body-secondary text-center mt-2 mb-0">
                             {total} producto{total === 1 ? '' : 's'} activo{total === 1 ? '' : 's'} en total
                         </p>
                     </>
@@ -270,7 +526,7 @@ function PanelAtencion({ stockBajo, porVencer, permisos, urls }) {
                 </div>
 
                 {pestana === 'stock' && (
-                    <ListaStockBajo items={stockBajo} url={urls.productos} />
+                    <StockBajo items={stockBajo} url={urls.productos} />
                 )}
 
                 {pestana === 'vencer' && (
@@ -302,11 +558,47 @@ function PanelAtencion({ stockBajo, porVencer, permisos, urls }) {
     );
 }
 
-function ListaStockBajo({ items, url }) {
+/* Stock bajo: gráfico de barras o lista, a elección */
+function StockBajo({ items, url }) {
+    const [vista, setVista] = useState('grafico');
+    const oscuro = useTemaOscuro();
+
+    const opciones = useMemo(
+        () => opcionesStockBajo(items, oscuro, url ? () => { window.location.href = url; } : null),
+        [items, oscuro, url]
+    );
+
     if (!items.length) {
         return <Vacio ok texto="Ningún producto está por debajo de su stock mínimo." />;
     }
 
+    return (
+        <>
+            <div className="btn-group btn-group-sm mb-2" role="group" aria-label="Forma de ver el stock bajo">
+                <button
+                    type="button"
+                    className={'btn ' + (vista === 'grafico' ? 'btn-success' : 'btn-outline-success')}
+                    onClick={() => setVista('grafico')}
+                >
+                    Gráfico
+                </button>
+                <button
+                    type="button"
+                    className={'btn ' + (vista === 'lista' ? 'btn-success' : 'btn-outline-success')}
+                    onClick={() => setVista('lista')}
+                >
+                    Lista
+                </button>
+            </div>
+
+            {vista === 'grafico'
+                ? <ApexGrafico opciones={opciones} />
+                : <ListaStockBajo items={items} url={url} />}
+        </>
+    );
+}
+
+function ListaStockBajo({ items, url }) {
     return (
         <div className="list-group pp-lista">
             {items.map(p => (
@@ -379,7 +671,7 @@ function TablaMovimientos({ movimientos, url }) {
     });
 
     return (
-        <section className="card">
+        <section className="card pp-aparecer" style={{ '--pp-i': 6 }}>
             <CabeceraTarjeta titulo="Últimos movimientos de stock">
                 <div className="d-flex flex-wrap align-items-center gap-3">
                     <div className="btn-group btn-group-sm" role="group" aria-label="Filtrar movimientos">
@@ -419,8 +711,8 @@ function TablaMovimientos({ movimientos, url }) {
                         </thead>
 
                         <tbody>
-                            {visibles.map(m => (
-                                <tr key={m.id}>
+                            {visibles.map((m, i) => (
+                                <tr key={m.id} style={{ '--pp-i': Math.min(i, 10) }}>
                                     <td className="fw-bold text-nowrap">
                                         MOV-{String(m.id).padStart(4, '0')}
                                     </td>
@@ -490,13 +782,19 @@ function Panel() {
             {(permisos.productos || muestraAtencion) && (
                 <section className="row g-3 mb-4">
                     {permisos.productos && (
-                        <div className={'col-12' + (muestraAtencion ? ' col-xl-6' : '')}>
+                        <div
+                            className={'pp-aparecer col-12' + (muestraAtencion ? ' col-xl-6' : '')}
+                            style={{ '--pp-i': 4 }}
+                        >
                             <GraficoProductos datos={DATOS.grafico} url={urls.productos} />
                         </div>
                     )}
 
                     {muestraAtencion && (
-                        <div className={'col-12' + (permisos.productos ? ' col-xl-6' : '')}>
+                        <div
+                            className={'pp-aparecer col-12' + (permisos.productos ? ' col-xl-6' : '')}
+                            style={{ '--pp-i': 5 }}
+                        >
                             <PanelAtencion
                                 stockBajo={DATOS.stock_bajo}
                                 porVencer={DATOS.por_vencer}
