@@ -431,3 +431,304 @@ html.modo-oscuro .topbar-badge { border-color: #111a15; }
     .topbar-crumb-inicio { display: none; }
     .topbar-crumb-actual::before { display: none; }
 }
+
+
+/* ============================================================
+   BANDEJA DE NOTIFICACIONES
+   Reemplaza a la campana: ícono de mensajes con el número de
+   alertas sin atender y una bandeja que se abre debajo.
+   ============================================================ */
+
+.topbar-notif { position: relative; }
+
+/* El número se oculta cuando no hay alertas */
+.topbar-badge[hidden] { display: none; }
+
+/* La bandeja cerrada no ocupa lugar ni tapa lo que hay debajo.
+   (Sin esto, display: flex le ganaba a hidden y el recuadro invisible
+   bloqueaba los botones de la derecha de cada pantalla.) */
+.tb-notif-panel[hidden] { display: none; }
+
+/* El sobre se mueve apenas al pasar el mouse */
+.topbar-alertas:hover svg { animation: tb-sobre .5s ease; }
+
+@keyframes tb-sobre {
+    0%, 100% { transform: translateY(0); }
+    40%      { transform: translateY(-3px); }
+    70%      { transform: translateY(1px); }
+}
+
+.tb-notif-panel {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: -8px;
+    z-index: 1600;
+
+    width: 380px;
+    max-width: calc(100vw - 24px);
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    background: #ffffff;
+    border: 1px solid var(--tb-borde);
+    border-radius: 16px;
+    box-shadow: 0 18px 48px rgba(15, 58, 36, .18);
+
+    opacity: 0;
+    transform: translateY(-8px) scale(.98);
+    transform-origin: top right;
+    transition: opacity .18s ease, transform .18s ease;
+
+    /* Mientras se cierra con la animación, tampoco recibe clics. */
+    pointer-events: none;
+}
+
+.tb-notif-panel.abierto {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Flechita que apunta al ícono */
+.tb-notif-panel::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    right: 22px;
+    width: 12px;
+    height: 12px;
+    background: #ffffff;
+    border-top: 1px solid var(--tb-borde);
+    border-left: 1px solid var(--tb-borde);
+    transform: rotate(45deg);
+}
+
+.tb-notif-cab {
+    position: relative;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--tb-borde);
+}
+
+.tb-notif-cab strong {
+    display: block;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--tb-texto);
+}
+
+.tb-notif-cab span {
+    font-size: 12px;
+    color: var(--tb-suave);
+}
+
+.tb-notif-lista {
+    max-height: 380px;
+    margin: 0;
+    padding: 6px;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.tb-notif-vacio {
+    padding: 28px 16px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--tb-suave);
+}
+
+/* Cada alerta */
+.tb-notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    transition: background-color .15s ease, opacity .25s ease, transform .25s ease;
+    animation: tb-tramo .3s ease-out both;
+}
+
+.tb-notif-item:hover { background: #f4f8f5; }
+
+/* Al atenderla, se desliza hacia la derecha y desaparece */
+.tb-notif-item.tb-notif-saliendo {
+    opacity: 0;
+    transform: translateX(24px);
+}
+
+.tb-notif-icono {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+}
+
+.tb-notif-icono svg,
+.tb-notif-atender svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Stock mínimo: rojo · Por vencer: ámbar · Vencido: rojo */
+.tb-notif-stock .tb-notif-icono       { background: #fdecec; color: #b91c1c; }
+.tb-notif-vencimiento .tb-notif-icono { background: #fff4d6; color: #b45309; }
+.tb-notif-vencido .tb-notif-icono     { background: #fdecec; color: #b91c1c; }
+
+.tb-notif-cuerpo { flex: 1; min-width: 0; }
+
+.tb-notif-linea {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.tb-notif-etiqueta {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+
+.tb-notif-stock .tb-notif-etiqueta,
+.tb-notif-vencido .tb-notif-etiqueta { color: #b91c1c; }
+.tb-notif-vencimiento .tb-notif-etiqueta { color: #b45309; }
+
+.tb-notif-hace {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--tb-suave);
+}
+
+.tb-notif-producto {
+    display: block;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--tb-texto);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tb-notif-mensaje {
+    margin: 2px 0 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #5c7367;
+}
+
+/* Botón para marcarla como atendida */
+.tb-notif-atender {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid #cfe3d7;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--tb-verde);
+    cursor: pointer;
+    opacity: .7;
+    transition: opacity .15s ease, background-color .15s ease, transform .15s ease;
+}
+
+.tb-notif-item:hover .tb-notif-atender { opacity: 1; }
+
+.tb-notif-atender:hover {
+    background: #e6f4ec;
+    transform: scale(1.06);
+}
+
+.tb-notif-atender:disabled { cursor: wait; opacity: .4; }
+
+.tb-notif-atender:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--tb-acento);
+    outline-offset: 2px;
+}
+
+/* Pie: enlace al historial */
+.tb-notif-pie {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    border-top: 1px solid var(--tb-borde);
+    background: #fafcfb;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--tb-verde);
+    text-decoration: none;
+    transition: background-color .15s ease;
+}
+
+.tb-notif-pie:hover { background: #eef6f1; }
+
+
+/* ---------- Bandeja en modo oscuro ---------- */
+
+html.modo-oscuro .tb-notif-panel,
+html.modo-oscuro .tb-notif-panel::before {
+    background: var(--d-surface);
+    border-color: var(--d-border);
+}
+
+html.modo-oscuro .tb-notif-panel { box-shadow: 0 18px 48px rgba(0, 0, 0, .45); }
+html.modo-oscuro .tb-notif-item:hover { background: var(--d-hover); }
+html.modo-oscuro .tb-notif-mensaje { color: var(--d-text-2); }
+
+html.modo-oscuro .tb-notif-stock .tb-notif-icono,
+html.modo-oscuro .tb-notif-vencido .tb-notif-icono { background: var(--d-red-bg); color: var(--d-red-tx); }
+html.modo-oscuro .tb-notif-vencimiento .tb-notif-icono { background: var(--d-amb-bg); color: var(--d-amb-tx); }
+
+html.modo-oscuro .tb-notif-stock .tb-notif-etiqueta,
+html.modo-oscuro .tb-notif-vencido .tb-notif-etiqueta { color: var(--d-red-tx); }
+html.modo-oscuro .tb-notif-vencimiento .tb-notif-etiqueta { color: var(--d-amb-tx); }
+
+html.modo-oscuro .tb-notif-atender {
+    background: var(--d-surface-2);
+    border-color: var(--d-green-bd);
+    color: var(--d-green-tx);
+}
+
+html.modo-oscuro .tb-notif-atender:hover { background: var(--d-green-bg); }
+
+html.modo-oscuro .tb-notif-pie {
+    background: var(--d-surface-2);
+    border-color: var(--d-border);
+    color: var(--d-green);
+}
+
+html.modo-oscuro .tb-notif-pie:hover { background: var(--d-surface-3); }
+
+
+/* ---------- Bandeja en celulares: ocupa el ancho de la pantalla ---------- */
+
+@media (max-width: 500px) {
+    .topbar-notif { position: static; }
+
+    .tb-notif-panel {
+        position: fixed;
+        top: 64px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-width: none;
+    }
+
+    .tb-notif-panel::before { display: none; }
+}

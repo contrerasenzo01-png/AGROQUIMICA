@@ -117,7 +117,7 @@
                    name="q"
                    value="{{ busqueda }}"
                    onkeyup="filtrarProductos()"
-                   placeholder="Buscar por nombre o subtipo...">
+                   placeholder="Buscar por nombre, subtipo o proveedor...">
 
         </div>
 
@@ -180,7 +180,6 @@
                         <th>Precio</th>
                         <th>Cantidad presentación</th>
                         <th>Unidad medida</th>
-                        <th>Unidades por presentación</th>
                         <th>Stock disponible</th>
                         <th>Stock mínimo</th>
                         <th>Estado</th>
@@ -199,7 +198,7 @@
                             class="producto-card {% if producto.Estado_producto != 'Activo' %}inactivo{% endif %}"
                             data-tipo="{{ producto.ID_Tipo_producto.ID_Tipo_producto }}"
                             data-estado="{{ producto.Estado_producto }}"
-                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %}">
+                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %} {% for p in producto.proveedores.all %}{{ p.nombre_proveedor|lower }} {% endfor %}">
 
                             <!-- ===================== PRODUCTO ===================== -->
 
@@ -286,15 +285,6 @@
                             </td>
 
 
-                            <!-- ===================== UNIDADES POR PRESENTACIÓN ===================== -->
-
-                            <td>
-
-                                {{ producto.Unidades_por_presentacion }}
-
-                            </td>
-
-
                             <!-- ===================== STOCK ===================== -->
 
                             <td>
@@ -360,7 +350,7 @@
 
                                 <div class="pr-acciones">
 
-                                    
+
                                     <!-- CONSULTAR LOTES -->
 
                                     {% if producto.num_lotes > 0 %}
@@ -398,7 +388,6 @@
                                                 '{{ producto.Estado_producto }}',
                                                 '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}',
                                                 '{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}',
-                                                '{{ producto.Unidades_por_presentacion }}',
                                                 '{% for p in producto.proveedores.all %}{{ p.ID_Proveedor }}{% if not forloop.last %},{% endif %}{% endfor %}'
                                             )">
 
@@ -448,7 +437,7 @@
                             class="pr-fila-lotes"
                             style="display: none;">
 
-                            <td colspan="11">
+                            <td colspan="10">
 
                                 <div class="pr-lotes-contenido">
 
@@ -534,7 +523,7 @@
 
                         <tr>
 
-                            <td colspan="11" class="pr-vacio">
+                            <td colspan="10" class="pr-vacio">
                                 No se encontraron productos.
                             </td>
 
@@ -602,7 +591,8 @@
 
 
         <form method="POST"
-              action="{% url 'crear_producto' %}">
+              action="{% url 'crear_producto' %}"
+              class="form-producto">
 
             {% csrf_token %}
 
@@ -787,56 +777,37 @@
                     </div>
 
 
-
-                    <!-- UNIDADES POR PRESENTACIÓN -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Unidades por presentación
-                        </label>
-
-                        <input type="number"
-                               step="1"
-                               min="1"
-                               name="Unidades_por_presentacion"
-                               value="1"
-                               required>
-
-                        <span class="pr-hint">
-                            Envases por caja (ej.: 4 en "4X 5L").
-                        </span>
-
-                    </div>
-
-
                     <!-- PROVEEDORES QUE SUMINISTRAN EL PRODUCTO -->
 
                     <div class="pr-grupo pr-full">
 
                         <label>
-                            Proveedor que lo suministra
+                            Proveedores que lo suministran
                         </label>
 
-                        <select name="proveedores"
-                                required>
-
-                            <option value="">
-                                Seleccione un proveedor
-                            </option>
+                        <div class="pr-lista-proveedores">
 
                             {% for prov in proveedores_activos %}
 
-                                <option value="{{ prov.ID_Proveedor }}">
+                                <label class="pr-proveedor-opcion">
+                                    <input type="checkbox"
+                                           name="proveedores"
+                                           value="{{ prov.ID_Proveedor }}">
                                     {{ prov.nombre_proveedor }}
-                                </option>
+                                </label>
+
+                            {% empty %}
+
+                                <span class="pr-hint">
+                                    No hay proveedores activos. Registrá uno primero.
+                                </span>
 
                             {% endfor %}
 
-                        </select>
+                        </div>
 
                         <span class="pr-hint">
-                            Solo este proveedor podrá ingresar el producto en un remito.
+                            Podés elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.
                         </span>
 
                     </div>
@@ -924,7 +895,8 @@
 
         <form id="formEditarProducto"
               method="POST"
-              action="">
+              action=""
+              class="form-producto">
 
             {% csrf_token %}
 
@@ -1141,53 +1113,37 @@
                     </div>
 
 
-
-                    <!-- UNIDADES POR PRESENTACIÓN -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Unidades por presentación
-                        </label>
-
-                        <input type="number"
-                               step="1"
-                               min="1"
-                               id="edit_unidades"
-                               name="Unidades_por_presentacion"
-                               required>
-
-                    </div>
-
-
                     <!-- PROVEEDORES QUE SUMINISTRAN EL PRODUCTO -->
 
                     <div class="pr-grupo pr-full">
 
                         <label>
-                            Proveedor que lo suministra
+                            Proveedores que lo suministran
                         </label>
 
-                        <select name="proveedores"
-                                id="edit_proveedor"
-                                required>
-
-                            <option value="">
-                                Seleccione un proveedor
-                            </option>
+                        <div class="pr-lista-proveedores" id="edit_proveedores">
 
                             {% for prov in proveedores_activos %}
 
-                                <option value="{{ prov.ID_Proveedor }}">
+                                <label class="pr-proveedor-opcion">
+                                    <input type="checkbox"
+                                           name="proveedores"
+                                           value="{{ prov.ID_Proveedor }}">
                                     {{ prov.nombre_proveedor }}
-                                </option>
+                                </label>
+
+                            {% empty %}
+
+                                <span class="pr-hint">
+                                    No hay proveedores activos. Registrá uno primero.
+                                </span>
 
                             {% endfor %}
 
-                        </select>
+                        </div>
 
                         <span class="pr-hint">
-                            Solo este proveedor podrá ingresar el producto en un remito.
+                            Podés elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.
                         </span>
 
                     </div>
@@ -1367,7 +1323,7 @@
     {% block extra_js %}
 
 
-    
+
 <script>
 
     /* =====================================================
@@ -1499,7 +1455,7 @@
         if (new URLSearchParams(window.location.search).get('egreso') === '1') {
             abrirModalEgreso();
         }
-    });    
+    });
 
 
 
@@ -1737,7 +1693,6 @@ function toggleLotes(productoId, boton) {
         estado,
         stockMinimo,
         subtipo,
-        unidades,
         proveedoresIds
     ) {
 
@@ -1787,22 +1742,22 @@ function toggleLotes(productoId, boton) {
             cantidad;
 
 
-        document.getElementById(
-            'edit_unidades'
-        ).value =
-            unidades || 1;
-
-
-        /* PROVEEDORES QUE SUMINISTRAN EL PRODUCTO */
+        /* PROVEEDORES QUE SUMINISTRAN EL PRODUCTO (pueden ser varios) */
 
         const idsProveedores = (proveedoresIds || '')
             .split(',')
             .filter(Boolean);
 
-        document.getElementById(
-            'edit_proveedor'
-        ).value =
-            idsProveedores[0] || '';
+        document
+            .querySelectorAll(
+                '#edit_proveedores input[name="proveedores"]'
+            )
+            .forEach(function (casilla) {
+
+                casilla.checked =
+                    idsProveedores.includes(casilla.value);
+
+            });
 
 
         document.getElementById(
@@ -1871,6 +1826,34 @@ function toggleLotes(productoId, boton) {
     }
 
 
+    /* =====================================================
+       AL MENOS UN PROVEEDOR ANTES DE GUARDAR
+       (registrar y editar)
+    ===================================================== */
+
+    document
+        .querySelectorAll('.form-producto')
+        .forEach(function (formulario) {
+
+            formulario.addEventListener('submit', function (evento) {
+
+                const elegido = formulario.querySelector(
+                    'input[name="proveedores"]:checked'
+                );
+
+                if (!elegido) {
+                    evento.preventDefault();
+                    mostrarToast(
+                        'Seleccioná al menos un proveedor que suministre el producto.',
+                        'warning'
+                    );
+                }
+
+            });
+
+        });
+
+
         /* =====================================================
          CERRAR MODALES AL HACER CLIC FUERA
         ===================================================== */
@@ -1893,7 +1876,7 @@ function toggleLotes(productoId, boton) {
         }
 
     });
-    
+
 
     /* =====================================================
        TOASTS

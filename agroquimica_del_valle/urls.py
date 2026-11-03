@@ -78,6 +78,7 @@ urlpatterns = [
     # Alertas
     path('historial-alertas/', views.gestion_alertas, name='historial_alertas'),
     path('alertas/atender/<int:id_alerta>/', views.atender_alerta, name='atender_alerta'),
+    path('alertas/notificaciones/', views.notificaciones_alertas, name='notificaciones_alertas'),
 
     # Permisos
     path('permisos/', views.gestion_permisos, name='gestion_permisos'),

@@ -310,7 +310,7 @@
                                                         data-producto="{{ lote.ID_Producto_id }}"
                                                         data-numero="{{ lote.Numero_lote }}"
                                                         data-cajas="{{ lote.Cantidad_cajas|default_if_none:'' }}"
-                                                        data-unidades="{{ lote.Unidades_por_caja|default_if_none:lote.ID_Producto.Unidades_por_presentacion }}"
+                                                        data-unidades="{{ lote.Unidades_por_caja|default_if_none:'' }}"
                                                         data-ingresada="{{ lote.Cantidad_ingresada }}"
                                                         data-actual="{{ lote.Cantidad_actual }}"
                                                         data-ingreso="{{ lote.Fecha_ingreso|date:'Y-m-d' }}"
@@ -535,9 +535,8 @@
                                 <option value="">Primero seleccioná un proveedor</option>
                                 {% for producto in productos_alta %}
                                     <option value="{{ producto.ID_Producto }}"
-                                            data-unidades="{{ producto.Unidades_por_presentacion }}"
                                             data-proveedores="{% for pr in producto.proveedores.all %}{{ pr.ID_Proveedor }}{% if not forloop.last %},{% endif %}{% endfor %}">
-                                        {{ producto.Nombre_producto }}{% if producto.Cantidad_presentacion %} · {{ producto.Unidades_por_presentacion }} x {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}{% endif %}
+                                        {{ producto.Nombre_producto }}{% if producto.Cantidad_presentacion %} · {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}{% endif %}
                                     </option>
                                 {% endfor %}
                             </select>
@@ -734,7 +733,7 @@
                             <option value="">Seleccioná un producto</option>
                             {% for producto in productos_alta %}
                                 <option value="{{ producto.ID_Producto }}">
-                                    {{ producto.Nombre_producto }}{% if producto.Cantidad_presentacion %} · {{ producto.Unidades_por_presentacion }} x {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}{% endif %}
+                                    {{ producto.Nombre_producto }}{% if producto.Cantidad_presentacion %} · {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}{% endif %}
                                 </option>
                             {% endfor %}
                         </select>
@@ -1061,16 +1060,6 @@
         }
     }
 
-    /* AL ELEGIR PRODUCTO, SE SUGIERE SU PRESENTACIÓN */
-    function sugerirUnidadesPorCaja(tarjeta) {
-        const opcion = tarjeta
-            .querySelector('[name="lote_producto"]')
-            .selectedOptions[0];
-
-        tarjeta.querySelector('[name="lote_unidades_caja"]').value =
-            opcion && opcion.value ? (opcion.dataset.unidades || '') : '';
-    }
-
     /* SOLO PRODUCTOS SUMINISTRADOS POR EL PROVEEDOR ELEGIDO */
     function filtrarProductosLote(tarjeta) {
         const select = tarjeta.querySelector('[name="lote_producto"]');
@@ -1097,7 +1086,6 @@
         if (elegida && elegida.value && elegida.disabled) {
             select.value = '';
             reiniciado = true;
-            sugerirUnidadesPorCaja(tarjeta);
         }
 
         actualizarTotalLote(tarjeta);
@@ -1124,10 +1112,6 @@
         listaLotes.addEventListener(tipo, function (evento) {
             const tarjeta = evento.target.closest('.rm-lote');
             if (!tarjeta) return;
-
-            if (evento.target.name === 'lote_producto' && tipo === 'change') {
-                sugerirUnidadesPorCaja(tarjeta);
-            }
 
             actualizarTotalLote(tarjeta);
         });
@@ -1278,14 +1262,14 @@
             return;
         }
 
-        const unidades = parseInt(fila.dataset.unidades, 10) || 1;
+        const unidades = parseInt(fila.dataset.unidades, 10) || 0;
         const ingresada = parseInt(fila.dataset.ingresada, 10);
         const actual = parseInt(fila.dataset.actual, 10);
 
         // Lotes cargados antes de existir las cajas: se deducen si es posible.
         let cajas = fila.dataset.cajas;
 
-        if (!cajas && ingresada % unidades === 0) {
+        if (!cajas && unidades > 0 && ingresada % unidades === 0) {
             cajas = String(ingresada / unidades);
         }
 
@@ -1297,7 +1281,7 @@
         document.getElementById('editar_lote_numero').value =
             fila.dataset.numero;
         inputCajasEdicion.value = cajas || '';
-        inputUpcEdicion.value = unidades;
+        inputUpcEdicion.value = unidades || '';
         inputTotalEdicion.value = ingresada;
         inputActualEdicion.value = fila.dataset.actual;
         document.getElementById('editar_lote_ingreso').value =

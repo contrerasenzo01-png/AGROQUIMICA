@@ -134,19 +134,57 @@
 
                     <span class="topbar-sep" aria-hidden="true"></span>
 
+                    <!-- BANDEJA DE NOTIFICACIONES: alertas de stock mínimo y vencimiento.
+                         La lista la carga notificaciones.js desde url_notificaciones. -->
                     {% if puede_ver_alertas %}
-                    <a class="topbar-icon-btn topbar-alertas{% if alertas_pendientes %} tiene-alertas{% endif %}"
-                       href="{{ url_alertas }}"
-                       title="{% if alertas_pendientes %}{{ alertas_pendientes }} alerta{{ alertas_pendientes|pluralize }} sin atender{% else %}Sin alertas pendientes{% endif %}"
-                       aria-label="Alertas{% if alertas_pendientes %}: {{ alertas_pendientes }} sin atender{% endif %}">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        {% if alertas_pendientes %}
-                        <span class="topbar-badge">{% if alertas_pendientes > 99 %}99+{% else %}{{ alertas_pendientes }}{% endif %}</span>
-                        {% endif %}
-                    </a>
+                    <div class="topbar-notif"
+                         id="topbarNotif"
+                         data-url="{{ url_notificaciones }}"
+                         data-url-atender="{% url 'atender_alerta' 0 %}"
+                         data-puede-atender="{% if puede_atender_alertas %}1{% else %}0{% endif %}">
+
+                        {% csrf_token %}
+
+                        <button type="button"
+                                class="topbar-icon-btn topbar-alertas{% if alertas_pendientes %} tiene-alertas{% endif %}"
+                                id="btnNotif"
+                                aria-haspopup="dialog"
+                                aria-expanded="false"
+                                aria-controls="panelNotif"
+                                title="{% if alertas_pendientes %}{{ alertas_pendientes }} alerta{{ alertas_pendientes|pluralize }} sin atender{% else %}Sin alertas pendientes{% endif %}"
+                                aria-label="Notificaciones{% if alertas_pendientes %}: {{ alertas_pendientes }} sin atender{% endif %}">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="5" width="18" height="14" rx="2.5"></rect>
+                                <path d="m3.5 7 8.5 6 8.5-6"></path>
+                            </svg>
+                            <span class="topbar-badge" id="notifContador" {% if not alertas_pendientes %}hidden{% endif %}>{% if alertas_pendientes > 99 %}99+{% else %}{{ alertas_pendientes }}{% endif %}</span>
+                        </button>
+
+                        <div class="tb-notif-panel" id="panelNotif" role="dialog" aria-label="Notificaciones" hidden>
+
+                            <div class="tb-notif-cab">
+                                <div>
+                                    <strong>Notificaciones</strong>
+                                    <span id="notifResumen">
+                                        {% if alertas_pendientes %}{{ alertas_pendientes }} sin atender{% else %}Todo al día{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <ul class="tb-notif-lista" id="notifLista" aria-live="polite">
+                                <li class="tb-notif-vacio">Cargando…</li>
+                            </ul>
+
+                            <a class="tb-notif-pie" href="{{ url_alertas }}">
+                                Ver historial de alertas
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M5 12h14M13 6l6 6-6 6"></path>
+                                </svg>
+                            </a>
+
+                        </div>
+
+                    </div>
                     {% endif %}
 
                     <!-- tema.js dibuja el ícono (sol/luna) dentro de este botón -->
@@ -184,6 +222,7 @@
             data-ping-url="{% url 'sesion_ping' %}"
             data-login-url="{% url 'login' %}"></script>
     <script src="{% static 'inventario/js/tema.js' %}"></script>
+    <script src="{% static 'inventario/js/notificaciones.js' %}"></script>
 
     <!-- REACT: solo se carga en las pantallas que lo usan.
          Esas pantallas incluyen 'inventario/_react.html' en este bloque. -->

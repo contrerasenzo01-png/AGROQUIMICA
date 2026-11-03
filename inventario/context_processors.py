@@ -2,7 +2,7 @@ from django.conf import settings
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 
-from .permissions import MENU, permisos_ui, puede, rutas_denegadas
+from .permissions import MENU, permisos_ui, puede, puede_accion, rutas_denegadas
 
 
 # ------------------------------------------------------------
@@ -99,23 +99,30 @@ def _fecha_de_hoy():
 
 
 # ------------------------------------------------------------
-# CAMPANA DE ALERTAS
+# BANDEJA DE NOTIFICACIONES (topbar)
 # Solo aparece si el perfil puede ver el historial de alertas.
+# Antes de contar, se revisan los vencimientos (como mucho una vez
+# cada 10 minutos), así el número siempre está al día.
 # ------------------------------------------------------------
 
 def _datos_alertas(usuario):
-    """Devuelve (puede_ver, url, pendientes)."""
+    """Devuelve el diccionario con los datos de la bandeja."""
 
     if not puede(usuario, 'alertas'):
-        return False, '', 0
+        return {'puede_ver_alertas': False}
 
+    from .alertas import revisar_vencimientos_si_corresponde
     from .models import Alertas
 
-    return (
-        True,
-        reverse('historial_alertas'),
-        Alertas.objects.filter(Atendida=False).count(),
-    )
+    revisar_vencimientos_si_corresponde()
+
+    return {
+        'puede_ver_alertas': True,
+        'puede_atender_alertas': puede_accion(usuario, 'atender_alertas'),
+        'url_alertas': reverse('historial_alertas'),
+        'url_notificaciones': reverse('notificaciones_alertas'),
+        'alertas_pendientes': Alertas.objects.filter(Atendida=False).count(),
+    }
 
 
 def configuracion_sesion(request):
@@ -131,15 +138,11 @@ def configuracion_sesion(request):
     if not usuario:
         return {}
 
-    puede_alertas, url_alertas, alertas_pendientes = _datos_alertas(usuario)
-
     return {
+        **_datos_alertas(usuario),
         'inactividad_ms': settings.INACTIVIDAD_SEGUNDOS * 1000,
         'rutas_denegadas': rutas_denegadas(usuario),
         'perm': permisos_ui(usuario),
         'topbar_ubicacion': _ubicacion(request),
         'topbar_fecha': _fecha_de_hoy(),
-        'puede_ver_alertas': puede_alertas,
-        'url_alertas': url_alertas,
-        'alertas_pendientes': alertas_pendientes,
     }

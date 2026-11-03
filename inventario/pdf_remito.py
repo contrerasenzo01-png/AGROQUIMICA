@@ -105,14 +105,14 @@ def _numero(valor):
 
 
 def _presentacion(producto):
-    """Ej.: 4 x 5 litros"""
+    """Ej.: 5 litros. Las unidades por caja se muestran en cada lote."""
     if not producto.Cantidad_presentacion:
         return ''
 
     cantidad = f'{producto.Cantidad_presentacion.normalize():f}'
     unidad = producto.Unidad_medida_producto or ''
 
-    return f'{producto.Unidades_por_presentacion} x {cantidad} {unidad}'.strip()
+    return f'{cantidad} {unidad}'.strip()
 
 
 def _escapar(texto):

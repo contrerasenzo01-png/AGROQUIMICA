@@ -151,3 +151,25 @@ MAILERS = {
     },
 }
 
+
+# ------------------------------------------------------------
+# CORREO DE LAS ALERTAS (Gmail)
+# Los datos se leen del archivo .env, igual que los de la base:
+#
+#   EMAIL_HOST_USER=alertas.agroquimica@gmail.com
+#   EMAIL_HOST_PASSWORD=la contraseña de aplicación de 16 letras
+#   SITIO_URL=http://127.0.0.1:8000
+#
+# Si EMAIL_HOST_USER o EMAIL_HOST_PASSWORD están vacíos, los correos
+# no se envían: se muestran en la terminal (sirve para probar).
+# ------------------------------------------------------------
+
+CORREO_ALERTAS = {
+    'host': os.getenv('EMAIL_HOST', 'smtp.gmail.com'),
+    'puerto': int(os.getenv('EMAIL_PORT', '587')),
+    'usuario': os.getenv('EMAIL_HOST_USER', ''),
+    'contrasena': os.getenv('EMAIL_HOST_PASSWORD', ''),
+}
+
+# Dirección del sistema, para el botón "Ver alertas" del correo.
+SITIO_URL = os.getenv('SITIO_URL', 'http://127.0.0.1:8000')

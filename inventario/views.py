@@ -29,6 +29,11 @@ from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
 from .reportes import generar_reportes, datos_evolucion_rango
 from .pdf_remito import generar_pdf_remito
+from .alertas import (
+    DIAS_AVISO_VENCIMIENTO, TIPO_STOCK, TIPOS_STOCK,
+    listar_notificaciones, mensaje_visible, revisar_stock,
+    revisar_vencimientos as generar_alertas_vencimiento,
+)
 from .auditoria import (
     snapshot, registrar_auditoria,
     registrar_asignacion_perfil, registrar_asignacion_permisos,
@@ -2538,7 +2543,9 @@ def _leer_datos_producto(request, estado_por_defecto):
 def _producto_duplicado(nombre, cantidad_presentacion, unidad_medida,
                         unidades, excluir_pk=None):
     """Comprueba si existe otro producto con el mismo nombre y la misma
-    presentación (cantidad, unidad de medida y unidades por presentación).
+    presentación (cantidad y unidad de medida).
+
+    Las unidades por caja ya no son del producto: se cargan en cada lote.
 
     El sistema no usa marca: un mismo producto puede venir de varios
     proveedores, y el proveedor queda registrado en cada lote.
@@ -2547,7 +2554,6 @@ def _producto_duplicado(nombre, cantidad_presentacion, unidad_medida,
     productos = Productos.objects.filter(
         Nombre_producto__iexact=nombre,
         Cantidad_presentacion=cantidad_presentacion,
-        Unidades_por_presentacion=unidades,
     )
 
     if unidad_medida:
@@ -2843,6 +2849,9 @@ def editar_producto(request, pk):
                     update_fields=['Stock_minimo']
                 )
 
+            if producto.lotes.exists():
+                revisar_stock(stock, usuario)
+
         # --- AUDITORÍA: foto después del cambio ---
         # refresh_from_db normaliza los decimales (1500.00 vs 1500)
         producto.refresh_from_db()
@@ -2992,7 +3001,7 @@ def registrar_ingreso_lote(request):
             'busqueda': busqueda,
             'proveedor_filtro': proveedor_filtro,
             'hoy': hoy,
-            'limite': hoy + timedelta(days=30),
+            'limite': hoy + timedelta(days=DIAS_AVISO_VENCIMIENTO),
         }
     )
 
@@ -3075,114 +3084,10 @@ def gestion_movimientos_stock(request):
 
 
 # ============================================================
-# ALERTAS DE VENCIMIENTO
+# ALERTAS
+# La lógica (stock mínimo, vencimientos y correos) está en alertas.py.
+# generar_alertas_vencimiento se importa de ahí con ese nombre.
 # ============================================================
-
-def generar_alertas_vencimiento():
-    fecha_actual = timezone.localdate()
-    fecha_limite = fecha_actual + timedelta(days=30)
-
-    lotes = Lotes.objects.select_related(
-        'ID_Producto'
-    ).filter(
-        Fecha_vencimiento__isnull=False,
-        Fecha_vencimiento__lte=fecha_limite,
-        Cantidad_actual__gt=0
-    ).order_by('Fecha_vencimiento')
-
-    alertas_vencimiento = []
-
-    for lote in lotes:
-        dias_restantes = (
-            lote.Fecha_vencimiento - fecha_actual
-        ).days
-
-        if dias_restantes < 0:
-            mensaje = (
-                f'El producto {lote.ID_Producto.Nombre_producto} '
-                f'del lote {lote.Numero_lote} está vencido desde '
-                f'el {lote.Fecha_vencimiento:%d/%m/%Y}.'
-            )
-        elif dias_restantes == 0:
-            mensaje = (
-                f'El producto {lote.ID_Producto.Nombre_producto} '
-                f'del lote {lote.Numero_lote} vence hoy '
-                f'({lote.Fecha_vencimiento:%d/%m/%Y}).'
-            )
-        else:
-            mensaje = (
-                f'El producto {lote.ID_Producto.Nombre_producto} '
-                f'del lote {lote.Numero_lote} vence en '
-                f'{dias_restantes} días '
-                f'({lote.Fecha_vencimiento:%d/%m/%Y}).'
-            )
-
-        stock = Stock.objects.filter(
-            ID_Producto=lote.ID_Producto
-        ).first()
-
-        if stock:
-            nombre_producto = lote.ID_Producto.Nombre_producto
-
-            # Arma el mensaje según el estado del vencimiento.
-            if dias_restantes < 0:
-                texto_vencimiento = (
-                    f'está vencido desde el '
-                    f'{lote.Fecha_vencimiento:%d/%m/%Y}.'
-                )
-            elif dias_restantes == 0:
-                texto_vencimiento = (
-                    f'vence hoy '
-                    f'({lote.Fecha_vencimiento:%d/%m/%Y}).'
-                )
-            else:
-                texto_vencimiento = (
-                    f'vence en {dias_restantes} días '
-                    f'({lote.Fecha_vencimiento:%d/%m/%Y}).'
-                )
-
-            mensaje_guardado = (
-                f'El producto {nombre_producto} '
-                f'del lote {lote.Numero_lote} '
-                f'{texto_vencimiento} '
-                f'[LOTE_ID:{lote.ID_Lote}]'
-            )
-
-            # Busca si ya existe una alerta para ese lote.
-            alerta_existente = Alertas.objects.filter(
-                ID_Stock=stock,
-                Tipo_alerta='Vencimiento',
-                Mensaje__contains=f'[LOTE_ID:{lote.ID_Lote}]'
-            ).order_by('ID_Historial_alerta').first()
-
-            if alerta_existente:
-                # Actualiza el mensaje sin cambiar la fecha
-                # de creación ni el estado de atención.
-                if alerta_existente.Mensaje != mensaje_guardado:
-                    alerta_existente.Mensaje = mensaje_guardado
-                    alerta_existente.save(
-                        update_fields=['Mensaje']
-                    )
-            else:
-                # Registra una nueva alerta de vencimiento.
-                Alertas.objects.create(
-                    ID_Stock=stock,
-                    Tipo_alerta='Vencimiento',
-                    Mensaje=mensaje_guardado,
-                    Cantidad_al_generar=lote.Cantidad_actual,
-                    Stock_minimo_al_generar=stock.Stock_minimo,
-                    Atendida=False
-                )
-
-        alertas_vencimiento.append({
-            'producto': lote.ID_Producto,
-            'lote': lote,
-            'dias_restantes': dias_restantes,
-            'mensaje': mensaje,
-        })
-
-    return alertas_vencimiento
-
 
 def clave_fecha_alerta(item):
     fecha = item['fecha']
@@ -3224,7 +3129,11 @@ def gestion_alertas(request):
         'ID_Usuario'
     ).all()
 
-    if tipo_alerta:
+    if tipo_alerta == TIPO_STOCK:
+        alertas_bd = alertas_bd.filter(
+            Tipo_alerta__in=TIPOS_STOCK
+        )
+    elif tipo_alerta:
         alertas_bd = alertas_bd.filter(
             Tipo_alerta=tipo_alerta
         )
@@ -3269,11 +3178,14 @@ def gestion_alertas(request):
                 lote = None
 
             # Quita el identificador técnico del mensaje visible.
-            mensaje = mensaje.split(' [LOTE_ID:', 1)[0]
+            mensaje = mensaje_visible(mensaje)
 
         alertas.append({
             'id': alerta.ID_Historial_alerta,
-            'tipo': alerta.Tipo_alerta,
+            'tipo': (
+                TIPO_STOCK if alerta.Tipo_alerta in TIPOS_STOCK
+                else alerta.Tipo_alerta
+            ),
             'producto': producto,
             'lote': lote,
             'mensaje': mensaje,
@@ -3324,9 +3236,22 @@ def gestion_alertas(request):
 
 @require_POST
 def atender_alerta(request, id_alerta):
+    """Marca una alerta como atendida.
+
+    Desde el historial vuelve a la pantalla; desde la bandeja de
+    notificaciones del topbar (JavaScript) responde JSON.
+    """
+
+    es_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     usuario = usuario_con_accion(request, 'atender_alertas')
 
     if not usuario:
+        if es_ajax:
+            return JsonResponse(
+                {'ok': False, 'error': 'No tenés permiso para atender alertas.'},
+                status=403
+            )
         return redirect('panel_principal')
 
     alerta = get_object_or_404(
@@ -3354,7 +3279,31 @@ def atender_alerta(request, id_alerta):
             snapshot(alerta)
         )
 
+    if es_ajax:
+        return JsonResponse({
+            'ok': True,
+            'pendientes': Alertas.objects.filter(Atendida=False).count(),
+        })
+
     return redirect('historial_alertas')
+
+
+# ============================================================
+# BANDEJA DE NOTIFICACIONES (topbar)
+# ============================================================
+
+def notificaciones_alertas(request):
+    """Alertas pendientes para la bandeja del topbar (JSON)."""
+
+    usuario = usuario_con_acceso(request, 'alertas')
+
+    if not usuario:
+        return JsonResponse(
+            {'error': 'No tenés permiso para ver las alertas.'},
+            status=403
+        )
+
+    return JsonResponse(listar_notificaciones())
 
 
 # ============================================================
@@ -4481,6 +4430,9 @@ def gestion_remitos(request):
                         stock.Cantidad_stock += diferencia
                         stock.save(update_fields=['Cantidad_stock'])
 
+                        # Si la corrección bajó el stock, puede quedar en el mínimo.
+                        revisar_stock(stock, usuario)
+
                         # Actualizar el movimiento de entrada existente.
                         entrada.Cantidad_movimiento_stock = cantidad_ingresada
                         entrada.save(
@@ -4631,6 +4583,10 @@ def gestion_remitos(request):
 
                         lote_r.Cantidad_actual = 0
                         lote_r.save(update_fields=['Cantidad_actual'])
+
+                    # El stock bajó: alerta si quedó en el mínimo o por debajo.
+                    for stock_r in stocks.values():
+                        revisar_stock(stock_r, usuario)
 
                     remito.Estado_remito = 'Anulado'
                     remito.Fecha_anulacion = timezone.now()
@@ -5013,35 +4969,6 @@ TIPO_EGRESO = 'Egreso por venta'
 TIPO_ANULACION_REMITO = 'Anulación de remito'
 
 
-def _alerta_stock_bajo(stock, producto):
-    """Genera una alerta si el stock quedó en o bajo el mínimo."""
-
-    if stock.Cantidad_stock > stock.Stock_minimo:
-        return False
-
-    if Alertas.objects.filter(
-        ID_Stock=stock,
-        Tipo_alerta='Stock bajo',
-        Atendida=False
-    ).exists():
-        return True
-
-    Alertas.objects.create(
-        ID_Stock=stock,
-        Tipo_alerta='Stock bajo',
-        Mensaje=(
-            f'El producto {producto.Nombre_producto} quedó con '
-            f'{stock.Cantidad_stock} unidades '
-            f'(stock mínimo: {stock.Stock_minimo}).'
-        ),
-        Cantidad_al_generar=stock.Cantidad_stock,
-        Stock_minimo_al_generar=stock.Stock_minimo,
-        Atendida=False
-    )
-
-    return True
-
-
 def egreso_productos(request):
     """Compatibilidad: abre la vista de productos con el modal de egreso."""
     return redirect(f"{reverse('gestion_productos')}?egreso=1")
@@ -5223,7 +5150,7 @@ def registrar_egreso(request):
                 }
             )
 
-            stock_bajo = _alerta_stock_bajo(stock, producto)
+            stock_bajo = revisar_stock(stock, usuario)
 
     except DatabaseError:
         messages.error(
