@@ -1182,3 +1182,17 @@ html.modo-oscuro .pr-ficha-chips span { background: var(--d-green-bg); color: va
     .pr-toasts { right: 12px; left: 12px; }
     .pr-toast { min-width: 0; max-width: none; }
 }
+
+
+/* ============================================================
+   PAGINACIÓN DE LAS TARJETAS (estilos base en paginacion.css)
+   ============================================================ */
+
+.pr-paginacion {
+    margin-top: 24px;
+    border: 1px solid var(--pr-borde);
+    border-radius: 14px;
+    box-shadow: var(--pr-sombra);
+}
+
+.pr-contador { margin-top: 12px; }

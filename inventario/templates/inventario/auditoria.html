@@ -1,14 +1,14 @@
-
 {% extends 'inventario/base.html' %}
 {% load static %}
 
 {% block title %}
-    Auditoría - Agroquímicos del Valle
+    Auditoría - Agroquímica del Valle
 {% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -126,7 +126,7 @@
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody data-pg-animar>
 
                     {% for log in pagina %}
                     <tr>
@@ -239,6 +239,9 @@
 
         </div>
 
+        <!-- PAGINACIÓN (en el servidor: conserva los filtros) -->
+        {% include 'inventario/_paginacion.html' %}
+
         <!-- PIE -->
         <div class="al-pie">
 
@@ -248,35 +251,7 @@
                 encontrado{{ pagina.paginator.count|pluralize }}
             </span>
 
-            {% if pagina.paginator.num_pages > 1 %}
-            <nav class="aud-paginas" aria-label="Paginación">
-
-                {% if pagina.has_previous %}
-                    <a class="al-btn al-btn-claro"
-                       href="{% querystring page=pagina.previous_page_number %}">
-                        Anterior
-                    </a>
-                {% else %}
-                    <span class="al-btn al-btn-claro aud-off">Anterior</span>
-                {% endif %}
-
-                <span>
-                    Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
-                </span>
-
-                {% if pagina.has_next %}
-                    <a class="al-btn al-btn-claro"
-                       href="{% querystring page=pagina.next_page_number %}">
-                        Siguiente
-                    </a>
-                {% else %}
-                    <span class="al-btn al-btn-claro aud-off">Siguiente</span>
-                {% endif %}
-
-            </nav>
-            {% else %}
-                <span>Agroquímica del Valle</span>
-            {% endif %}
+            <span>Agroquímica del Valle</span>
 
         </div>
 
@@ -322,5 +297,6 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script src="{% static 'inventario/js/paginacion.js' %}"></script>
     <script src="{% static 'inventario/js/auditoria.js' %}"></script>
 {% endblock %}

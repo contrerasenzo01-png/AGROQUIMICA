@@ -7,6 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/styles/tipos_productos.css' %}">
+<link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -182,6 +183,9 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- PAGINACIÓN (la arma paginacion.js sobre los tipos que coinciden) -->
+        <nav class="pg" id="paginacionTipos" aria-label="Paginación" hidden></nav>
 
         <!-- PIE DE TABLA -->
         <div class="pr-pie">
@@ -397,7 +401,14 @@
 {% endblock contenido %}
 
 {% block extra_js %}
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
 <script>
+    /* =====================================================
+       PAGINACIÓN (en el navegador, sobre lo que coincide
+       con la búsqueda)
+    ===================================================== */
+    let pagTipos = null;
+
     /* =====================================================
        MENSAJES
     ===================================================== */
@@ -438,6 +449,14 @@
             }, 4000);
         });
 
+        pagTipos = Paginador({
+            contenedor: document.getElementById('listaTipos'),
+            items: '.tipo-card',
+            nav: document.getElementById('paginacionTipos'),
+            clave: 'tipos',
+            subirA: document.querySelector('.pr-filtros'),
+        });
+
         filtrarTipos();
 
         [
@@ -458,6 +477,8 @@
 
     /* =====================================================
        BUSCAR TIPOS
+       Marca qué filas coinciden y la paginación muestra
+       solo esas, empezando por la página 1.
     ===================================================== */
     function filtrarTipos() {
         const input = document.getElementById('searchInput');
@@ -473,10 +494,14 @@
             const nombre = (fila.dataset.search || '').toLowerCase();
             const coincide = nombre.includes(query);
 
-            fila.style.display = coincide ? '' : 'none';
+            fila.dataset.coincide = coincide ? '1' : '0';
 
             if (coincide) visibles++;
         });
+
+        if (pagTipos) {
+            pagTipos.refrescar(true);
+        }
 
         contador.textContent =
             visibles + ' tipo' + (visibles === 1 ? '' : 's') +

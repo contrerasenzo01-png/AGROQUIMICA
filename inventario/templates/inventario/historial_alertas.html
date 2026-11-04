@@ -2,11 +2,12 @@
 {% load static %}
 
 {% block title %}
-    Historial de Alertas - Agroquímicos del Valle
+    Historial de Alertas - Agroquímica del Valle
 {% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -229,7 +230,7 @@
                 </thead>
 
 
-                <tbody>
+                <tbody data-pg-animar>
 
                     {% for alerta in alertas %}
 
@@ -444,19 +445,23 @@
         </div>
 
 
+        <!-- PAGINACIÓN (en el servidor: conserva los filtros) -->
+        {% include 'inventario/_paginacion.html' %}
+
+
         <!-- PIE -->
         <div class="al-pie">
 
             <span>
 
-                {{ alertas|length }}
-                alerta{{ alertas|length|pluralize }}
-                encontrada{{ alertas|length|pluralize }}
+                {{ pagina.paginator.count }}
+                alerta{{ pagina.paginator.count|pluralize }}
+                encontrada{{ pagina.paginator.count|pluralize }}
 
             </span>
 
             <span>
-                Agroquímicos del Valle
+                Agroquímica del Valle
             </span>
 
         </div>
@@ -465,4 +470,8 @@
 
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
 {% endblock %}

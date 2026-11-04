@@ -1,0 +1,62 @@
+{% comment %}
+    PAGINACIÓN EN EL SERVIDOR
+    Se incluye debajo de una tabla: {% include 'inventario/_paginacion.html' %}
+    Necesita la variable "pagina" que arma paginacion.py.
+    Los estilos están en css/paginacion.css y el selector "por página"
+    lo maneja js/paginacion.js.
+{% endcomment %}
+{% if pagina and pagina.paginator.count %}
+<nav class="pg" aria-label="Paginación">
+
+    <p class="pg-info">
+        Mostrando <strong>{{ pagina.start_index }}–{{ pagina.end_index }}</strong>
+        de <strong>{{ pagina.paginator.count }}</strong>
+    </p>
+
+    {% if pagina.paginator.num_pages > 1 %}
+    <div class="pg-botones">
+
+        {% if pagina.has_previous %}
+            <a class="pg-btn pg-flecha" href="{% querystring page=pagina.previous_page_number %}" aria-label="Página anterior">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+        {% else %}
+            <span class="pg-btn pg-flecha pg-off" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </span>
+        {% endif %}
+
+        {% for numero in pagina.rango %}
+            {% if numero == pagina.elipsis %}
+                <span class="pg-puntos">…</span>
+            {% elif numero == pagina.number %}
+                <span class="pg-btn pg-actual" aria-current="page">{{ numero }}</span>
+            {% else %}
+                <a class="pg-btn" href="{% querystring page=numero %}" aria-label="Página {{ numero }}">{{ numero }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagina.has_next %}
+            <a class="pg-btn pg-flecha" href="{% querystring page=pagina.next_page_number %}" aria-label="Página siguiente">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+        {% else %}
+            <span class="pg-btn pg-flecha pg-off" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </span>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+    <label class="pg-tamano">
+        <span>Por página</span>
+        <select data-pg-servidor aria-label="Registros por página">
+            {% for opcion in pagina.opciones %}
+                <option value="{{ opcion }}" {% if opcion == pagina.por_pagina %}selected{% endif %}>{{ opcion }}</option>
+            {% endfor %}
+        </select>
+    </label>
+
+</nav>
+{% endif %}

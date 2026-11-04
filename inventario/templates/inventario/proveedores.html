@@ -7,6 +7,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/proveedores.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -82,7 +83,7 @@
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody id="listaProveedores">
 
                     {% for p in proveedores %}
 
@@ -211,6 +212,9 @@
             </table>
 
         </div>
+
+        <!-- PAGINACIÓN (la arma paginacion.js sobre los proveedores que coinciden) -->
+        <nav class="pg" id="paginacionProveedores" aria-label="Paginación" hidden></nav>
 
         <div class="pv-pie">
             <span id="contadorProveedores">
@@ -606,10 +610,26 @@
 
 <!-- ===================== JAVASCRIPT DE PROVEEDORES ===================== -->
 
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
+
 <script>
     let formPendingState = null;
     let idPendingState = null;
     let namePendingState = null;
+
+
+    /* =====================================================
+       PAGINACIÓN (en el navegador, sobre lo que coincide
+       con la búsqueda)
+    ===================================================== */
+
+    const pagProveedores = Paginador({
+        contenedor: document.getElementById('listaProveedores'),
+        items: '.supplier-card',
+        nav: document.getElementById('paginacionProveedores'),
+        clave: 'proveedores',
+        subirA: document.querySelector('.pv-search'),
+    });
 
 
     /* =====================================================
@@ -696,6 +716,8 @@
 
     /* =====================================================
        BUSCADOR DE PROVEEDORES
+       Marca qué filas coinciden y la paginación muestra
+       solo esas, empezando por la página 1.
     ===================================================== */
 
     function filtrarProveedores() {
@@ -713,12 +735,14 @@
             const texto = fila.getAttribute('data-search') || '';
             const coincide = texto.includes(query);
 
-            fila.style.display = coincide ? '' : 'none';
+            fila.dataset.coincide = coincide ? '1' : '0';
 
             if (coincide) {
                 visibles++;
             }
         });
+
+        pagProveedores.refrescar(true);
 
         contador.textContent =
             visibles + ' registro' + (visibles === 1 ? '' : 's') +

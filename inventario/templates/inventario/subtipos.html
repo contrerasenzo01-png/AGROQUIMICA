@@ -7,6 +7,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/subtipos.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -84,11 +85,11 @@
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody id="listaSubtipos">
 
                     {% for subtipo in subtipos %}
 
-                        <tr>
+                        <tr class="ts-fila">
 
                             <td><span class="ts-nombre">{{ subtipo.Nombre_subtipo }}</span></td>
 
@@ -146,6 +147,9 @@
             </table>
 
         </div>
+
+        <!-- PAGINACIÓN (la arma paginacion.js) -->
+        <nav class="pg" id="paginacionSubtipos" aria-label="Paginación" hidden></nav>
 
         <div class="ts-pie">
             <span>
@@ -256,11 +260,25 @@
 </div>
 
 
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
+
 <script>
 
     const modalSubtipo = document.getElementById('modalSubtipo');
     const formSubtipo = document.getElementById('formSubtipo');
     const modalEliminar = document.getElementById('modalEliminarSubtipo');
+
+
+    /* =====================================================
+       PAGINACIÓN (en el navegador)
+    ===================================================== */
+    Paginador({
+        contenedor: document.getElementById('listaSubtipos'),
+        items: '.ts-fila',
+        nav: document.getElementById('paginacionSubtipos'),
+        clave: 'subtipos',
+        subirA: document.querySelector('.ts-search'),
+    });
 
 
     document.addEventListener('DOMContentLoaded', function () {

@@ -10,6 +10,8 @@
       href="{% static 'inventario/styles/gestion_remitos.css' %}">
 <link rel="stylesheet"
       href="{% static 'inventario/styles/movimientos_stock.css' %}">
+<link rel="stylesheet"
+      href="{% static 'inventario/css/paginacion.css' %}">
 <style>
     .tag-venta {
         display: inline-block;
@@ -142,7 +144,7 @@
                 </tr>
             </thead>
 
-            <tbody>
+            <tbody data-pg-animar>
 
                 {% for m in movimientos %}
 
@@ -281,10 +283,13 @@
         </table>
     </div>
 
+    <!-- PAGINACIÓN (en el servidor: conserva la búsqueda y el filtro) -->
+    {% include 'inventario/_paginacion.html' %}
+
     <div class="tabla-pie">
         <span>
-            {{ movimientos|length }}
-            movimiento{{ movimientos|length|pluralize }}
+            {{ pagina.paginator.count }}
+            movimiento{{ pagina.paginator.count|pluralize }}
         </span>
 
         <span>Agroquímica del Valle</span>
@@ -397,6 +402,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
 {% if puede_anular %}
 <script>
 (function () {

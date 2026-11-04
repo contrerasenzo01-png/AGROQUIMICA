@@ -34,6 +34,7 @@ from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
 from .reportes import generar_reportes, datos_evolucion_rango
 from .pdf_remito import generar_pdf_remito
+from .paginacion import paginar
 from .alertas import (
     DIAS_AVISO_VENCIMIENTO, TIPO_STOCK, TIPOS_STOCK,
     listar_notificaciones, mensaje_visible, revisar_stock,
@@ -3212,12 +3213,15 @@ def registrar_ingreso_lote(request):
         remitos__isnull=False
     ).distinct().order_by('nombre_proveedor')
 
+    pagina = paginar(request, lotes)
+
     return render(
         request,
         'inventario/registrar_ingreso_lote.html',
         {
             'usuario': usuario,
-            'lotes': lotes,
+            'lotes': pagina,
+            'pagina': pagina,
             'proveedores': proveedores,
             'busqueda': busqueda,
             'proveedor_filtro': proveedor_filtro,
@@ -3293,13 +3297,19 @@ def baja_lote_vencido(request, id_lote):
 
     detalle = f"Salida por vencimiento del lote {lote.Numero_lote}"
 
+    # Observación opcional de la ventana (ej.: "Devuelto al proveedor").
+    observacion = request.POST.get('observacion', '').strip()[:200]
+
+    if observacion:
+        detalle = f'{detalle}. {observacion}'
+
     # Registrar movimiento de stock
     movimiento = MovimientosStock.objects.create(
         ID_Usuario=usuario,
         ID_Tipo_movimiento=tipo_movimiento,
         ID_Lote=lote,
         Cantidad_movimiento_stock=cantidad,
-        Observaciones=detalle
+        Observaciones=detalle[:255]
     )
 
     # Registrar auditoría como egreso por vencimiento
@@ -3406,11 +3416,14 @@ def gestion_movimientos_stock(request):
         Nombre_tipo_movimiento__in=tipos_visibles
     ).order_by('Nombre_tipo_movimiento')
 
+    pagina = paginar(request, movimientos)
+
     return render(
         request,
         'inventario/movimientos_stock.html',
         {
-            'movimientos': movimientos,
+            'movimientos': pagina,
+            'pagina': pagina,
             'todos_tipos': todos_tipos,
             'busqueda': busqueda,
             'tipo_sel': tipo_sel,
@@ -3551,11 +3564,14 @@ def gestion_alertas(request):
         'Nombre_usuario'
     )
 
+    pagina = paginar(request, alertas)
+
     return render(
         request,
         'inventario/historial_alertas.html',
         {
-            'alertas': alertas,
+            'alertas': pagina,
+            'pagina': pagina,
             'tipo_alerta': tipo_alerta,
             'producto_id': producto_id,
             'usuario_id': usuario_id,
@@ -5028,12 +5044,15 @@ def gestion_remitos(request):
         'proveedores'
     ).order_by('Nombre_producto')
 
+    pagina = paginar(request, remitos)
+
     return render(
         request,
         'inventario/gestion_remitos.html',
         {
             'usuario': usuario,
-            'remitos': remitos,
+            'remitos': pagina,
+            'pagina': pagina,
             'proveedores': proveedores,
             'proveedores_alta': proveedores,
             'productos_alta': productos_alta,
@@ -5187,7 +5206,7 @@ def gestion_auditoria(request):
             Fecha_hora__lt=_inicio_dia(hasta + timedelta(days=1))
         )
 
-    pagina = Paginator(logs, 50).get_page(request.GET.get('page'))
+    pagina = paginar(request, logs, por_defecto=25)
 
     return render(
         request,

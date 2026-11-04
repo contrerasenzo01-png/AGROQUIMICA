@@ -1,0 +1,192 @@
+/* ============================================================
+   PAGINACIÓN · Agroquímica del Valle
+   La usan todas las pantallas con listas, paginen en el
+   servidor (_paginacion.html) o en el navegador (paginacion.js).
+   ============================================================ */
+
+.pg {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 18px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border-top: 1px solid #e3eae6;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 12.5px;
+    color: #5c7367;
+}
+
+.pg[hidden] { display: none; }
+
+.pg-info { margin: 0; }
+
+.pg-info strong {
+    font-weight: 700;
+    color: #1c2a23;
+}
+
+.pg-botones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+}
+
+.pg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #e3eae6;
+    border-radius: 10px;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #2a4436;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .15s ease;
+}
+
+.pg-btn:hover {
+    background: #eef6f1;
+    border-color: #cfe3d7;
+    color: #185a38;
+    transform: translateY(-1px);
+}
+
+.pg-btn:focus-visible {
+    outline: 2px solid #2e9d66;
+    outline-offset: 2px;
+}
+
+.pg-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Página actual */
+.pg-actual,
+.pg-actual:hover {
+    background: linear-gradient(135deg, #185a38, #2e9d66);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(24, 90, 56, .25);
+    cursor: default;
+    transform: none;
+    animation: pg-pop .25s ease-out;
+}
+
+.pg-off {
+    opacity: .4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.pg-puntos {
+    padding: 0 4px;
+    color: #9bb3a5;
+    letter-spacing: 1px;
+}
+
+.pg-tamano {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-weight: 500;
+}
+
+.pg-tamano select {
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #e3eae6;
+    border-radius: 10px;
+    background: #ffffff;
+    font: inherit;
+    color: #1c2a23;
+    cursor: pointer;
+    outline: none;
+}
+
+.pg-tamano select:focus {
+    border-color: #2e9d66;
+    box-shadow: 0 0 0 3px rgba(46, 157, 102, .15);
+}
+
+/* Filas o tarjetas que entran al cambiar de página */
+.pg-entra {
+    animation: pg-entra .32s calc(var(--pg-i, 0) * 25ms) ease-out both;
+}
+
+@keyframes pg-entra {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes pg-pop {
+    from { transform: scale(.82); }
+    to   { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pg-entra,
+    .pg-actual { animation: none; }
+    .pg-btn { transition: none; }
+}
+
+
+/* ---------- Modo oscuro (variables de tema.css) ---------- */
+
+html.modo-oscuro .pg {
+    background: var(--d-surface);
+    border-color: var(--d-border);
+    color: var(--d-text-2);
+}
+
+html.modo-oscuro .pg-info strong { color: var(--d-title); }
+
+html.modo-oscuro .pg-btn,
+html.modo-oscuro .pg-tamano select {
+    background: var(--d-surface-2);
+    border-color: var(--d-border);
+    color: var(--d-text);
+}
+
+html.modo-oscuro .pg-btn:hover {
+    background: var(--d-green-bg);
+    border-color: var(--d-green-bd);
+    color: var(--d-green-tx);
+}
+
+html.modo-oscuro .pg-actual,
+html.modo-oscuro .pg-actual:hover {
+    background: linear-gradient(135deg, #1f7a4d, #2e9d66);
+    color: #ffffff;
+}
+
+
+/* ---------- Celulares: todo centrado y en columnas ---------- */
+
+@media (max-width: 640px) {
+    .pg {
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .pg-btn {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 8px;
+    }
+}

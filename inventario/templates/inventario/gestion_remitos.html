@@ -6,6 +6,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/styles/gestion_remitos.css' %}">
+<link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -101,7 +102,8 @@
 
         <select name="proveedor"
                 id="filtroProveedor"
-                class="rm-select">
+                class="rm-select"
+                onchange="this.form.submit()">
             <option value="">Todos los proveedores</option>
 
             {% for proveedor in proveedores %}
@@ -116,7 +118,8 @@
 
         <select name="estado"
                 id="filtroEstado"
-                class="rm-select">
+                class="rm-select"
+                onchange="this.form.submit()">
             <option value="">Todos los estados</option>
             <option value="Confirmado" {% if estado_filtro == 'Confirmado' %}selected{% endif %}>Confirmado</option>
             <option value="Anulado" {% if estado_filtro == 'Anulado' %}selected{% endif %}>Anulado</option>
@@ -155,7 +158,7 @@
                     </tr>
                 </thead>
 
-                <tbody id="listaRemitos">
+                <tbody id="listaRemitos" data-pg-animar>
                     {% for remito in remitos %}
                         <tr class="rm-fila-remito{% if remito.Estado_remito == 'Anulado' %} rm-anulado{% endif %}"
                             data-search="{{ remito.Numero_remito|lower }} {{ remito.ID_Proveedor.nombre_proveedor|lower }}"
@@ -268,6 +271,9 @@
                                     <div class="rm-detalle-header">
                                         <h3>
                                             Lotes del remito {{ remito.Numero_remito }}
+                                            <span class="rm-detalle-proveedor">
+                                                · Proveedor: <strong>{{ remito.ID_Proveedor.nombre_proveedor }}</strong>
+                                            </span>
                                         </h3>
                                     </div>
 
@@ -400,12 +406,15 @@
             </table>
         </div>
 
+        <!-- PAGINACIÓN (en el servidor: conserva la búsqueda y los filtros) -->
+        {% include 'inventario/_paginacion.html' %}
+
         <!-- PIE DE TABLA -->
         <div class="rm-pie">
             <span id="contadorRemitos">
-                {{ remitos|length }}
-                remito{{ remitos|length|pluralize }}
-                encontrado{{ remitos|length|pluralize }}
+                {{ pagina.paginator.count }}
+                remito{{ pagina.paginator.count|pluralize }}
+                encontrado{{ pagina.paginator.count|pluralize }}
             </span>
             <span>Agroquímica del Valle</span>
         </div>
@@ -931,61 +940,13 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
 <script>
 (function () {
     'use strict';
 
-    const searchInput = document.getElementById('searchInput');
-    const filtroProveedor = document.getElementById('filtroProveedor');
-    const filtroEstado = document.getElementById('filtroEstado');
-    const filasRemitos = document.querySelectorAll('.rm-fila-remito');
-    const contadorRemitos = document.getElementById('contadorRemitos');
-
-    /* BÚSQUEDA Y FILTROS */
-    function filtrarRemitos() {
-        const texto = searchInput.value.toLowerCase().trim();
-        const proveedorSeleccionado = filtroProveedor.value;
-        const estadoSeleccionado = filtroEstado.value;
-        let visibles = 0;
-
-        filasRemitos.forEach(function (fila) {
-            const textoFila = fila.dataset.search || '';
-            const proveedorFila = fila.dataset.proveedor || '';
-            const estadoFila = fila.dataset.estado || '';
-
-            const coincideTexto = textoFila.includes(texto);
-            const coincideProveedor =
-                !proveedorSeleccionado ||
-                proveedorFila === proveedorSeleccionado;
-            const coincideEstado =
-                !estadoSeleccionado ||
-                estadoFila === estadoSeleccionado;
-
-            const visible =
-                coincideTexto && coincideProveedor && coincideEstado;
-            fila.style.display = visible ? '' : 'none';
-
-            const detalle = fila.nextElementSibling;
-            if (
-                detalle &&
-                detalle.classList.contains('rm-fila-detalle') &&
-                !visible
-            ) {
-                detalle.style.display = 'none';
-            }
-
-            if (visible) visibles++;
-        });
-
-        contadorRemitos.textContent =
-            visibles + (visibles === 1
-                ? ' remito encontrado'
-                : ' remitos encontrados');
-    }
-
-    searchInput.addEventListener('input', filtrarRemitos);
-    filtroProveedor.addEventListener('change', filtrarRemitos);
-    filtroEstado.addEventListener('change', filtrarRemitos);
+    /* BÚSQUEDA Y FILTROS: los aplica el servidor (formulario GET),
+       así encuentran en todas las páginas, no solo en la visible. */
 
     /* MOSTRAR Y OCULTAR LOTES */
     window.alternarDetalle = function (id) {

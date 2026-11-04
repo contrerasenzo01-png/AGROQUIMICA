@@ -7,6 +7,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/usuarios.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -95,11 +96,11 @@
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody id="listaUsuarios">
 
                     {% for usuario in usuarios %}
 
-                        <tr>
+                        <tr class="us-fila">
 
                             <td><span class="us-username">{{ usuario.Usuario }}</span></td>
 
@@ -233,6 +234,9 @@
             </table>
 
         </div>
+
+        <!-- PAGINACIÓN (la arma paginacion.js) -->
+        <nav class="pg" id="paginacionUsuarios" aria-label="Paginación" hidden></nav>
 
         <div class="us-pie">
             {{ usuarios|length }} registro{{ usuarios|length|pluralize }} encontrado{{ usuarios|length|pluralize }}
@@ -588,7 +592,20 @@
      JAVASCRIPT
      ========================================== -->
 
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
+
 <script>
+
+/* PAGINACIÓN (en el navegador) */
+
+Paginador({
+    contenedor: document.getElementById('listaUsuarios'),
+    items: '.us-fila',
+    nav: document.getElementById('paginacionUsuarios'),
+    clave: 'usuarios',
+    subirA: document.querySelector('.us-search'),
+});
+
 
 /* MENSAJES */
 

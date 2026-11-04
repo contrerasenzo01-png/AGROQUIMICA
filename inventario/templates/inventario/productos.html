@@ -14,6 +14,7 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/css/bootstrap_ajustes.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -370,6 +371,9 @@
         <h3>{% if productos %}No hay productos con esos filtros{% else %}Todavía no hay productos{% endif %}</h3>
         <p>{% if productos %}Probá con otra búsqueda o cambiá los filtros.{% else %}Registrá el primero con el botón "Registrar producto".{% endif %}</p>
     </div>
+
+    <!-- PAGINACIÓN (la arma paginacion.js sobre los productos que coinciden) -->
+    <nav class="pg pr-paginacion" id="paginacionProductos" aria-label="Paginación" hidden></nav>
 
     <p class="pr-contador" id="contadorProductos">
         {{ productos|length }} producto{{ productos|length|pluralize }}
@@ -912,6 +916,7 @@
 {% block extra_js %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
 
 <script>
 (function () {
@@ -1046,29 +1051,42 @@
         'stock-asc': function (a, b) { return a.dataset.stock - b.dataset.stock; },
     };
 
+    /* Paginación: 12, 24 o 48 tarjetas (la grilla es de a 3 o 4). */
+    const paginador = Paginador({
+        contenedor: grid,
+        items: '.pr-col',
+        nav: document.getElementById('paginacionProductos'),
+        clave: 'productos',
+        opciones: [12, 24, 48],
+        subirA: document.querySelector('.pr-filtros'),
+        mostrar: function (col, visible) { col.hidden = !visible; },
+        alCambiar: animarEntrada,
+    });
+
     function aplicarFiltros() {
         const texto = inputBuscar.value.toLowerCase().trim();
         const tipo = filtroTipo.value;
         const estado = filtroEstado.value;
-        const visibles = [];
+        let coincidencias = 0;
 
         columnas.slice().sort(ORDENES[orden.value]).forEach(function (col) {
             grid.appendChild(col);
 
-            const visible =
+            const coincide =
                 col.dataset.search.includes(texto) &&
                 (!tipo || col.dataset.tipo === tipo) &&
                 (!estado || (estado === 'bajo' ? esStockBajo(col) : col.dataset.estado === estado));
 
-            col.hidden = !visible;
-            if (visible) { visibles.push(col); }
+            col.dataset.coincide = coincide ? '1' : '0';
+            if (coincide) { coincidencias++; }
         });
 
-        animarEntrada(visibles);
+        // Se vuelve a la página 1 y se muestran las tarjetas de esa página.
+        paginador.refrescar(true);
 
-        document.getElementById('sinResultados').hidden = visibles.length > 0;
+        document.getElementById('sinResultados').hidden = coincidencias > 0;
         document.getElementById('contadorProductos').textContent =
-            visibles.length + (visibles.length === 1 ? ' producto' : ' productos');
+            coincidencias + (coincidencias === 1 ? ' producto encontrado' : ' productos encontrados');
     }
 
     let espera;

@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/styles/ingreso_lote.css' %}">
+<link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -51,7 +52,8 @@
 
         <select name="proveedor"
                 class="lt-select"
-                aria-label="Filtrar por proveedor">
+                aria-label="Filtrar por proveedor"
+                onchange="this.form.submit()">
 
             <option value="">Todos los proveedores</option>
 
@@ -70,7 +72,6 @@
     </form>
 
     <!-- TABLA DE LOTES -->
-    {% with total=lotes|length %}
     <section class="lt-card">
 
         <div class="lt-table-wrap">
@@ -91,7 +92,7 @@
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody data-pg-animar>
                     {% for l in lotes %}
                     <tr>
 
@@ -212,16 +213,18 @@
             </table>
         </div>
 
+        <!-- PAGINACIÓN (en el servidor: conserva la búsqueda y el filtro) -->
+        {% include 'inventario/_paginacion.html' %}
+
         <!-- TOTAL DE LOTES -->
         <div class="lt-pie">
             <span>
-                {{ total }} lote{{ total|pluralize }}
-                encontrado{{ total|pluralize }}
+                {{ pagina.paginator.count }} lote{{ pagina.paginator.count|pluralize }}
+                encontrado{{ pagina.paginator.count|pluralize }}
             </span>
         </div>
 
     </section>
-    {% endwith %}
 
 </div>
 
@@ -329,6 +332,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
 {% if perm.egresos_gestionar %}
 <script>
 (function () {
