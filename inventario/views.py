@@ -1,6 +1,7 @@
 import re
 import time as time_module
 import unicodedata
+import uuid
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -11,6 +12,8 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import JsonResponse
 from django.contrib.staticfiles import finders
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
 from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpResponse
@@ -21,6 +24,8 @@ from django.urls import reverse
 
 from django.db.models import Count, F, Prefetch, ProtectedError, Q, RestrictedError, Sum
 from django.db.models.functions import Coalesce
+
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -2693,6 +2698,81 @@ def _producto_duplicado(nombre, cantidad_presentacion, unidad_medida,
     return productos.exists()
 
 
+# ============================================================
+# FOTO DEL PRODUCTO
+# La foto se valida, se gira según la cámara, se achica a
+# 1200 px como máximo y se guarda en WEBP: pesa poco y se ve bien.
+# ============================================================
+
+IMAGEN_MAX_MB = 5
+IMAGEN_TIPOS = ('image/jpeg', 'image/png', 'image/webp')
+
+
+def _procesar_imagen(archivo):
+    """Devuelve (ContentFile, None) si la foto es válida, o (None, error)."""
+
+    if archivo.size > IMAGEN_MAX_MB * 1024 * 1024:
+        return None, f'La imagen no puede superar los {IMAGEN_MAX_MB} MB.'
+
+    if (archivo.content_type or '').lower() not in IMAGEN_TIPOS:
+        return None, 'La imagen debe ser JPG, PNG o WEBP.'
+
+    try:
+        # verify() detecta archivos dañados o que no son imágenes.
+        Image.open(archivo).verify()
+        archivo.seek(0)
+
+        imagen = ImageOps.exif_transpose(Image.open(archivo))
+
+        if imagen.mode not in ('RGB', 'RGBA'):
+            imagen = imagen.convert(
+                'RGBA' if 'A' in imagen.getbands() else 'RGB'
+            )
+
+        imagen.thumbnail((1200, 1200))
+
+        buffer = BytesIO()
+        imagen.save(buffer, format='WEBP', quality=85)
+
+    except (UnidentifiedImageError, OSError, ValueError):
+        return None, 'El archivo elegido no es una imagen válida.'
+
+    return ContentFile(buffer.getvalue(), name=f'{uuid.uuid4().hex}.webp'), None
+
+
+def _leer_imagen(request):
+    """Lee la foto del formulario. Devuelve (ContentFile o None, error)."""
+
+    archivo = request.FILES.get('Imagen_producto')
+
+    if not archivo:
+        return None, None
+
+    return _procesar_imagen(archivo)
+
+
+def _borrar_imagen_al_confirmar(nombre):
+    """Borra el archivo de la foto vieja, solo si la operación se guardó."""
+
+    if nombre:
+        transaction.on_commit(lambda: default_storage.delete(nombre))
+
+
+def _snapshot_producto(producto, stock=None):
+    """Datos del producto para la auditoría.
+
+    La foto se guarda como nombre de archivo (texto): el objeto de
+    imagen de Django no se puede guardar en el registro de auditoría.
+    """
+
+    datos = snapshot(producto)
+    datos['Imagen_producto'] = producto.Imagen_producto.name or 'Sin foto'
+
+    if stock:
+        datos['Stock_minimo'] = stock.Stock_minimo
+
+    return datos
+
 
 def gestion_productos(request):
     """Lista, busca y filtra productos por tipo y subtipo."""
@@ -2792,7 +2872,7 @@ def gestion_productos(request):
     )
 
 def crear_producto(request):
-    """Registra un producto con su tipo y subtipo correspondiente."""
+    """Registra un producto con su tipo, subtipo y foto (opcional)."""
 
     usuario = usuario_con_acceso(
         request,
@@ -2819,6 +2899,12 @@ def crear_producto(request):
         messages.error(request, error)
         return redirect('gestion_productos')
 
+    imagen, error = _leer_imagen(request)
+
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_productos')
+
     if _producto_duplicado(
         datos['nombre'],
         datos['cantidad_presentacion'],
@@ -2833,7 +2919,7 @@ def crear_producto(request):
 
     with transaction.atomic():
 
-        producto = Productos.objects.create(
+        producto = Productos(
             ID_Tipo_producto=datos['tipo'],
             ID_Subtipo=datos['subtipo'],
             Nombre_producto=datos['nombre'],
@@ -2845,11 +2931,15 @@ def crear_producto(request):
             Estado_producto=datos['estado_producto'],
         )
 
+        if imagen:
+            producto.Imagen_producto.save(imagen.name, imagen, save=False)
+
+        producto.save()
         producto.proveedores.set(datos['proveedores'])
 
         # El stock inicial es cero.
         # Las entradas se registran mediante lotes.
-        Stock.objects.get_or_create(
+        stock, _ = Stock.objects.get_or_create(
             ID_Producto=producto,
             defaults={
                 'Cantidad_stock': 0,
@@ -2857,22 +2947,13 @@ def crear_producto(request):
             }
         )
 
-        despues = snapshot(producto)
-
-        stock_actual = Stock.objects.filter(
-            ID_Producto=producto
-        ).first()
-
-        if stock_actual:
-            despues['Stock_minimo'] = stock_actual.Stock_minimo
-
         registrar_auditoria(
             usuario=usuario,
             entidad='Productos',
             objeto=producto,
             accion='CREACION',
             antes={},
-            despues=despues,
+            despues=_snapshot_producto(producto, stock),
         )
 
     messages.success(
@@ -2884,7 +2965,7 @@ def crear_producto(request):
 
 
 def editar_producto(request, pk):
-    """Actualiza los datos del producto, incluido su subtipo."""
+    """Actualiza los datos del producto, su subtipo y su foto."""
 
     usuario = usuario_con_acceso(
         request,
@@ -2909,9 +2990,7 @@ def editar_producto(request, pk):
 
     # --- AUDITORÍA: foto antes del cambio (incluye stock mínimo) ---
     stock_previo = Stock.objects.filter(ID_Producto=producto).first()
-    antes = snapshot(producto)
-    if stock_previo:
-        antes['Stock_minimo'] = stock_previo.Stock_minimo
+    antes = _snapshot_producto(producto, stock_previo)
 
     datos, error = _leer_datos_producto(
         request,
@@ -2921,6 +3000,14 @@ def editar_producto(request, pk):
     if error:
         messages.error(request, error)
         return redirect('gestion_productos')
+
+    imagen, error = _leer_imagen(request)
+
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_productos')
+
+    quitar_imagen = request.POST.get('quitar_imagen') == '1'
 
     if _producto_duplicado(
         datos['nombre'],
@@ -2947,6 +3034,16 @@ def editar_producto(request, pk):
         producto.Unidad_medida_producto = datos['unidad_medida']
         producto.Estado_producto = datos['estado_producto']
 
+        # FOTO: nueva, quitada o sin cambios.
+        imagen_vieja = producto.Imagen_producto.name
+
+        if imagen:
+            producto.Imagen_producto.save(imagen.name, imagen, save=False)
+            _borrar_imagen_al_confirmar(imagen_vieja)
+
+        elif quitar_imagen and imagen_vieja:
+            producto.Imagen_producto = None
+            _borrar_imagen_al_confirmar(imagen_vieja)
 
         producto.save()
         producto.proveedores.set(datos['proveedores'])
@@ -2974,11 +3071,10 @@ def editar_producto(request, pk):
         # --- AUDITORÍA: foto después del cambio ---
         # refresh_from_db normaliza los decimales (1500.00 vs 1500)
         producto.refresh_from_db()
-        despues = snapshot(producto)
-
-        stock_actual = Stock.objects.filter(ID_Producto=producto).first()
-        if stock_actual:
-            despues['Stock_minimo'] = stock_actual.Stock_minimo
+        despues = _snapshot_producto(
+            producto,
+            Stock.objects.filter(ID_Producto=producto).first()
+        )
 
         registrar_auditoria(
             usuario,
@@ -3036,15 +3132,7 @@ def eliminar_producto(request, pk):
 
     try:
         with transaction.atomic():
-            # Guardar los datos antes de eliminar.
-            antes = snapshot(producto)
-
-            stock = Stock.objects.filter(
-                ID_Producto=producto
-            ).first()
-
-            if stock:
-                antes['Stock_minimo'] = stock.Stock_minimo
+            imagen = producto.Imagen_producto.name
 
             # Registrar la eliminación en la auditoría.
             registrar_auditoria(
@@ -3052,12 +3140,15 @@ def eliminar_producto(request, pk):
                 entidad='Productos',
                 objeto=producto,
                 accion='ELIMINACION',
-                antes=antes,
+                antes=_snapshot_producto(producto, stock),
                 despues={},
             )
 
             # Eliminar el producto.
             producto.delete()
+
+            # El archivo de la foto se borra recién cuando se confirma.
+            _borrar_imagen_al_confirmar(imagen)
 
     except (ProtectedError, RestrictedError, IntegrityError):
         messages.error(
@@ -3231,6 +3322,20 @@ def baja_lote_vencido(request, id_lote):
             'Observaciones': detalle[:255],
         }
     )
+
+    # La alerta de vencimiento de este lote ya quedó resuelta.
+    Alertas.objects.filter(
+        Tipo_alerta='Vencimiento',
+        Atendida=False,
+        Mensaje__contains=f'[LOTE_ID:{lote.ID_Lote}]',
+    ).update(
+        Atendida=True,
+        ID_Usuario=usuario,
+        Fecha_hora_atencion=timezone.now(),
+    )
+
+    # Si el producto quedó en su stock mínimo, se genera esa alerta.
+    revisar_stock(stock, usuario)
 
     messages.success(
         request,
@@ -4141,8 +4246,8 @@ def gestion_remitos(request):
                     'El proveedor seleccionado no existe o está inactivo.'
                 )
                 return redirect('gestion_remitos')
-
-
+            
+    
 
             # Validar los lotes antes de guardar.
             lotes_validados = []
@@ -4210,7 +4315,7 @@ def gestion_remitos(request):
                         'No se pueden registrar lotes ya vencidos.'
                     )
                     return redirect('gestion_remitos')
-
+                
                 if fecha_vencimiento < fecha_remito:
                     messages.error(
                         request,
@@ -4231,8 +4336,8 @@ def gestion_remitos(request):
                         'o está inactivo.'
                     )
                     return redirect('gestion_remitos')
-
-
+                
+                
                 # El producto debe ser suministrado por el proveedor del remito.
                 if not producto.proveedores.filter(
                     pk=proveedor.pk
@@ -4248,7 +4353,7 @@ def gestion_remitos(request):
                 # Unidades totales = cajas x unidades por caja.
                 cantidad = cajas * unidades_caja
 
-                # Verificar si el lote ya existe en la base de datos.
+            # Verificar si el lote ya existe en la base de datos.
                 if Lotes.objects.filter(
                     ID_Producto=producto,
                     Numero_lote=numero_lote
@@ -4339,13 +4444,9 @@ def gestion_remitos(request):
                             )
                         )
                         registrar_auditoria(
-                            usuario, 'Lotes', lote, 'INGRESO_LOTE', {},
-                            dict(
-                                snapshot(lote),
-                                Stock_antes=stock_antes,
-                                Stock_despues=stock.Cantidad_stock
-                            )
-                        )
+                        usuario, 'Lotes', lote, 'INGRESO_LOTE', {}, dict(snapshot(lote),
+                        Stock_antes=stock_antes,
+                        Stock_despues=stock.Cantidad_stock))
                 messages.success(
                     request,
                     'El remito, sus lotes, el stock y los movimientos '
@@ -4445,9 +4546,9 @@ def gestion_remitos(request):
                 )
 
             return redirect('gestion_remitos')
-
-
-
+        
+       
+      
         # ====================================================
         # EDITAR DATOS DEL LOTE
         # ====================================================
@@ -4848,9 +4949,8 @@ def gestion_remitos(request):
                     despues['Estado_remito'] = 'Anulado'
                     despues['Motivo_anulacion'] = motivo
                     despues['Lotes_revertidos'] = '; '.join(
-                        f'{l.ID_Producto.Nombre_producto} lote {l.Numero_lote}: {l.Cantidad_ingresada} u.'
-                        for l in lotes_remito
-                    )
+                    f'{l.ID_Producto.Nombre_producto} lote {l.Numero_lote}: {l.Cantidad_ingresada} u.'
+                    for l in lotes_remito)
 
                     registrar_auditoria(
                         usuario,
@@ -5163,8 +5263,8 @@ def detalle_auditoria(request, id_log):
     #   cambios -> modificaciones y anulaciones: valor anterior y nuevo
     #   ninguno -> inicio y cierre de sesión: nada más que los datos básicos
     ACCIONES_DATOS = (
-        'CREACION', 'EGRESO_STOCK', 'INGRESO_LOTE', 'DESCARGA_PDF',
-        'ENVIO_RECUPERACION',
+        'CREACION', 'EGRESO_STOCK', 'EGRESO_VENCIMIENTO', 'INGRESO_LOTE',
+        'DESCARGA_PDF', 'ENVIO_RECUPERACION',
     )
 
     if log.Accion in ACCIONES_DATOS:

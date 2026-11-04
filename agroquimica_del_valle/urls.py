@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path
 from inventario import views
 
@@ -105,3 +107,8 @@ urlpatterns = [
     path('recuperar/', views.recuperar_contrasena, name='recuperar_contrasena'),
     path('recuperar/<uidb64>/<token>/', views.recuperar_confirmar, name='recuperar_confirmar'),
 ]
+
+# Fotos de los productos (MEDIA_URL). En desarrollo las sirve Django;
+# en un servidor real las sirve el servidor web (por ejemplo, Nginx).
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

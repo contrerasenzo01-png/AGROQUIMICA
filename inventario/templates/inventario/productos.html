@@ -6,1479 +6,1410 @@
     Productos - Agroquímica del Valle
 {% endblock %}
 
+{% block css_librerias %}
+    <!-- Bootstrap solo en esta pantalla (ver bootstrap_ajustes.css) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+{% endblock %}
+
 {% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/css/bootstrap_ajustes.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}">
 {% endblock %}
 
 {% block contenido %}
 
-<!-- ===================== MENSAJES ===================== -->
+<div class="bs-pantalla pr-pantalla">
 
-<div class="pr-toasts" id="toastContainer">
+    <!-- ===================== MENSAJES ===================== -->
 
-    {% if messages %}
+    <div class="pr-toasts" id="toastContainer" aria-live="polite">
         {% for message in messages %}
             <div class="pr-toast {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}">
                 <span>{{ message }}</span>
-                <span class="pr-toast-x" onclick="this.parentElement.remove()">✕</span>
+                <button type="button" class="pr-toast-x" aria-label="Cerrar mensaje">✕</button>
             </div>
         {% endfor %}
-    {% endif %}
+    </div>
 
-</div>
-
-
-<div class="pr-page">
 
     <!-- ===================== ENCABEZADO ===================== -->
 
     <header class="pr-header">
 
-        <div>
-            <h1 class="pr-title">Gestión de productos</h1>
+        <div class="pr-header-texto">
+            <h1 class="pr-titulo">Gestión de productos</h1>
+            <p class="pr-subtitulo">Catálogo, presentación, stock y lotes de cada producto.</p>
         </div>
 
         <div class="pr-header-acciones">
-            {% if perm.productos_gestionar %}
-            <button type="button"
-                    class="pr-btn pr-btn-primary"
-                    onclick="abrirModalCrear()">
-
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="M12 5v14M5 12h14"/>
-                </svg>
-
-                Registrar producto
-
-            </button>
-            {% endif %}
             {% if puede_egresar %}
-            <button type="button"
-                    class="pr-btn pr-btn-rojo"
-                    onclick="abrirModalEgreso()">
-
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="M5 12h14"/>
-                </svg>
-
-                Registrar egreso
-
-            </button>
+                <button type="button" class="btn pr-btn pr-btn-egreso" onclick="abrirModalEgreso()">
+                    <svg class="pr-icon" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    Registrar egreso
+                </button>
             {% endif %}
 
+            {% if perm.productos_gestionar %}
+                <button type="button" class="btn pr-btn pr-btn-principal" onclick="abrirModalCrear()">
+                    <svg class="pr-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    Registrar producto
+                </button>
+            {% endif %}
         </div>
 
     </header>
 
 
-    <!-- ===================== RESUMEN ===================== -->
+    <!-- ===================== RESUMEN (lo completa el JavaScript) ===================== -->
 
-    <div class="pr-barra">
+    <div class="row g-3 mb-4">
 
-        <div class="pr-barra-datos">
+        <div class="col-6 col-lg-3">
+            <div class="pr-stat pr-stat-verde">
+                <span class="pr-stat-icono">
+                    <svg class="pr-icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+                </span>
+                <div>
+                    <strong id="statActivos">0</strong>
+                    <span>Productos activos</span>
+                </div>
+            </div>
+        </div>
 
-            <span class="pr-barra-dato">
+        <div class="col-6 col-lg-3">
+            <div class="pr-stat pr-stat-rojo">
+                <span class="pr-stat-icono">
+                    <svg class="pr-icon" viewBox="0 0 24 24"><path d="M22 17 13.5 8.5 8.5 13.5 2 7"/><path d="M16 17h6v-6"/></svg>
+                </span>
+                <div>
+                    <strong id="statBajo">0</strong>
+                    <span>En stock mínimo</span>
+                </div>
+            </div>
+        </div>
 
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="m7.5 4.27 9 5.15"/>
-                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-                    <path d="m3.3 7 8.7 5 8.7-5"/>
-                    <path d="M12 22V12"/>
-                </svg>
+        <div class="col-6 col-lg-3">
+            <div class="pr-stat pr-stat-ambar">
+                <span class="pr-stat-icono">
+                    <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+                </span>
+                <div>
+                    <strong id="statSinStock">0</strong>
+                    <span>Sin stock</span>
+                </div>
+            </div>
+        </div>
 
-                <strong id="totalActivos">
-                    {{ total_activos|default:0 }}
-                </strong>
-
-                productos activos
-
-            </span>
-
+        <div class="col-6 col-lg-3">
+            <div class="pr-stat pr-stat-azul">
+                <span class="pr-stat-icono">
+                    <svg class="pr-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+                </span>
+                <div>
+                    <strong id="statConFoto">0</strong>
+                    <span>Con foto</span>
+                </div>
+            </div>
         </div>
 
     </div>
 
 
-    <!-- ===================== BÚSQUEDA Y FILTROS ===================== -->
+    <!-- ===================== BÚSQUEDA, FILTROS Y ORDEN ===================== -->
 
-    <form method="GET"
-          onsubmit="return false;"
-          class="pr-filtros">
+    <div class="pr-filtros">
 
-        <div class="pr-search">
-
-            <svg class="pr-icon" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="7"/>
-                <path d="m21 21-4.3-4.3"/>
-            </svg>
-
-            <input type="text"
+        <div class="pr-buscador">
+            <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search"
                    id="searchInput"
-                   name="q"
                    value="{{ busqueda }}"
-                   onkeyup="filtrarProductos()"
-                   placeholder="Buscar por nombre, subtipo o proveedor...">
-
+                   class="form-control"
+                   placeholder="Buscar por nombre, subtipo o proveedor..."
+                   aria-label="Buscar productos">
         </div>
 
-
-        <select id="filtroTipo"
-                class="pr-select"
-                onchange="filtrarProductos()">
-
-            <option value="">
-                Todos los tipos
-            </option>
-
+        <select id="filtroTipo" class="form-select" aria-label="Filtrar por tipo">
+            <option value="">Todos los tipos</option>
             {% for tipo in tipos_productos %}
-
-                <option value="{{ tipo.ID_Tipo_producto }}">
-                    {{ tipo.Nombre_tipo_producto }}
-                </option>
-
+                <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
             {% endfor %}
-
         </select>
 
-
-        <select id="filtroEstado"
-                class="pr-select"
-                onchange="filtrarProductos()">
-
-            <option value="">
-                Todos los estados
-            </option>
-
-            <option value="Activo">
-                Activo
-            </option>
-
-            <option value="Inactivo">
-                Inactivo
-            </option>
-
+        <select id="filtroEstado" class="form-select" aria-label="Filtrar por estado">
+            <option value="">Todos los estados</option>
+            <option value="Activo">Activos</option>
+            <option value="Inactivo">Inactivos</option>
+            <option value="bajo">En stock mínimo</option>
         </select>
 
-    </form>
+        <select id="ordenProductos" class="form-select" aria-label="Ordenar productos">
+            <option value="nombre">Nombre (A-Z)</option>
+            <option value="precio-asc">Precio: menor a mayor</option>
+            <option value="precio-desc">Precio: mayor a menor</option>
+            <option value="stock-asc">Stock: menor a mayor</option>
+        </select>
+
+    </div>
 
 
-    <!-- ===================== TABLA ===================== -->
+    <!-- ===================== TARJETAS DE PRODUCTOS ===================== -->
 
-    <section class="pr-card">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4" id="gridProductos">
 
-        <div class="pr-table-wrap">
+        {% for producto in productos %}
 
-            <table class="pr-table">
+            {% with stock=producto.stock %}
 
-                <thead>
+            <div class="col pr-col"
+                 data-id="{{ producto.ID_Producto }}"
+                 data-nombre="{{ producto.Nombre_producto|lower }}"
+                 data-tipo="{{ producto.ID_Tipo_producto.ID_Tipo_producto }}"
+                 data-estado="{{ producto.Estado_producto }}"
+                 data-precio="{{ producto.Precio|unlocalize }}"
+                 data-stock="{% if stock %}{{ stock.Cantidad_stock }}{% else %}0{% endif %}"
+                 data-minimo="{% if stock %}{{ stock.Stock_minimo }}{% else %}0{% endif %}"
+                 data-foto="{% if producto.Imagen_producto %}1{% else %}0{% endif %}"
+                 data-search="{{ producto.Nombre_producto|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %} {{ producto.ID_Tipo_producto.Nombre_tipo_producto|lower }} {% for p in producto.proveedores.all %}{{ p.nombre_proveedor|lower }} {% endfor %}">
 
-                    <tr>
+                <article class="card pr-card h-100 {% if producto.Estado_producto != 'Activo' %}pr-card-inactiva{% endif %}">
 
-                        <th>Producto</th>
-                        <th>Tipo de producto</th>
-                        <th>Subtipo</th>
-                        <th>Precio</th>
-                        <th>Cantidad presentación</th>
-                        <th>Unidad medida</th>
-                        <th>Stock disponible</th>
-                        <th>Stock mínimo</th>
-                        <th>Estado</th>
-                        <th style="text-align:right;">Acciones</th>
+                    <!-- FOTO -->
+                    <div class="pr-foto">
 
-                    </tr>
+                        {% if producto.Imagen_producto %}
+                            <button type="button"
+                                    class="pr-foto-btn"
+                                    data-img="{{ producto.Imagen_producto.url }}"
+                                    data-titulo="{{ producto.Nombre_producto }}"
+                                    aria-label="Ver la foto de {{ producto.Nombre_producto }} en grande">
+                                <img src="{{ producto.Imagen_producto.url }}"
+                                     alt="Foto de {{ producto.Nombre_producto }}"
+                                     loading="lazy">
+                                <span class="pr-foto-zoom" aria-hidden="true">
+                                    <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>
+                                </span>
+                            </button>
+                        {% else %}
+                            <div class="pr-foto-vacia">
+                                <svg class="pr-icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+                                <span>Sin foto</span>
+                            </div>
+                        {% endif %}
 
-                </thead>
+                        <span class="pr-chip-estado {% if producto.Estado_producto == 'Activo' %}activo{% else %}inactivo{% endif %}">
+                            {{ producto.Estado_producto }}
+                        </span>
+
+                        <span class="pr-chip-bajo" hidden>
+                            <svg class="pr-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>
+                            Stock mínimo
+                        </span>
+
+                    </div>
+
+                    <!-- DATOS -->
+                    <div class="card-body pr-card-cuerpo">
+
+                        <p class="pr-categoria">
+                            {{ producto.ID_Tipo_producto.Nombre_tipo_producto }}
+                            {% if producto.ID_Subtipo %}<span>·</span> {{ producto.ID_Subtipo.Nombre_subtipo }}{% endif %}
+                        </p>
+
+                        <h2 class="pr-nombre">{{ producto.Nombre_producto }}</h2>
+
+                        <p class="pr-descripcion">
+                            {{ producto.Descripcion_producto|default:"Sin descripción" }}
+                        </p>
+
+                        <div class="pr-datos">
+                            <div>
+                                <span>Precio</span>
+                                <strong class="pr-precio">$ {{ producto.Precio|floatformat:"-2g" }}</strong>
+                            </div>
+                            <div>
+                                <span>Presentación</span>
+                                <strong>
+                                    {% if producto.Cantidad_presentacion %}
+                                        {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}
+                                    {% else %}—{% endif %}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="pr-stock">
+                            <div class="pr-stock-linea">
+                                <span>Stock disponible</span>
+                                <strong class="pr-stock-valor">
+                                    {% if stock %}{{ stock.Cantidad_stock }}{% else %}0{% endif %} un.
+                                </strong>
+                            </div>
+                            <div class="progress pr-stock-barra" role="progressbar" aria-label="Nivel de stock">
+                                <div class="progress-bar"></div>
+                            </div>
+                            <small class="pr-stock-minimo">
+                                Mínimo: {% if stock %}{{ stock.Stock_minimo }}{% else %}0{% endif %} un.
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <!-- ACCIONES -->
+                    <div class="card-footer pr-card-pie">
+
+                        {% if producto.num_lotes > 0 %}
+                            <button type="button"
+                                    class="btn pr-btn-lotes"
+                                    data-lotes="{{ producto.ID_Producto }}"
+                                    data-titulo="{{ producto.Nombre_producto }}">
+                                <svg class="pr-icon" viewBox="0 0 24 24"><path d="m16 6 4 14M12 6v14M8 8v12M4 4v16"/></svg>
+                                Lotes <span class="pr-lotes-cantidad">{{ producto.num_lotes }}</span>
+                            </button>
+                        {% else %}
+                            <span class="pr-sin-lotes">Sin lotes</span>
+                        {% endif %}
+
+                        {% if perm.productos_gestionar %}
+                            <div class="pr-card-botones">
+
+                                <button type="button"
+                                        class="pr-icon-btn pr-btn-editar"
+                                        title="Editar producto"
+                                        aria-label="Editar {{ producto.Nombre_producto }}"
+                                        data-id="{{ producto.ID_Producto }}"
+                                        data-tipo="{{ producto.ID_Tipo_producto.ID_Tipo_producto }}"
+                                        data-subtipo="{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}"
+                                        data-nombre="{{ producto.Nombre_producto }}"
+                                        data-descripcion="{{ producto.Descripcion_producto|default:'' }}"
+                                        data-precio="{{ producto.Precio|unlocalize }}"
+                                        data-cantidad="{{ producto.Cantidad_presentacion|default_if_none:''|unlocalize }}"
+                                        data-unidad="{{ producto.Unidad_medida_producto|default:'' }}"
+                                        data-estado="{{ producto.Estado_producto }}"
+                                        data-minimo="{% if stock %}{{ stock.Stock_minimo }}{% endif %}"
+                                        data-proveedores="{% for p in producto.proveedores.all %}{{ p.ID_Proveedor }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                        data-imagen="{% if producto.Imagen_producto %}{{ producto.Imagen_producto.url }}{% endif %}">
+                                    <svg class="pr-icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.4 18.6a2 2 0 0 1-.9.5l-2.9.8a.5.5 0 0 1-.6-.6l.8-2.9a2 2 0 0 1 .5-.9z"/></svg>
+                                </button>
+
+                                <button type="button"
+                                        class="pr-icon-btn pr-btn-eliminar"
+                                        title="Eliminar producto"
+                                        aria-label="Eliminar {{ producto.Nombre_producto }}"
+                                        data-id="{{ producto.ID_Producto }}"
+                                        data-nombre="{{ producto.Nombre_producto }}"
+                                        data-descripcion="{{ producto.Descripcion_producto|default:'' }}"
+                                        data-tipo="{{ producto.ID_Tipo_producto.Nombre_tipo_producto }}"
+                                        data-subtipo="{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo }}{% else %}Sin subtipo{% endif %}"
+                                        data-precio="$ {{ producto.Precio|floatformat:'-2g' }}"
+                                        data-presentacion="{{ producto.Cantidad_presentacion|floatformat:'-2' }} {{ producto.Unidad_medida_producto|default:'' }}"
+                                        data-stock="{% if stock %}{{ stock.Cantidad_stock }}{% else %}0{% endif %}"
+                                        data-estado="{{ producto.Estado_producto }}"
+                                        data-lotes="{{ producto.num_lotes|default:0 }}"
+                                        data-proveedores="{% for p in producto.proveedores.all %}{{ p.nombre_proveedor }}{% if not forloop.last %}|{% endif %}{% endfor %}"
+                                        data-imagen="{% if producto.Imagen_producto %}{{ producto.Imagen_producto.url }}{% endif %}">
+                                    <svg class="pr-icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg>
+                                </button>
+
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </article>
+
+                <!-- Lotes del producto: se copian al modal "Lotes" al tocar el botón -->
+                {% if producto.num_lotes > 0 %}
+                    <template id="lotes-{{ producto.ID_Producto }}">
+                        <div class="table-responsive">
+                            <table class="table pr-tabla-lotes align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Lote</th>
+                                        <th>Remito</th>
+                                        <th>Proveedor</th>
+                                        <th>Vencimiento</th>
+                                        <th class="text-end">Ingresada</th>
+                                        <th class="text-end">Actual</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lote in producto.lotes_ordenados %}
+                                        <tr>
+                                            <td class="fw-semibold">{{ lote.Numero_lote }}</td>
+                                            <td>{{ lote.ID_Remito.Numero_remito }}</td>
+                                            <td>{{ lote.ID_Remito.ID_Proveedor }}</td>
+                                            <td>{{ lote.Fecha_vencimiento|date:"d/m/Y" }}</td>
+                                            <td class="text-end">{{ lote.Cantidad_ingresada }}</td>
+                                            <td class="text-end">{{ lote.Cantidad_actual }}</td>
+                                            <td>
+                                                <span class="pr-lote-estado pr-estado-{{ lote.estado_actual|lower }}">
+                                                    {{ lote.estado_actual }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                {% endif %}
+
+            </div>
+
+            {% endwith %}
+
+        {% endfor %}
+
+    </div>
 
 
-                <tbody id="listaProductos">
+    <!-- SIN PRODUCTOS / SIN RESULTADOS -->
+    <div class="pr-vacio" id="sinResultados" {% if productos %}hidden{% endif %}>
+        <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <h3>{% if productos %}No hay productos con esos filtros{% else %}Todavía no hay productos{% endif %}</h3>
+        <p>{% if productos %}Probá con otra búsqueda o cambiá los filtros.{% else %}Registrá el primero con el botón "Registrar producto".{% endif %}</p>
+    </div>
 
-                    {% for producto in productos %}
+    <p class="pr-contador" id="contadorProductos">
+        {{ productos|length }} producto{{ productos|length|pluralize }}
+    </p>
 
-                        <tr id="card-{{ producto.ID_Producto }}"
-                            class="producto-card {% if producto.Estado_producto != 'Activo' %}inactivo{% endif %}"
-                            data-tipo="{{ producto.ID_Tipo_producto.ID_Tipo_producto }}"
-                            data-estado="{{ producto.Estado_producto }}"
-                            data-search="{{ producto.ID_Producto }} {{ producto.Nombre_producto|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %} {% for p in producto.proveedores.all %}{{ p.nombre_proveedor|lower }} {% endfor %}">
 
-                            <!-- ===================== PRODUCTO ===================== -->
+    <!-- =====================================================
+         MODAL REGISTRAR PRODUCTO
+    ====================================================== -->
 
-                            <td>
+    <div class="modal fade pr-modal" id="modalCrearProducto" tabindex="-1" aria-labelledby="tituloCrear" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
 
-                                <div class="pr-prod">
+                <form method="POST"
+                      action="{% url 'crear_producto' %}"
+                      enctype="multipart/form-data"
+                      class="form-producto">
 
-                                    <span class="pr-prod-icono">
+                    {% csrf_token %}
+                    <input type="hidden" name="Estado_producto" value="Activo">
 
-                                        <svg class="pr-icon" viewBox="0 0 24 24">
-                                            <path d="m7.5 4.27 9 5.15"/>
-                                            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-                                            <path d="m3.3 7 8.7 5 8.7-5"/>
-                                            <path d="M12 22V12"/>
-                                        </svg>
+                    <div class="modal-header">
+                        <div>
+                            <h2 class="modal-title" id="tituloCrear">Registrar producto</h2>
+                            <p class="pr-modal-sub">El stock inicial es 0: la mercadería entra con los lotes de un remito.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
 
-                                    </span>
+                    <div class="modal-body">
+                        <div class="row g-4">
 
-                                    <div>
+                            <!-- FOTO -->
+                            <div class="col-md-5">
+                                <label class="form-label">Foto del producto <span class="pr-opcional">(opcional)</span></label>
 
-                                        <span class="pr-nombre">
-                                            {{ producto.Nombre_producto }}
+                                <div class="pr-picker" data-picker>
+                                    <input type="file" name="Imagen_producto" id="crear_imagen"
+                                           accept="image/jpeg,image/png,image/webp" hidden>
+                                    <input type="hidden" name="quitar_imagen" value="0" data-quitar>
+
+                                    <label for="crear_imagen" class="pr-picker-zona" data-zona tabindex="0">
+                                        <img class="pr-picker-preview" alt="Vista previa de la foto" data-preview hidden>
+                                        <span class="pr-picker-vacio" data-vacio>
+                                            <span class="pr-picker-icono">
+                                                <svg class="pr-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
+                                            </span>
+                                            <strong>Arrastrá una foto</strong>
+                                            <span>o tocá para elegirla</span>
+                                            <small>JPG, PNG o WEBP · hasta 5 MB</small>
                                         </span>
+                                    </label>
 
+                                    <div class="pr-picker-acciones" data-acciones hidden>
+                                        <label for="crear_imagen" class="btn btn-sm pr-btn-suave">Cambiar</label>
+                                        <button type="button" class="btn btn-sm pr-btn-suave-rojo" data-quitar-btn>Quitar</button>
+                                    </div>
+
+                                    <div class="pr-picker-error" data-error role="alert"></div>
+                                </div>
+                            </div>
+
+                            <!-- DATOS -->
+                            <div class="col-md-7">
+                                <div class="row g-3">
+
+                                    <div class="col-12">
+                                        <label class="form-label" for="crear_nombre">Nombre del producto</label>
+                                        <input type="text" class="form-control" id="crear_nombre" name="Nombre_producto"
+                                               placeholder="Ej. Glifosato 48%" maxlength="50" required>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label" for="crear_descripcion">Descripción</label>
+                                        <input type="text" class="form-control" id="crear_descripcion" name="Descripcion_producto"
+                                               maxlength="200" placeholder="Características del producto">
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="crear_tipo">Tipo de producto</label>
+                                        <select class="form-select" name="ID_Tipo_producto" id="crear_tipo"
+                                                onchange="actualizarSubtipos('crear_tipo', 'crear_subtipo')" required>
+                                            <option value="">Seleccioná un tipo</option>
+                                            {% for tipo in tipos_productos %}
+                                                <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="crear_subtipo">Subtipo</label>
+                                        <select class="form-select" name="ID_Subtipo" id="crear_subtipo">
+                                            <option value="">Sin subtipo</option>
+                                            {% for sub in subtipos %}
+                                                <option value="{{ sub.ID_Subtipo }}" data-tipo="{{ sub.ID_Tipo_producto.ID_Tipo_producto }}">
+                                                    {{ sub.Nombre_subtipo }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="crear_precio">Precio por presentación</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="crear_precio" name="Precio"
+                                                   step="0.01" min="0.01" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="crear_minimo">Stock mínimo</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="crear_minimo" name="Stock_minimo"
+                                                   step="1" min="0" value="10" required>
+                                            <span class="input-group-text">un.</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="crear_cantidad">Cantidad de presentación</label>
+                                        <input type="number" class="form-control" id="crear_cantidad" name="Cantidad_presentacion"
+                                               step="0.01" min="0.01" value="1" required>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="crear_unidad">Unidad de medida</label>
+                                        <select class="form-select" id="crear_unidad" name="Unidad_medida_producto" required>
+                                            <option value="">Seleccioná una unidad</option>
+                                            <option value="kg">Kilogramos (kg)</option>
+                                            <option value="g">Gramos (g)</option>
+                                            <option value="litros">Litros (L)</option>
+                                        </select>
                                     </div>
 
                                 </div>
-
-                            </td>
-
-
-                            <!-- ===================== TIPO ===================== -->
-
-                            <td>
-
-                                <span class="pr-tipo">
-                                    {{ producto.ID_Tipo_producto.Nombre_tipo_producto }}
-                                </span>
-
-                            </td>
-
-
-                            <!-- ===================== SUBTIPO ===================== -->
-
-                            <td>
-
-                                <span class="pr-subtipos">
-
-                                    {% if producto.ID_Subtipo %}
-                                        {{ producto.ID_Subtipo.Nombre_subtipo }}
-                                    {% else %}
-                                        Sin subtipo
-                                    {% endif %}
-
-                                </span>
-
-                            </td>
-
-
-                            <!-- ===================== PRECIO ===================== -->
-
-                            <td class="pr-precio">
-
-                                $ {{ producto.Precio|floatformat:"-2g" }}
-
-                            </td>
-
-
-                            <!-- ===================== CANTIDAD ===================== -->
-
-                            <td>
-
-                                {{ producto.Cantidad_presentacion|floatformat:"-2" }}
-
-                            </td>
-
-
-                            <!-- ===================== UNIDAD ===================== -->
-
-                            <td>
-
-                                {{ producto.Unidad_medida_producto|default:"—" }}
-
-                            </td>
-
-
-                            <!-- ===================== STOCK ===================== -->
-
-                            <td>
-
-                                {% if producto.stock %}
-
-                                    <span class="pr-stock {% if producto.stock.Cantidad_stock <= producto.stock.Stock_minimo %}pr-bajo{% endif %}">
-                                        {{ producto.stock.Cantidad_stock }}
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="pr-stock">
-                                        0
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- ===================== STOCK MÍNIMO ===================== -->
-
-                            <td class="pr-minimo">
-
-                                {% if producto.stock %}
-
-                                    {{ producto.stock.Stock_minimo }}
-                                    <small>un.</small>
-
-                                {% else %}
-
-                                    <span class="pr-muted">
-                                        —
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- ===================== ESTADO ===================== -->
-
-                            <td>
-
-                                <span id="badge-estado-{{ producto.ID_Producto }}"
-                                      class="pr-badge {% if producto.Estado_producto == 'Activo' %}pr-activo{% else %}pr-inactivo{% endif %}">
-
-                                    {% if producto.Estado_producto == 'Activo' %}
-                                        Activo
-                                    {% else %}
-                                        Inactivo
-                                    {% endif %}
-
-                                </span>
-
-                            </td>
-
-
-                            <!-- ===================== ACCIONES ===================== -->
-
-                            <td>
-
-                                <div class="pr-acciones">
-
-
-                                    <!-- CONSULTAR LOTES -->
-
-                                    {% if producto.num_lotes > 0 %}
-                                        <button type="button"
-                                                class="pr-icon-btn pr-ver-lotes"
-                                                title="Consultar lotes"
-                                                aria-label="Consultar lotes"
-                                                aria-expanded="false"
-                                                aria-controls="lotes-{{ producto.ID_Producto }}"
-                                                onclick="toggleLotes({{ producto.ID_Producto }}, this)">
-
-                                            <svg class="pr-icon" viewBox="0 0 24 24">
-                                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
-                                                <circle cx="12" cy="12" r="3"/>
-                                            </svg>
-
-                                        </button>
-                                    {% endif %}
-
-                                    {% if perm.productos_gestionar %}
-
-                                    <!-- EDITAR -->
-
-                                    <button type="button"
-                                            class="pr-icon-btn"
-                                            title="Editar producto"
-                                            aria-label="Editar producto"
-                                            onclick="abrirModalEditar(
-                                                '{{ producto.ID_Producto }}',
-                                                '{{ producto.ID_Tipo_producto.ID_Tipo_producto }}',
-                                                '{{ producto.Nombre_producto|escapejs }}',
-                                                '{{ producto.Descripcion_producto|default:''|escapejs }}',
-                                                '{{ producto.Precio|unlocalize }}',
-                                                '{{ producto.Cantidad_presentacion|default_if_none:''|unlocalize }}',
-                                                '{{ producto.Unidad_medida_producto|default:''|escapejs }}',
-                                                '{{ producto.Estado_producto }}',
-                                                '{% if producto.stock %}{{ producto.stock.Stock_minimo }}{% endif %}',
-                                                '{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.ID_Subtipo }}{% endif %}',
-                                                '{% for p in producto.proveedores.all %}{{ p.ID_Proveedor }}{% if not forloop.last %},{% endif %}{% endfor %}'
-                                            )">
-
-                                        <svg class="pr-icon" viewBox="0 0 24 24">
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>
-                                        </svg>
-
-                                    </button>
-
-
-                                    <!-- ELIMINAR -->
-
-                                    <button type="button"
-                                            class="pr-icon-btn pr-baja"
-                                            title="Eliminar producto"
-                                            aria-label="Eliminar producto"
-                                            data-id="{{ producto.ID_Producto }}"
-                                            data-nombre="{{ producto.Nombre_producto }}"
-                                            data-descripcion="{{ producto.Descripcion_producto|default:'' }}"
-                                            data-tipo="{{ producto.ID_Tipo_producto.Nombre_tipo_producto }}"
-                                            data-subtipo="{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo }}{% else %}Sin subtipo{% endif %}"
-                                            data-precio="$ {{ producto.Precio|floatformat:'-2g' }}"
-                                            data-presentacion="{{ producto.Cantidad_presentacion|floatformat:'-2' }} {{ producto.Unidad_medida_producto|default:'' }}"
-                                            data-stock="{% if producto.stock %}{{ producto.stock.Cantidad_stock }}{% else %}0{% endif %}"
-                                            data-estado="{{ producto.Estado_producto }}"
-                                            data-lotes="{{ producto.num_lotes|default:0 }}"
-                                            data-proveedores="{% for p in producto.proveedores.all %}{{ p.nombre_proveedor }}{% if not forloop.last %}|{% endif %}{% endfor %}"
-                                            onclick="abrirModalEliminar(this)">
-
-                                        <svg class="pr-icon" viewBox="0 0 24 24">
-                                            <path d="M3 6h18"/>
-                                            <path d="M8 6V4h8v2"/>
-                                            <path d="M19 6l-1 14H6L5 6"/>
-                                            <path d="M10 11v5"/>
-                                            <path d="M14 11v5"/>
-                                        </svg>
-
-                                    </button>
-
-                                    {% endif %}
-
+                            </div>
+
+                            <!-- PROVEEDORES -->
+                            <div class="col-12">
+                                <label class="form-label">Proveedores que lo suministran</label>
+                                <div class="pr-proveedores">
+                                    {% for prov in proveedores_activos %}
+                                        <input type="checkbox" class="btn-check" name="proveedores"
+                                               id="crear_prov_{{ prov.ID_Proveedor }}" value="{{ prov.ID_Proveedor }}" autocomplete="off">
+                                        <label class="pr-proveedor-chip" for="crear_prov_{{ prov.ID_Proveedor }}">{{ prov.nombre_proveedor }}</label>
+                                    {% empty %}
+                                        <span class="pr-ayuda">No hay proveedores activos. Registrá uno primero.</span>
+                                    {% endfor %}
                                 </div>
+                                <p class="pr-ayuda">Podés elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.</p>
+                            </div>
 
-                            </td>
+                        </div>
+                    </div>
 
-                        </tr>
+                    <div class="modal-footer">
+                        <button type="button" class="btn pr-btn pr-btn-claro" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn pr-btn pr-btn-principal">
+                            <svg class="pr-icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                            Registrar producto
+                        </button>
+                    </div>
 
-                        <!-- DETALLE DE LOTES DEL PRODUCTO -->
+                </form>
 
-                        <tr id="lotes-{{ producto.ID_Producto }}"
-                            class="pr-fila-lotes"
-                            style="display: none;">
+            </div>
+        </div>
+    </div>
 
-                            <td colspan="10">
 
-                                <div class="pr-lotes-contenido">
+    <!-- =====================================================
+         MODAL EDITAR PRODUCTO
+    ====================================================== -->
 
-                                    <h4>
-                                        Lotes de {{ producto.Nombre_producto }}
-                                    </h4>
+    <div class="modal fade pr-modal" id="modalEditarProducto" tabindex="-1" aria-labelledby="tituloEditar" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
 
-                                    <div class="pr-lotes-tabla-contenedor">
+                <form method="POST"
+                      action=""
+                      id="formEditarProducto"
+                      enctype="multipart/form-data"
+                      class="form-producto">
 
-                                        <table class="pr-lotes-tabla">
+                    {% csrf_token %}
 
-                                            <thead>
-                                                <tr>
-                                                    <th>Número de lote</th>
-                                                    <th>Remito</th>
-                                                    <th>Proveedor</th>
-                                                    <th>Fecha de vencimiento</th>
-                                                    <th>Cantidad ingresada</th>
-                                                    <th>Cantidad actual</th>
-                                                    <th>Estado</th>
-                                                </tr>
-                                            </thead>
+                    <div class="modal-header">
+                        <div>
+                            <h2 class="modal-title" id="tituloEditar">Modificar producto</h2>
+                            <p class="pr-modal-sub">Los cambios no modifican el stock actual.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
 
-                                            <tbody>
+                    <div class="modal-body">
+                        <div class="row g-4">
 
-                                                {% for lote in producto.lotes_ordenados %}
+                            <!-- FOTO -->
+                            <div class="col-md-5">
+                                <label class="form-label">Foto del producto <span class="pr-opcional">(opcional)</span></label>
 
-                                                    <tr>
-                                                        <td>{{ lote.Numero_lote }}</td>
+                                <div class="pr-picker" data-picker>
+                                    <input type="file" name="Imagen_producto" id="edit_imagen"
+                                           accept="image/jpeg,image/png,image/webp" hidden>
+                                    <input type="hidden" name="quitar_imagen" value="0" data-quitar>
 
-                                                        <td>
-                                                            {{ lote.ID_Remito.Numero_remito }}
-                                                        </td>
+                                    <label for="edit_imagen" class="pr-picker-zona" data-zona tabindex="0">
+                                        <img class="pr-picker-preview" alt="Foto del producto" data-preview hidden>
+                                        <span class="pr-picker-vacio" data-vacio>
+                                            <span class="pr-picker-icono">
+                                                <svg class="pr-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
+                                            </span>
+                                            <strong>Arrastrá una foto</strong>
+                                            <span>o tocá para elegirla</span>
+                                            <small>JPG, PNG o WEBP · hasta 5 MB</small>
+                                        </span>
+                                    </label>
 
-                                                        <td>
-                                                            {{ lote.ID_Remito.ID_Proveedor }}
-                                                        </td>
+                                    <div class="pr-picker-acciones" data-acciones hidden>
+                                        <label for="edit_imagen" class="btn btn-sm pr-btn-suave">Cambiar</label>
+                                        <button type="button" class="btn btn-sm pr-btn-suave-rojo" data-quitar-btn>Quitar</button>
+                                    </div>
 
-                                                        <td>
-                                                            {{ lote.Fecha_vencimiento|date:"d/m/Y" }}
-                                                        </td>
+                                    <div class="pr-picker-error" data-error role="alert"></div>
+                                </div>
+                            </div>
 
-                                                        <td>
-                                                            {{ lote.Cantidad_ingresada }}
-                                                        </td>
+                            <!-- DATOS -->
+                            <div class="col-md-7">
+                                <div class="row g-3">
 
-                                                        <td>
-                                                            {{ lote.Cantidad_actual }}
-                                                        </td>
+                                    <div class="col-sm-8">
+                                        <label class="form-label" for="edit_nombre">Nombre del producto</label>
+                                        <input type="text" class="form-control" id="edit_nombre" name="Nombre_producto"
+                                               maxlength="50" required>
+                                    </div>
 
-                                                        <td>
-                                                            <span class="pr-lote-estado pr-estado-{{ lote.estado_actual|lower }}">
-                                                                {{ lote.estado_actual }}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
+                                    <div class="col-sm-4">
+                                        <label class="form-label" for="edit_estado">Estado</label>
+                                        <select class="form-select" id="edit_estado" name="Estado_producto">
+                                            <option value="Activo">Activo</option>
+                                            <option value="Inactivo">Inactivo</option>
+                                        </select>
+                                    </div>
 
-                                                {% empty %}
+                                    <div class="col-12">
+                                        <label class="form-label" for="edit_descripcion">Descripción</label>
+                                        <input type="text" class="form-control" id="edit_descripcion" name="Descripcion_producto"
+                                               maxlength="200">
+                                    </div>
 
-                                                    <tr>
-                                                        <td colspan="7">
-                                                            Este producto no tiene lotes registrados.
-                                                        </td>
-                                                    </tr>
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="edit_tipo">Tipo de producto</label>
+                                        <select class="form-select" id="edit_tipo" name="ID_Tipo_producto"
+                                                onchange="actualizarSubtipos('edit_tipo', 'edit_subtipo')" required>
+                                            {% for tipo in tipos_productos %}
+                                                <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
 
-                                                {% endfor %}
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="edit_subtipo">Subtipo</label>
+                                        <select class="form-select" id="edit_subtipo" name="ID_Subtipo">
+                                            <option value="">Sin subtipo</option>
+                                            {% for sub in subtipos %}
+                                                <option value="{{ sub.ID_Subtipo }}" data-tipo="{{ sub.ID_Tipo_producto.ID_Tipo_producto }}">
+                                                    {{ sub.Nombre_subtipo }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
 
-                                            </tbody>
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="edit_precio">Precio por presentación</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="edit_precio" name="Precio"
+                                                   step="0.01" min="0.01" required>
+                                        </div>
+                                    </div>
 
-                                        </table>
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="edit_stock_minimo">Stock mínimo</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="edit_stock_minimo" name="Stock_minimo"
+                                                   step="1" min="0">
+                                            <span class="input-group-text">un.</span>
+                                        </div>
+                                    </div>
 
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="edit_cantidad">Cantidad de presentación</label>
+                                        <input type="number" class="form-control" id="edit_cantidad" name="Cantidad_presentacion"
+                                               step="0.01" min="0.01" required>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="edit_unidad">Unidad de medida</label>
+                                        <select class="form-select" id="edit_unidad" name="Unidad_medida_producto" required>
+                                            <option value="kg">Kilogramos (kg)</option>
+                                            <option value="g">Gramos (g)</option>
+                                            <option value="litros">Litros (L)</option>
+                                        </select>
                                     </div>
 
                                 </div>
-
-                            </td>
-
-                        </tr>
-
-                    {% empty %}
-
-                        <tr>
-
-                            <td colspan="10" class="pr-vacio">
-                                No se encontraron productos.
-                            </td>
-
-                        </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-
-        <!-- ===================== PIE ===================== -->
-
-        <div class="pr-pie">
-
-            <span id="contadorProductos">
-
-                {{ productos|length }}
-                producto{{ productos|length|pluralize }}
-                encontrado{{ productos|length|pluralize }}
-
-            </span>
-
-            <span>
-                Agroquímica del Valle
-            </span>
-
-        </div>
-
-    </section>
-
-</div>
-
-
-<!-- =====================================================
-     MODAL REGISTRAR PRODUCTO
-===================================================== -->
-
-<div class="pr-modal"
-     id="modalCrearProducto">
-
-    <div class="pr-modal-box">
-
-        <div class="pr-modal-head">
-
-            <h2>
-                Registrar producto
-            </h2>
-
-            <button type="button"
-                    class="pr-modal-x"
-                    onclick="cerrarModal('modalCrearProducto')"
-                    aria-label="Cerrar">
-
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-
-            </button>
-
-        </div>
-
-
-        <form method="POST"
-              action="{% url 'crear_producto' %}"
-              class="form-producto">
-
-            {% csrf_token %}
-
-            <div class="pr-modal-body">
-
-                <div class="pr-grid">
-
-                    <!-- NOMBRE -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Nombre del producto
-                        </label>
-
-                        <input type="text"
-                               name="Nombre_producto"
-                               placeholder="Ej. Glifosato 48%"
-                               required>
-
-                    </div>
-
-
-                    <!-- DESCRIPCIÓN -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Descripción
-                        </label>
-
-                        <input type="text"
-                               name="Descripcion_producto"
-                               maxlength="200"
-                               placeholder="Características del producto">
-
-                    </div>
-
-
-                    <!-- TIPO -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Tipo de producto
-                        </label>
-
-                        <select name="ID_Tipo_producto"
-                                id="crear_tipo"
-                                onchange="actualizarSubtipos('crear_tipo', 'crear_subtipo')"
-                                required>
-
-                            <option value="">
-                                Seleccione un tipo
-                            </option>
-
-                            {% for tipo in tipos_productos %}
-
-                                <option value="{{ tipo.ID_Tipo_producto }}">
-                                    {{ tipo.Nombre_tipo_producto }}
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- SUBTIPO -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Subtipo
-                        </label>
-
-                        <select name="ID_Subtipo"
-                                id="crear_subtipo">
-
-                            <option value="">
-                                Sin subtipo
-                            </option>
-
-                            {% for sub in subtipos %}
-
-                                <option value="{{ sub.ID_Subtipo }}"
-                                        data-tipo="{{ sub.ID_Tipo_producto.ID_Tipo_producto }}">
-
-                                    {{ sub.Nombre_subtipo }}
-
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                        <span class="pr-hint">
-                            Los subtipos disponibles dependen del tipo de producto seleccionado.
-                        </span>
-
-                    </div>
-
-
-                    <!-- PRECIO -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Precio por presentación
-                        </label>
-
-                        <input type="number"
-                               step="0.01"
-                               min="0.01"
-                               name="Precio"
-                               required>
-
-                    </div>
-
-
-                    <!-- STOCK MÍNIMO -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Stock mínimo (unidades)
-                        </label>
-
-                        <input type="number"
-                               step="1"
-                               min="0"
-                               name="Stock_minimo"
-                               value="10"
-                               required>
-
-                    </div>
-
-
-                    <!-- CANTIDAD -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Cantidad de presentación
-                        </label>
-
-                        <input type="number"
-                               step="0.01"
-                               min="0.01"
-                               name="Cantidad_presentacion"
-                               value="1"
-                               required>
-
-                    </div>
-
-
-                    <!-- UNIDAD -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Unidad de medida
-                        </label>
-
-                        <select name="Unidad_medida_producto"
-                                required>
-
-                            <option value="">
-                                Seleccione una unidad
-                            </option>
-
-                            <option value="kg">
-                                Kilogramos (kg)
-                            </option>
-
-                            <option value="g">
-                                Gramos (g)
-                            </option>
-
-                            <option value="litros">
-                                Litros (L)
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- PROVEEDORES QUE SUMINISTRAN EL PRODUCTO -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Proveedores que lo suministran
-                        </label>
-
-                        <div class="pr-lista-proveedores">
-
-                            {% for prov in proveedores_activos %}
-
-                                <label class="pr-proveedor-opcion">
-                                    <input type="checkbox"
-                                           name="proveedores"
-                                           value="{{ prov.ID_Proveedor }}">
-                                    {{ prov.nombre_proveedor }}
-                                </label>
-
-                            {% empty %}
-
-                                <span class="pr-hint">
-                                    No hay proveedores activos. Registrá uno primero.
-                                </span>
-
-                            {% endfor %}
+                            </div>
+
+                            <!-- PROVEEDORES -->
+                            <div class="col-12">
+                                <label class="form-label">Proveedores que lo suministran</label>
+                                <div class="pr-proveedores" id="edit_proveedores">
+                                    {% for prov in proveedores_activos %}
+                                        <input type="checkbox" class="btn-check" name="proveedores"
+                                               id="edit_prov_{{ prov.ID_Proveedor }}" value="{{ prov.ID_Proveedor }}" autocomplete="off">
+                                        <label class="pr-proveedor-chip" for="edit_prov_{{ prov.ID_Proveedor }}">{{ prov.nombre_proveedor }}</label>
+                                    {% empty %}
+                                        <span class="pr-ayuda">No hay proveedores activos. Registrá uno primero.</span>
+                                    {% endfor %}
+                                </div>
+                                <p class="pr-ayuda">Podés elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.</p>
+                            </div>
 
                         </div>
-
-                        <span class="pr-hint">
-                            Podés elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.
-                        </span>
-
                     </div>
 
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn pr-btn pr-btn-claro" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn pr-btn pr-btn-principal">Guardar cambios</button>
+                    </div>
 
-
-                <div class="pr-info">
-
-                    <svg class="pr-icon" viewBox="0 0 24 24">
-                        <path d="M20 6 9 17l-5-5"/>
-                    </svg>
-
-                    El stock inicial es 0. Registrá un lote para ingresar mercadería.
-
-                </div>
-
-
-                <input type="hidden"
-                       name="Estado_producto"
-                       value="Activo">
+                </form>
 
             </div>
-
-
-            <div class="pr-modal-pie">
-
-                <button type="button"
-                        class="pr-btn pr-btn-claro"
-                        onclick="cerrarModal('modalCrearProducto')">
-
-                    Cancelar
-
-                </button>
-
-
-                <button type="submit"
-                        class="pr-btn pr-btn-primary">
-
-                    <svg class="pr-icon" viewBox="0 0 24 24">
-                        <path d="M20 6 9 17l-5-5"/>
-                    </svg>
-
-                    Registrar producto
-
-                </button>
-
-            </div>
-
-        </form>
-
+        </div>
     </div>
 
-</div>
 
+    <!-- =====================================================
+         MODAL ELIMINAR PRODUCTO
+    ====================================================== -->
 
-<!-- =====================================================
-     MODAL EDITAR PRODUCTO
-===================================================== -->
+    <div class="modal fade pr-modal" id="modalEliminarProducto" tabindex="-1" aria-labelledby="tituloEliminar" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
 
-<div class="pr-modal"
-     id="modalEditarProducto">
+                <form method="POST" action="" id="formEliminarProducto">
 
-    <div class="pr-modal-box">
+                    {% csrf_token %}
 
-        <div class="pr-modal-head">
-
-            <h2>
-                Modificar producto
-            </h2>
-
-            <button type="button"
-                    class="pr-modal-x"
-                    onclick="cerrarModal('modalEditarProducto')"
-                    aria-label="Cerrar">
-
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-
-            </button>
-
-        </div>
-
-
-        <form id="formEditarProducto"
-              method="POST"
-              action=""
-              class="form-producto">
-
-            {% csrf_token %}
-
-            <div class="pr-modal-body">
-
-                <div class="pr-grid">
-
-                    <!-- CÓDIGO (oculto) -->
-
-                    <input type="hidden" id="edit_id">
-
-
-                    <!-- NOMBRE -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Nombre del producto
-                        </label>
-
-                        <input type="text"
-                               id="edit_nombre"
-                               name="Nombre_producto"
-                               required>
-
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="tituloEliminar">Eliminar producto</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
 
-
-                    <!-- ESTADO -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Estado
-                        </label>
-
-                        <select id="edit_estado"
-                                name="Estado_producto">
-
-                            <option value="Activo">
-                                Activo
-                            </option>
-
-                            <option value="Inactivo">
-                                Inactivo
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- DESCRIPCIÓN -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Descripción
-                        </label>
-
-                        <input type="text"
-                               id="edit_descripcion"
-                               name="Descripcion_producto"
-                               maxlength="200">
-
-                    </div>
-
-
-                    <!-- TIPO -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Tipo de producto
-                        </label>
-
-                        <select id="edit_tipo"
-                                name="ID_Tipo_producto"
-                                onchange="actualizarSubtipos('edit_tipo', 'edit_subtipo')"
-                                required>
-
-                            {% for tipo in tipos_productos %}
-
-                                <option value="{{ tipo.ID_Tipo_producto }}">
-                                    {{ tipo.Nombre_tipo_producto }}
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- SUBTIPO -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Subtipo
-                        </label>
-
-                        <select id="edit_subtipo"
-                                name="ID_Subtipo">
-
-                            <option value="">
-                                Sin subtipo
-                            </option>
-
-                            {% for sub in subtipos %}
-
-                                <option value="{{ sub.ID_Subtipo }}"
-                                        data-tipo="{{ sub.ID_Tipo_producto.ID_Tipo_producto }}">
-
-                                    {{ sub.Nombre_subtipo }}
-
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                        <span class="pr-hint">
-                            Los subtipos disponibles dependen del tipo de producto seleccionado.
-                        </span>
-
-                    </div>
-
-
-                    <!-- PRECIO -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Precio por presentación
-                        </label>
-
-                        <input type="number"
-                               step="0.01"
-                               min="0.01"
-                               id="edit_precio"
-                               name="Precio"
-                               required>
-
-                    </div>
-
-
-                    <!-- STOCK MÍNIMO -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Stock mínimo (unidades)
-                        </label>
-
-                        <input type="number"
-                               step="1"
-                               min="0"
-                               id="edit_stock_minimo"
-                               name="Stock_minimo">
-
-                    </div>
-
-
-                    <!-- CANTIDAD -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Cantidad de presentación
-                        </label>
-
-                        <input type="number"
-                               step="0.01"
-                               min="0.01"
-                               id="edit_cantidad"
-                               name="Cantidad_presentacion"
-                               required>
-
-                    </div>
-
-
-                    <!-- UNIDAD -->
-
-                    <div class="pr-grupo">
-
-                        <label>
-                            Unidad de medida
-                        </label>
-
-                        <select id="edit_unidad"
-                                name="Unidad_medida_producto"
-                                required>
-
-                            <option value="kg">
-                                Kilogramos (kg)
-                            </option>
-
-                            <option value="g">
-                                Gramos (g)
-                            </option>
-
-                            <option value="litros">
-                                Litros (L)
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- PROVEEDORES QUE SUMINISTRAN EL PRODUCTO -->
-
-                    <div class="pr-grupo pr-full">
-
-                        <label>
-                            Proveedores que lo suministran
-                        </label>
-
-                        <div class="pr-lista-proveedores" id="edit_proveedores">
-
-                            {% for prov in proveedores_activos %}
-
-                                <label class="pr-proveedor-opcion">
-                                    <input type="checkbox"
-                                           name="proveedores"
-                                           value="{{ prov.ID_Proveedor }}">
-                                    {{ prov.nombre_proveedor }}
-                                </label>
-
-                            {% empty %}
-
-                                <span class="pr-hint">
-                                    No hay proveedores activos. Registrá uno primero.
-                                </span>
-
-                            {% endfor %}
-
-                        </div>
-
-                        <span class="pr-hint">
-                            Podés elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="pr-modal-pie">
-
-                <button type="button"
-                        class="pr-btn pr-btn-claro"
-                        onclick="cerrarModal('modalEditarProducto')">
-
-                    Cancelar
-
-                </button>
-
-
-                <button type="submit"
-                        class="pr-btn pr-btn-primary">
-
-                    Guardar cambios
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     MODAL ELIMINAR PRODUCTO
-===================================================== -->
-
-<div class="pr-modal"
-     id="modalEliminarProducto">
-
-    <div class="pr-modal-box">
-
-        <div class="pr-modal-head">
-
-            <h2>
-                Eliminar producto
-            </h2>
-
-            <button type="button"
-                    class="pr-modal-x"
-                    onclick="cerrarModal('modalEliminarProducto')"
-                    aria-label="Cerrar">
-
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-
-            </button>
-
-        </div>
-
-
-        <form id="formEliminarProducto"
-              method="POST"
-              action="">
-
-            {% csrf_token %}
-
-            <div class="pr-modal-body">
-
-                <!-- ADVERTENCIA -->
-
-                <div class="pr-aviso-eliminar" id="el_aviso">
-
-                    <svg class="pr-icon" viewBox="0 0 24 24">
-                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
-                        <path d="M12 9v4"/>
-                        <path d="M12 17h.01"/>
-                    </svg>
-
-                    <div>
-                        <strong id="el_aviso_titulo"></strong>
-                        <span id="el_aviso_texto"></span>
-                    </div>
-
-                </div>
-
-
-                <!-- DATOS DEL PRODUCTO -->
-
-                <div class="pr-ficha-cab">
-
-                    <div>
-                        <h3 id="el_nombre">—</h3>
-                        <p id="el_descripcion"></p>
-                    </div>
-
-                    <span class="pr-badge" id="el_estado"></span>
-
-                </div>
-
-
-                <div class="pr-ficha-grid">
-
-                    <div class="pr-ficha-dato">
-                        <span class="pr-ficha-label">Tipo de producto</span>
-                        <span class="pr-ficha-valor" id="el_tipo">—</span>
-                    </div>
-
-                    <div class="pr-ficha-dato">
-                        <span class="pr-ficha-label">Subtipo</span>
-                        <span class="pr-ficha-valor" id="el_subtipo">—</span>
-                    </div>
-
-                    <div class="pr-ficha-dato">
-                        <span class="pr-ficha-label">Precio</span>
-                        <span class="pr-ficha-valor" id="el_precio">—</span>
-                    </div>
-
-                    <div class="pr-ficha-dato">
-                        <span class="pr-ficha-label">Presentación</span>
-                        <span class="pr-ficha-valor" id="el_presentacion">—</span>
-                    </div>
-
-                    <div class="pr-ficha-dato">
-                        <span class="pr-ficha-label">Stock disponible</span>
-                        <span class="pr-ficha-valor" id="el_stock">—</span>
-                    </div>
-
-                    <div class="pr-ficha-dato">
-                        <span class="pr-ficha-label">Lotes asociados</span>
-                        <span class="pr-ficha-valor" id="el_lotes">—</span>
-                    </div>
-
-                    <div class="pr-ficha-dato pr-ficha-full">
-                        <span class="pr-ficha-label">Proveedores</span>
-                        <div class="pr-ficha-chips" id="el_proveedores"></div>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="pr-modal-pie">
-
-                <button type="button"
-                        class="pr-btn pr-btn-claro"
-                        onclick="cerrarModal('modalEliminarProducto')">
-
-                    Cancelar
-
-                </button>
-
-
-                <button type="submit"
-                        id="el_confirmar"
-                        class="pr-btn pr-btn-rojo">
-
-                    <svg class="pr-icon" viewBox="0 0 24 24">
-                        <path d="M3 6h18"/>
-                        <path d="M8 6V4h8v2"/>
-                        <path d="M19 6l-1 14H6L5 6"/>
-                    </svg>
-
-                    Eliminar producto
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     MODAL EGRESO POR VENTA
-===================================================== -->
-
-{% if puede_egresar %}
-
-{{ datos_egreso|json_script:"datosEgreso" }}
-
-<div class="pr-modal" id="modalEgreso">
-
-    <div class="pr-modal-box pr-modal-egreso">
-
-        <div class="pr-modal-head">
-            <h2>Registrar egreso por venta</h2>
-
-            <button type="button"
-                    class="pr-modal-x"
-                    onclick="cerrarModal('modalEgreso')"
-                    aria-label="Cerrar">
-                <svg class="pr-icon" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-
-        <form method="POST" action="{% url 'registrar_egreso' %}" id="formEgreso">
-
-            {% csrf_token %}
-
-            <div class="pr-modal-body">
-
-                <div class="pr-grid">
-
-                    <div class="pr-grupo">
-                        <label>Tipo de movimiento</label>
-                        <input type="text" value="Egreso por venta" readonly>
-                    </div>
-
-                    <div class="pr-grupo">
-                        <label>Fecha y hora</label>
-                        <input type="text" id="eg_fecha" readonly>
-                    </div>
-
-                    <div class="pr-grupo pr-full">
-                        <label>Usuario y perfil</label>
-                        <input type="text"
-                               value="{{ usuario.Nombre_usuario }} {{ usuario.Apellido_usuario }} - {{ usuario.ID_Perfil.Nombre_perfil }}"
-                               readonly>
-                    </div>
-
-                    <div class="pr-grupo">
-                        <label>Producto</label>
-                        <select id="eg_producto" onchange="egCargarLotes()" required></select>
-                    </div>
-
-                    <div class="pr-grupo">
-                        <label>Lote</label>
-                        <select name="lote" id="eg_lote" onchange="egActualizar()" required></select>
-                    </div>
-
-                    <div class="pr-grupo pr-full">
-                        <div class="eg-datos">
-                            <p class="eg-datos-titulo">Datos del lote</p>
-                            <div class="eg-datos-grid">
-                                <div class="eg-dato">
-                                    <span class="eg-dato-label">Remito de origen</span>
-                                    <span class="eg-dato-valor" id="eg_remito">—</span>
-                                </div>
-                                <div class="eg-dato">
-                                    <span class="eg-dato-label">Proveedor</span>
-                                    <span class="eg-dato-valor" id="eg_proveedor">—</span>
-                                </div>
-                                <div class="eg-dato">
-                                    <span class="eg-dato-label">Vencimiento</span>
-                                    <span class="eg-dato-valor" id="eg_vence">—</span>
-                                </div>
-                                <div class="eg-dato">
-                                    <span class="eg-dato-label">Cantidad actual del lote</span>
-                                    <span class="eg-dato-valor" id="eg_cant_lote">—</span>
-                                </div>
+                    <div class="modal-body">
+
+                        <div class="pr-aviso" id="el_aviso">
+                            <svg class="pr-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>
+                            <div>
+                                <strong id="el_aviso_titulo"></strong>
+                                <span id="el_aviso_texto"></span>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="pr-grupo pr-full">
-                        <label>Cantidad a vender</label>
-                        <input type="number"
-                               name="cantidad"
-                               id="eg_cantidad"
-                               min="1"
-                               step="1"
-                               oninput="egActualizar()"
-                               required>
-                    </div>
-
-                    <div class="pr-grupo pr-full">
-                        <div class="eg-resultado">
-                            <div class="eg-res" id="eg_box_lote">
-                                <span class="eg-res-label">Lote quedará en</span>
-                                <span class="eg-res-valor" id="eg_res_lote">—</span>
+                        <div class="pr-ficha-cab">
+                            <div class="pr-ficha-foto" id="el_foto"></div>
+                            <div class="flex-grow-1">
+                                <h3 id="el_nombre">—</h3>
+                                <p id="el_descripcion"></p>
                             </div>
-                            <div class="eg-res" id="eg_box_stock">
-                                <span class="eg-res-label">Stock del producto quedará en</span>
-                                <span class="eg-res-valor" id="eg_res_stock">—</span>
+                            <span class="pr-chip-estado" id="el_estado"></span>
+                        </div>
+
+                        <div class="pr-ficha-grid">
+                            <div><span>Tipo</span><strong id="el_tipo">—</strong></div>
+                            <div><span>Subtipo</span><strong id="el_subtipo">—</strong></div>
+                            <div><span>Precio</span><strong id="el_precio">—</strong></div>
+                            <div><span>Presentación</span><strong id="el_presentacion">—</strong></div>
+                            <div><span>Stock</span><strong id="el_stock">—</strong></div>
+                            <div><span>Lotes</span><strong id="el_lotes">—</strong></div>
+                            <div class="pr-ficha-full">
+                                <span>Proveedores</span>
+                                <div class="pr-ficha-chips" id="el_proveedores"></div>
                             </div>
                         </div>
-                        <span class="pr-hint" id="eg_aviso"></span>
+
                     </div>
 
-                    <div class="pr-grupo pr-full">
-                        <label>Descripción</label>
-                        <textarea name="descripcion"
-                                  id="eg_descripcion"
-                                  rows="2"
-                                  maxlength="200"
-                                  placeholder="Ej. Venta a cliente, factura 0001-00123"></textarea>
+                    <div class="modal-footer">
+                        <button type="button" class="btn pr-btn pr-btn-claro" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="el_confirmar" class="btn pr-btn pr-btn-peligro">
+                            <svg class="pr-icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                            Eliminar producto
+                        </button>
                     </div>
 
-                </div>
+                </form>
 
             </div>
-
-            <div class="pr-modal-pie">
-                <button type="button"
-                        class="pr-btn pr-btn-claro"
-                        onclick="cerrarModal('modalEgreso')">
-                    Cancelar
-                </button>
-
-                <button type="submit"
-                        id="eg_submit"
-                        class="pr-btn pr-btn-rojo">
-                    Registrar egreso
-                </button>
-            </div>
-
-        </form>
-
+        </div>
     </div>
 
-</div>
 
-{% endif %}
+    <!-- =====================================================
+         MODAL LOTES DEL PRODUCTO
+    ====================================================== -->
+
+    <div class="modal fade pr-modal" id="modalLotes" tabindex="-1" aria-labelledby="tituloLotes" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="tituloLotes">Lotes</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="contenidoLotes"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         MODAL FOTO AMPLIADA
+    ====================================================== -->
+
+    <div class="modal fade pr-modal pr-modal-foto" id="modalFoto" tabindex="-1" aria-labelledby="tituloFoto" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="tituloFoto">Foto</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="fotoAmpliada" src="" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         MODAL EGRESO POR VENTA
+    ====================================================== -->
+
+    {% if puede_egresar %}
+
+    {{ datos_egreso|json_script:"datosEgreso" }}
+
+    <div class="modal fade pr-modal" id="modalEgreso" tabindex="-1" aria-labelledby="tituloEgreso" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+
+                <form method="POST" action="{% url 'registrar_egreso' %}" id="formEgreso">
+
+                    {% csrf_token %}
+
+                    <div class="modal-header">
+                        <div>
+                            <h2 class="modal-title" id="tituloEgreso">Registrar egreso por venta</h2>
+                            <p class="pr-modal-sub">
+                                {{ usuario.Nombre_usuario }} {{ usuario.Apellido_usuario }} · {{ usuario.ID_Perfil.Nombre_perfil }} ·
+                                <span id="eg_fecha"></span>
+                            </p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row g-3">
+
+                            <div class="col-sm-6">
+                                <label class="form-label" for="eg_producto">Producto</label>
+                                <select class="form-select" id="eg_producto" onchange="egCargarLotes()" required></select>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <label class="form-label" for="eg_lote">Lote</label>
+                                <select class="form-select" name="lote" id="eg_lote" onchange="egActualizar()" required></select>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="pr-eg-datos">
+                                    <div><span>Remito de origen</span><strong id="eg_remito">—</strong></div>
+                                    <div><span>Proveedor</span><strong id="eg_proveedor">—</strong></div>
+                                    <div><span>Vencimiento</span><strong id="eg_vence">—</strong></div>
+                                    <div><span>Cantidad del lote</span><strong id="eg_cant_lote">—</strong></div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" for="eg_cantidad">Cantidad a vender</label>
+                                <input type="number" class="form-control" name="cantidad" id="eg_cantidad"
+                                       min="1" step="1" oninput="egActualizar()" required>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="pr-eg-resultado">
+                                    <div class="pr-eg-res" id="eg_box_lote">
+                                        <span>El lote quedará en</span>
+                                        <strong id="eg_res_lote">—</strong>
+                                    </div>
+                                    <div class="pr-eg-res" id="eg_box_stock">
+                                        <span>El stock quedará en</span>
+                                        <strong id="eg_res_stock">—</strong>
+                                    </div>
+                                </div>
+                                <p class="pr-ayuda mt-2" id="eg_aviso"></p>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" for="eg_descripcion">Descripción</label>
+                                <textarea class="form-control" name="descripcion" id="eg_descripcion" rows="2"
+                                          maxlength="200" placeholder="Ej. Venta a cliente, factura 0001-00123"></textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn pr-btn pr-btn-claro" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="eg_submit" class="btn pr-btn pr-btn-peligro">Registrar egreso</button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
 
 {% endblock contenido %}
 
 
 {% block extra_js %}
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
+(function () {
+    'use strict';
+
+    const URL_EDITAR = "{% url 'editar_producto' 0 %}";
+    const URL_ELIMINAR = "{% url 'eliminar_producto' 0 %}";
+
+    const grid = document.getElementById('gridProductos');
+    const columnas = Array.from(document.querySelectorAll('.pr-col'));
+
+    const modal = function (id) {
+        return bootstrap.Modal.getOrCreateInstance(document.getElementById(id));
+    };
+
+
+    /* =====================================================
+       TOASTS
+    ===================================================== */
+
+    function cerrarToast(toast) {
+        toast.classList.add('saliendo');
+        setTimeout(function () { toast.remove(); }, 300);
+    }
+
+    window.mostrarToast = function (mensaje, tipo) {
+        const toast = document.createElement('div');
+        toast.className = 'pr-toast ' + (tipo || 'warning');
+
+        const texto = document.createElement('span');
+        texto.textContent = mensaje;
+
+        const cerrar = document.createElement('button');
+        cerrar.type = 'button';
+        cerrar.className = 'pr-toast-x';
+        cerrar.setAttribute('aria-label', 'Cerrar mensaje');
+        cerrar.textContent = '✕';
+
+        toast.append(texto, cerrar);
+        document.getElementById('toastContainer').appendChild(toast);
+        setTimeout(function () { cerrarToast(toast); }, 4500);
+    };
+
+    document.getElementById('toastContainer').addEventListener('click', function (e) {
+        if (e.target.classList.contains('pr-toast-x')) { cerrarToast(e.target.parentElement); }
+    });
+
+    document.querySelectorAll('.pr-toast').forEach(function (toast) {
+        setTimeout(function () { cerrarToast(toast); }, 4500);
+    });
+
+
+    /* =====================================================
+       TARJETAS: barra de stock, aviso de mínimo y entrada animada
+    ===================================================== */
+
+    function esStockBajo(col) {
+        return Number(col.dataset.stock) <= Number(col.dataset.minimo);
+    }
+
+    columnas.forEach(function (col) {
+        const stock = Number(col.dataset.stock);
+        const minimo = Number(col.dataset.minimo);
+        const barra = col.querySelector('.progress-bar');
+
+        // La barra se llena en relación al doble del mínimo.
+        const referencia = Math.max(minimo * 2, 1);
+        const porcentaje = Math.min(100, Math.round(stock * 100 / referencia));
+
+        barra.classList.add(
+            stock <= minimo ? 'pr-barra-roja' :
+            stock <= minimo * 2 ? 'pr-barra-ambar' : 'pr-barra-verde'
+        );
+
+        // Empieza en 0 y crece hasta el valor real.
+        setTimeout(function () { barra.style.width = porcentaje + '%'; }, 300);
+
+        if (esStockBajo(col)) {
+            col.querySelector('.pr-chip-bajo').hidden = false;
+            col.querySelector('.pr-stock-valor').classList.add('pr-texto-rojo');
+        }
+    });
+
+    function animarEntrada(visibles) {
+        visibles.forEach(function (col, i) {
+            col.classList.remove('pr-entrando');
+            void col.offsetWidth;   // reinicia la animación
+            col.style.setProperty('--retraso', Math.min(i, 12) * 45 + 'ms');
+            col.classList.add('pr-entrando');
+        });
+    }
+
+
+    /* =====================================================
+       RESUMEN: los números cuentan hacia arriba
+    ===================================================== */
+
+    function contar(el, valor) {
+        const inicio = performance.now();
+        const duracion = 700;
+
+        (function paso(ahora) {
+            const avance = Math.min((ahora - inicio) / duracion, 1);
+            el.textContent = Math.round(valor * (1 - Math.pow(1 - avance, 3)));
+            if (avance < 1) { requestAnimationFrame(paso); }
+        })(inicio);
+    }
+
+    contar(document.getElementById('statActivos'),
+        columnas.filter(function (c) { return c.dataset.estado === 'Activo'; }).length);
+    contar(document.getElementById('statBajo'),
+        columnas.filter(function (c) { return c.dataset.estado === 'Activo' && esStockBajo(c); }).length);
+    contar(document.getElementById('statSinStock'),
+        columnas.filter(function (c) { return Number(c.dataset.stock) === 0; }).length);
+    contar(document.getElementById('statConFoto'),
+        columnas.filter(function (c) { return c.dataset.foto === '1'; }).length);
+
+
+    /* =====================================================
+       BUSCAR, FILTRAR Y ORDENAR
+    ===================================================== */
+
+    const inputBuscar = document.getElementById('searchInput');
+    const filtroTipo = document.getElementById('filtroTipo');
+    const filtroEstado = document.getElementById('filtroEstado');
+    const orden = document.getElementById('ordenProductos');
+
+    const ORDENES = {
+        'nombre': function (a, b) { return a.dataset.nombre.localeCompare(b.dataset.nombre); },
+        'precio-asc': function (a, b) { return a.dataset.precio - b.dataset.precio; },
+        'precio-desc': function (a, b) { return b.dataset.precio - a.dataset.precio; },
+        'stock-asc': function (a, b) { return a.dataset.stock - b.dataset.stock; },
+    };
+
+    function aplicarFiltros() {
+        const texto = inputBuscar.value.toLowerCase().trim();
+        const tipo = filtroTipo.value;
+        const estado = filtroEstado.value;
+        const visibles = [];
+
+        columnas.slice().sort(ORDENES[orden.value]).forEach(function (col) {
+            grid.appendChild(col);
+
+            const visible =
+                col.dataset.search.includes(texto) &&
+                (!tipo || col.dataset.tipo === tipo) &&
+                (!estado || (estado === 'bajo' ? esStockBajo(col) : col.dataset.estado === estado));
+
+            col.hidden = !visible;
+            if (visible) { visibles.push(col); }
+        });
+
+        animarEntrada(visibles);
+
+        document.getElementById('sinResultados').hidden = visibles.length > 0;
+        document.getElementById('contadorProductos').textContent =
+            visibles.length + (visibles.length === 1 ? ' producto' : ' productos');
+    }
+
+    let espera;
+    inputBuscar.addEventListener('input', function () {
+        clearTimeout(espera);
+        espera = setTimeout(aplicarFiltros, 150);
+    });
+
+    [filtroTipo, filtroEstado, orden].forEach(function (el) {
+        el.addEventListener('change', aplicarFiltros);
+    });
+
+    aplicarFiltros();
+
+
+    /* =====================================================
+       SUBTIPOS SEGÚN EL TIPO
+    ===================================================== */
+
+    window.actualizarSubtipos = function (idTipo, idSubtipo) {
+        const tipo = document.getElementById(idTipo).value;
+        const select = document.getElementById(idSubtipo);
+
+        select.querySelectorAll('option[data-tipo]').forEach(function (opcion) {
+            const mostrar = tipo !== '' && opcion.dataset.tipo === tipo;
+            opcion.hidden = !mostrar;
+            opcion.disabled = !mostrar;
+        });
+
+        const elegida = select.options[select.selectedIndex];
+
+        if (elegida && elegida.dataset.tipo && elegida.dataset.tipo !== tipo) {
+            select.value = '';
+        }
+    };
+
+
+    /* =====================================================
+       SELECTOR DE IMÁGENES (arrastrar, elegir, vista previa)
+    ===================================================== */
+
+    const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
+    const MAX_BYTES = 5 * 1024 * 1024;
+
+    function crearPicker(raiz) {
+        const input = raiz.querySelector('input[type="file"]');
+        const quitar = raiz.querySelector('[data-quitar]');
+        const zona = raiz.querySelector('[data-zona]');
+        const preview = raiz.querySelector('[data-preview]');
+        const vacio = raiz.querySelector('[data-vacio]');
+        const acciones = raiz.querySelector('[data-acciones]');
+        const error = raiz.querySelector('[data-error]');
+        let urlTemporal = null;
+
+        function liberar() {
+            if (urlTemporal) { URL.revokeObjectURL(urlTemporal); urlTemporal = null; }
+        }
+
+        function mostrar(src) {
+            preview.src = src;
+            preview.hidden = false;
+            vacio.hidden = true;
+            acciones.hidden = false;
+            zona.classList.add('con-imagen');
+            zona.classList.remove('pr-aparece');
+            void zona.offsetWidth;
+            zona.classList.add('pr-aparece');
+        }
+
+        function vaciar() {
+            liberar();
+            preview.removeAttribute('src');
+            preview.hidden = true;
+            vacio.hidden = false;
+            acciones.hidden = true;
+            zona.classList.remove('con-imagen');
+        }
+
+        function rechazar(texto) {
+            error.textContent = texto;
+            input.value = '';
+            raiz.classList.remove('pr-sacudir');
+            void raiz.offsetWidth;
+            raiz.classList.add('pr-sacudir');
+        }
+
+        function elegir(archivo) {
+            if (!TIPOS_IMAGEN.includes(archivo.type)) {
+                rechazar('La imagen debe ser JPG, PNG o WEBP.');
+                return false;
+            }
+            if (archivo.size > MAX_BYTES) {
+                rechazar('La imagen no puede superar los 5 MB.');
+                return false;
+            }
+
+            error.textContent = '';
+            liberar();
+            urlTemporal = URL.createObjectURL(archivo);
+            mostrar(urlTemporal);
+            quitar.value = '0';
+            return true;
+        }
+
+        input.addEventListener('change', function () {
+            if (input.files[0]) { elegir(input.files[0]); }
+        });
+
+        // Arrastrar y soltar
+        ['dragenter', 'dragover'].forEach(function (evento) {
+            zona.addEventListener(evento, function (e) {
+                e.preventDefault();
+                zona.classList.add('arrastrando');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(function (evento) {
+            zona.addEventListener(evento, function (e) {
+                e.preventDefault();
+                zona.classList.remove('arrastrando');
+            });
+        });
+
+        zona.addEventListener('drop', function (e) {
+            const archivo = e.dataTransfer.files[0];
+            if (!archivo) { return; }
+
+            if (elegir(archivo)) {
+                const transferencia = new DataTransfer();
+                transferencia.items.add(archivo);
+                input.files = transferencia.files;
+            }
+        });
+
+        // Con teclado: Enter o espacio abren el selector
+        zona.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                input.click();
+            }
+        });
+
+        raiz.querySelector('[data-quitar-btn]').addEventListener('click', function () {
+            input.value = '';
+            quitar.value = '1';
+            error.textContent = '';
+            vaciar();
+        });
+
+        return {
+            reiniciar: function (urlActual) {
+                input.value = '';
+                quitar.value = '0';
+                error.textContent = '';
+                if (urlActual) { liberar(); mostrar(urlActual); } else { vaciar(); }
+            }
+        };
+    }
+
+    const pickerCrear = crearPicker(document.querySelector('#modalCrearProducto [data-picker]'));
+    const pickerEditar = crearPicker(document.querySelector('#modalEditarProducto [data-picker]'));
+
+
+    /* =====================================================
+       REGISTRAR PRODUCTO
+    ===================================================== */
+
+    window.abrirModalCrear = function () {
+        document.querySelector('#modalCrearProducto form').reset();
+        pickerCrear.reiniciar(null);
+        actualizarSubtipos('crear_tipo', 'crear_subtipo');
+        modal('modalCrearProducto').show();
+    };
+
+
+    /* =====================================================
+       EDITAR PRODUCTO
+    ===================================================== */
+
+    document.querySelectorAll('.pr-btn-editar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            const d = boton.dataset;
+
+            document.getElementById('formEditarProducto').action =
+                URL_EDITAR.replace('/0/', '/' + d.id + '/');
+
+            document.getElementById('edit_nombre').value = d.nombre;
+            document.getElementById('edit_descripcion').value = d.descripcion;
+            document.getElementById('edit_tipo').value = d.tipo;
+            document.getElementById('edit_precio').value = d.precio;
+            document.getElementById('edit_cantidad').value = d.cantidad;
+            document.getElementById('edit_stock_minimo').value = d.minimo;
+            document.getElementById('edit_estado').value = d.estado;
+
+            const unidad = document.getElementById('edit_unidad');
+            if (d.unidad && !Array.from(unidad.options).some(function (o) { return o.value === d.unidad; })) {
+                unidad.add(new Option(d.unidad, d.unidad));
+            }
+            unidad.value = d.unidad;
+
+            const ids = (d.proveedores || '').split(',').filter(Boolean);
+            document.querySelectorAll('#edit_proveedores input').forEach(function (casilla) {
+                casilla.checked = ids.includes(casilla.value);
+            });
+
+            actualizarSubtipos('edit_tipo', 'edit_subtipo');
+            document.getElementById('edit_subtipo').value = d.subtipo || '';
+
+            pickerEditar.reiniciar(d.imagen || null);
+
+            modal('modalEditarProducto').show();
+        });
+    });
+
+
+    /* =====================================================
+       AL MENOS UN PROVEEDOR ANTES DE GUARDAR
+    ===================================================== */
+
+    document.querySelectorAll('.form-producto').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            if (!form.querySelector('input[name="proveedores"]:checked')) {
+                e.preventDefault();
+                mostrarToast('Seleccioná al menos un proveedor que suministre el producto.', 'warning');
+                return;
+            }
+
+            const boton = form.querySelector('[type="submit"]');
+            boton.disabled = true;
+            boton.classList.add('pr-cargando');
+        });
+    });
+
+    // Si el usuario vuelve con "Atrás", los botones no quedan bloqueados.
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('.pr-cargando').forEach(function (boton) {
+            boton.disabled = false;
+            boton.classList.remove('pr-cargando');
+        });
+    });
+
+
+    /* =====================================================
+       ELIMINAR PRODUCTO
+    ===================================================== */
+
+    document.querySelectorAll('.pr-btn-eliminar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            const d = boton.dataset;
+            const lotes = parseInt(d.lotes, 10) || 0;
+            const stock = parseInt(d.stock, 10) || 0;
+
+            document.getElementById('formEliminarProducto').action =
+                URL_ELIMINAR.replace('/0/', '/' + d.id + '/');
+
+            document.getElementById('el_nombre').textContent = d.nombre;
+            document.getElementById('el_descripcion').textContent = d.descripcion || 'Sin descripción';
+            document.getElementById('el_tipo').textContent = d.tipo;
+            document.getElementById('el_subtipo').textContent = d.subtipo;
+            document.getElementById('el_precio').textContent = d.precio;
+            document.getElementById('el_presentacion').textContent = d.presentacion;
+            document.getElementById('el_stock').textContent = stock + ' un.';
+            document.getElementById('el_lotes').textContent = lotes;
+
+            const estado = document.getElementById('el_estado');
+            estado.textContent = d.estado;
+            estado.className = 'pr-chip-estado ' + (d.estado === 'Activo' ? 'activo' : 'inactivo');
+
+            const foto = document.getElementById('el_foto');
+            foto.innerHTML = '';
+
+            if (d.imagen) {
+                const img = document.createElement('img');
+                img.src = d.imagen;
+                img.alt = 'Foto de ' + d.nombre;
+                foto.appendChild(img);
+            } else {
+                foto.textContent = d.nombre.slice(0, 2).toUpperCase();
+            }
+
+            const chips = document.getElementById('el_proveedores');
+            chips.innerHTML = '';
+
+            const proveedores = (d.proveedores || '').split('|').filter(Boolean);
+
+            (proveedores.length ? proveedores : ['Sin proveedores']).forEach(function (nombre) {
+                const chip = document.createElement('span');
+                chip.textContent = nombre;
+                chips.appendChild(chip);
+            });
+
+            const aviso = document.getElementById('el_aviso');
+            const confirmar = document.getElementById('el_confirmar');
+
+            if (stock > 0 || lotes > 0) {
+                aviso.className = 'pr-aviso pr-aviso-bloqueo';
+                document.getElementById('el_aviso_titulo').textContent = 'No se puede eliminar este producto.';
+                document.getElementById('el_aviso_texto').textContent = stock > 0
+                    ? 'Tiene ' + stock + ' unidades en stock. Para dejar de usarlo, cambiá su estado a Inactivo desde Editar.'
+                    : 'Tiene ' + lotes + (lotes === 1 ? ' lote asociado' : ' lotes asociados') +
+                      '. Para conservar la trazabilidad, cambiá su estado a Inactivo desde Editar.';
+                confirmar.disabled = true;
+            } else {
+                aviso.className = 'pr-aviso';
+                document.getElementById('el_aviso_titulo').textContent = '¿Eliminar este producto definitivamente?';
+                document.getElementById('el_aviso_texto').textContent = 'Esta acción no se puede deshacer. También se borra su foto.';
+                confirmar.disabled = false;
+            }
+
+            modal('modalEliminarProducto').show();
+        });
+    });
+
+
+    /* =====================================================
+       LOTES Y FOTO AMPLIADA
+    ===================================================== */
+
+    document.querySelectorAll('.pr-btn-lotes').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            const plantilla = document.getElementById('lotes-' + boton.dataset.lotes);
+            const contenido = document.getElementById('contenidoLotes');
+
+            contenido.innerHTML = '';
+            contenido.appendChild(plantilla.content.cloneNode(true));
+            document.getElementById('tituloLotes').textContent = 'Lotes de ' + boton.dataset.titulo;
+
+            modal('modalLotes').show();
+        });
+    });
+
+    document.querySelectorAll('.pr-foto-btn').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            const img = document.getElementById('fotoAmpliada');
+            img.src = boton.dataset.img;
+            img.alt = 'Foto de ' + boton.dataset.titulo;
+            document.getElementById('tituloFoto').textContent = boton.dataset.titulo;
+            modal('modalFoto').show();
+        });
+    });
+
 
     /* =====================================================
        EGRESO POR VENTA
@@ -1489,61 +1420,45 @@
         return el ? JSON.parse(el.textContent) : [];
     })();
 
-    function egProductoActual() {
+    function egProducto() {
         return DATOS_EGRESO[document.getElementById('eg_producto').value];
     }
 
-    function egLoteActual() {
-        const p = egProductoActual();
+    function egLote() {
+        const p = egProducto();
         const id = Number(document.getElementById('eg_lote').value);
         return p ? p.lotes.find(function (l) { return l.id === id; }) : null;
     }
 
-    function abrirModalEgreso() {
-
+    window.abrirModalEgreso = function () {
         if (!DATOS_EGRESO.length) {
             mostrarToast('No hay productos con lotes disponibles para egresar.', 'warning');
             return;
         }
 
-        const selProd = document.getElementById('eg_producto');
-        selProd.innerHTML = '';
-
-        DATOS_EGRESO.forEach(function (p, i) {
-            selProd.add(new Option(p.nombre, i));
-        });
+        const select = document.getElementById('eg_producto');
+        select.innerHTML = '';
+        DATOS_EGRESO.forEach(function (p, i) { select.add(new Option(p.nombre, i)); });
 
         document.getElementById('eg_cantidad').value = '';
         document.getElementById('eg_descripcion').value = '';
-        document.getElementById('eg_fecha').value =
-            new Date().toLocaleString('es-AR', {
-                dateStyle: 'short',
-                timeStyle: 'short'
-            });
+        document.getElementById('eg_fecha').textContent =
+            new Date().toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
 
         egCargarLotes();
+        modal('modalEgreso').show();
+    };
 
-        document.getElementById('modalEgreso').style.display = 'flex';
-    }
-
-    function egCargarLotes() {
-
-        const p = egProductoActual();
-        const selLote = document.getElementById('eg_lote');
-        selLote.innerHTML = '';
-
-        p.lotes.forEach(function (l) {
-            selLote.add(new Option(l.numero, l.id));
-        });
-
+    window.egCargarLotes = function () {
+        const select = document.getElementById('eg_lote');
+        select.innerHTML = '';
+        egProducto().lotes.forEach(function (l) { select.add(new Option(l.numero, l.id)); });
         egActualizar();
-    }
+    };
 
-    function egActualizar() {
-
-        const p = egProductoActual();
-        const l = egLoteActual();
-
+    window.egActualizar = function () {
+        const p = egProducto();
+        const l = egLote();
         if (!p || !l) { return; }
 
         document.getElementById('eg_remito').textContent = l.remito;
@@ -1551,23 +1466,23 @@
         document.getElementById('eg_vence').textContent = l.vence;
         document.getElementById('eg_cant_lote').textContent = l.cantidad;
 
-        const inputCant = document.getElementById('eg_cantidad');
-        inputCant.max = Math.min(l.cantidad, p.stock);
+        const input = document.getElementById('eg_cantidad');
+        input.max = Math.min(l.cantidad, p.stock);
 
-        const cant = parseInt(inputCant.value, 10);
+        const cant = parseInt(input.value, 10);
         const boxLote = document.getElementById('eg_box_lote');
         const boxStock = document.getElementById('eg_box_stock');
         const aviso = document.getElementById('eg_aviso');
-        const btn = document.getElementById('eg_submit');
+        const boton = document.getElementById('eg_submit');
 
-        boxLote.className = 'eg-res';
-        boxStock.className = 'eg-res';
+        boxLote.className = 'pr-eg-res';
+        boxStock.className = 'pr-eg-res';
         aviso.textContent = '';
 
         if (isNaN(cant) || cant <= 0) {
             document.getElementById('eg_res_lote').textContent = '—';
             document.getElementById('eg_res_stock').textContent = '—';
-            btn.disabled = true;
+            boton.disabled = true;
             return;
         }
 
@@ -1578,451 +1493,26 @@
         document.getElementById('eg_res_stock').textContent = restoStock;
 
         if (restoLote < 0 || restoStock < 0) {
-            boxLote.className = 'eg-res eg-error';
-            boxStock.className = 'eg-res eg-error';
+            boxLote.className = 'pr-eg-res error';
+            boxStock.className = 'pr-eg-res error';
             aviso.textContent = 'La cantidad supera lo disponible en el lote o en el stock.';
-            btn.disabled = true;
+            boton.disabled = true;
             return;
         }
 
         if (restoStock <= p.stock_minimo) {
-            boxStock.className = 'eg-res eg-alerta';
-            aviso.textContent =
-                'El stock quedará en o por debajo del mínimo (' + p.stock_minimo + ').';
+            boxStock.className = 'pr-eg-res alerta';
+            aviso.textContent = 'El stock quedará en o por debajo del mínimo (' + p.stock_minimo + ').';
         }
 
-        btn.disabled = false;
+        boton.disabled = false;
+    };
+
+    if (new URLSearchParams(window.location.search).get('egreso') === '1' && DATOS_EGRESO.length) {
+        abrirModalEgreso();
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-
-        const modalEgreso = document.getElementById('modalEgreso');
-
-        if (!modalEgreso) { return; }
-
-        modalEgreso.addEventListener('click', function (e) {
-            if (e.target === this) { cerrarModal('modalEgreso'); }
-        });
-
-        if (new URLSearchParams(window.location.search).get('egreso') === '1') {
-            abrirModalEgreso();
-        }
-    });
-
-
-    /* =====================================================
-       MOSTRAR Y OCULTAR LOTES DEL PRODUCTO
-    ===================================================== */
-
-    function toggleLotes(productoId, boton) {
-
-        const filaLotes = document.getElementById('lotes-' + productoId);
-
-        if (!filaLotes) {
-            return;
-        }
-
-        const estaAbierta = filaLotes.style.display === 'table-row';
-
-        if (estaAbierta) {
-
-            filaLotes.style.display = 'none';
-
-            boton.setAttribute('aria-expanded', 'false');
-            boton.title = 'Consultar lotes';
-            boton.setAttribute('aria-label', 'Consultar lotes');
-
-        } else {
-
-            filaLotes.style.display = 'table-row';
-
-            boton.setAttribute('aria-expanded', 'true');
-            boton.title = 'Ocultar lotes';
-            boton.setAttribute('aria-label', 'Ocultar lotes');
-
-        }
-    }
-
-
-    /* =====================================================
-       BUSCAR Y FILTRAR
-    ===================================================== */
-
-    function filtrarProductos() {
-
-        const query = document.getElementById('searchInput').value
-            .toLowerCase()
-            .trim();
-
-        const tipo = document.getElementById('filtroTipo').value;
-
-        const estado = document.getElementById('filtroEstado').value;
-
-        let visibles = 0;
-
-        document.querySelectorAll('.producto-card')
-            .forEach(function (fila) {
-
-                const coincideTexto = fila.dataset.search
-                    .toLowerCase()
-                    .includes(query);
-
-                const coincideTipo = !tipo || fila.dataset.tipo === tipo;
-
-                const coincideEstado = !estado || fila.dataset.estado === estado;
-
-                const visible = coincideTexto && coincideTipo && coincideEstado;
-
-                fila.style.display = visible ? '' : 'none';
-
-                // Ocultar el detalle de lotes al filtrar
-                const idProducto = fila.id.replace('card-', '');
-
-                const filaLotes = document.getElementById('lotes-' + idProducto);
-
-                if (filaLotes) {
-                    filaLotes.style.display = 'none';
-                }
-
-                const botonLotes = fila.querySelector('.pr-ver-lotes');
-
-                if (botonLotes) {
-                    botonLotes.setAttribute('aria-expanded', 'false');
-                    botonLotes.title = 'Consultar lotes';
-                    botonLotes.setAttribute('aria-label', 'Consultar lotes');
-                }
-
-                if (visible) {
-                    visibles++;
-                }
-
-            });
-
-        document.getElementById('contadorProductos').textContent =
-            visibles +
-            ' producto' +
-            (visibles === 1 ? '' : 's') +
-            ' encontrado' +
-            (visibles === 1 ? '' : 's');
-
-    }
-
-
-    /* =====================================================
-       MOSTRAR SUBTIPOS SEGÚN EL TIPO
-    ===================================================== */
-
-    function actualizarSubtipos(idSelectTipo, idSelectSubtipo) {
-
-        const tipo = document.getElementById(idSelectTipo).value;
-
-        const selectSubtipo = document.getElementById(idSelectSubtipo);
-
-        const opciones = selectSubtipo.querySelectorAll('option[data-tipo]');
-
-        opciones.forEach(function (opcion) {
-
-            const mostrar = tipo !== '' && opcion.dataset.tipo === tipo;
-
-            opcion.hidden = !mostrar;
-            opcion.disabled = !mostrar;
-
-        });
-
-        const opcionSeleccionada = selectSubtipo.options[selectSubtipo.selectedIndex];
-
-        if (
-            opcionSeleccionada &&
-            opcionSeleccionada.dataset.tipo &&
-            opcionSeleccionada.dataset.tipo !== tipo
-        ) {
-            selectSubtipo.value = '';
-        }
-
-    }
-
-
-    /* =====================================================
-       CERRAR MODALES
-    ===================================================== */
-
-    function cerrarModal(idModal) {
-
-        const modal = document.getElementById(idModal);
-
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-
-
-    /* =====================================================
-       NUEVO PRODUCTO
-    ===================================================== */
-
-    function abrirModalCrear() {
-
-        document.getElementById('modalCrearProducto').style.display = 'flex';
-
-        actualizarSubtipos('crear_tipo', 'crear_subtipo');
-
-    }
-
-
-    /* =====================================================
-       EDITAR PRODUCTO
-    ===================================================== */
-
-    function abrirModalEditar(
-        id,
-        tipo,
-        nombre,
-        descripcion,
-        precio,
-        cantidad,
-        unidad,
-        estado,
-        stockMinimo,
-        subtipo,
-        proveedoresIds
-    ) {
-
-        document.getElementById('formEditarProducto').action =
-            "{% url 'editar_producto' 0 %}".replace('/0/', '/' + id + '/');
-
-        document.getElementById('edit_id').value = 'PROD' + id;
-        document.getElementById('edit_tipo').value = tipo;
-        document.getElementById('edit_nombre').value = nombre;
-        document.getElementById('edit_descripcion').value = descripcion;
-        document.getElementById('edit_precio').value = precio;
-        document.getElementById('edit_cantidad').value = cantidad;
-
-
-        /* PROVEEDORES QUE SUMINISTRAN EL PRODUCTO (pueden ser varios) */
-
-        const idsProveedores = (proveedoresIds || '')
-            .split(',')
-            .filter(Boolean);
-
-        document
-            .querySelectorAll('#edit_proveedores input[name="proveedores"]')
-            .forEach(function (casilla) {
-                casilla.checked = idsProveedores.includes(casilla.value);
-            });
-
-
-        document.getElementById('edit_stock_minimo').value = stockMinimo;
-        document.getElementById('edit_estado').value = estado;
-
-
-        const selectUnidad = document.getElementById('edit_unidad');
-
-        if (
-            unidad &&
-            !Array.from(selectUnidad.options).some(function (opcion) {
-                return opcion.value === unidad;
-            })
-        ) {
-            selectUnidad.add(new Option(unidad, unidad));
-        }
-
-        selectUnidad.value = unidad;
-
-
-        /* SUBTIPOS SEGÚN EL TIPO DEL PRODUCTO */
-
-        actualizarSubtipos('edit_tipo', 'edit_subtipo');
-
-
-        /* SELECCIONAR EL SUBTIPO DEL PRODUCTO */
-
-        document.getElementById('edit_subtipo').value = subtipo || '';
-
-
-        document.getElementById('modalEditarProducto').style.display = 'flex';
-
-    }
-
-
-    /* =====================================================
-       ELIMINAR PRODUCTO
-       Muestra los datos del producto y una advertencia.
-       Con stock o lotes asociados no se puede eliminar.
-    ===================================================== */
-
-    function abrirModalEliminar(boton) {
-
-        const d = boton.dataset;
-        const lotes = parseInt(d.lotes, 10) || 0;
-
-        document.getElementById('formEliminarProducto').action =
-            "{% url 'eliminar_producto' 0 %}".replace('/0/', '/' + d.id + '/');
-
-        document.getElementById('el_nombre').textContent = d.nombre;
-        document.getElementById('el_descripcion').textContent =
-            d.descripcion || 'Sin descripción';
-        document.getElementById('el_tipo').textContent = d.tipo;
-        document.getElementById('el_subtipo').textContent = d.subtipo;
-        document.getElementById('el_precio').textContent = d.precio;
-        document.getElementById('el_presentacion').textContent = d.presentacion;
-        document.getElementById('el_stock').textContent = d.stock + ' un.';
-        document.getElementById('el_lotes').textContent = lotes;
-
-        const estado = document.getElementById('el_estado');
-        estado.textContent = d.estado;
-        estado.className = 'pr-badge ' +
-            (d.estado === 'Activo' ? 'pr-activo' : 'pr-inactivo');
-
-        const chips = document.getElementById('el_proveedores');
-        chips.innerHTML = '';
-
-        const proveedores = (d.proveedores || '').split('|').filter(Boolean);
-
-        if (proveedores.length) {
-            proveedores.forEach(function (nombre) {
-                const chip = document.createElement('span');
-                chip.className = 'pr-ficha-chip';
-                chip.textContent = nombre;
-                chips.appendChild(chip);
-            });
-        } else {
-            const chip = document.createElement('span');
-            chip.className = 'pr-ficha-chip pr-ficha-chip-aviso';
-            chip.textContent = 'Sin proveedores';
-            chips.appendChild(chip);
-        }
-
-        const aviso = document.getElementById('el_aviso');
-        const titulo = document.getElementById('el_aviso_titulo');
-        const texto = document.getElementById('el_aviso_texto');
-        const confirmar = document.getElementById('el_confirmar');
-
-        const stock = parseInt(d.stock, 10) || 0;
-
-        if (stock > 0 || lotes > 0) {
-            aviso.className = 'pr-aviso-eliminar pr-aviso-bloqueo';
-            titulo.textContent = 'No se puede eliminar este producto.';
-            texto.textContent = stock > 0
-                ? 'Tiene ' + stock + ' unidades en stock. Para dejar de usarlo, cambiá su estado a Inactivo desde Editar.'
-                : 'Tiene ' + lotes + ' lote' + (lotes === 1 ? '' : 's') +
-                  ' asociado' + (lotes === 1 ? '' : 's') +
-                  '. Para conservar la trazabilidad, cambiá su estado a Inactivo desde Editar.';
-            confirmar.disabled = true;
-        } else {
-            aviso.className = 'pr-aviso-eliminar';
-            titulo.textContent = '¿Eliminar este producto definitivamente?';
-            texto.textContent =
-                'Esta acción no se puede deshacer.';
-            confirmar.disabled = false;
-        }
-
-        document.getElementById('modalEliminarProducto').style.display = 'flex';
-
-    }
-
-
-    /* =====================================================
-       AL MENOS UN PROVEEDOR ANTES DE GUARDAR
-       (registrar y editar)
-    ===================================================== */
-
-    document
-        .querySelectorAll('.form-producto')
-        .forEach(function (formulario) {
-
-            formulario.addEventListener('submit', function (evento) {
-
-                const elegido = formulario.querySelector(
-                    'input[name="proveedores"]:checked'
-                );
-
-                if (!elegido) {
-                    evento.preventDefault();
-                    mostrarToast(
-                        'Seleccioná al menos un proveedor que suministre el producto.',
-                        'warning'
-                    );
-                }
-
-            });
-
-        });
-
-
-    /* =====================================================
-       CERRAR MODALES AL HACER CLIC FUERA
-    ===================================================== */
-
-    [
-        'modalCrearProducto',
-        'modalEditarProducto',
-        'modalEliminarProducto'
-    ].forEach(function (id) {
-
-        const modal = document.getElementById(id);
-
-        if (modal) {
-            modal.addEventListener('click', function (e) {
-                if (e.target === this) {
-                    cerrarModal(id);
-                }
-            });
-        }
-
-    });
-
-
-    /* =====================================================
-       TOASTS
-    ===================================================== */
-
-    function mostrarToast(mensaje, tipo) {
-
-        const container = document.getElementById('toastContainer');
-
-        const toast = document.createElement('div');
-        toast.className = 'pr-toast ' + (tipo || 'warning');
-
-        const texto = document.createElement('span');
-        texto.textContent = mensaje;
-
-        const cerrar = document.createElement('span');
-        cerrar.className = 'pr-toast-x';
-        cerrar.textContent = '✕';
-        cerrar.onclick = function () {
-            toast.remove();
-        };
-
-        toast.appendChild(texto);
-        toast.appendChild(cerrar);
-
-        container.appendChild(toast);
-
-        setTimeout(function () {
-            toast.remove();
-        }, 4000);
-
-    }
-
-
-    /* =====================================================
-       MENSAJES DJANGO
-    ===================================================== */
-
-    document.addEventListener('DOMContentLoaded', function () {
-
-        document
-            .querySelectorAll('.pr-toast')
-            .forEach(function (toast) {
-                setTimeout(function () {
-                    toast.remove();
-                }, 4000);
-            });
-
-    });
-
-
+})();
 </script>
 
 {% endblock extra_js %}
-

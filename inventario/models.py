@@ -335,6 +335,15 @@ class Productos(models.Model):
         null=True
     )
 
+    # Foto del producto (opcional). Se guarda en media/productos/.
+    # views.py la achica a 1200 px y la convierte a WEBP.
+    Imagen_producto = models.ImageField(
+        upload_to='productos/',
+        null=True,
+        blank=True,
+        verbose_name='Imagen'
+    )
+
     Precio = models.DecimalField(
         max_digits=10,
         decimal_places=2

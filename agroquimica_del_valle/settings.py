@@ -142,6 +142,16 @@ USE_I18N = True
 STATIC_URL = '/static/'
 
 
+# ------------------------------------------------------------
+# ARCHIVOS SUBIDOS (fotos de los productos)
+# Se guardan en la carpeta "media" del proyecto, por ejemplo
+# media/productos/3f2a...webp, y se ven en /media/...
+# ------------------------------------------------------------
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
