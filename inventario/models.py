@@ -278,6 +278,13 @@ class Usuarios(models.Model):
     )
 
     Email_usuario = models.EmailField(max_length=100)
+    
+    Foto_usuario = models.ImageField(
+        upload_to='usuarios/',
+        null=True,
+        blank=True,
+        verbose_name='Foto de perfil'
+    )
 
     Estado_usuario = models.BooleanField(default=True)
 

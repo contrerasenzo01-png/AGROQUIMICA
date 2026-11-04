@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
 from inventario import views
+from inventario import perfil
 
 urlpatterns = [
     # Login
@@ -54,6 +55,8 @@ urlpatterns = [
     path('perfiles/editar/<int:pk>/', views.editar_perfil, name='editar_perfil'),
     path('perfiles/cambiar-estado/<int:id>/', views.cambiar_estado_perfil, name='cambiar_estado_perfil'),
     path('mis-permisos/', views.mis_permisos, name='mis_permisos'),
+    path('mi-perfil/', perfil.mi_perfil, name='mi_perfil'),
+    path('mi-perfil/guardar/', perfil.guardar_mi_perfil, name='guardar_mi_perfil'),
     path('perfiles/eliminar/<int:pk>/', views.eliminar_perfil, name='eliminar_perfil'),
 
 

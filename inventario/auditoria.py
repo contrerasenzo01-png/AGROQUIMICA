@@ -2,6 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from django.apps import apps
+from django.db.models.fields.files import FieldFile
 
 from .models import LogAuditoria
 
@@ -9,6 +10,9 @@ CAMPOS_EXCLUIDOS = {'Contrasena','Fecha_ultima_modificacion'}   # nunca guardar 
 
 
 def _serializar(valor):
+    # Fotos (ImageField): se guarda el nombre del archivo, no el objeto.
+    if isinstance(valor, FieldFile):
+        return valor.name or 'Sin foto'
     if isinstance(valor, (datetime, date)):
         return valor.isoformat()
     if isinstance(valor, Decimal):

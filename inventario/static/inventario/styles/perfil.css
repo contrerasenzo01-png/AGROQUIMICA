@@ -1,0 +1,441 @@
+/* ============================================================
+   MI PERFIL · Agroquímica del Valle
+   Pantalla con Bootstrap 5.3, dibujada por React
+   (static/inventario/react/perfil.jsx).
+   Las clases propias empiezan con "pf-".
+   Ubicación: inventario/static/inventario/styles/perfil.css
+   ============================================================ */
+
+
+/* ==========================================
+   1. CONVIVENCIA CON EL RESTO DEL SISTEMA
+   (igual que el panel principal)
+   ========================================== */
+
+/* Bootstrap sube el interlineado de toda la página: se deja como en
+   las demás pantallas para que el menú no cambie de alto. */
+body {
+    background-color: #ffffff;
+    color: #1c2a23;
+    font-family: 'Inter', sans-serif;
+    line-height: normal;
+}
+
+/* Bootstrap también usa .nav-link: sin esto el menú se pondría azul. */
+.sidebar .nav-link,
+.sidebar .nav-link:focus,
+.sidebar .nav-link:hover {
+    color: #ffffff;
+}
+
+.pf-cargando {
+    padding: 30px 0;
+    font-size: 13px;
+    color: #5c7367;
+}
+
+
+/* ==========================================
+   2. BOOTSTRAP CON LOS COLORES DE LA MARCA
+   ========================================== */
+
+.pf-panel {
+    line-height: 1.5;
+
+    --bs-body-font-family: 'Inter', sans-serif;
+    --bs-body-color: #1c2a23;
+    --bs-secondary-color: #6b7c73;
+    --bs-emphasis-color: #0b311e;
+    --bs-border-color: #e3eae6;
+    --bs-tertiary-bg: #f6f9f7;
+
+    --bs-success: #1b7a4a;
+    --bs-success-rgb: 27, 122, 74;
+    --bs-success-text-emphasis: #145236;
+    --bs-success-bg-subtle: #e6f4ec;
+    --bs-success-border-subtle: #bfe3cc;
+    --bs-link-color-rgb: 24, 90, 56;
+
+    --bs-card-border-color: #e3eae6;
+    --bs-card-border-radius: 14px;
+}
+
+.pf-panel .card {
+    --bs-card-cap-bg: transparent;
+    border-color: #e3eae6;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(15, 58, 36, .05), 0 6px 18px rgba(15, 58, 36, .05);
+}
+
+.pf-panel .card-header,
+.pf-panel .card-footer {
+    border-color: #e3eae6;
+}
+
+.pf-panel .form-control {
+    border-color: #dde7e0;
+    border-radius: 9px;
+}
+
+.pf-panel .form-control:focus {
+    border-color: #2e9d66;
+    box-shadow: 0 0 0 .2rem rgba(46, 157, 102, .18);
+}
+
+.pf-panel .form-label {
+    margin-bottom: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2a4436;
+}
+
+.pf-panel .btn-success {
+    --bs-btn-bg: #185a38;
+    --bs-btn-border-color: #185a38;
+    --bs-btn-hover-bg: #134a2e;
+    --bs-btn-hover-border-color: #134a2e;
+    --bs-btn-active-bg: #0f3a24;
+    --bs-btn-active-border-color: #0f3a24;
+    --bs-btn-disabled-bg: #185a38;
+    --bs-btn-disabled-border-color: #185a38;
+}
+
+.pf-panel .btn-outline-success {
+    --bs-btn-color: #185a38;
+    --bs-btn-border-color: #cfe3d7;
+    --bs-btn-hover-bg: #eaf4ee;
+    --bs-btn-hover-color: #185a38;
+    --bs-btn-hover-border-color: #b9d7c5;
+    --bs-btn-active-bg: #185a38;
+    --bs-btn-active-border-color: #185a38;
+    --bs-btn-disabled-color: #185a38;
+    --bs-btn-disabled-border-color: #cfe3d7;
+}
+
+.pf-panel .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.pf-panel .link-success { color: #185a38 !important; }
+.pf-panel .link-success:hover { text-decoration: underline !important; }
+
+
+/* ==========================================
+   3. ANIMACIÓN DE ENTRADA
+   ========================================== */
+
+@keyframes pf-aparecer {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.pf-aparecer {
+    animation: pf-aparecer .5s cubic-bezier(.22, .61, .36, 1) both;
+    animation-delay: calc(var(--pf-i, 0) * 70ms);
+}
+
+@keyframes pf-foto-entra {
+    from { opacity: 0; transform: scale(1.08); filter: blur(4px); }
+    to   { opacity: 1; transform: none; filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-aparecer,
+    .pf-foto-img { animation: none; }
+
+    .pf-foto,
+    .pf-foto-capa { transition: none; }
+}
+
+
+/* ==========================================
+   ÍCONOS
+   ========================================== */
+
+.pf-svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pf-icono-titulo {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #e6f4ec;
+    color: #185a38;
+}
+
+.pf-icono-titulo .pf-svg { width: 18px; height: 18px; }
+
+
+/* ==========================================
+   SELECTOR DE FOTO
+   ========================================== */
+
+.pf-foto {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 176px;
+    height: 176px;
+    overflow: hidden;
+    border: 3px dashed #b9d8c6;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1b7a4a, #2e9d66);
+    color: #ffffff;
+    cursor: pointer;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.pf-foto.con-foto { border-style: solid; border-color: #ffffff; box-shadow: 0 0 0 3px #cfe3d7; }
+
+.pf-foto:hover,
+.pf-foto:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(46, 157, 102, .28);
+}
+
+.pf-foto.arrastrando {
+    border-style: solid;
+    border-color: #2e9d66;
+    transform: scale(1.05);
+    box-shadow: 0 0 0 6px rgba(46, 157, 102, .22);
+}
+
+.pf-foto-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: pf-foto-entra .45s ease-out both;
+}
+
+.pf-foto-inicial {
+    font-family: 'Poppins', sans-serif;
+    font-size: 64px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+/* Cartel que aparece al pasar el mouse o al arrastrar */
+.pf-foto-capa {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px;
+    background: rgba(11, 49, 30, .62);
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity .2s ease;
+}
+
+.pf-foto .pf-svg { width: 24px; height: 24px; }
+
+.pf-foto:hover .pf-foto-capa,
+.pf-foto:focus-visible .pf-foto-capa,
+.pf-foto.arrastrando .pf-foto-capa { opacity: 1; }
+
+/* Sin mouse (celular): el cartel se ve siempre, abajo, y chico */
+@media (hover: none) {
+    .pf-foto-capa {
+        inset: auto 0 0 0;
+        flex-direction: row;
+        padding: 8px;
+        background: rgba(11, 49, 30, .7);
+        opacity: 1;
+    }
+
+    .pf-foto .pf-svg { width: 16px; height: 16px; }
+}
+
+
+/* ==========================================
+   DATOS DE SOLO LECTURA Y PERMISOS
+   ========================================== */
+
+.pf-datos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.pf-dato {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--bs-tertiary-bg);
+}
+
+.pf-dato span {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+.pf-dato strong { font-size: 13.5px; overflow-wrap: anywhere; }
+
+.pf-pendiente::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: #f5c400;
+    animation: pf-latido 1.8s ease-in-out infinite;
+}
+
+@keyframes pf-latido {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 196, 0, .5); }
+    50%      { box-shadow: 0 0 0 6px rgba(245, 196, 0, 0); }
+}
+
+.pf-modulos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    align-items: start;
+}
+
+.pf-modulo {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10px;
+    background: var(--bs-body-bg, #fff);
+}
+
+.pf-modulo summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.pf-modulo summary::-webkit-details-marker { display: none; }
+
+.pf-modulo summary::after {
+    content: "▾";
+    margin-left: auto;
+    color: var(--bs-secondary-color);
+    transition: transform .2s ease;
+}
+
+.pf-modulo[open] summary::after { transform: rotate(180deg); }
+.pf-modulo summary:hover { background: var(--bs-tertiary-bg); border-radius: 10px; }
+
+.pf-permisos {
+    margin: 0;
+    padding: 0 14px 12px 30px;
+    font-size: 12.5px;
+    color: var(--bs-secondary-color);
+}
+
+.pf-permisos li { padding: 2px 0; }
+
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 576px) {
+    .pf-datos,
+    .pf-modulos { grid-template-columns: 1fr; }
+}
+
+
+/* ==========================================
+   4. MODO OSCURO
+   tema.js pone data-bs-theme="dark" junto con .modo-oscuro.
+   Se usan los verdes oscuros de tema.css (variables --d-*).
+   ========================================== */
+
+html.modo-oscuro .pf-panel {
+    --bs-body-bg: var(--d-surface);
+    --bs-body-color: var(--d-text);
+    --bs-secondary-color: var(--d-text-2);
+    --bs-emphasis-color: var(--d-title);
+    --bs-border-color: var(--d-border);
+    --bs-tertiary-bg: var(--d-surface-2);
+    --bs-secondary-bg: var(--d-surface-3);
+
+    --bs-success: #4ade80;
+    --bs-success-rgb: 74, 222, 128;
+    --bs-success-text-emphasis: var(--d-green-tx);
+    --bs-success-bg-subtle: var(--d-green-bg);
+    --bs-success-border-subtle: var(--d-green-bd);
+
+    --bs-card-border-color: var(--d-border);
+}
+
+html.modo-oscuro .pf-cargando { color: var(--d-text-3); }
+
+html.modo-oscuro .pf-panel .card {
+    background: var(--d-surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+}
+
+html.modo-oscuro .pf-panel .card-header,
+html.modo-oscuro .pf-panel .card-footer { border-color: var(--d-border); }
+
+html.modo-oscuro .pf-panel .form-label { color: var(--d-text-2); }
+
+html.modo-oscuro .pf-panel .form-control {
+    background: var(--d-surface-2);
+    border-color: var(--d-border-2);
+    color: var(--d-text);
+}
+
+html.modo-oscuro .pf-icono-titulo { background: var(--d-green-bg); color: var(--d-green-tx); }
+
+html.modo-oscuro .pf-foto { border-color: var(--d-border-2); }
+html.modo-oscuro .pf-foto.con-foto { border-color: var(--d-surface); box-shadow: 0 0 0 3px var(--d-border-2); }
+
+html.modo-oscuro .pf-modulo { background: var(--d-surface-2); }
+
+/* tema.css pinta todos los .btn de gris en modo oscuro:
+   dentro de esta pantalla se recuperan los verdes. */
+html.modo-oscuro .pf-panel .btn-success {
+    background: var(--d-green-btn) !important;
+    border-color: var(--d-green-btn) !important;
+    color: #ffffff !important;
+}
+
+html.modo-oscuro .pf-panel .btn-success:hover:not(:disabled) {
+    background: var(--d-green-btn-h) !important;
+    border-color: var(--d-green-btn-h) !important;
+}
+
+html.modo-oscuro .pf-panel .btn-outline-success {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border-2) !important;
+    color: var(--d-green-tx) !important;
+}
+
+html.modo-oscuro .pf-panel .btn-outline-success:hover:not(:disabled) {
+    background: var(--d-surface-3) !important;
+}
+
+html.modo-oscuro .pf-panel .link-success { color: var(--d-green) !important; }

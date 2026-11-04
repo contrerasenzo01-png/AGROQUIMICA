@@ -157,11 +157,17 @@
 
     <div class="sidebar-footer">
 
-        <!-- DATOS DEL USUARIO -->
-        <div class="sidebar-user">
+        <!-- DATOS DEL USUARIO (llevan a "Mi perfil") -->
+        <a href="{% url 'mi_perfil' %}"
+           class="sidebar-user{% if activo == 'mi_perfil' %} active{% endif %}"
+           title="Mi perfil">
 
-            <div class="sidebar-user-avatar">
-                {{ usuario.Email_usuario|first|upper }}
+            <div class="sidebar-user-avatar{% if usuario.Foto_usuario %} con-foto{% endif %}">
+                {% if usuario.Foto_usuario %}
+                    <img src="{{ usuario.Foto_usuario.url }}" alt="">
+                {% else %}
+                    {{ usuario.Email_usuario|first|upper }}
+                {% endif %}
             </div>
 
             <div class="sidebar-user-info">
@@ -175,7 +181,7 @@
                 </span>
 
             </div>
-        </div>
+        </a>
 
         <!-- CERRAR SESIÓN -->
         <a href="{% url 'cerrar_sesion' %}"
