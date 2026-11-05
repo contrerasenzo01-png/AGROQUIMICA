@@ -505,3 +505,30 @@
     height: 1px;
     background: var(--us-borde);
 }
+
+/* ---------- FOTO DE PERFIL EN LA TABLA ---------- */
+.us-usuario-celda {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.us-avatar {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--us-borde);
+    background: #f3f6f4;
+}
+
+.us-avatar-inicial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--us-verde);
+    background: #e8f5ee;
+}

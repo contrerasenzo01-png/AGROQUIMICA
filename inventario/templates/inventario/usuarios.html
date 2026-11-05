@@ -48,6 +48,7 @@
 
         <div>
             <h1 class="us-title">Gestión de usuarios</h1>
+            <p>Prueba de fotos: {{ ver_fotos }}</p>
         </div>
         {% if perm.usuarios_gestionar %}
         <button type="button" class="us-btn us-btn-primary" onclick="abrirModalCrear()">
@@ -102,7 +103,24 @@
 
                         <tr class="us-fila">
 
-                            <td><span class="us-username">{{ usuario.Usuario }}</span></td>
+                           <td>
+                                <div class="us-usuario-celda">
+                                    {% if ver_fotos %}
+                                        {% if usuario.Foto_usuario %}
+                                            <img class="us-avatar"
+                                                src="{{ usuario.Foto_usuario.url }}"
+                                                alt="Foto de {{ usuario.Usuario }}"
+                                                loading="lazy">
+                                        {% else %}
+                                            <span class="us-avatar us-avatar-inicial">
+                                                {{ usuario.Email_usuario|slice:":1"|upper }}
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    <span class="us-username">{{ usuario.Usuario }}</span>
+                                </div>
+                            </td>
 
                             <td>{{ usuario.Nombre_usuario }} {{ usuario.Apellido_usuario }}</td>
 

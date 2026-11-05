@@ -251,6 +251,7 @@ class PerfilesXPermisos(models.Model):
         verbose_name_plural = "Perfiles por Permisos"
 
 
+
 class Usuarios(models.Model):
     ID_Usuario = models.AutoField(primary_key=True)
 
@@ -278,11 +279,11 @@ class Usuarios(models.Model):
     )
 
     Email_usuario = models.EmailField(max_length=100)
-    
+
     Foto_usuario = models.ImageField(
         upload_to='usuarios/',
-        null=True,
         blank=True,
+        null=True,
         verbose_name='Foto de perfil'
     )
 

@@ -1674,7 +1674,9 @@ def gestion_usuarios(request):
             'perfiles': perfiles,
             'busqueda': busqueda,
             'usuario_actual': usuario,
-            'usuario': usuario
+            'usuario': usuario,
+            # Solo el administrador ve las fotos de los demás usuarios.
+            'ver_fotos': usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN,
         }
     )
 
