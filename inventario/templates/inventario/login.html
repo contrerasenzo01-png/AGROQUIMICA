@@ -101,6 +101,7 @@
                                 type="text"
                                 id="usuario"
                                 name="usuario"
+                                maxlength="50"
                                 value="{{ request.POST.usuario|default:'' }}"
                                 placeholder="Ingresá tu usuario"
                                 autocomplete="username"
@@ -124,6 +125,7 @@
                                     type="password"
                                     id="password"
                                     name="password"
+                                    maxlength="128"
                                     placeholder="Ingresá tu contraseña"
                                     autocomplete="current-password"
                                     required

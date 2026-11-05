@@ -157,31 +157,34 @@
 
     <div class="sidebar-footer">
 
-        <!-- DATOS DEL USUARIO (llevan a "Mi perfil") -->
+        <!-- USUARIO LOGUEADO (botón que lleva a "Mi perfil") -->
+        {% with u=usuario_sesion|default:usuario %}
         <a href="{% url 'mi_perfil' %}"
            class="sidebar-user{% if activo == 'mi_perfil' %} active{% endif %}"
-           title="Mi perfil">
+           title="Ver y editar mi perfil">
 
-            <div class="sidebar-user-avatar{% if usuario.Foto_usuario %} con-foto{% endif %}">
-                {% if usuario.Foto_usuario %}
-                    <img src="{{ usuario.Foto_usuario.url }}" alt="">
+            <div class="sidebar-user-avatar{% if u.Foto_usuario %} con-foto{% endif %}">
+                {% if u.Foto_usuario %}
+                    <img src="{{ u.Foto_usuario.url }}" alt="">
                 {% else %}
-                    {{ usuario.Email_usuario|first|upper }}
+                    {{ u.Nombre_usuario|first|upper }}
                 {% endif %}
             </div>
 
             <div class="sidebar-user-info">
-
                 <span class="sidebar-user-name">
-                    {{ usuario.Email_usuario }}
+                    {{ u.Nombre_usuario }} {{ u.Apellido_usuario }}
                 </span>
-
                 <span class="sidebar-user-role">
-                    {{ usuario.ID_Perfil.Nombre_perfil }}
+                    {{ u.ID_Perfil.Nombre_perfil }}
                 </span>
-
             </div>
+
+            <svg class="sidebar-user-flecha" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m9 6 6 6-6 6"/>
+            </svg>
         </a>
+        {% endwith %}
 
         <!-- CERRAR SESIÓN -->
         <a href="{% url 'cerrar_sesion' %}"

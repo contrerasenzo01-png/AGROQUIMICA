@@ -1,0 +1,55 @@
+/* Mensajes de error de los formularios (validaciones.js) */
+.v-error {
+    margin-top: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: #b91c1c;
+}
+
+.v-error[hidden] { display: none; }
+.v-error.v-aviso { color: #b45309; }
+
+input.v-invalid,
+select.v-invalid,
+textarea.v-invalid {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
+}
+
+/* Checklist de la contraseña */
+.v-checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 14px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12px;
+}
+
+.v-checklist li { color: #6b7c73; }
+.v-checklist li::before { content: "○"; display: inline-block; width: 16px; }
+.v-checklist li.ok { color: #15803d; }
+.v-checklist li.ok::before { content: "✓"; font-weight: 700; }
+.v-checklist li.no { color: #b91c1c; }
+.v-checklist li.no::before { content: "✕"; font-weight: 700; }
+
+@media (max-width: 480px) {
+    .v-checklist { grid-template-columns: 1fr; }
+}
+
+/* Modo oscuro (variables de tema.css) */
+html.modo-oscuro .v-error { color: var(--d-red-tx); }
+html.modo-oscuro .v-error.v-aviso { color: var(--d-amb-tx); }
+
+html.modo-oscuro input.v-invalid:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]),
+html.modo-oscuro select.v-invalid,
+html.modo-oscuro textarea.v-invalid {
+    border-color: var(--d-red-tx) !important;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, .18) !important;
+}
+
+html.modo-oscuro .v-checklist li { color: var(--d-text-3); }
+html.modo-oscuro .v-checklist li.ok { color: var(--d-green-tx); }
+html.modo-oscuro .v-checklist li.no { color: var(--d-red-tx); }
