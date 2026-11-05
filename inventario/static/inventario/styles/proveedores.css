@@ -1,36 +1,35 @@
 /* ============================================================
-   PROVEEDORES  ·  Agroquímicos del Valle
-   Estilos de proveedores.html.
-   Todas las clases empiezan con "pv-" para no pisar los estilos de base.css.
+   PROVEEDORES · Agroquímica del Valle
    Ubicación: inventario/static/inventario/styles/proveedores.css
    ============================================================ */
 
-/* Las variables se declaran para la página, los modales y las notificaciones
-   (los modales están fuera del contenedor .pv-page). */
+/* VARIABLES */
 .pv-page,
 .pv-modal,
 .pv-toasts {
-    --pv-verde:        #185a38;
-    --pv-verde-hover:  #134a2e;
-    --pv-titulo:       #0f3a24;
-    --pv-borde:        #e3eae6;
-    --pv-borde-campo:  #dde7e0;
-    --pv-texto:        #1c2a23;
-    --pv-suave:        #6b7c73;
-    --pv-rojo:         #b91c1c;
+    --pv-verde: #185a38;
+    --pv-verde-hover: #134a2e;
+    --pv-titulo: #0f3a24;
+    --pv-borde: #e3eae6;
+    --pv-borde-campo: #dde7e0;
+    --pv-texto: #1c2a23;
+    --pv-suave: #6b7c73;
+    --pv-rojo: #b91c1c;
 
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--pv-texto);
 }
 
+/* BOX SIZING */
 .pv-page *,
 .pv-modal,
 .pv-modal *,
-.pv-modal *::before,
-.pv-modal *::after {
+.pv-toasts,
+.pv-toasts * {
     box-sizing: border-box;
 }
 
+/* ICONOS */
 .pv-icon {
     width: 16px;
     height: 16px;
@@ -43,21 +42,16 @@
 }
 
 
-/* ---------- ENCABEZADO ---------- */
+/* ============================================================
+   ENCABEZADO
+   ============================================================ */
+
 .pv-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 16px;
     margin-bottom: 20px;
-}
-
-.pv-eyebrow {
-    font-size: 10px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--pv-suave);
-    margin-bottom: 8px;
 }
 
 .pv-title {
@@ -69,22 +63,19 @@
     margin: 0 0 6px;
 }
 
-.pv-sub {
-    font-size: 13px;
-    color: var(--pv-suave);
-    margin: 0;
-}
 
+/* ============================================================
+   BOTONES
+   ============================================================ */
 
-/* ---------- BOTONES ---------- */
 .pv-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     padding: 11px 20px;
-    border-radius: 8px;
     border: 1px solid transparent;
+    border-radius: 8px;
     font-family: inherit;
     font-size: 12.5px;
     font-weight: 600;
@@ -93,60 +84,44 @@
     transition: background-color .15s, border-color .15s;
 }
 
-.pv-btn-primary       { background: var(--pv-verde); color: #fff; }
-.pv-btn-primary:hover { background: var(--pv-verde-hover); }
-
-.pv-btn-claro         { background: #fff; color: var(--pv-texto); border-color: var(--pv-borde-campo); }
-.pv-btn-claro:hover   { background: #f4f7f5; }
-
-.pv-btn-peligro       { background: var(--pv-rojo); color: #fff; }
-.pv-btn-peligro:hover { background: #991b1b; }
-
-
-/* ---------- PESTAÑAS (Tipos de producto | Subtipos) ---------- */
-.pv-tabs {
-    display: flex;
-    gap: 26px;
-    margin-bottom: 18px;
-    border-bottom: 1px solid var(--pv-borde);
+.pv-btn-primary {
+    background: var(--pv-verde);
+    color: #fff;
 }
 
-.pv-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 2px 12px;
-    margin-bottom: -1px;
-    font-size: 13px;
-    color: var(--pv-suave);
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
-    transition: color .15s;
+.pv-btn-primary:hover {
+    background: var(--pv-verde-hover);
 }
 
-.pv-tab:hover { color: var(--pv-texto); }
-
-.pv-tab.activa {
-    color: var(--pv-verde);
-    font-weight: 600;
-    border-bottom-color: var(--pv-verde);
+.pv-btn-claro {
+    background: #fff;
+    color: var(--pv-texto);
+    border-color: var(--pv-borde-campo);
 }
 
-.pv-contador {
-    min-width: 20px;
-    padding: 1px 7px;
-    border-radius: 10px;
-    background: #eef2ef;
-    font-size: 10.5px;
-    font-weight: 600;
-    text-align: center;
-    color: var(--pv-suave);
+.pv-btn-claro:hover {
+    background: #f4f7f5;
 }
 
-.pv-tab.activa .pv-contador { background: #e2f0e8; color: var(--pv-verde); }
+.pv-btn-peligro {
+    background: var(--pv-rojo);
+    color: #fff;
+}
+
+.pv-btn-peligro:hover {
+    background: #991b1b;
+}
+
+.pv-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
 
 
-/* ---------- BÚSQUEDA ---------- */
+/* ============================================================
+   BÚSQUEDA
+   ============================================================ */
+
 .pv-search {
     display: flex;
     align-items: center;
@@ -159,10 +134,14 @@
     color: var(--pv-suave);
 }
 
-.pv-search:focus-within { border-color: #86c5a1; box-shadow: 0 0 0 3px rgba(24, 90, 56, .12); }
+.pv-search:focus-within {
+    border-color: #86c5a1;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .12);
+}
 
 .pv-search input {
     flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     background: transparent;
@@ -173,7 +152,10 @@
 }
 
 
-/* ---------- TABLA ---------- */
+/* ============================================================
+   TABLA
+   ============================================================ */
+
 .pv-card {
     background: #fff;
     border: 1px solid var(--pv-borde);
@@ -181,16 +163,21 @@
     overflow: hidden;
 }
 
-.pv-table-wrap { overflow-x: auto; }
+.pv-table-wrap {
+    overflow-x: auto;
+}
 
-.pv-table { width: 100%; border-collapse: collapse; }
+.pv-table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
 .pv-table th {
     text-align: left;
     padding: 14px 16px;
     font-size: 11px;
     font-weight: 500;
-    color: white;
+    color: #fff;
     background: #185a38;
     border-bottom: 1px solid var(--pv-borde);
     white-space: nowrap;
@@ -203,13 +190,30 @@
     vertical-align: middle;
 }
 
-.pv-table tbody tr:last-child td { border-bottom: none; }
-.pv-table tbody tr:hover         { background: #f9fbfa; }
+.pv-table tbody tr:last-child td {
+    border-bottom: none;
+}
 
-.pv-table tr.inactivo .pv-nombre { color: var(--pv-suave); }
+.pv-table tbody tr:hover {
+    background: #f9fbfa;
+}
 
-.pv-nombre { font-weight: 700; color: var(--pv-titulo); }
-.pv-muted  { color: var(--pv-suave); }
+.pv-table tr.inactivo .pv-nombre {
+    color: var(--pv-suave);
+}
+
+.pv-nombre {
+    font-weight: 700;
+    color: var(--pv-titulo);
+}
+
+.pv-muted {
+    color: var(--pv-suave);
+}
+
+.pv-table td.pv-dir {
+    max-width: 260px;
+}
 
 .pv-vacio {
     text-align: center;
@@ -220,6 +224,7 @@
 .pv-pie {
     display: flex;
     justify-content: space-between;
+    gap: 12px;
     padding: 12px 16px;
     font-size: 11px;
     color: var(--pv-suave);
@@ -228,7 +233,10 @@
 }
 
 
-/* ---------- ESTADO ---------- */
+/* ============================================================
+   ESTADO DEL PROVEEDOR
+   ============================================================ */
+
 .pv-badge {
     display: inline-flex;
     align-items: center;
@@ -247,45 +255,97 @@
     background: currentColor;
 }
 
-.pv-activo   { background: #e8f5ee; color: #1b7a4a; }
-.pv-inactivo { background: #eef1ef; color: #7b8a82; }
+.pv-activo {
+    background: #e8f5ee;
+    color: #1b7a4a;
+}
+
+.pv-inactivo {
+    background: #eef1ef;
+    color: #7b8a82;
+}
 
 
-/* ---------- ACCIONES DE LA TABLA ---------- */
+/* ============================================================
+   ACCIONES DE LA TABLA
+   ============================================================ */
+
 .pv-acciones {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
 }
 
-.pv-acciones form { display: inline; margin: 0; }
+.pv-acciones form {
+    display: inline-flex;
+    margin: 0;
+}
 
-.pv-accion {
+/* Botones de acciones con íconos */
+.pv-accion-icono {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 13px;
+    justify-content: center;
+    width: 33px;
+    height: 33px;
+    padding: 0;
     background: #fff;
     border: 1px solid var(--pv-borde-campo);
     border-radius: 8px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    color: #2d4739;
+    color: #3f5a4c;
     cursor: pointer;
-    transition: background-color .15s;
+    transition: background-color .15s, border-color .15s;
 }
 
-.pv-accion:hover { background: #f1f5f3; }
+.pv-accion-icono .pv-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
 
-.pv-baja         { color: #3f5a4c; }
-.pv-baja:hover   { background: #fef2f2; border-color: #fecaca; color: var(--pv-rojo); }
+.pv-accion-icono:hover {
+    background: #f1f5f3;
+}
 
-.pv-activar        { color: #15803d; border-color: #bbf7d0; background: #f0fdf4; }
-.pv-activar:hover  { background: #dcfce7; }
+/* Dar de baja */
+.pv-accion-icono.pv-baja {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.pv-accion-icono.pv-baja:hover {
+    background: #fee2e2;
+}
+
+/* Activar */
+.pv-accion-icono.pv-activar {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.pv-accion-icono.pv-activar:hover {
+    background: #dcfce7;
+}
+
+/* Accesibilidad */
+.pv-accion-icono:focus-visible {
+    outline: 3px solid rgba(24, 90, 56, .25);
+    outline-offset: 2px;
+}
+
+.pv-accion-icono:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
 
 
-/* ---------- NOTIFICACIONES ---------- */
+/* ============================================================
+   NOTIFICACIONES
+   ============================================================ */
+
 .pv-toasts {
     position: fixed;
     top: 84px;
@@ -302,6 +362,7 @@
     align-items: center;
     gap: 14px;
     min-width: 280px;
+    max-width: min(420px, calc(100vw - 32px));
     padding: 12px 16px;
     background: #fff;
     border: 1px solid var(--pv-borde);
@@ -312,32 +373,61 @@
     animation: pv-entrada-toast .3s ease-out forwards;
 }
 
-.pv-toast.success { border-left-color: #15803d; }
-.pv-toast.warning { border-left-color: #f59f00; }
-.pv-toast.error   { border-left-color: var(--pv-rojo); }
+.pv-toast.success {
+    border-left-color: #15803d;
+}
 
-.pv-toast-x       { cursor: pointer; font-weight: 700; color: #8a9e93; }
-.pv-toast-x:hover { color: var(--pv-texto); }
+.pv-toast.warning {
+    border-left-color: #f59f00;
+}
+
+.pv-toast.error {
+    border-left-color: var(--pv-rojo);
+}
+
+.pv-toast-x {
+    flex-shrink: 0;
+    cursor: pointer;
+    font-weight: 700;
+    color: #8a9e93;
+}
+
+.pv-toast-x:hover {
+    color: var(--pv-texto);
+}
 
 @keyframes pv-entrada-toast {
-    from { opacity: 0; transform: translateX(30px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 @keyframes pv-fadeout {
-    from { opacity: 1; transform: translateX(0); }
-    to   { opacity: 0; transform: translateX(20px); }
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
 }
 
 
 /* ============================================================
    MODALES
    ============================================================ */
+
 .pv-modal {
-    display: none;                /* el JS lo cambia a flex */
+    display: none;
     position: fixed;
     inset: 0;
-    z-index: 9999;                /* por encima del menú lateral y la barra superior */
+    z-index: 9999;
     align-items: center;
     justify-content: center;
     padding: 20px;
@@ -359,10 +449,18 @@
 }
 
 @keyframes pv-entrada {
-    from { opacity: 0; transform: translateY(-12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
+
+/* CABECERA DEL MODAL */
 .pv-modal-head {
     display: flex;
     justify-content: space-between;
@@ -388,11 +486,24 @@
     color: var(--pv-suave);
     cursor: pointer;
 }
-.pv-modal-x:hover { background: #f1f5f3; color: var(--pv-texto); }
 
-.pv-modal-body { padding: 20px 22px 6px; }
+.pv-modal-x:hover {
+    background: #f1f5f3;
+    color: var(--pv-texto);
+}
 
-.pv-grupo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+
+/* CUERPO DEL MODAL */
+.pv-modal-body {
+    padding: 20px 22px 6px;
+}
+
+.pv-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
 
 .pv-grupo label {
     font-size: 11.5px;
@@ -415,7 +526,9 @@
     transition: border-color .15s, box-shadow .15s;
 }
 
-.pv-grupo input::placeholder { color: #a3b0a9; }
+.pv-grupo input::placeholder {
+    color: #a3b0a9;
+}
 
 .pv-grupo input:focus,
 .pv-grupo select:focus {
@@ -428,8 +541,26 @@
     color: #5c7367;
     cursor: default;
 }
-.pv-grupo input[readonly]:focus { border-color: var(--pv-borde-campo); box-shadow: none; }
 
+.pv-grupo input[readonly]:focus {
+    border-color: var(--pv-borde-campo);
+    box-shadow: none;
+}
+
+
+/* FORMULARIO EN DOS COLUMNAS */
+.pv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+}
+
+.pv-full {
+    grid-column: 1 / -1;
+}
+
+
+/* PIE DEL MODAL */
 .pv-modal-pie {
     display: flex;
     justify-content: flex-end;
@@ -445,7 +576,10 @@
 }
 
 
-/* ---------- MODAL DE CONFIRMAR BAJA ---------- */
+/* ============================================================
+   AVISOS DE CONFIRMACIÓN
+   ============================================================ */
+
 .pv-aviso {
     display: flex;
     align-items: center;
@@ -459,6 +593,11 @@
     font-weight: 600;
     color: #991b1b;
 }
+
+
+/* ============================================================
+   RESUMEN DEL PROVEEDOR EN MODAL DE BAJA
+   ============================================================ */
 
 .pv-resumen {
     margin-bottom: 16px;
@@ -481,6 +620,7 @@
     justify-content: center;
     width: 38px;
     height: 38px;
+    flex-shrink: 0;
     border-radius: 8px;
     background: #fde8e8;
     color: #e02424;
@@ -488,10 +628,23 @@
     font-weight: 700;
 }
 
-.pv-resumen-cab h4 { font-size: 14px; color: var(--pv-texto); margin: 0; }
-.pv-resumen-cab p  { font-size: 11px; color: var(--pv-suave); margin: 2px 0 0; }
+.pv-resumen-cab h4 {
+    font-size: 14px;
+    color: var(--pv-texto);
+    margin: 0;
+}
 
-.pv-resumen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pv-resumen-cab p {
+    font-size: 11px;
+    color: var(--pv-suave);
+    margin: 2px 0 0;
+}
+
+.pv-resumen-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
 
 .pv-dato {
     padding: 8px 10px;
@@ -517,143 +670,106 @@
 }
 
 
-/* ---------- RESPONSIVE ---------- */
-@media (max-width: 700px) {
-    .pv-header { flex-direction: column; }
-    .pv-resumen-grid { grid-template-columns: 1fr; }
-}
-
-
-/* ---------- ESPECÍFICO DE PROVEEDORES ---------- */
-.pv-codigo {
-    display: block;
-    margin-top: 2px;
-    font-size: 10.5px;
-    color: var(--pv-suave);
-}
-
-.pv-table td.pv-dir { max-width: 260px; }
-
-/* Formulario del modal en 2 columnas */
-.pv-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 16px;
-}
-.pv-full { grid-column: 1 / -1; }
-
-/* Aviso de proveedor duplicado */
-.pv-alerta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    padding: 11px 14px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    font-size: 12.5px;
-    color: #991b1b;
-}
-
-.pv-conflicto {
-    margin-bottom: 16px;
-    padding: 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 10px;
-    font-size: 12px;
-    color: #7f1d1d;
-}
-
-.pv-conflicto-t { margin-bottom: 8px; font-weight: 700; color: #b91c1c; }
-
-.pv-conflicto-d {
-    padding: 8px 10px;
-    background: #fff;
-    border: 1px solid #fecaca;
-    border-radius: 6px;
-    line-height: 1.6;
-    color: var(--pv-texto);
-}
-
-@media (max-width: 700px) {
-    .pv-grid { grid-template-columns: 1fr; }
-}
-
 /* ============================================================
-   BOTONES DE ACCIÓN SOLO CON ÍCONOS
-   Mismos colores y tamaños que Productos
+   ERRORES DE VALIDACIÓN DE FORMULARIOS
    ============================================================ */
 
-.pv-acciones {
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.pv-acciones form {
-    display: inline-flex;
-    margin: 0;
-}
-
-/* Botones de íconos: mismo tamaño que .pr-icon-btn */
-.pv-accion-icono {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 33px;
-    height: 33px;
-    padding: 0;
-    background: #fff;
-    border: 1px solid var(--pv-borde-campo);
-    border-radius: 8px;
-    color: #3f5a4c;
-    cursor: pointer;
-    transition: background-color .15s, border-color .15s;
-}
-
-/* Tamaño de los SVG */
-.pv-accion-icono .pv-icon {
+/* Mensajes de error debajo de cada campo */
+.pv-error {
     display: block;
-    width: 16px;
-    height: 16px;
+    margin-top: 3px;
+    color: #b42318;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
 }
 
-/* Hover general: botón de editar */
-.pv-accion-icono:hover {
-    background: #f1f5f3;
+/* Mensajes generales del formulario */
+.pv-modal-body .errorlist {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    list-style: none;
+    background: #fef3f2;
+    border: 1px solid #fecdca;
+    border-radius: 7px;
+    color: #b42318;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
-/* Dar de baja: rojo */
-.pv-accion-icono.pv-baja {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #dc2626;
+/* Campo que contiene errores */
+.pv-grupo input.is-invalid {
+    border-color: #b42318;
+    background: #fffafa;
 }
 
-.pv-accion-icono.pv-baja:hover {
-    background: #fee2e2;
+/* Enfoque de un campo inválido */
+.pv-grupo input.is-invalid:focus {
+    border-color: #b42318;
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, .12);
 }
 
-/* Volver a activar: verde */
-.pv-accion-icono.pv-activar {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
-    color: #15803d;
+/* Evita que los errores alteren innecesariamente el ancho del formulario */
+.pv-grupo {
+    min-width: 0;
 }
 
-.pv-accion-icono.pv-activar:hover {
-    background: #dcfce7;
-}
 
-/* Accesibilidad con teclado */
-.pv-accion-icono:focus-visible {
-    outline: 3px solid rgba(24, 90, 56, .25);
-    outline-offset: 2px;
-}
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 
-/* Estado mientras se procesa la solicitud */
-.pv-accion-icono:disabled {
-    opacity: .6;
-    cursor: not-allowed;
+@media (max-width: 700px) {
+
+    .pv-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pv-header .pv-btn {
+        align-self: flex-start;
+    }
+
+    .pv-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-full {
+        grid-column: auto;
+    }
+
+    .pv-resumen-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-toasts {
+        top: 72px;
+        right: 12px;
+        left: 12px;
+    }
+
+    .pv-toast {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .pv-pie {
+        flex-wrap: wrap;
+    }
+
+    .pv-modal {
+        padding: 12px;
+    }
+
+    .pv-modal-box {
+        max-height: 95vh;
+    }
+
+    .pv-modal-head,
+    .pv-modal-body,
+    .pv-modal-pie {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
 }

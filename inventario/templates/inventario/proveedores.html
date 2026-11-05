@@ -12,19 +12,18 @@
 
 {% block contenido %}
 
-<!-- Mensajes Django (toasts) -->
+<!-- MENSAJES DJANGO -->
 <div class="pv-toasts" id="toastContainer">
-
     {% if messages %}
         {% for message in messages %}
             <div class="pv-toast {% if message.tags %}{{ message.tags }}{% else %}success{% endif %}"
                  id="toast-{{ forloop.counter }}">
                 <span>{{ message }}</span>
-                <span class="pv-toast-x" onclick="cerrarToast('toast-{{ forloop.counter }}')">✕</span>
+                <span class="pv-toast-x"
+                      onclick="cerrarToast('toast-{{ forloop.counter }}')">✕</span>
             </div>
         {% endfor %}
     {% endif %}
-
 </div>
 
 
@@ -32,40 +31,42 @@
 
     <!-- ENCABEZADO -->
     <header class="pv-header">
-
         <div>
             <h1 class="pv-title">Gestión de proveedores</h1>
         </div>
+
         {% if perm.proveedores_gestionar %}
-        <button type="button" class="pv-btn pv-btn-primary" onclick="abrirModalCrear()">
-            <svg class="pv-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            Nuevo proveedor
-        </button>
+            <button type="button"
+                    class="pv-btn pv-btn-primary"
+                    onclick="abrirModalCrear()">
+                <svg class="pv-icon" viewBox="0 0 24 24">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Nuevo proveedor
+            </button>
         {% endif %}
     </header>
-
-
-    {% if proveedor_conflicto %}
-        <div class="pv-alerta">
-            <svg class="pv-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-            {{ proveedor_conflicto }}
-        </div>
-    {% endif %}
 
 
     <!-- BUSCADOR -->
     <form method="GET" onsubmit="return false;" class="pv-search">
 
-        <svg class="pv-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <svg class="pv-icon" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m21 21-4.3-4.3"/>
+        </svg>
 
-        <input type="text" id="searchInput" name="q" value="{{ busqueda }}"
+        <input type="text"
+               id="searchInput"
+               name="q"
+               value="{{ busqueda|default:'' }}"
                onkeyup="filtrarProveedores()"
                placeholder="Buscar por nombre, teléfono, correo o dirección...">
 
     </form>
 
 
-    <!-- TABLA -->
+    <!-- TABLA DE PROVEEDORES -->
     <section class="pv-card">
 
         <div class="pv-table-wrap">
@@ -92,108 +93,135 @@
                             data-search="{{ p.nombre_proveedor|lower }} {{ p.email_proveedor|default:''|lower }} {{ p.direccion_proveedor|default:''|lower }} {{ p.telefono_proveedor|default:''|lower }}">
 
                             <td>
-                                <span class="pv-nombre">{{ p.nombre_proveedor }}</span>
+                                <span class="pv-nombre">
+                                    {{ p.nombre_proveedor }}
+                                </span>
                             </td>
 
-                            <td class="pv-muted">{{ p.telefono_proveedor|default:"—" }}</td>
+                            <td class="pv-muted">
+                                {{ p.telefono_proveedor|default:"—" }}
+                            </td>
 
-                            <td class="pv-muted">{{ p.email_proveedor|default:"—" }}</td>
+                            <td class="pv-muted">
+                                {{ p.email_proveedor|default:"—" }}
+                            </td>
 
-                            <td class="pv-muted pv-dir">{{ p.direccion_proveedor|default:"—" }}</td>
+                            <td class="pv-muted pv-dir">
+                                {{ p.direccion_proveedor|default:"—" }}
+                            </td>
 
                             <td>
                                 <span id="badge-estado-{{ p.pk }}"
                                       class="pv-badge {% if p.estado_proveedor %}pv-activo{% else %}pv-inactivo{% endif %}">
-                                    {% if p.estado_proveedor %}Activo{% else %}Inactivo{% endif %}
+                                    {% if p.estado_proveedor %}
+                                        Activo
+                                    {% else %}
+                                        Inactivo
+                                    {% endif %}
                                 </span>
                             </td>
 
                             <td>
                                 <div class="pv-acciones">
+
                                     {% if perm.proveedores_gestionar %}
 
-                                    <!-- EDITAR -->
-                                    <button type="button" class="pv-accion pv-accion-icono"
-                                        title="Editar proveedor"
-                                        aria-label="Editar proveedor"
-                                        onclick="abrirModalEditar(
-                                            '{{ p.pk }}',
-                                            '{{ p.nombre_proveedor|escapejs }}',
-                                            '{{ p.telefono_proveedor|default:''|escapejs }}',
-                                            '{{ p.email_proveedor|default:''|escapejs }}',
-                                            '{{ p.direccion_proveedor|default:''|escapejs }}'
-                                        )">
-                                        <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
-                                        </svg>
-                                    </button>
-
-
-                                    <!-- DAR DE BAJA / ACTIVAR -->
-                                    <form id="form-estado-{{ p.pk }}"
-                                          method="POST"
-                                          action="{% url 'cambiar_estado_proveedor' p.pk %}"
-                                          onsubmit="return procesarSolicitudEstado(
-                                              event,
-                                              '{{ p.pk }}',
-                                              '{{ p.nombre_proveedor|escapejs }}',
-                                              '{{ p.telefono_proveedor|default:'--'|escapejs }}',
-                                              '{{ p.email_proveedor|default:'--'|escapejs }}',
-                                              '{{ p.direccion_proveedor|default:'--'|escapejs }}'
-                                          )">
-
-                                        {% csrf_token %}
-
-                                        <input type="hidden" name="estado" id="estado-{{ p.pk }}"
-                                               value="{% if p.estado_proveedor %}inactivo{% else %}activo{% endif %}">
-
-                                        <button type="submit"
-                                            id="btn-estado-{{ p.pk }}"
-                                            class="pv-accion pv-accion-icono {% if p.estado_proveedor %}pv-baja{% else %}pv-activar{% endif %}"
-                                            title="{% if p.estado_proveedor %}Dar de baja{% else %}Activar{% endif %}"
-                                            aria-label="{% if p.estado_proveedor %}Dar de baja proveedor{% else %}Activar proveedor{% endif %}">
-
-                                            {% if p.estado_proveedor %}
-                                                <!-- Dar de baja: círculo tachado -->
-                                                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                                    <circle cx="12" cy="12" r="9"/>
-                                                    <path d="m5.6 5.6 12.8 12.8"/>
-                                                </svg>
-                                            {% else %}
-                                                <!-- Activar -->
-                                                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                                    <path d="M21.801 10A10 10 0 1 1 17 3.335"/>
-                                                    <path d="m9 11 3 3L22 4"/>
-                                                </svg>
-                                            {% endif %}
-
-                                        </button>
-
-                                    </form>
-
-
-                                    <!-- ELIMINAR: solo si el proveedor nunca se usó
-                                         (sin remitos ni productos asociados) -->
-                                    {% if p.eliminable %}
+                                        <!-- EDITAR -->
                                         <button type="button"
-                                            class="pv-accion pv-accion-icono pv-baja"
-                                            title="Eliminar proveedor"
-                                            aria-label="Eliminar proveedor"
-                                            onclick="abrirModalEliminar(
-                                                '{{ p.pk }}',
-                                                '{{ p.nombre_proveedor|escapejs }}'
-                                            )">
+                                                class="pv-accion pv-accion-icono"
+                                                title="Editar proveedor"
+                                                aria-label="Editar proveedor"
+                                                onclick="abrirModalEditar(
+                                                    '{{ p.pk }}',
+                                                    '{{ p.nombre_proveedor|escapejs }}',
+                                                    '{{ p.telefono_proveedor|default:''|escapejs }}',
+                                                    '{{ p.email_proveedor|default:''|escapejs }}',
+                                                    '{{ p.direccion_proveedor|default:''|escapejs }}'
+                                                )">
+
                                             <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M3 6h18"/>
-                                                <path d="M8 6V4h8v2"/>
-                                                <path d="m19 6-1 14H6L5 6"/>
-                                                <path d="M10 11v5M14 11v5"/>
+                                                <path d="M12 20h9"/>
+                                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
                                             </svg>
+
                                         </button>
-                                    {% endif %}
+
+
+                                        <!-- DAR DE BAJA / ACTIVAR -->
+                                        <form id="form-estado-{{ p.pk }}"
+                                              method="POST"
+                                              action="{% url 'cambiar_estado_proveedor' p.pk %}"
+                                              onsubmit="return procesarSolicitudEstado(
+                                                  event,
+                                                  '{{ p.pk }}',
+                                                  '{{ p.nombre_proveedor|escapejs }}',
+                                                  '{{ p.telefono_proveedor|default:'--'|escapejs }}',
+                                                  '{{ p.email_proveedor|default:'--'|escapejs }}',
+                                                  '{{ p.direccion_proveedor|default:'--'|escapejs }}'
+                                              )">
+
+                                            {% csrf_token %}
+
+                                            <input type="hidden"
+                                                   name="estado"
+                                                   id="estado-{{ p.pk }}"
+                                                   value="{% if p.estado_proveedor %}inactivo{% else %}activo{% endif %}">
+
+                                            <button type="submit"
+                                                    id="btn-estado-{{ p.pk }}"
+                                                    class="pv-accion pv-accion-icono {% if p.estado_proveedor %}pv-baja{% else %}pv-activar{% endif %}"
+                                                    title="{% if p.estado_proveedor %}Dar de baja{% else %}Activar{% endif %}"
+                                                    aria-label="{% if p.estado_proveedor %}Dar de baja proveedor{% else %}Activar proveedor{% endif %}">
+
+                                                {% if p.estado_proveedor %}
+
+                                                    <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <circle cx="12" cy="12" r="9"/>
+                                                        <path d="m5.6 5.6 12.8 12.8"/>
+                                                    </svg>
+
+                                                {% else %}
+
+                                                    <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path d="M21.801 10A10 10 0 1 1 17 3.335"/>
+                                                        <path d="m9 11 3 3L22 4"/>
+                                                    </svg>
+
+                                                {% endif %}
+
+                                            </button>
+
+                                        </form>
+
+
+                                        <!-- ELIMINAR -->
+                                        {% if p.eliminable %}
+
+                                            <button type="button"
+                                                    class="pv-accion pv-accion-icono pv-baja"
+                                                    title="Eliminar proveedor"
+                                                    aria-label="Eliminar proveedor"
+                                                    onclick="abrirModalEliminar(
+                                                        '{{ p.pk }}',
+                                                        '{{ p.nombre_proveedor|escapejs }}',
+                                                        '{{ p.telefono_proveedor|default:''|escapejs }}',
+                                                        '{{ p.email_proveedor|default:''|escapejs }}',
+                                                        '{{ p.direccion_proveedor|default:''|escapejs }}'
+                                                    )">
+
+                                                <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M8 6V4h8v2"/>
+                                                    <path d="m19 6-1 14H6L5 6"/>
+                                                    <path d="M10 11v5M14 11v5"/>
+                                                </svg>
+
+                                            </button>
+
+                                        {% endif %}
 
                                     {% endif %}
+
                                 </div>
                             </td>
 
@@ -201,9 +229,11 @@
 
                     {% empty %}
 
-                    <tr>
-                        <td colspan="6" class="pv-vacio">No se encontraron proveedores.</td>
-                    </tr>
+                        <tr>
+                            <td colspan="6" class="pv-vacio">
+                                No se encontraron proveedores.
+                            </td>
+                        </tr>
 
                     {% endfor %}
 
@@ -213,14 +243,23 @@
 
         </div>
 
-        <!-- PAGINACIÓN (la arma paginacion.js sobre los proveedores que coinciden) -->
-        <nav class="pg" id="paginacionProveedores" aria-label="Paginación" hidden></nav>
+        <!-- PAGINACIÓN -->
+        <nav class="pg"
+             id="paginacionProveedores"
+             aria-label="Paginación"
+             hidden>
+        </nav>
 
         <div class="pv-pie">
+
             <span id="contadorProveedores">
-                {{ proveedores|length }} registro{{ proveedores|length|pluralize }} encontrado{{ proveedores|length|pluralize }}
+                {{ proveedores|length }}
+                registro{{ proveedores|length|pluralize }}
+                encontrado{{ proveedores|length|pluralize }}
             </span>
+
             <span>Agroquímica del Valle</span>
+
         </div>
 
     </section>
@@ -228,7 +267,9 @@
 </div>
 
 
-<!-- ===================== MODAL CONFIRMAR BAJA ===================== -->
+<!-- ==========================================
+     MODAL CONFIRMAR BAJA
+========================================== -->
 
 <div class="pv-modal" id="modalConfirmarBaja">
 
@@ -238,6 +279,7 @@
          aria-labelledby="tituloConfirmarBaja">
 
         <div class="pv-modal-head">
+
             <h2 id="tituloConfirmarBaja">Confirmar baja</h2>
 
             <button type="button"
@@ -248,12 +290,15 @@
                 <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
+
             </button>
+
         </div>
 
         <div class="pv-modal-body">
 
             <div class="pv-aviso">
+
                 <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
                     <path d="M12 9v4"/>
@@ -261,21 +306,24 @@
                 </svg>
 
                 <span>
-                    El proveedor quedará inactivo y no aparecerá al registrar
-                    remitos ni productos. Su historial se conserva y se puede
-                    volver a activar.
+                    El proveedor quedará inactivo y no podrá utilizarse
+                    para registrar nuevos remitos o productos. Su historial
+                    se conservará y podrá volver a activarse.
                 </span>
+
             </div>
 
             <div class="pv-resumen">
 
                 <div class="pv-resumen-cab">
+
                     <div class="pv-avatar" id="baja_avatar">PV</div>
 
                     <div>
                         <h4 id="baja_nombre">Nombre proveedor</h4>
                         <p>Proveedor registrado</p>
                     </div>
+
                 </div>
 
                 <div class="pv-resumen-grid">
@@ -322,7 +370,9 @@
 </div>
 
 
-<!-- ===================== MODAL CONFIRMAR ELIMINACIÓN ===================== -->
+<!-- ==========================================
+     MODAL CONFIRMAR ELIMINACIÓN
+========================================== -->
 
 <div class="pv-modal" id="modalEliminarProveedor">
 
@@ -332,7 +382,8 @@
          aria-labelledby="tituloEliminarProveedor">
 
         <div class="pv-modal-head">
-            <h2 id="tituloEliminarProveedor">Eliminar proveedor</h2>
+
+            <h2 id="tituloEliminarProveedor">Confirmar eliminación</h2>
 
             <button type="button"
                     class="pv-modal-x"
@@ -342,7 +393,9 @@
                 <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
+
             </button>
+
         </div>
 
         <form id="formEliminarProveedor" method="POST" action="">
@@ -352,6 +405,7 @@
             <div class="pv-modal-body">
 
                 <div class="pv-aviso">
+
                     <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
                         <path d="M12 9v4"/>
@@ -359,10 +413,44 @@
                     </svg>
 
                     <span>
-                        Se va a eliminar <strong id="eliminar_nombre"></strong>.
-                        Esta acción no se puede deshacer. Solo se permite porque
-                        el proveedor no tiene remitos ni productos asociados.
+                        El proveedor será eliminado definitivamente.
+                        Esta acción no se puede deshacer.
                     </span>
+
+                </div>
+
+                <div class="pv-resumen">
+
+                    <div class="pv-resumen-cab">
+
+                        <div class="pv-avatar" id="eliminar_avatar">PV</div>
+
+                        <div>
+                            <h4 id="eliminar_nombre">Nombre proveedor</h4>
+                            <p>Proveedor registrado</p>
+                        </div>
+
+                    </div>
+
+                    <div class="pv-resumen-grid">
+
+                        <div class="pv-dato">
+                            <span class="lbl">Teléfono</span>
+                            <span class="val" id="eliminar_telefono">--</span>
+                        </div>
+
+                        <div class="pv-dato">
+                            <span class="lbl">Email</span>
+                            <span class="val" id="eliminar_email">--</span>
+                        </div>
+
+                        <div class="pv-dato">
+                            <span class="lbl">Dirección</span>
+                            <span class="val" id="eliminar_direccion">--</span>
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>
@@ -377,7 +465,7 @@
 
                 <button type="submit"
                         class="pv-btn pv-btn-peligro">
-                    Eliminar
+                    Eliminar proveedor
                 </button>
 
             </div>
@@ -389,7 +477,9 @@
 </div>
 
 
-<!-- ===================== MODAL EDITAR PROVEEDOR ===================== -->
+<!-- ==========================================
+     MODAL EDITAR PROVEEDOR
+========================================== -->
 
 <div class="pv-modal" id="modalEditarProveedor">
 
@@ -399,6 +489,7 @@
          aria-labelledby="tituloEditarProveedor">
 
         <div class="pv-modal-head">
+
             <h2 id="tituloEditarProveedor">Modificar proveedor</h2>
 
             <button type="button"
@@ -409,45 +500,92 @@
                 <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
+
             </button>
+
         </div>
 
         <form id="formEditarProveedor"
               method="POST"
-              action="">
+              action="{% if proveedor_editar %}{% url 'editar_proveedor' proveedor_editar.pk %}{% else %}#{% endif %}">
 
             {% csrf_token %}
+
+            {{ form_editar.non_field_errors }}
 
             <div class="pv-modal-body pv-grid">
 
                 <div class="pv-grupo pv-full">
+
                     <label for="edit_nombre">Nombre del proveedor</label>
+
                     <input type="text"
                            id="edit_nombre"
                            name="nombre_proveedor"
-                           required>
+                           maxlength="150"
+                           value="{{ form_editar.nombre_proveedor.value|default_if_none:'' }}"
+                           required
+                           class="{% if form_editar.nombre_proveedor.errors %}is-invalid{% endif %}">
+
+                    {% for error in form_editar.nombre_proveedor.errors %}
+                        <span class="pv-error">{{ error }}</span>
+                    {% endfor %}
+
                 </div>
 
                 <div class="pv-grupo">
+
                     <label for="edit_telefono">Teléfono</label>
+
                     <input type="text"
                            id="edit_telefono"
-                           name="telefono_proveedor">
+                           name="telefono_proveedor"
+                           maxlength="50"
+                           inputmode="tel"
+                           oninput="this.value = this.value.replace(/[^0-9+()\s-]/g, '')"
+                           value="{{ form_editar.telefono_proveedor.value|default_if_none:'' }}"
+                           class="{% if form_editar.telefono_proveedor.errors %}is-invalid{% endif %}">
+
+                    {% for error in form_editar.telefono_proveedor.errors %}
+                        <span class="pv-error">{{ error }}</span>
+                    {% endfor %}
+
                 </div>
 
                 <div class="pv-grupo">
+
                     <label for="edit_email">Email</label>
+
                     <input type="email"
                            id="edit_email"
-                           name="email_proveedor">
+                           name="email_proveedor"
+                           value="{{ form_editar.email_proveedor.value|default_if_none:'' }}"
+                           class="{% if form_editar.email_proveedor.errors %}is-invalid{% endif %}">
+
+                    {% for error in form_editar.email_proveedor.errors %}
+                        <span class="pv-error">{{ error }}</span>
+                    {% endfor %}
+
                 </div>
 
                 <div class="pv-grupo pv-full">
+
                     <label for="edit_direccion">Dirección</label>
+
                     <input type="text"
                            id="edit_direccion"
-                           name="direccion_proveedor">
+                           name="direccion_proveedor"
+                           maxlength="255"
+                           value="{{ form_editar.direccion_proveedor.value|default_if_none:'' }}"
+                           class="{% if form_editar.direccion_proveedor.errors %}is-invalid{% endif %}">
+
+                    {% for error in form_editar.direccion_proveedor.errors %}
+                        <span class="pv-error">{{ error }}</span>
+                    {% endfor %}
+
                 </div>
+
+                {{ form_editar.estado_proveedor }}
 
             </div>
 
@@ -473,11 +611,11 @@
 </div>
 
 
-<!-- ===================== MODAL NUEVO PROVEEDOR ===================== -->
+<!-- ==========================================
+     MODAL NUEVO PROVEEDOR
+========================================== -->
 
-<div class="pv-modal"
-     id="modalCrearProveedor"
-     {% if proveedor_conflicto %}style="display: flex;"{% endif %}>
+<div class="pv-modal" id="modalCrearProveedor">
 
     <div class="pv-modal-box"
          role="dialog"
@@ -485,6 +623,7 @@
          aria-labelledby="tituloCrearProveedor">
 
         <div class="pv-modal-head">
+
             <h2 id="tituloCrearProveedor">Registrar proveedor</h2>
 
             <button type="button"
@@ -495,92 +634,92 @@
                 <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
+
             </button>
+
         </div>
 
         <form method="POST" action="{% url 'crear_proveedor' %}">
 
             {% csrf_token %}
 
+            {{ form_crear.non_field_errors }}
+
             <div class="pv-modal-body">
-
-                {% if proveedor_conflicto %}
-
-                    <div class="pv-conflicto">
-
-                        <div class="pv-conflicto-t">
-                            El proveedor ya se encuentra registrado
-                        </div>
-
-                        {% for p in proveedores %}
-                            {% if p.pk == error_duplicado_id %}
-
-                                <div class="pv-conflicto-d">
-                                    <div>
-                                        <strong>Nombre:</strong>
-                                        {{ p.nombre_proveedor }}
-                                    </div>
-
-                                    <div>
-                                        <strong>Teléfono:</strong>
-                                        {{ p.telefono_proveedor|default:"--" }}
-                                    </div>
-
-                                    <div>
-                                        <strong>Email:</strong>
-                                        {{ p.email_proveedor|default:"--" }}
-                                    </div>
-                                </div>
-
-                            {% endif %}
-                        {% endfor %}
-
-                    </div>
-
-                {% endif %}
 
                 <div class="pv-grid">
 
                     <div class="pv-grupo pv-full">
+
                         <label for="nuevo_nombre">Nombre del proveedor</label>
 
                         <input type="text"
                                id="nuevo_nombre"
                                name="nombre_proveedor"
-                               value="{{ request.POST.nombre_proveedor|default:'' }}"
-                               required>
+                               maxlength="150"
+                               value="{{ form_crear.nombre_proveedor.value|default_if_none:'' }}"
+                               required
+                               class="{% if form_crear.nombre_proveedor.errors %}is-invalid{% endif %}">
+
+                        {% for error in form_crear.nombre_proveedor.errors %}
+                            <span class="pv-error">{{ error }}</span>
+                        {% endfor %}
+
                     </div>
 
                     <div class="pv-grupo">
+
                         <label for="nuevo_telefono">Teléfono</label>
 
                         <input type="text"
                                id="nuevo_telefono"
                                name="telefono_proveedor"
-                               value="{{ request.POST.telefono_proveedor|default:'' }}">
+                               maxlength="50"
+                               inputmode="tel"
+                               oninput="this.value = this.value.replace(/[^0-9+()\s-]/g, '')"
+                               value="{{ form_crear.telefono_proveedor.value|default_if_none:'' }}"
+                               class="{% if form_crear.telefono_proveedor.errors %}is-invalid{% endif %}">
+
+                        {% for error in form_crear.telefono_proveedor.errors %}
+                            <span class="pv-error">{{ error }}</span>
+                        {% endfor %}
+
                     </div>
 
                     <div class="pv-grupo">
+
                         <label for="nuevo_email">Email</label>
 
                         <input type="email"
                                id="nuevo_email"
                                name="email_proveedor"
-                               value="{{ request.POST.email_proveedor|default:'' }}">
+                               value="{{ form_crear.email_proveedor.value|default_if_none:'' }}"
+                               class="{% if form_crear.email_proveedor.errors %}is-invalid{% endif %}">
+
+                        {% for error in form_crear.email_proveedor.errors %}
+                            <span class="pv-error">{{ error }}</span>
+                        {% endfor %}
+
                     </div>
 
                     <div class="pv-grupo pv-full">
+
                         <label for="nuevo_direccion">Dirección</label>
 
                         <input type="text"
                                id="nuevo_direccion"
                                name="direccion_proveedor"
-                               value="{{ request.POST.direccion_proveedor|default:'' }}">
+                               maxlength="255"
+                               value="{{ form_crear.direccion_proveedor.value|default_if_none:'' }}"
+                               class="{% if form_crear.direccion_proveedor.errors %}is-invalid{% endif %}">
+
+                        {% for error in form_crear.direccion_proveedor.errors %}
+                            <span class="pv-error">{{ error }}</span>
+                        {% endfor %}
+
                     </div>
 
-                    <input type="hidden"
-                           name="estado_proveedor"
-                           value="True">
+                    {{ form_crear.estado_proveedor }}
 
                 </div>
 
@@ -608,20 +747,22 @@
 </div>
 
 
-<!-- ===================== JAVASCRIPT DE PROVEEDORES ===================== -->
+<!-- ==========================================
+     JAVASCRIPT DE PROVEEDORES
+========================================== -->
 
 <script src="{% static 'inventario/js/paginacion.js' %}"></script>
 
 <script>
+
     let formPendingState = null;
     let idPendingState = null;
     let namePendingState = null;
 
 
-    /* =====================================================
-       PAGINACIÓN (en el navegador, sobre lo que coincide
-       con la búsqueda)
-    ===================================================== */
+    /* ==========================================
+       PAGINACIÓN
+    ========================================== */
 
     const pagProveedores = Paginador({
         contenedor: document.getElementById('listaProveedores'),
@@ -632,19 +773,25 @@
     });
 
 
-    /* =====================================================
+    /* ==========================================
        NOTIFICACIONES
-    ===================================================== */
+    ========================================== */
 
     document.addEventListener('DOMContentLoaded', function () {
+
         document.querySelectorAll('.pv-toast').forEach(function (toast) {
             autocerrarToast(toast);
         });
+
+        filtrarProveedores();
+
     });
 
 
     function autocerrarToast(toast) {
+
         setTimeout(function () {
+
             if (!toast.isConnected) {
                 return;
             }
@@ -656,23 +803,29 @@
             }, 500);
 
         }, 4000);
+
     }
 
 
     function cerrarToast(id) {
+
         const toast = document.getElementById(id);
 
         if (toast) {
+
             toast.style.animation = 'pv-fadeout 0.3s ease-out forwards';
 
             setTimeout(function () {
                 toast.remove();
             }, 300);
+
         }
+
     }
 
 
     function mostrarToast(mensaje, tipo) {
+
         const container = document.getElementById('toastContainer');
 
         if (!container) {
@@ -700,10 +853,12 @@
         });
 
         cerrar.addEventListener('keydown', function (evento) {
+
             if (evento.key === 'Enter' || evento.key === ' ') {
                 evento.preventDefault();
                 cerrarToast(id);
             }
+
         });
 
         toast.appendChild(texto);
@@ -711,16 +866,16 @@
         container.appendChild(toast);
 
         autocerrarToast(toast);
+
     }
 
 
-    /* =====================================================
-       BUSCADOR DE PROVEEDORES
-       Marca qué filas coinciden y la paginación muestra
-       solo esas, empezando por la página 1.
-    ===================================================== */
+    /* ==========================================
+       BUSCADOR
+    ========================================== */
 
     function filtrarProveedores() {
+
         const campo = document.getElementById('searchInput');
         const contador = document.getElementById('contadorProveedores');
 
@@ -729,9 +884,11 @@
         }
 
         const query = campo.value.toLowerCase().trim();
+
         let visibles = 0;
 
         document.querySelectorAll('.supplier-card').forEach(function (fila) {
+
             const texto = fila.getAttribute('data-search') || '';
             const coincide = texto.includes(query);
 
@@ -740,6 +897,7 @@
             if (coincide) {
                 visibles++;
             }
+
         });
 
         pagProveedores.refrescar(true);
@@ -747,23 +905,27 @@
         contador.textContent =
             visibles + ' registro' + (visibles === 1 ? '' : 's') +
             ' encontrado' + (visibles === 1 ? '' : 's');
+
     }
 
 
-    /* =====================================================
-       ABRIR, EDITAR Y CERRAR MODALES
-    ===================================================== */
+    /* ==========================================
+       ABRIR Y CERRAR MODALES
+    ========================================== */
 
     function abrirModalCrear() {
+
         const modal = document.getElementById('modalCrearProveedor');
 
         if (modal) {
             modal.style.display = 'flex';
         }
+
     }
 
 
     function abrirModalEditar(id, nombre, telefono, email, direccion) {
+
         const formulario = document.getElementById('formEditarProveedor');
 
         if (!formulario) {
@@ -771,6 +933,7 @@
         }
 
         const urlBase = "{% url 'editar_proveedor' 0 %}";
+
         formulario.action = urlBase.replace('/0/', '/' + id + '/');
 
         document.getElementById('edit_nombre').value = nombre || '';
@@ -779,10 +942,12 @@
         document.getElementById('edit_direccion').value = direccion || '';
 
         document.getElementById('modalEditarProveedor').style.display = 'flex';
+
     }
 
 
-    function abrirModalEliminar(id, nombre) {
+    function abrirModalEliminar(id, nombre, telefono, email, direccion) {
+
         const formulario = document.getElementById('formEliminarProveedor');
 
         if (!formulario) {
@@ -790,30 +955,48 @@
         }
 
         const urlBase = "{% url 'eliminar_proveedor' 0 %}";
+
         formulario.action = urlBase.replace('/0/', '/' + id + '/');
 
-        document.getElementById('eliminar_nombre').textContent = nombre || '';
+        document.getElementById('eliminar_avatar').textContent =
+            (nombre || 'PV').substring(0, 2).toUpperCase();
+
+        document.getElementById('eliminar_nombre').textContent =
+            nombre || 'Sin nombre';
+
+        document.getElementById('eliminar_telefono').textContent =
+            telefono || '--';
+
+        document.getElementById('eliminar_email').textContent =
+            email || '--';
+
+        document.getElementById('eliminar_direccion').textContent =
+            direccion || '--';
 
         document.getElementById('modalEliminarProveedor').style.display = 'flex';
+
     }
 
 
     function cerrarModal(idModal) {
+
         const modal = document.getElementById(idModal);
 
         if (modal) {
             modal.style.display = 'none';
         }
+
     }
 
 
-    /* Cancelar también elimina la solicitud de baja pendiente. */
     function cancelarBajaProveedor() {
+
         cerrarModal('modalConfirmarBaja');
 
         formPendingState = null;
         idPendingState = null;
         namePendingState = null;
+
     }
 
 
@@ -831,6 +1014,7 @@
         }
 
         modal.addEventListener('click', function (evento) {
+
             if (evento.target !== modal) {
                 return;
             }
@@ -840,23 +1024,30 @@
             } else {
                 cerrarModal(id);
             }
+
         });
+
     });
 
 
     document.addEventListener('keydown', function (evento) {
+
         if (evento.key === 'Escape') {
+
             cancelarBajaProveedor();
+
             cerrarModal('modalEliminarProveedor');
             cerrarModal('modalEditarProveedor');
             cerrarModal('modalCrearProveedor');
+
         }
+
     });
 
 
-    /* =====================================================
+    /* ==========================================
        SOLICITUD DE BAJA O ACTIVACIÓN
-    ===================================================== */
+    ========================================== */
 
     function procesarSolicitudEstado(
         evento,
@@ -866,23 +1057,27 @@
         email,
         direccion
     ) {
+
         evento.preventDefault();
 
         const formulario = evento.currentTarget;
         const boton = document.getElementById('btn-estado-' + id);
 
         if (!formulario || !boton) {
+
             mostrarToast(
                 'No se pudo identificar el proveedor seleccionado.',
                 'warning'
             );
+
             return false;
+
         }
 
         const estaActivo = boton.classList.contains('pv-baja');
 
         if (estaActivo) {
-            /* Solicitar confirmación antes de dar de baja. */
+
             formPendingState = formulario;
             idPendingState = id;
             namePendingState = nombre;
@@ -902,21 +1097,22 @@
             document.getElementById('baja_direccion').textContent =
                 direccion || '--';
 
-            document.getElementById('modalConfirmarBaja').style.display =
-                'flex';
+            document.getElementById('modalConfirmarBaja').style.display = 'flex';
 
         } else {
-            /* Un proveedor inactivo se puede volver a activar. */
+
             ejecutarCambioEstado(formulario, id, nombre, false);
+
         }
 
         return false;
+
     }
 
 
-    /* =====================================================
+    /* ==========================================
        CONFIRMAR BAJA
-    ===================================================== */
+    ========================================== */
 
     document
         .getElementById('btnConfirmarBajaEjecutar')
@@ -930,7 +1126,6 @@
             const id = idPendingState;
             const nombre = namePendingState;
 
-            /* Limpiar la solicitud pendiente antes de enviarla. */
             formPendingState = null;
             idPendingState = null;
             namePendingState = null;
@@ -938,37 +1133,41 @@
             cerrarModal('modalConfirmarBaja');
 
             ejecutarCambioEstado(formulario, id, nombre, true);
+
         });
 
 
-    /* =====================================================
-       ICONOS DE LOS BOTONES
-    ===================================================== */
+    /* ==========================================
+       ICONOS
+    ========================================== */
 
     function iconoBaja() {
+
         return `
             <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="9"/>
                 <path d="m5.6 5.6 12.8 12.8"/>
             </svg>
         `;
+
     }
 
 
     function iconoActivar() {
+
         return `
             <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M21.801 10A10 10 0 1 1 17 3.335"/>
                 <path d="m9 11 3 3L22 4"/>
             </svg>
         `;
+
     }
 
 
-    /* =====================================================
+    /* ==========================================
        CAMBIAR ESTADO DEL PROVEEDOR
-       El servidor responde JSON: {ok, mensaje} o {ok: false, error}.
-    ===================================================== */
+    ========================================== */
 
     async function ejecutarCambioEstado(
         formulario,
@@ -976,30 +1175,41 @@
         nombreProveedor,
         esBaja
     ) {
+
         const boton = document.getElementById('btn-estado-' + id);
         const badge = document.getElementById('badge-estado-' + id);
         const fila = document.getElementById('card-' + id);
         const campoEstado = document.getElementById('estado-' + id);
 
         if (!boton || !badge || !fila || !campoEstado) {
+
             mostrarToast(
                 'No se pudo actualizar el estado del proveedor.',
                 'warning'
             );
+
             return;
+
         }
 
         campoEstado.value = esBaja ? 'inactivo' : 'activo';
+
         boton.disabled = true;
 
         try {
+
             const respuesta = await fetch(formulario.action, {
+
                 method: 'POST',
+
                 body: new FormData(formulario),
+
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 },
+
                 credentials: 'same-origin'
+
             });
 
             let datos = null;
@@ -1011,16 +1221,21 @@
             }
 
             if (!respuesta.ok || !datos || !datos.ok) {
+
                 throw new Error(
                     (datos && datos.error) ||
                     'No se pudo cambiar el estado del proveedor.'
                 );
+
             }
 
             if (esBaja) {
+
                 boton.classList.remove('pv-baja');
                 boton.classList.add('pv-activar');
+
                 boton.innerHTML = iconoActivar();
+
                 boton.title = 'Activar';
                 boton.setAttribute('aria-label', 'Activar proveedor');
 
@@ -1030,15 +1245,17 @@
 
                 fila.classList.add('inactivo');
 
-                /* Preparar el valor para la próxima operación. */
                 campoEstado.value = 'activo';
 
                 mostrarToast(datos.mensaje, 'warning');
 
             } else {
+
                 boton.classList.remove('pv-activar');
                 boton.classList.add('pv-baja');
+
                 boton.innerHTML = iconoBaja();
+
                 boton.title = 'Dar de baja';
                 boton.setAttribute('aria-label', 'Dar de baja proveedor');
 
@@ -1048,24 +1265,58 @@
 
                 fila.classList.remove('inactivo');
 
-                /* Preparar el valor para la próxima operación. */
                 campoEstado.value = 'inactivo';
 
                 mostrarToast(datos.mensaje, 'success');
+
             }
 
         } catch (error) {
+
             console.error('Error al cambiar el estado:', error);
 
-            /* Volver el campo al valor que corresponde al estado actual. */
             campoEstado.value = esBaja ? 'inactivo' : 'activo';
 
             mostrarToast(error.message, 'error');
 
         } finally {
+
             boton.disabled = false;
+
         }
+
     }
+
+
+    /* ==========================================
+       REABRIR MODAL SI HAY ERRORES DE VALIDACIÓN
+    ========================================== */
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const modalAbierto = "{{ modal_abierto|default:'' }}";
+
+        if (modalAbierto === 'crear') {
+
+            const modalCrear = document.getElementById('modalCrearProveedor');
+
+            if (modalCrear) {
+                modalCrear.style.display = 'flex';
+            }
+
+        }
+
+        if (modalAbierto === 'editar') {
+
+            const modalEditar = document.getElementById('modalEditarProveedor');
+
+            if (modalEditar) {
+                modalEditar.style.display = 'flex';
+            }
+
+        }
+
+    });
 
 </script>
 

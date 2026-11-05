@@ -436,52 +436,27 @@ def panel_principal(request):
 # PROVEEDORES
 # ============================================================
 
-def _proveedor_duplicado(form, excluir_pk=None):
-    """Busca otro proveedor que coincida en nombre, teléfono, email o dirección."""
-
-    nombre = form.cleaned_data['nombre_proveedor'].strip()
-    telefono = (
-        form.cleaned_data.get('telefono_proveedor') or ''
-    ).strip()
-    email = (
-        form.cleaned_data.get('email_proveedor') or ''
-    ).strip()
-    direccion = (
-        form.cleaned_data.get('direccion_proveedor') or ''
-    ).strip()
-
-    filtros = Q(nombre_proveedor__iexact=nombre)
-
-    if telefono:
-        filtros |= Q(telefono_proveedor=telefono)
-
-    if email:
-        filtros |= Q(email_proveedor__iexact=email)
-
-    if direccion:
-        filtros |= Q(direccion_proveedor__iexact=direccion)
-
-    proveedores = Proveedores.objects.filter(filtros)
-
-    if excluir_pk is not None:
-        proveedores = proveedores.exclude(
-            ID_Proveedor=excluir_pk
-        )
-
-    return proveedores.first()
+# ============================================================
+# PROVEEDORES
+# ============================================================
 
 
+def _render_proveedores(
+    request,
+    usuario,
+    form_crear=None,
+    form_editar=None,
+    proveedor_editar=None,
+    modal_abierto=None
+):
+    """
+    Prepara los datos y muestra la pantalla de proveedores.
+    Se utiliza desde las funciones de consulta, creación y edición.
+    """
 
-def gestion_proveedores(request):
-
-    usuario = usuario_con_acceso(request, 'proveedores')
-
-    if not usuario:
-        messages.error(
-            request,
-            'No tenés permiso para consultar proveedores.'
-        )
-        return redirect('panel_principal')
+    # --------------------------------------------------------
+    # BÚSQUEDA
+    # --------------------------------------------------------
 
     busqueda = request.GET.get('q', '').strip()
 
@@ -495,12 +470,18 @@ def gestion_proveedores(request):
             Q(telefono_proveedor__icontains=busqueda)
         )
 
-    # Un proveedor solo se puede eliminar si nunca se usó:
-    # sin remitos y sin productos asociados. Si no, se da de baja.
+    # --------------------------------------------------------
+    # VERIFICAR SI LOS PROVEEDORES SE PUEDEN ELIMINAR
+    # --------------------------------------------------------
+
+    # Proveedores que tienen remitos registrados.
     con_remitos = set(
-        Remitos.objects.values_list('ID_Proveedor', flat=True)
+        Remitos.objects.values_list(
+            'ID_Proveedor', flat=True
+        )
     )
 
+    # Proveedores asociados a productos.
     con_productos = set(
         Productos.objects.filter(
             proveedores__isnull=False
@@ -509,29 +490,28 @@ def gestion_proveedores(request):
 
     proveedores = list(proveedores)
 
+    # Un proveedor solo puede eliminarse si nunca se utilizó.
     for proveedor in proveedores:
         proveedor.eliminable = (
             proveedor.pk not in con_remitos
             and proveedor.pk not in con_productos
         )
 
-    total_proveedores = Proveedores.objects.count()
+    # --------------------------------------------------------
+    # FORMULARIOS
+    # --------------------------------------------------------
 
-    proveedores_activos = Proveedores.objects.filter(
-        estado_proveedor=True
-    ).count()
+    if form_crear is None:
+        form_crear = ProveedorForm()
 
-    form = ProveedorForm()
+    if form_editar is None:
+        form_editar = ProveedorForm(
+            instance=proveedor_editar
+        )
 
-    error_duplicado_id = request.session.pop(
-        'error_duplicado_id',
-        None
-    )
-
-    proveedor_conflicto = request.session.pop(
-        'proveedor_conflicto',
-        None
-    )
+    # --------------------------------------------------------
+    # MOSTRAR PANTALLA
+    # --------------------------------------------------------
 
     return render(
         request,
@@ -539,19 +519,65 @@ def gestion_proveedores(request):
         {
             'usuario': usuario,
             'proveedores': proveedores,
-            'total_proveedores': total_proveedores,
-            'proveedores_activos': proveedores_activos,
-            'form': form,
-            'error_duplicado_id': error_duplicado_id,
-            'proveedor_conflicto': proveedor_conflicto,
+
+            'total_proveedores': Proveedores.objects.count(),
+
+            'proveedores_activos': Proveedores.objects.filter(
+                estado_proveedor=True
+            ).count(),
+
+            # Formularios separados para crear y editar.
+            'form_crear': form_crear,
+            'form_editar': form_editar,
+
+            # Compatibilidad con la variable anterior.
+            'form': form_crear,
+
+            # Datos necesarios para abrir el modal de edición.
+            'proveedor_editar': proveedor_editar,
+            'modal_abierto': modal_abierto,
+
+            'busqueda': busqueda,
         }
     )
 
 
+# ============================================================
+# CONSULTAR PROVEEDORES
+# ============================================================
+
+def gestion_proveedores(request):
+    """Muestra la pantalla principal de proveedores."""
+
+    usuario = usuario_con_acceso(
+        request,
+        'proveedores'
+    )
+
+    if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para consultar proveedores.'
+        )
+        return redirect('panel_principal')
+
+    return _render_proveedores(
+        request,
+        usuario
+    )
+
+
+# ============================================================
+# CREAR PROVEEDOR
+# ============================================================
 
 def crear_proveedor(request):
 
-    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
+    usuario = usuario_con_acceso(
+        request,
+        'proveedores',
+        gestionar=True
+    )
 
     if not usuario:
         messages.error(
@@ -563,42 +589,49 @@ def crear_proveedor(request):
     if request.method != 'POST':
         return redirect('gestion_proveedores')
 
+    # Recibir los datos del formulario.
     form = ProveedorForm(request.POST)
 
+    # Si existen errores, mostrar nuevamente la pantalla
+    # conservando los datos y los mensajes debajo de los campos.
     if not form.is_valid():
 
-        for campo, errores in form.errors.items():
-
-            if campo in form.fields:
-                etiqueta = form.fields[campo].label or campo
-            else:
-                etiqueta = 'Datos del proveedor'
-
-            for error in errores:
-                messages.error(
-                    request,
-                    f'{etiqueta}: {error}'
-                )
-
-        return redirect('gestion_proveedores')
-
-    existente = _proveedor_duplicado(form)
-
-    if existente:
-
-        request.session['error_duplicado_id'] = (
-            existente.ID_Proveedor
+        return _render_proveedores(
+            request,
+            usuario,
+            form_crear=form,
+            modal_abierto='crear'
         )
 
-        request.session['proveedor_conflicto'] = (
-            'Ya existe un proveedor con alguno '
-            'de los datos ingresados.'
+    try:
+        with transaction.atomic():
+
+            proveedor = form.save()
+
+            # Registrar la creación en la auditoría.
+            registrar_auditoria(
+                usuario,
+                'Proveedores',
+                proveedor,
+                'CREACION',
+                {},
+                snapshot(proveedor)
+            )
+
+    except IntegrityError:
+
+        form.add_error(
+            None,
+            'No se pudo registrar el proveedor. '
+            'Verificá que el nombre no esté registrado.'
         )
 
-        return redirect('gestion_proveedores')
-
-    proveedor = form.save()
-    registrar_auditoria(usuario, 'Proveedores', proveedor, 'CREACION', {}, snapshot(proveedor))
+        return _render_proveedores(
+            request,
+            usuario,
+            form_crear=form,
+            modal_abierto='crear'
+        )
 
     messages.success(
         request,
@@ -608,9 +641,17 @@ def crear_proveedor(request):
     return redirect('gestion_proveedores')
 
 
+# ============================================================
+# EDITAR PROVEEDOR
+# ============================================================
+
 def editar_proveedor(request, pk):
 
-    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
+    usuario = usuario_con_acceso(
+        request,
+        'proveedores',
+        gestionar=True
+    )
 
     if not usuario:
         messages.error(
@@ -624,65 +665,80 @@ def editar_proveedor(request, pk):
         ID_Proveedor=pk
     )
 
+    if request.method != 'POST':
+        return redirect('gestion_proveedores')
+
+    # Guardar los datos anteriores para la auditoría.
     antes = snapshot(proveedor)
 
     estado_original = proveedor.estado_proveedor
 
-    if request.method != 'POST':
-        return redirect('gestion_proveedores')
-
+    # Vincular el formulario con el proveedor seleccionado.
     form = ProveedorForm(
         request.POST,
         instance=proveedor
     )
 
+    # Si hay errores, conservar los datos ingresados
+    # y volver a abrir el modal de edición.
     if not form.is_valid():
 
-        for campo, errores in form.errors.items():
-
-            if campo in form.fields:
-                etiqueta = form.fields[campo].label or campo
-            else:
-                etiqueta = 'Datos del proveedor'
-
-            for error in errores:
-                messages.error(
-                    request,
-                    f'{etiqueta}: {error}'
-                )
-
-        return redirect('gestion_proveedores')
-
-    existente = _proveedor_duplicado(
-        form,
-        excluir_pk=pk
-    )
-
-    if existente:
-
-        request.session['error_duplicado_id'] = (
-            existente.ID_Proveedor
+        return _render_proveedores(
+            request,
+            usuario,
+            form_editar=form,
+            proveedor_editar=proveedor,
+            modal_abierto='editar'
         )
-
-        request.session['proveedor_conflicto'] = (
-            'Ya existe otro proveedor con alguno '
-            'de los datos ingresados.'
-        )
-
-        return redirect('gestion_proveedores')
 
     proveedor_actualizado = form.save(commit=False)
-    proveedor_actualizado.estado_proveedor = estado_original
-    proveedor_actualizado.save()
 
-    registrar_auditoria(
-        usuario,
-        'Proveedores',
-        proveedor_actualizado,
-        'MODIFICACION',
-        antes,
-        snapshot(proveedor_actualizado)
-    )
+    # El estado se modifica únicamente desde
+    # cambiar_estado_proveedor.
+    proveedor_actualizado.estado_proveedor = estado_original
+
+    despues = snapshot(proveedor_actualizado)
+
+    # Verificar si realmente hubo modificaciones.
+    if antes == despues:
+
+        messages.info(
+            request,
+            'No se realizaron cambios en los datos del proveedor.'
+        )
+
+        return redirect('gestion_proveedores')
+
+    try:
+        with transaction.atomic():
+
+            proveedor_actualizado.save()
+
+            # Registrar la modificación en la auditoría.
+            registrar_auditoria(
+                usuario,
+                'Proveedores',
+                proveedor_actualizado,
+                'MODIFICACION',
+                antes,
+                snapshot(proveedor_actualizado)
+            )
+
+    except IntegrityError:
+
+        form.add_error(
+            None,
+            'No se pudo actualizar el proveedor. '
+            'Verificá que el nombre no esté registrado.'
+        )
+
+        return _render_proveedores(
+            request,
+            usuario,
+            form_editar=form,
+            proveedor_editar=proveedor,
+            modal_abierto='editar'
+        )
 
     messages.success(
         request,
@@ -692,91 +748,177 @@ def editar_proveedor(request, pk):
     return redirect('gestion_proveedores')
 
 
+# ============================================================
+# ELIMINAR PROVEEDOR
+# ============================================================
+
 @require_POST
 def eliminar_proveedor(request, pk):
-    """Elimina un proveedor solo si nunca se usó.
-    Si tiene remitos o productos, se debe dar de baja."""
+    """Elimina un proveedor únicamente si nunca se utilizó."""
 
-    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
+    usuario = usuario_con_acceso(
+        request,
+        'proveedores',
+        gestionar=True
+    )
 
     if not usuario:
+        messages.error(
+            request,
+            'No tenés permiso para eliminar proveedores.'
+        )
         return redirect('panel_principal')
 
-    proveedor = get_object_or_404(Proveedores, ID_Proveedor=pk)
+    proveedor = get_object_or_404(
+        Proveedores,
+        ID_Proveedor=pk
+    )
+
     nombre = proveedor.nombre_proveedor
 
-    if Remitos.objects.filter(ID_Proveedor=proveedor).exists():
+    # Verificar si tiene remitos asociados.
+    if Remitos.objects.filter(
+        ID_Proveedor=proveedor
+    ).exists():
+
         messages.error(
             request,
-            f'No se puede eliminar el proveedor "{nombre}" porque tiene '
-            'remitos registrados. Podés darlo de baja.'
+            f'No se puede eliminar el proveedor "{nombre}" '
+            'porque tiene remitos registrados. Podés darlo de baja.'
         )
+
         return redirect('gestion_proveedores')
 
-    if Productos.objects.filter(proveedores=proveedor).exists():
+    # Verificar si tiene productos asociados.
+    if Productos.objects.filter(
+        proveedores=proveedor
+    ).exists():
+
         messages.error(
             request,
-            f'No se puede eliminar el proveedor "{nombre}" porque tiene '
-            'productos asociados. Podés darlo de baja.'
+            f'No se puede eliminar el proveedor "{nombre}" '
+            'porque tiene productos asociados. Podés darlo de baja.'
         )
+
         return redirect('gestion_proveedores')
 
     try:
         with transaction.atomic():
+
+            # Registrar la eliminación en la auditoría.
             registrar_auditoria(
-                usuario, 'Proveedores', proveedor, 'ELIMINACION',
-                snapshot(proveedor), {}
+                usuario,
+                'Proveedores',
+                proveedor,
+                'ELIMINACION',
+                snapshot(proveedor),
+                {}
             )
+
             proveedor.delete()
 
-    except (ProtectedError, RestrictedError, IntegrityError):
+    except (
+        ProtectedError,
+        RestrictedError,
+        IntegrityError
+    ):
+
         messages.error(
             request,
-            f'No se puede eliminar el proveedor "{nombre}" porque tiene '
-            'registros asociados. Podés darlo de baja.'
+            f'No se puede eliminar el proveedor "{nombre}" '
+            'porque tiene registros asociados. Podés darlo de baja.'
         )
+
         return redirect('gestion_proveedores')
 
-    messages.success(request, f'El proveedor "{nombre}" fue eliminado.')
+    messages.success(
+        request,
+        f'El proveedor "{nombre}" fue eliminado.'
+    )
 
     return redirect('gestion_proveedores')
 
 
+# ============================================================
+# CAMBIAR ESTADO DEL PROVEEDOR
+# ============================================================
+
+@require_POST
 def cambiar_estado_proveedor(request, pk):
-    """Da de baja o activa un proveedor.
+    """Permite activar o dar de baja un proveedor."""
 
-    La pantalla lo llama con JavaScript (fetch): en ese caso responde
-    JSON y no guarda un mensaje, porque si no aparecería repetido
-    la próxima vez que se cargue la página.
-    """
+    es_ajax = (
+        request.headers.get('X-Requested-With')
+        == 'XMLHttpRequest'
+    )
 
-    es_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    # --------------------------------------------------------
+    # RESPUESTA ANTE ERRORES
+    # --------------------------------------------------------
 
     def responder_error(texto, status):
-        if es_ajax:
-            return JsonResponse({'ok': False, 'error': texto}, status=status)
 
-        messages.error(request, texto)
-        return redirect('gestion_proveedores')
-
-    usuario = usuario_con_acceso(request, 'proveedores', gestionar=True)
-
-    if not usuario:
         if es_ajax:
             return JsonResponse(
-                {'ok': False,
-                 'error': 'No tenés permiso para cambiar el estado de proveedores.'},
-                status=403
+                {
+                    'ok': False,
+                    'error': texto
+                },
+                status=status
             )
-        return redirect('panel_principal')
 
-    if request.method != 'POST':
+        messages.error(request, texto)
+
         return redirect('gestion_proveedores')
 
-    proveedor = Proveedores.objects.filter(ID_Proveedor=pk).first()
+    # --------------------------------------------------------
+    # VERIFICAR PERMISOS
+    # --------------------------------------------------------
+
+    usuario = usuario_con_acceso(
+        request,
+        'proveedores',
+        gestionar=True
+    )
+
+    if not usuario:
+
+        if es_ajax:
+            return JsonResponse(
+                {
+                    'ok': False,
+                    'error': (
+                        'No tenés permiso para cambiar '
+                        'el estado de proveedores.'
+                    )
+                },
+                status=403
+            )
+
+        messages.error(
+            request,
+            'No tenés permiso para cambiar el estado de proveedores.'
+        )
+
+        return redirect('panel_principal')
+
+    # --------------------------------------------------------
+    # BUSCAR PROVEEDOR
+    # --------------------------------------------------------
+
+    proveedor = Proveedores.objects.filter(
+        ID_Proveedor=pk
+    ).first()
 
     if not proveedor:
-        return responder_error('El proveedor seleccionado no existe.', 404)
+        return responder_error(
+            'El proveedor seleccionado no existe.',
+            404
+        )
+
+    # --------------------------------------------------------
+    # VALIDAR ESTADO SOLICITADO
+    # --------------------------------------------------------
 
     estado_solicitado = request.POST.get(
         'estado',
@@ -784,35 +926,81 @@ def cambiar_estado_proveedor(request, pk):
     ).strip().lower()
 
     if estado_solicitado not in ('activo', 'inactivo'):
-        return responder_error('El estado solicitado no es válido.', 400)
+
+        return responder_error(
+            'El estado solicitado no es válido.',
+            400
+        )
+
+    nuevo_estado = estado_solicitado == 'activo'
+
+    # --------------------------------------------------------
+    # VERIFICAR SI EL ESTADO YA ES EL MISMO
+    # --------------------------------------------------------
+
+    if proveedor.estado_proveedor == nuevo_estado:
+
+        mensaje = (
+            'El proveedor ya se encuentra activo.'
+            if nuevo_estado
+            else 'El proveedor ya se encuentra inactivo.'
+        )
+
+        if es_ajax:
+            return JsonResponse({
+                'ok': True,
+                'mensaje': mensaje,
+                'activo': proveedor.estado_proveedor,
+            })
+
+        messages.info(request, mensaje)
+
+        return redirect('gestion_proveedores')
+
+    # --------------------------------------------------------
+    # ACTUALIZAR ESTADO
+    # --------------------------------------------------------
 
     antes = snapshot(proveedor)
 
-    if estado_solicitado == 'inactivo':
-        proveedor.estado_proveedor = False
-        mensaje = (
-            f'El proveedor "{proveedor.nombre_proveedor}" '
-            'fue dado de baja correctamente.'
-        )
-    else:
-        proveedor.estado_proveedor = True
-        mensaje = (
-            f'El proveedor "{proveedor.nombre_proveedor}" '
-            'fue activado correctamente.'
-        )
+    proveedor.estado_proveedor = nuevo_estado
 
-    proveedor.save(
-        update_fields=['estado_proveedor']
+    mensaje = (
+        f'El proveedor "{proveedor.nombre_proveedor}" '
+        'fue activado correctamente.'
+        if nuevo_estado
+        else
+        f'El proveedor "{proveedor.nombre_proveedor}" '
+        'fue dado de baja correctamente.'
     )
 
-    registrar_auditoria(
-        usuario,
-        'Proveedores',
-        proveedor,
-        'ACTIVACION' if proveedor.estado_proveedor else 'BAJA',
-        antes,
-        snapshot(proveedor)
-    )
+    try:
+        with transaction.atomic():
+
+            proveedor.save(
+                update_fields=['estado_proveedor']
+            )
+
+            # Registrar el cambio en la auditoría.
+            registrar_auditoria(
+                usuario,
+                'Proveedores',
+                proveedor,
+                'ACTIVACION' if nuevo_estado else 'BAJA',
+                antes,
+                snapshot(proveedor)
+            )
+
+    except IntegrityError:
+
+        return responder_error(
+            'No se pudo actualizar el estado del proveedor.',
+            400
+        )
+
+    # --------------------------------------------------------
+    # RESPUESTA
+    # --------------------------------------------------------
 
     if es_ajax:
         return JsonResponse({
@@ -824,6 +1012,7 @@ def cambiar_estado_proveedor(request, pk):
     messages.success(request, mensaje)
 
     return redirect('gestion_proveedores')
+
 
 # ============================================================
 # TIPOS DE PRODUCTOS
