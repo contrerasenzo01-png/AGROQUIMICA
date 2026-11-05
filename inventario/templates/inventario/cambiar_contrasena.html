@@ -11,6 +11,7 @@
 
     <link rel="stylesheet"
           href="{% static 'inventario/styles/cambiar_contrasena.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/validaciones.css' %}">
 </head>
 
 <body>
@@ -51,7 +52,7 @@
                 </p>
             </div>
 
-            <form method="POST">
+            <form method="POST" novalidate data-usuario-valor="{{ usuario.Usuario }}">
 
                 {% csrf_token %}
 
@@ -131,7 +132,7 @@
         </footer>
 
     </main>
-
+<script src="{% static 'inventario/js/validaciones.js' %}"></script>
 </body>
 
 </html>

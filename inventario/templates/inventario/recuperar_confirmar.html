@@ -1,8 +1,11 @@
 {% extends 'inventario/acceso_base.html' %}
+{% load static %}
 
 {% block titulo %}Nueva contraseña{% endblock %}
 
 {% block formulario %}
+
+    <link rel="stylesheet" href="{% static 'inventario/css/validaciones.css' %}">
 
     <span class="form-eyebrow">RECUPERAR ACCESO</span>
 
@@ -24,10 +27,10 @@
         <h2>Elegí tu nueva contraseña</h2>
 
         <p class="description">
-            La contraseña debe tener al menos 8 caracteres.
+            Tiene que cumplir todos los requisitos de la lista.
         </p>
 
-        <form method="POST">
+        <form method="POST" novalidate data-usuario-valor="{{ usuario_nombre|default:'' }}">
             {% csrf_token %}
 
             <div class="form-group">
@@ -37,7 +40,7 @@
                        name="nueva_contrasena"
                        placeholder="Ingresá la nueva contraseña"
                        autocomplete="new-password"
-                       minlength="8"
+                       maxlength="64"
                        required>
             </div>
 
@@ -48,7 +51,7 @@
                        name="confirmar_contrasena"
                        placeholder="Repetí la nueva contraseña"
                        autocomplete="new-password"
-                       minlength="8"
+                       maxlength="64"
                        required>
             </div>
 
@@ -61,6 +64,8 @@
                 <span class="arrow">›</span>
             </button>
         </form>
+
+        <script src="{% static 'inventario/js/validaciones.js' %}"></script>
 
     {% endif %}
 

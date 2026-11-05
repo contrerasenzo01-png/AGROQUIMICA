@@ -1,8 +1,11 @@
 {% extends 'inventario/acceso_base.html' %}
+{% load static %}
 
 {% block titulo %}Recuperar contraseña{% endblock %}
 
 {% block formulario %}
+
+    <link rel="stylesheet" href="{% static 'inventario/css/validaciones.css' %}">
 
     <span class="form-eyebrow">RECUPERAR ACCESO</span>
     <h2>¿Olvidaste tu contraseña?</h2>
@@ -22,7 +25,7 @@
             enviaremos un enlace para crear una nueva contraseña.
         </p>
 
-        <form method="POST" action="{% url 'recuperar_contrasena' %}">
+        <form method="POST" action="{% url 'recuperar_contrasena' %}" novalidate>
             {% csrf_token %}
 
             <div class="form-group">
@@ -31,8 +34,9 @@
                        id="email"
                        name="email"
                        value="{{ email|default:'' }}"
-                       placeholder="Ingresá tu correo"
+                       placeholder="nombre@empresa.com"
                        autocomplete="email"
+                       maxlength="100"
                        required>
             </div>
 
@@ -49,5 +53,7 @@
     {% endif %}
 
     <a href="{% url 'login' %}" class="link-volver">Volver al inicio de sesión</a>
+
+    <script src="{% static 'inventario/js/validaciones.js' %}"></script>
 
 {% endblock %}

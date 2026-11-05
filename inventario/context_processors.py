@@ -140,6 +140,7 @@ def configuracion_sesion(request):
 
     return {
         **_datos_alertas(usuario),
+        'usuario_sesion': usuario,
         'inactividad_ms': settings.INACTIVIDAD_SEGUNDOS * 1000,
         'rutas_denegadas': rutas_denegadas(usuario),
         'perm': permisos_ui(usuario),

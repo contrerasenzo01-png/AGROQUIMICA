@@ -48,7 +48,7 @@
 
         <div>
             <h1 class="us-title">Gestión de usuarios</h1>
-            <p>Prueba de fotos: {{ ver_fotos }}</p>
+            <p>Alta, modificación y baja de los usuarios del sistema.</p>
         </div>
         {% if perm.usuarios_gestionar %}
         <button type="button" class="us-btn us-btn-primary" onclick="abrirModalCrear()">
@@ -844,7 +844,10 @@ function generarUsuario() {
         .replace(/[\u0300-\u036f]/g, "");
 
     if (apellido && nombre) {
-        usuarioPreview.value = apellido.toLowerCase() + nombre.charAt(0).toLowerCase();
+        usuarioPreview.value = (apellido + nombre.charAt(0))
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '')
+            .slice(0, 50);
     } else {
         usuarioPreview.value = '';
     }

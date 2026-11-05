@@ -73,6 +73,12 @@ from .recuperacion import (
     token_valido, usuario_desde_uid, usuario_habilitado,
 )
 
+from .validaciones import (
+    validar_nombre, validar_persona, validar_texto, validar_codigo,
+    validar_entero, validar_decimal, validar_dni, validar_email,
+    validar_fecha,
+)
+
 # ============================================================
 # CONTROL DE ACCESO
 # Los permisos se verifican en permissions.py.
@@ -1059,11 +1065,7 @@ def gestion_tipos_productos(request):
 
 def crear_tipo_producto(request):
 
-    usuario = usuario_con_acceso(
-        request,
-        'tipos',
-        gestionar=True
-    )
+    usuario = usuario_con_acceso(request, 'tipos', gestionar=True)
 
     if not usuario:
         messages.error(
@@ -1075,23 +1077,18 @@ def crear_tipo_producto(request):
     if request.method != 'POST':
         return redirect('gestion_tipos_productos')
 
-    nombre = request.POST.get(
-        'Nombre_tipo_producto',
-        ''
-    ).strip()
+    nombre, error = validar_nombre(
+        request.POST.get('Nombre_tipo_producto', ''),
+        'Nombre del tipo de producto', 2, 50
+    )
 
-    if not nombre:
-        messages.error(
-            request,
-            'Debe ingresar el nombre del tipo de producto.'
-        )
+    if error:
+        messages.error(request, error)
         return redirect('gestion_tipos_productos')
 
-    existe = TiposProductos.objects.filter(
+    if TiposProductos.objects.filter(
         Nombre_tipo_producto__iexact=nombre
-    ).exists()
-
-    if existe:
+    ).exists():
         messages.error(
             request,
             'Ya existe un tipo de producto con ese nombre.'
@@ -1103,7 +1100,9 @@ def crear_tipo_producto(request):
         Estado_tipo_producto=True
     )
 
-    registrar_auditoria(usuario, 'Tipos de productos', tipo, 'CREACION', {}, snapshot(tipo))
+    registrar_auditoria(
+        usuario, 'Tipos de productos', tipo, 'CREACION', {}, snapshot(tipo)
+    )
 
     messages.success(
         request,
@@ -1119,11 +1118,7 @@ def crear_tipo_producto(request):
 
 def editar_tipo_producto(request, pk):
 
-    usuario = usuario_con_acceso(
-        request,
-        'tipos',
-        gestionar=True
-    )
+    usuario = usuario_con_acceso(request, 'tipos', gestionar=True)
 
     if not usuario:
         messages.error(
@@ -1135,44 +1130,28 @@ def editar_tipo_producto(request, pk):
     if request.method != 'POST':
         return redirect('gestion_tipos_productos')
 
-    tipo = get_object_or_404(
-        TiposProductos,
-        ID_Tipo_producto=pk
-    )
+    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=pk)
 
     antes = snapshot(tipo)
 
-    nombre = request.POST.get(
-        'Nombre_tipo_producto',
-        ''
-    ).strip()
-
-    estado_recibido = request.POST.get(
-        'Estado_tipo_producto',
-        ''
+    nombre, error = validar_nombre(
+        request.POST.get('Nombre_tipo_producto', ''),
+        'Nombre del tipo de producto', 2, 50
     )
 
-    if not nombre:
-        messages.error(
-            request,
-            'Debe ingresar el nombre del tipo de producto.'
-        )
+    if error:
+        messages.error(request, error)
         return redirect('gestion_tipos_productos')
+
+    estado_recibido = request.POST.get('Estado_tipo_producto', '')
 
     if estado_recibido not in ('True', 'False'):
-        messages.error(
-            request,
-            'El estado seleccionado no es válido.'
-        )
+        messages.error(request, 'El estado seleccionado no es válido.')
         return redirect('gestion_tipos_productos')
 
-    existe = TiposProductos.objects.filter(
+    if TiposProductos.objects.filter(
         Nombre_tipo_producto__iexact=nombre
-    ).exclude(
-        ID_Tipo_producto=pk
-    ).exists()
-
-    if existe:
+    ).exclude(ID_Tipo_producto=pk).exists():
         messages.error(
             request,
             'Ya existe otro tipo de producto con ese nombre.'
@@ -1182,10 +1161,7 @@ def editar_tipo_producto(request, pk):
     tipo.Nombre_tipo_producto = nombre
     tipo.Estado_tipo_producto = (estado_recibido == 'True')
     tipo.save(
-        update_fields=[
-            'Nombre_tipo_producto',
-            'Estado_tipo_producto',
-        ]
+        update_fields=['Nombre_tipo_producto', 'Estado_tipo_producto']
     )
 
     despues = snapshot(tipo)
@@ -1395,79 +1371,69 @@ def crear_subtipo(request):
     if not usuario:
         return redirect('panel_principal')
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('gestion_subtipos')
 
-        nombre = request.POST.get(
-            'Nombre_subtipo',
-            ''
-        ).strip()
+    nombre, error = validar_nombre(
+        request.POST.get('Nombre_subtipo', ''),
+        'Nombre del subtipo', 2, 50
+    )
 
-        tipo_id = request.POST.get('ID_Tipo_producto')
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_subtipos')
 
-        if not nombre:
-            messages.error(
-                request,
-                'Debe ingresar el nombre del subtipo.'
-            )
+    descripcion, error = validar_texto(
+        request.POST.get('Descripcion_subtipo', ''),
+        'Descripción', maximo=200, obligatorio=False
+    )
 
-            return redirect('gestion_subtipos')
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_subtipos')
 
-        if not tipo_id:
-            messages.error(
-                request,
-                'Debe seleccionar un tipo de producto.'
-            )
+    tipo_id = request.POST.get('ID_Tipo_producto', '').strip()
 
-            return redirect('gestion_subtipos')
+    if not tipo_id.isdigit():
+        messages.error(request, 'Debe seleccionar un tipo de producto.')
+        return redirect('gestion_subtipos')
 
-        tipo = get_object_or_404(
-            TiposProductos,
-            ID_Tipo_producto=tipo_id,
-        )
+    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=tipo_id)
 
-        # No permitir asociar subtipos a tipos inactivos
-        if not tipo.Estado_tipo_producto:
-            messages.error(
-                request,
-                'No se pueden asociar subtipos a un tipo de producto inactivo.'
-            )
-            return redirect('gestion_subtipos')
-
-        existe = Subtipos.objects.filter(
-            ID_Tipo_producto=tipo,
-            Nombre_subtipo__iexact=nombre
-
-        ).exists()
-
-        if existe:
-            messages.error(
-                request,
-                'Ya existe un subtipo con ese nombre '
-                'para el tipo seleccionado.'
-            )
-
-            return redirect('gestion_subtipos')
-
-        datos_subtipo = {
-            'ID_Tipo_producto': tipo,
-            'Nombre_subtipo': nombre,
-        }
-
-        if _subtipo_tiene_descripcion():
-            datos_subtipo['Descripcion_subtipo'] = (
-                request.POST.get(
-                    'Descripcion_subtipo',
-                    ''
-                ).strip() or None
-            )
-
-        subtipo = Subtipos.objects.create(**datos_subtipo)
-        registrar_auditoria(usuario, 'Subtipos', subtipo, 'CREACION', {}, snapshot(subtipo))
-
-        messages.success(
+    # No permitir asociar subtipos a tipos inactivos
+    if not tipo.Estado_tipo_producto:
+        messages.error(
             request,
-            'Subtipo creado correctamente.'
+            'No se pueden asociar subtipos a un tipo de producto inactivo.'
         )
+        return redirect('gestion_subtipos')
+
+    if Subtipos.objects.filter(
+        ID_Tipo_producto=tipo,
+        Nombre_subtipo__iexact=nombre
+    ).exists():
+        messages.error(
+            request,
+            'Ya existe un subtipo con ese nombre '
+            'para el tipo seleccionado.'
+        )
+        return redirect('gestion_subtipos')
+
+    datos_subtipo = {
+        'ID_Tipo_producto': tipo,
+        'Nombre_subtipo': nombre,
+    }
+
+    if _subtipo_tiene_descripcion():
+        datos_subtipo['Descripcion_subtipo'] = descripcion or None
+
+    subtipo = Subtipos.objects.create(**datos_subtipo)
+
+    registrar_auditoria(
+        usuario, 'Subtipos', subtipo, 'CREACION', {}, snapshot(subtipo)
+    )
+
+    messages.success(request, 'Subtipo creado correctamente.')
 
     return redirect('gestion_subtipos')
 
@@ -1479,106 +1445,81 @@ def editar_subtipo(request, pk):
     if not usuario:
         return redirect('panel_principal')
 
-    subtipo = get_object_or_404(
-        Subtipos,
-        ID_Subtipo=pk
-    )
+    subtipo = get_object_or_404(Subtipos, ID_Subtipo=pk)
+
+    if request.method != 'POST':
+        return redirect('gestion_subtipos')
 
     antes = snapshot(subtipo)
 
-    if request.method == 'POST':
+    nombre, error = validar_nombre(
+        request.POST.get('Nombre_subtipo', ''),
+        'Nombre del subtipo', 2, 50
+    )
 
-        nombre = request.POST.get(
-            'Nombre_subtipo',
-            ''
-        ).strip()
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_subtipos')
 
-        tipo_id = request.POST.get('ID_Tipo_producto')
+    descripcion, error = validar_texto(
+        request.POST.get('Descripcion_subtipo', ''),
+        'Descripción', maximo=200, obligatorio=False
+    )
 
-        if not nombre:
-            messages.error(
-                request,
-                'Debe ingresar el nombre del subtipo.'
-            )
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_subtipos')
 
-            return redirect('gestion_subtipos')
+    tipo_id = request.POST.get('ID_Tipo_producto', '').strip()
 
-        if not tipo_id:
-            messages.error(
-                request,
-                'Debe seleccionar un tipo de producto.'
-            )
+    if not tipo_id.isdigit():
+        messages.error(request, 'Debe seleccionar un tipo de producto.')
+        return redirect('gestion_subtipos')
 
-            return redirect('gestion_subtipos')
+    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=tipo_id)
 
-        tipo = get_object_or_404(
-            TiposProductos,
-            ID_Tipo_producto=tipo_id,
-        )
-
-        # No permitir asociar subtipos a tipos inactivos
-        if not tipo.Estado_tipo_producto:
-            messages.error(
-                request,
-                'No se pueden asociar subtipos a un tipo de producto inactivo.'
-            )
-            return redirect('gestion_subtipos')
-
-
-        if (
-            tipo.pk != subtipo.ID_Tipo_producto_id
-            and Productos.objects.filter(ID_Subtipo=subtipo).exists()
-        ):
-            messages.error(
-                request,
-                'No se puede cambiar el tipo de un subtipo que tiene '
-                'productos asociados.'
-            )
-
-            return redirect('gestion_subtipos')
-
-        existe = Subtipos.objects.filter(
-            ID_Tipo_producto=tipo,
-            Nombre_subtipo__iexact=nombre
-        ).exclude(
-            ID_Subtipo=pk
-        ).exists()
-
-        if existe:
-            messages.error(
-                request,
-                'Ya existe un subtipo con ese nombre '
-                'para el tipo seleccionado.'
-            )
-
-            return redirect('gestion_subtipos')
-
-        subtipo.ID_Tipo_producto = tipo
-        subtipo.Nombre_subtipo = nombre
-
-        if _subtipo_tiene_descripcion():
-            subtipo.Descripcion_subtipo = (
-                request.POST.get(
-                    'Descripcion_subtipo',
-                    ''
-                ).strip() or None
-            )
-
-        subtipo.save()
-
-        registrar_auditoria(
-            usuario,
-            'Subtipos',
-            subtipo,
-            'MODIFICACION',
-            antes,
-            snapshot(subtipo)
-        )
-
-        messages.success(
+    if not tipo.Estado_tipo_producto:
+        messages.error(
             request,
-            'Subtipo modificado correctamente.'
+            'No se pueden asociar subtipos a un tipo de producto inactivo.'
         )
+        return redirect('gestion_subtipos')
+
+    if (
+        tipo.pk != subtipo.ID_Tipo_producto_id
+        and Productos.objects.filter(ID_Subtipo=subtipo).exists()
+    ):
+        messages.error(
+            request,
+            'No se puede cambiar el tipo de un subtipo que tiene '
+            'productos asociados.'
+        )
+        return redirect('gestion_subtipos')
+
+    if Subtipos.objects.filter(
+        ID_Tipo_producto=tipo,
+        Nombre_subtipo__iexact=nombre
+    ).exclude(ID_Subtipo=pk).exists():
+        messages.error(
+            request,
+            'Ya existe un subtipo con ese nombre '
+            'para el tipo seleccionado.'
+        )
+        return redirect('gestion_subtipos')
+
+    subtipo.ID_Tipo_producto = tipo
+    subtipo.Nombre_subtipo = nombre
+
+    if _subtipo_tiene_descripcion():
+        subtipo.Descripcion_subtipo = descripcion or None
+
+    subtipo.save()
+
+    registrar_auditoria(
+        usuario, 'Subtipos', subtipo, 'MODIFICACION', antes, snapshot(subtipo)
+    )
+
+    messages.success(request, 'Subtipo modificado correctamente.')
 
     return redirect('gestion_subtipos')
 
@@ -1692,7 +1633,9 @@ def validar_contrasena(contrasena, usuario=''):
 
     if len(contrasena) < 8:
         return 'La contraseña debe tener al menos 8 caracteres.'
-    if ' ' in contrasena:
+    if len(contrasena) > 64:
+        return 'La contraseña no puede superar los 64 caracteres.'
+    if re.search(r'\s', contrasena):
         return 'La contraseña no puede tener espacios.'
     if not re.search(r'[A-Z]', contrasena):
         return 'La contraseña debe tener al menos una mayúscula.'
@@ -1712,161 +1655,133 @@ def crear_usuario(request):
     if not usuario_admin:
         return redirect('panel_principal')
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('gestion_usuarios')
 
-        perfil_id = request.POST.get('ID_Perfil')
+    # --------------------------------------------------------
+    # PERFIL
+    # --------------------------------------------------------
 
-        if not perfil_id:
-            messages.error(
-                request,
-                'Debe seleccionar un perfil.'
-            )
+    perfil_id = request.POST.get('ID_Perfil', '').strip()
 
-            return redirect('gestion_usuarios')
+    if not perfil_id.isdigit():
+        messages.error(request, 'Debe seleccionar un perfil.')
+        return redirect('gestion_usuarios')
 
-        perfil = get_object_or_404(
-            Perfiles,
-            ID_Perfil=perfil_id
-        )
+    perfil = get_object_or_404(Perfiles, ID_Perfil=perfil_id)
 
-        if not perfil.Estado_perfil:
-            messages.error(
-                request,
-                'No se pueden registrar usuarios con un perfil inactivo.'
-            )
-            return redirect('gestion_usuarios')
-
-        dni = request.POST.get('DNI', '').strip()
-        apellido = request.POST.get(
-            'Apellido_usuario',
-            ''
-        ).strip()
-        nombre = request.POST.get(
-            'Nombre_usuario',
-            ''
-        ).strip()
-        email = request.POST.get(
-            'Email_usuario',
-            ''
-        ).strip()
-        contrasena = request.POST.get(
-            'Contrasena',
-            ''
-        ).strip()
-
-        if not dni or not dni.isdigit():
-            messages.error(
-                request,
-                'Debe ingresar un DNI válido.'
-            )
-
-            return redirect('gestion_usuarios')
-
-        if not nombre:
-            messages.error(
-                request,
-                'Debe ingresar el nombre del usuario.'
-            )
-
-            return redirect('gestion_usuarios')
-
-        if not apellido:
-            messages.error(
-                request,
-                'Debe ingresar el apellido del usuario.'
-            )
-
-            return redirect('gestion_usuarios')
-
-        if not email:
-            messages.error(
-                request,
-                'Debe ingresar el correo electrónico.'
-            )
-
-            return redirect('gestion_usuarios')
-
-        if Usuarios.objects.filter(DNI=int(dni)).exists():
-            messages.error(
-                request,
-                'Ya existe un usuario con ese DNI.'
-            )
-
-            return redirect('gestion_usuarios')
-
-        if Usuarios.objects.filter(
-            Email_usuario__iexact=email
-        ).exists():
-            messages.error(
-                request,
-                'Ya existe un usuario con ese correo electrónico.'
-            )
-
-            return redirect('gestion_usuarios')
-
-        apellido_sin_tildes = ''.join(
-            caracter
-            for caracter in unicodedata.normalize(
-                'NFD',
-                apellido
-            )
-            if unicodedata.category(caracter) != 'Mn'
-        )
-
-        nombre_sin_tildes = ''.join(
-            caracter
-            for caracter in unicodedata.normalize(
-                'NFD',
-                nombre
-            )
-            if unicodedata.category(caracter) != 'Mn'
-        )
-
-        usuario_generado = (
-            apellido_sin_tildes + nombre_sin_tildes[0]
-        ).lower()
-
-        if Usuarios.objects.filter(
-            Usuario=usuario_generado
-        ).exists():
-            messages.error(
-                request,
-                f'El usuario {usuario_generado} ya existe.'
-            )
-
-            return redirect('gestion_usuarios')
-
-        # Reglas de la contraseña (se valida acá porque necesita
-        # el nombre de usuario generado).
-        error = validar_contrasena(contrasena, usuario_generado)
-
-        if error:
-            messages.error(request, error)
-            return redirect('gestion_usuarios')
-
-        nuevo = Usuarios.objects.create(
-            ID_Perfil=perfil,
-            DNI=int(dni),
-            Apellido_usuario=apellido,
-            Nombre_usuario=nombre,
-            Usuario=usuario_generado,
-            Contrasena=make_password(contrasena),
-            Email_usuario=email,
-            Estado_usuario=True,
-            Cambiar_contrasena=True
-        )
-
-        registrar_auditoria(usuario_admin, 'Usuarios', nuevo, 'CREACION', {}, snapshot(nuevo))
-        registrar_asignacion_perfil(usuario_admin, nuevo, None, perfil)
-
-
-        messages.success(
+    if not perfil.Estado_perfil:
+        messages.error(
             request,
-            f'El usuario {nuevo.Usuario} '
-            'ha sido registrado correctamente. '
-            'Deberá cambiar su contraseña '
-            'en el próximo inicio de sesión.'
+            'No se pueden registrar usuarios con un perfil inactivo.'
         )
+        return redirect('gestion_usuarios')
+
+    # --------------------------------------------------------
+    # DATOS PERSONALES
+    # --------------------------------------------------------
+
+    nombre, error = validar_persona(
+        request.POST.get('Nombre_usuario', ''), 'Nombre'
+    )
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_usuarios')
+
+    apellido, error = validar_persona(
+        request.POST.get('Apellido_usuario', ''), 'Apellido'
+    )
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_usuarios')
+
+    dni, error = validar_dni(request.POST.get('DNI', ''))
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_usuarios')
+
+    email, error = validar_email(request.POST.get('Email_usuario', ''))
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_usuarios')
+
+    if Usuarios.objects.filter(DNI=dni).exists():
+        messages.error(request, 'Ya existe un usuario con ese DNI.')
+        return redirect('gestion_usuarios')
+
+    if Usuarios.objects.filter(Email_usuario__iexact=email).exists():
+        messages.error(
+            request,
+            'Ya existe un usuario con ese correo electrónico.'
+        )
+        return redirect('gestion_usuarios')
+
+    # --------------------------------------------------------
+    # NOMBRE DE USUARIO: apellido + primera letra del nombre,
+    # sin tildes, sin espacios ni símbolos.
+    # --------------------------------------------------------
+
+    def sin_tildes(texto):
+        return ''.join(
+            c for c in unicodedata.normalize('NFD', texto)
+            if unicodedata.category(c) != 'Mn'
+        )
+
+    usuario_generado = re.sub(
+        r'[^a-z0-9]', '',
+        (sin_tildes(apellido) + sin_tildes(nombre)[0]).lower()
+    )[:50]
+
+    if not usuario_generado:
+        messages.error(
+            request,
+            'No se pudo generar el nombre de usuario con esos datos.'
+        )
+        return redirect('gestion_usuarios')
+
+    if Usuarios.objects.filter(Usuario=usuario_generado).exists():
+        messages.error(
+            request,
+            f'El usuario {usuario_generado} ya existe.'
+        )
+        return redirect('gestion_usuarios')
+
+    # --------------------------------------------------------
+    # CONTRASEÑA (sin .strip(): si tiene espacios, se rechaza)
+    # --------------------------------------------------------
+
+    contrasena = request.POST.get('Contrasena', '')
+
+    error = validar_contrasena(contrasena, usuario_generado)
+
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_usuarios')
+
+    nuevo = Usuarios.objects.create(
+        ID_Perfil=perfil,
+        DNI=dni,
+        Apellido_usuario=apellido,
+        Nombre_usuario=nombre,
+        Usuario=usuario_generado,
+        Contrasena=make_password(contrasena),
+        Email_usuario=email,
+        Estado_usuario=True,
+        Cambiar_contrasena=True
+    )
+
+    registrar_auditoria(
+        usuario_admin, 'Usuarios', nuevo, 'CREACION', {}, snapshot(nuevo)
+    )
+    registrar_asignacion_perfil(usuario_admin, nuevo, None, perfil)
+
+    messages.success(
+        request,
+        f'El usuario {nuevo.Usuario} '
+        'ha sido registrado correctamente. '
+        'Deberá cambiar su contraseña '
+        'en el próximo inicio de sesión.'
+    )
 
     return redirect('gestion_usuarios')
 
@@ -1879,36 +1794,22 @@ def editar_usuario(request, pk):
     if not usuario_admin:
         return redirect('panel_principal')
 
-    # La edición se hace desde el modal: no hay pantalla propia.
     if request.method != 'POST':
         return redirect('gestion_usuarios')
 
-    usuario_editado = get_object_or_404(
-        Usuarios,
-        ID_Usuario=pk
-    )
+    usuario_editado = get_object_or_404(Usuarios, ID_Usuario=pk)
 
     antes = snapshot(usuario_editado)
 
-    nuevo_email = request.POST.get(
-        'Email_usuario',
-        ''
-    ).strip()
+    nuevo_email, error = validar_email(request.POST.get('Email_usuario', ''))
 
-    if not nuevo_email:
-        messages.error(
-            request,
-            'El correo electrónico es obligatorio.'
-        )
+    if error:
+        messages.error(request, error)
         return redirect('gestion_usuarios')
 
-    email_existente = Usuarios.objects.filter(
+    if Usuarios.objects.filter(
         Email_usuario__iexact=nuevo_email
-    ).exclude(
-        ID_Usuario=pk
-    ).exists()
-
-    if email_existente:
+    ).exclude(ID_Usuario=pk).exists():
         messages.error(
             request,
             'Ya existe otro usuario con ese correo electrónico.'
@@ -2282,17 +2183,13 @@ def crear_perfil(request):
 
     if request.method == 'POST':
 
-        nombre_perfil = request.POST.get(
-            'Nombre_perfil',
-            ''
-        ).strip()
+        nombre_perfil, error = validar_nombre(
+            request.POST.get('Nombre_perfil', ''),
+            'Nombre del perfil', 3, 50
+        )
 
-        if not nombre_perfil:
-            messages.error(
-                request,
-                'Debe ingresar el nombre del perfil.'
-            )
-
+        if error:
+            messages.error(request, error)
             return redirect('gestion_perfiles')
 
         if Perfiles.objects.filter(
@@ -2649,63 +2546,39 @@ def mis_permisos(request):
 # PRODUCTOS
 # ============================================================
 
-def _leer_datos_producto(request, estado_por_defecto):
+UNIDADES_VALIDAS = ('kg', 'g', 'litros')
+
+
+def _leer_datos_producto(request, estado_por_defecto, unidad_actual=None):
     """Lee y valida los datos del producto y su subtipo."""
 
-    tipo_id = request.POST.get(
-        'ID_Tipo_producto', ''
-    ).strip()
-
-    subtipo_id = request.POST.get(
-        'ID_Subtipo', ''
-    ).strip()
-
-    nombre = request.POST.get('Nombre_producto', '').strip()
-    descripcion = request.POST.get(
-        'Descripcion_producto', ''
-    ).strip()
-
-    precio_input = request.POST.get('Precio', '').strip()
-    cantidad_input = request.POST.get(
-        'Cantidad_presentacion', ''
-    ).strip()
-
-    unidades_input = request.POST.get(
-        'Unidades_por_presentacion', ''
-    ).strip()
-
-    unidad_medida = request.POST.get(
-        'Unidad_medida_producto', ''
-    ).strip()
-
+    tipo_id = request.POST.get('ID_Tipo_producto', '').strip()
+    subtipo_id = request.POST.get('ID_Subtipo', '').strip()
+    unidad_medida = request.POST.get('Unidad_medida_producto', '').strip()
     estado_producto = request.POST.get(
-        'Estado_producto',
-        estado_por_defecto
+        'Estado_producto', estado_por_defecto
     ).strip()
 
     # --------------------------------------------------------
-    # VALIDAR TIPO
+    # TIPO
     # --------------------------------------------------------
 
-    if not tipo_id:
+    if not tipo_id.isdigit():
         return None, 'Debe seleccionar un tipo de producto.'
 
-    tipo = get_object_or_404(
-        TiposProductos,
-        ID_Tipo_producto=tipo_id,
-    )
+    tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=tipo_id)
 
     if not tipo.Estado_tipo_producto:
         return None, 'No se pueden registrar productos con un tipo inactivo.'
 
     # --------------------------------------------------------
-    # VALIDAR SUBTIPO
+    # SUBTIPO
     # --------------------------------------------------------
 
-    subtipos_disponibles = Subtipos.objects.filter(
-        ID_Tipo_producto=tipo,
-    )
+    if subtipo_id and not subtipo_id.isdigit():
+        return None, 'El subtipo seleccionado no es válido.'
 
+    subtipos_disponibles = Subtipos.objects.filter(ID_Tipo_producto=tipo)
     subtipo = None
 
     if subtipos_disponibles.exists():
@@ -2715,9 +2588,7 @@ def _leer_datos_producto(request, estado_por_defecto):
                 'Debe seleccionar un subtipo para este tipo de producto.'
             )
 
-        subtipo = subtipos_disponibles.filter(
-            ID_Subtipo=subtipo_id
-        ).first()
+        subtipo = subtipos_disponibles.filter(ID_Subtipo=subtipo_id).first()
 
         if not subtipo:
             return None, (
@@ -2731,82 +2602,72 @@ def _leer_datos_producto(request, estado_por_defecto):
         )
 
     # --------------------------------------------------------
-    # VALIDAR NOMBRE
+    # TEXTOS
     # --------------------------------------------------------
 
-    if not nombre:
-        return None, 'Debe ingresar el nombre del producto.'
+    nombre, error = validar_nombre(
+        request.POST.get('Nombre_producto', ''),
+        'Nombre del producto', 2, 50
+    )
+    if error:
+        return None, error
+
+    descripcion, error = validar_texto(
+        request.POST.get('Descripcion_producto', ''),
+        'Descripción', maximo=200, obligatorio=False
+    )
+    if error:
+        return None, error
 
     # --------------------------------------------------------
-    # VALIDAR PRECIO
+    # NÚMEROS
     # --------------------------------------------------------
 
-    if not precio_input:
-        return None, 'Debe ingresar el precio del producto.'
+    precio, error = validar_decimal(
+        request.POST.get('Precio', ''), 'Precio',
+        Decimal('0.01'), Decimal('99999999.99')
+    )
+    if error:
+        return None, error
 
-    try:
-        precio = Decimal(precio_input)
-    except (InvalidOperation, TypeError, ValueError):
-        return None, 'El precio ingresado no es válido.'
+    cantidad_presentacion, error = validar_decimal(
+        request.POST.get('Cantidad_presentacion', ''),
+        'Cantidad de presentación',
+        Decimal('0.01'), Decimal('99999.99')
+    )
+    if error:
+        return None, error
 
-    if not precio.is_finite() or precio <= 0:
-        return None, 'El precio debe ser mayor a cero.'
+    unidades_texto = request.POST.get('Unidades_por_presentacion', '').strip()
 
-    # --------------------------------------------------------
-    # VALIDAR CANTIDAD DE PRESENTACIÓN
-    # --------------------------------------------------------
-
-    if cantidad_input:
-        try:
-            cantidad_presentacion = Decimal(cantidad_input)
-        except (InvalidOperation, TypeError, ValueError):
-            return None, (
-                'La cantidad de presentación no es válida.'
-            )
-
-        if (
-            not cantidad_presentacion.is_finite()
-            or cantidad_presentacion <= 0
-        ):
-            return None, (
-                'La cantidad de presentación debe ser mayor a cero.'
-            )
+    if unidades_texto:
+        unidades_por_presentacion, error = validar_entero(
+            unidades_texto, 'Unidades por presentación', 1, 9999
+        )
+        if error:
+            return None, error
     else:
-        cantidad_presentacion = None
+        unidades_por_presentacion = 1
+
+    stock_minimo, error = validar_entero(
+        request.POST.get('Stock_minimo', ''), 'Stock mínimo',
+        0, 999999, obligatorio=False
+    )
+    if error:
+        return None, error
 
     # --------------------------------------------------------
-    # VALIDAR UNIDADES POR PRESENTACIÓN
+    # UNIDAD DE MEDIDA
     # --------------------------------------------------------
 
-    try:
-        unidades_por_presentacion = int(unidades_input or 1)
-    except (ValueError, TypeError):
-        return None, 'Las unidades por presentación no son válidas.'
+    if not unidad_medida:
+        return None, 'Seleccioná la unidad de medida.'
 
-    if unidades_por_presentacion < 1:
-        return None, 'Las unidades por presentación deben ser al menos 1.'
+    if unidad_medida not in UNIDADES_VALIDAS and unidad_medida != unidad_actual:
+        return None, 'La unidad de medida seleccionada no es válida.'
 
     # --------------------------------------------------------
-    # VALIDAR STOCK MÍNIMO
-    # --------------------------------------------------------
-
-    stock_minimo_input = request.POST.get(
-        'Stock_minimo', ''
-    ).strip()
-
-    if stock_minimo_input:
-        try:
-            stock_minimo = int(stock_minimo_input)
-        except (ValueError, TypeError):
-            return None, 'El stock mínimo ingresado no es válido.'
-
-        if stock_minimo < 0:
-            return None, 'El stock mínimo no puede ser negativo.'
-    else:
-        stock_minimo = None
-
-    # --------------------------------------------------------
-    # VALIDAR PROVEEDORES QUE SUMINISTRAN EL PRODUCTO
+    # PROVEEDORES QUE SUMINISTRAN EL PRODUCTO
     # --------------------------------------------------------
 
     ids_proveedores = {
@@ -2829,15 +2690,11 @@ def _leer_datos_producto(request, estado_por_defecto):
         return None, 'Alguno de los proveedores seleccionados no existe o está inactivo.'
 
     # --------------------------------------------------------
-    # VALIDAR ESTADO
+    # ESTADO
     # --------------------------------------------------------
 
     if estado_producto not in ('Activo', 'Inactivo'):
         return None, 'El estado del producto no es válido.'
-
-    # --------------------------------------------------------
-    # DATOS VALIDADOS
-    # --------------------------------------------------------
 
     datos = {
         'stock_minimo': stock_minimo,
@@ -2849,7 +2706,7 @@ def _leer_datos_producto(request, estado_por_defecto):
         'cantidad_presentacion': cantidad_presentacion,
         'unidades_por_presentacion': unidades_por_presentacion,
         'proveedores': proveedores_producto,
-        'unidad_medida': unidad_medida or None,
+        'unidad_medida': unidad_medida,
         'estado_producto': estado_producto,
     }
 
@@ -3084,7 +2941,8 @@ def crear_producto(request):
 
     datos, error = _leer_datos_producto(
         request,
-        'Activo'
+        producto.Estado_producto,
+        unidad_actual=producto.Unidad_medida_producto
     )
 
     if error:
@@ -3489,7 +3347,14 @@ def baja_lote_vencido(request, id_lote):
     detalle = f"Salida por vencimiento del lote {lote.Numero_lote}"
 
     # Observación opcional de la ventana (ej.: "Devuelto al proveedor").
-    observacion = request.POST.get('observacion', '').strip()[:200]
+    observacion, error = validar_texto(
+        request.POST.get('observacion', ''), 'Observación',
+        maximo=200, obligatorio=False
+    )
+
+    if error:
+        messages.error(request, error)
+        return redirect('registrar_ingreso_lote')
 
     if observacion:
         detalle = f'{detalle}. {observacion}'
@@ -4372,7 +4237,76 @@ def remito_pdf(request, id_remito):
 
     return respuesta
 
+TOTAL_LOTE_MAX = 10_000_000   # cajas x unidades por caja
 
+
+def _validar_numero_y_fecha_remito(numero_texto, fecha_texto, hoy):
+    """Valida el número y la fecha de un remito. Devuelve (numero, fecha, error)."""
+
+    numero, error = validar_codigo(
+        numero_texto, 'Número de remito', 3, 20
+    )
+
+    if error:
+        return None, None, error
+
+    fecha, error = validar_fecha(
+        fecha_texto, 'Fecha del remito',
+        desde=hoy - timedelta(days=3650),
+        hasta=hoy,
+        msg_desde='La fecha del remito es demasiado antigua (máximo 10 años).',
+        msg_hasta='La fecha del remito no puede ser futura.'
+    )
+
+    if error:
+        return None, None, error
+
+    return numero, fecha, None
+
+
+def _validar_lote(numero_texto, cajas_texto, unidades_texto,
+                  vencimiento_texto, hoy, permitir_vencido=False):
+    """Valida los datos de un lote. Devuelve (datos, error)."""
+
+    numero, error = validar_codigo(numero_texto, 'Número de lote', 1, 50)
+    if error:
+        return None, error
+
+    cajas, error = validar_entero(
+        cajas_texto, 'Cantidad de cajas', 1, 999999
+    )
+    if error:
+        return None, error
+
+    unidades, error = validar_entero(
+        unidades_texto, 'Unidades por caja', 1, 999999
+    )
+    if error:
+        return None, error
+
+    if cajas * unidades > TOTAL_LOTE_MAX:
+        return None, (
+            'Un lote no puede superar las 10.000.000 unidades '
+            '(cajas × unidades por caja).'
+        )
+
+    vencimiento, error = validar_fecha(
+        vencimiento_texto, 'Fecha de vencimiento',
+        desde=None if permitir_vencido else hoy,
+        hasta=hoy + timedelta(days=5475),
+        msg_desde='No se pueden registrar lotes ya vencidos.',
+        msg_hasta='La fecha de vencimiento no puede superar los 15 años.'
+    )
+    if error:
+        return None, error
+
+    return {
+        'numero': numero,
+        'cajas': cajas,
+        'unidades_caja': unidades,
+        'vencimiento': vencimiento,
+        'cantidad': cajas * unidades,
+    }, None
 
 def gestion_remitos(request):
     usuario = usuario_con_acceso(
@@ -4398,8 +4332,6 @@ def gestion_remitos(request):
         # ====================================================
         if accion == 'crear_remito':
             proveedor_id = request.POST.get('ID_Proveedor', '').strip()
-            numero_remito = request.POST.get('Numero_remito', '').strip()
-            fecha_texto = request.POST.get('Fecha_remito', '').strip()
 
             productos_ids = request.POST.getlist('lote_producto')
             numeros_lote = request.POST.getlist('lote_numero')
@@ -4407,8 +4339,18 @@ def gestion_remitos(request):
             cajas_lista = request.POST.getlist('lote_cajas')
             unidades_lista = request.POST.getlist('lote_unidades_caja')
 
-            if not proveedor_id or not numero_remito or not fecha_texto:
-                messages.error(request, 'Completá los datos del remito.')
+            if not proveedor_id.isdigit():
+                messages.error(request, 'Seleccioná un proveedor.')
+                return redirect('gestion_remitos')
+
+            numero_remito, fecha_remito, error = _validar_numero_y_fecha_remito(
+                request.POST.get('Numero_remito', ''),
+                request.POST.get('Fecha_remito', ''),
+                hoy
+            )
+
+            if error:
+                messages.error(request, error)
                 return redirect('gestion_remitos')
 
             if not (
@@ -4422,23 +4364,10 @@ def gestion_remitos(request):
                 )
                 return redirect('gestion_remitos')
 
-            if len(numero_remito) > 20:
+            if len(productos_ids) > 50:
                 messages.error(
                     request,
-                    'El número de remito no puede superar los 20 caracteres.'
-                )
-                return redirect('gestion_remitos')
-
-            try:
-                fecha_remito = date.fromisoformat(fecha_texto)
-            except ValueError:
-                messages.error(request, 'La fecha del remito no es válida.')
-                return redirect('gestion_remitos')
-
-            if fecha_remito > hoy:
-                messages.error(
-                    request,
-                    'La fecha del remito no puede ser futura.'
+                    'Un remito no puede tener más de 50 lotes.'
                 )
                 return redirect('gestion_remitos')
 
@@ -4453,8 +4382,6 @@ def gestion_remitos(request):
                     'El proveedor seleccionado no existe o está inactivo.'
                 )
                 return redirect('gestion_remitos')
-            
-    
 
             # Validar los lotes antes de guardar.
             lotes_validados = []
@@ -4467,63 +4394,23 @@ def gestion_remitos(request):
                 productos_ids, numeros_lote, vencimientos,
                 cajas_lista, unidades_lista
             ):
-                numero_lote = numero_lote.strip()
-
-                if not all([
-                    producto_id,
-                    numero_lote,
-                    vencimiento_texto,
-                    cajas_texto,
-                    unidades_texto
-                ]):
+                if not producto_id.strip().isdigit():
                     messages.error(
                         request,
-                        'Completá todos los campos de cada lote.'
+                        'Seleccioná el producto de cada lote.'
                     )
                     return redirect('gestion_remitos')
 
-                if len(numero_lote) > 50:
-                    messages.error(
-                        request,
-                        'El número de lote no puede superar los 50 caracteres.'
-                    )
+                datos_lote, error = _validar_lote(
+                    numero_lote, cajas_texto, unidades_texto,
+                    vencimiento_texto, hoy
+                )
+
+                if error:
+                    messages.error(request, error)
                     return redirect('gestion_remitos')
 
-                try:
-                    cajas = int(cajas_texto)
-                    unidades_caja = int(unidades_texto)
-                    fecha_vencimiento = date.fromisoformat(
-                        vencimiento_texto
-                    )
-                except (ValueError, TypeError):
-                    messages.error(
-                        request,
-                        'Revisá las cantidades y las fechas de los lotes.'
-                    )
-                    return redirect('gestion_remitos')
-
-                if unidades_caja <= 0:
-                    messages.error(
-                        request,
-                        'Las unidades por caja de cada lote deben ser mayor a cero.'
-                    )
-                    return redirect('gestion_remitos')
-
-                if cajas <= 0:
-                    messages.error(
-                        request,
-                        'La cantidad de cajas de cada lote debe ser mayor a cero.'
-                    )
-                    return redirect('gestion_remitos')
-
-                if fecha_vencimiento < hoy:
-                    messages.error(
-                        request,
-                        'No se pueden registrar lotes ya vencidos.'
-                    )
-                    return redirect('gestion_remitos')
-                
-                if fecha_vencimiento < fecha_remito:
+                if datos_lote['vencimiento'] < fecha_remito:
                     messages.error(
                         request,
                         'La fecha de vencimiento no puede ser anterior '
@@ -4532,7 +4419,7 @@ def gestion_remitos(request):
                     return redirect('gestion_remitos')
 
                 producto = Productos.objects.filter(
-                    ID_Producto=producto_id,
+                    ID_Producto=producto_id.strip(),
                     Estado_producto='Activo'
                 ).first()
 
@@ -4543,12 +4430,9 @@ def gestion_remitos(request):
                         'o está inactivo.'
                     )
                     return redirect('gestion_remitos')
-                
-                
+
                 # El producto debe ser suministrado por el proveedor del remito.
-                if not producto.proveedores.filter(
-                    pk=proveedor.pk
-                ).exists():
+                if not producto.proveedores.filter(pk=proveedor.pk).exists():
                     messages.error(
                         request,
                         f'El producto "{producto.Nombre_producto}" no es '
@@ -4557,10 +4441,9 @@ def gestion_remitos(request):
                     )
                     return redirect('gestion_remitos')
 
-                # Unidades totales = cajas x unidades por caja.
-                cantidad = cajas * unidades_caja
+                numero_lote = datos_lote['numero']
 
-            # Verificar si el lote ya existe en la base de datos.
+                # Verificar si el lote ya existe en la base de datos.
                 if Lotes.objects.filter(
                     ID_Producto=producto,
                     Numero_lote=numero_lote
@@ -4571,7 +4454,6 @@ def gestion_remitos(request):
                         f'el producto "{producto.Nombre_producto}".'
                     )
                     return redirect('gestion_remitos')
-
 
                 combinacion = (producto.pk, numero_lote)
 
@@ -4587,10 +4469,10 @@ def gestion_remitos(request):
                 lotes_validados.append({
                     'producto': producto,
                     'numero': numero_lote,
-                    'vencimiento': fecha_vencimiento,
-                    'cajas': cajas,
-                    'unidades_caja': unidades_caja,
-                    'cantidad': cantidad,
+                    'vencimiento': datos_lote['vencimiento'],
+                    'cajas': datos_lote['cajas'],
+                    'unidades_caja': datos_lote['unidades_caja'],
+                    'cantidad': datos_lote['cantidad'],
                 })
 
             tipo_entrada = TiposMovimientos.objects.filter(
@@ -4682,38 +4564,18 @@ def gestion_remitos(request):
         # ====================================================
         elif accion == 'editar_remito':
             remito_id = request.POST.get('ID_Remito', '').strip()
-            numero_remito = request.POST.get('Numero_remito', '').strip()
-            fecha_texto = request.POST.get('Fecha_remito', '').strip()
 
-            if not remito_id or not numero_remito or not fecha_texto:
-                messages.error(
-                    request,
-                    'Completá todos los campos del remito.'
-                )
-                return redirect('gestion_remitos')
+            numero_remito, fecha_remito, error = _validar_numero_y_fecha_remito(
+                request.POST.get('Numero_remito', ''),
+                request.POST.get('Fecha_remito', ''),
+                hoy
+            )
 
-            # Validar la longitud del número de remito.
-            if len(numero_remito) > 20:
-                messages.error(
-                    request,
-                    'El número de remito no puede superar los 20 caracteres.'
-                )
-                return redirect('gestion_remitos')
+            if not remito_id.isdigit():
+                error = error or 'El remito seleccionado no es válido.'
 
-            try:
-                fecha_remito = date.fromisoformat(fecha_texto)
-            except ValueError:
-                messages.error(
-                    request,
-                    'La fecha del remito no es válida.'
-                )
-                return redirect('gestion_remitos')
-
-            if fecha_remito > hoy:
-                messages.error(
-                    request,
-                    'La fecha del remito no puede ser futura.'
-                )
+            if error:
+                messages.error(request, error)
                 return redirect('gestion_remitos')
 
             try:
@@ -4762,80 +4624,49 @@ def gestion_remitos(request):
         elif accion == 'editar_lote':
             lote_id = request.POST.get('ID_Lote', '').strip()
             producto_id = request.POST.get('ID_Producto', '').strip()
-            numero_lote = request.POST.get('Numero_lote', '').strip()
-            cajas_texto = request.POST.get(
-                'Cantidad_cajas', ''
-            ).strip()
-            unidades_caja_texto = request.POST.get(
-                'Unidades_por_caja', ''
-            ).strip()
-            cantidad_actual_texto = request.POST.get(
-                'Cantidad_actual', ''
-            ).strip()
-            fecha_ingreso_texto = request.POST.get(
-                'Fecha_ingreso', ''
-            ).strip()
-            vencimiento_texto = request.POST.get(
-                'Fecha_vencimiento', ''
-            ).strip()
 
-            if not all([
-                lote_id, producto_id, numero_lote,
-                cajas_texto, unidades_caja_texto, cantidad_actual_texto,
-                fecha_ingreso_texto, vencimiento_texto
-            ]):
+            if not lote_id.isdigit() or not producto_id.isdigit():
                 messages.error(request, 'Completá todos los campos del lote.')
                 return redirect('gestion_remitos')
 
-            if len(numero_lote) > 50:
-                messages.error(
-                    request,
-                    'El número de lote no puede superar los 50 caracteres.'
-                )
+            datos_lote, error = _validar_lote(
+                request.POST.get('Numero_lote', ''),
+                request.POST.get('Cantidad_cajas', ''),
+                request.POST.get('Unidades_por_caja', ''),
+                request.POST.get('Fecha_vencimiento', ''),
+                hoy,
+                permitir_vencido=True
+            )
+
+            if error:
+                messages.error(request, error)
                 return redirect('gestion_remitos')
 
-            try:
-                cajas = int(cajas_texto)
-                unidades_caja = int(unidades_caja_texto)
-                cantidad_actual = int(cantidad_actual_texto)
-                fecha_ingreso = date.fromisoformat(fecha_ingreso_texto)
-                fecha_vencimiento = date.fromisoformat(vencimiento_texto)
-            except (ValueError, TypeError):
-                messages.error(
-                    request,
-                    'Revisá las cantidades y las fechas ingresadas.'
-                )
+            numero_lote = datos_lote['numero']
+            cajas = datos_lote['cajas']
+            unidades_caja = datos_lote['unidades_caja']
+            fecha_vencimiento = datos_lote['vencimiento']
+            cantidad_ingresada = datos_lote['cantidad']
+
+            cantidad_actual, error = validar_entero(
+                request.POST.get('Cantidad_actual', ''),
+                'Cantidad actual', 0, cantidad_ingresada
+            )
+
+            if error:
+                messages.error(request, error)
                 return redirect('gestion_remitos')
 
-            if cajas <= 0:
-                messages.error(
-                    request,
-                    'La cantidad de cajas debe ser mayor a cero.'
-                )
-                return redirect('gestion_remitos')
+            fecha_ingreso, error = validar_fecha(
+                request.POST.get('Fecha_ingreso', ''), 'Fecha de ingreso',
+                desde=hoy - timedelta(days=3650),
+                hasta=hoy,
+                msg_desde='La fecha de ingreso es demasiado antigua (máximo 10 años).',
+                msg_hasta='La fecha de ingreso no puede ser futura.'
+            )
 
-            if unidades_caja <= 0:
-                messages.error(
-                    request,
-                    'Las unidades por caja deben ser mayor a cero.'
-                )
-                return redirect('gestion_remitos')
-
-            # Unidades totales = cajas x unidades por caja.
-            cantidad_ingresada = cajas * unidades_caja
-
-            if not 0 <= cantidad_actual <= cantidad_ingresada:
-                messages.error(
-                    request,
-                    'La cantidad actual debe estar entre cero y la cantidad ingresada.'
-                )
-                return redirect('gestion_remitos')
-
-            if fecha_ingreso > hoy:
-                messages.error(
-                    request,
-                    'La fecha de ingreso no puede ser futura.'
-                )
+            if error:
+                messages.error(request, error)
                 return redirect('gestion_remitos')
 
             if fecha_vencimiento < fecha_ingreso:
@@ -5039,27 +4870,19 @@ def gestion_remitos(request):
         # ====================================================
         elif accion == 'anular_remito':
             remito_id = request.POST.get('ID_Remito', '').strip()
-            motivo = request.POST.get('Motivo_anulacion', '').strip()
+            motivo, error = validar_texto(
+                request.POST.get('Motivo_anulacion', ''),
+                'Justificación', minimo=10, maximo=200, obligatorio=True
+            )
+
+            if error:
+                messages.error(request, error)
+                return redirect('gestion_remitos') 
 
             if not puede_accion(usuario, 'anular_remitos'):
                 messages.error(
                     request,
                     'No tenés permiso para anular remitos.'
-                )
-                return redirect('gestion_remitos')
-
-            if len(motivo) < 10:
-                messages.error(
-                    request,
-                    'Si anula este remito debe justificarlo '
-                    '(mínimo 10 caracteres).'
-                )
-                return redirect('gestion_remitos')
-
-            if len(motivo) > 200:
-                messages.error(
-                    request,
-                    'La justificación no puede superar los 200 caracteres.'
                 )
                 return redirect('gestion_remitos')
 
@@ -5607,21 +5430,26 @@ def registrar_egreso(request):
         return redirect('gestion_productos')
 
     try:
-        cantidad = int(request.POST.get('cantidad', '').strip())
+        cantidad, error = validar_entero(
+        request.POST.get('cantidad', ''), 'Cantidad', 1, 999999
+    )
     except (ValueError, TypeError):
         messages.error(request, 'La cantidad ingresada no es válida.')
         return redirect('gestion_productos')
 
-    if cantidad <= 0:
-        messages.error(request, 'La cantidad debe ser mayor a cero.')
+    if error:
+        messages.error(request, error)
         return redirect('gestion_productos')
 
-    descripcion = request.POST.get('descripcion', '').strip()[:200]
+    descripcion, error = validar_texto(
+        request.POST.get('descripcion', ''), 'Descripción',
+        maximo=200, obligatorio=False
+    )
 
     lote_base = Lotes.objects.filter(ID_Lote=lote_id).first()
 
-    if not lote_base:
-        messages.error(request, 'El lote seleccionado no existe.')
+    if error:
+        messages.error(request, error)
         return redirect('gestion_productos')
 
     tipo_egreso, _ = TiposMovimientos.objects.get_or_create(
@@ -5759,22 +5587,14 @@ def anular_egreso(request, id_movimiento):
         )
         return redirect('panel_principal')
 
-    motivo = request.POST.get('Motivo_anulacion', '').strip()
+    motivo, error = validar_texto(
+                request.POST.get('Motivo_anulacion', ''),
+                'Justificación', minimo=10, maximo=200, obligatorio=True
+            )
 
-    if len(motivo) < 10:
-        messages.error(
-            request,
-            'Si anula este egreso debe justificarlo '
-            '(mínimo 10 caracteres).'
-        )
-        return redirect('gestion_movimientos_stock')
-
-    if len(motivo) > 200:
-        messages.error(
-            request,
-            'La justificación no puede superar los 200 caracteres.'
-        )
-        return redirect('gestion_movimientos_stock')
+    if error:
+        messages.error(request, error)
+        return redirect('gestion_movimientos_stock')   
 
     tipo_egreso = TiposMovimientos.objects.filter(
         Nombre_tipo_movimiento=TIPO_EGRESO
@@ -6082,11 +5902,13 @@ def recuperar_contrasena(request):
     if request.method != 'POST':
         return render(request, 'inventario/recuperar_contrasena.html')
 
-    email = request.POST.get('email', '').strip()
-    contexto = {'email': email}
+    email_ingresado = request.POST.get('email', '').strip()
+    contexto = {'email': email_ingresado}
 
-    if not email or '@' not in email:
-        contexto['error'] = 'Ingresá un correo electrónico válido.'
+    email, error = validar_email(email_ingresado, '')
+
+    if error:
+        contexto['error'] = error
         return render(request, 'inventario/recuperar_contrasena.html', contexto)
 
     if limite_superado(request, email):
@@ -6139,11 +5961,11 @@ def recuperar_confirmar(request, uidb64, token):
             {'invalido': True}
         )
 
+    contexto = {'usuario_nombre': usuario.Usuario}
+
     if request.method == 'POST':
         nueva = request.POST.get('nueva_contrasena', '')
         confirmar = request.POST.get('confirmar_contrasena', '')
-
-        error = None
 
         if nueva != confirmar:
             error = 'Las contraseñas no coinciden.'
@@ -6151,10 +5973,11 @@ def recuperar_confirmar(request, uidb64, token):
             error = validar_contrasena(nueva, usuario.Usuario)
 
         if error:
+            contexto['error'] = error
             return render(
                 request,
                 'inventario/recuperar_confirmar.html',
-                {'error': error}
+                contexto
             )
 
         antes = snapshot(usuario)
@@ -6179,4 +6002,4 @@ def recuperar_confirmar(request, uidb64, token):
 
         return redirect('login')
 
-    return render(request, 'inventario/recuperar_confirmar.html')
+    return render(request, 'inventario/recuperar_confirmar.html', contexto)

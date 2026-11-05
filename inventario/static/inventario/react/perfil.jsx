@@ -48,13 +48,13 @@ function actualizarMenuLateral(u) {
             avatar.appendChild(img);
             avatar.classList.add('con-foto');
         } else {
-            avatar.textContent = u.inicial;
+            avatar.textContent = (u.nombre || '?').charAt(0).toUpperCase();
             avatar.classList.remove('con-foto');
         }
     }
 
     const nombre = document.querySelector('.sidebar-user-name');
-    if (nombre) nombre.textContent = u.email;
+    if (nombre) nombre.textContent = u.nombre + ' ' + u.apellido;
 }
 
 
@@ -323,11 +323,16 @@ function Perfil() {
     /* Validación rápida en el navegador (el servidor vuelve a validar). */
     const validar = () => {
         const nuevos = {};
+        const V = window.Validar;
 
         if (!limpiar(form.nombre)) nuevos.nombre = 'Ingresá tu nombre.';
+        else if (V && V.persona(form.nombre)) nuevos.nombre = V.persona(form.nombre);
+
         if (!limpiar(form.apellido)) nuevos.apellido = 'Ingresá tu apellido.';
+        else if (V && V.persona(form.apellido)) nuevos.apellido = V.persona(form.apellido);
 
         if (!form.email.trim()) nuevos.email = 'Ingresá tu correo electrónico.';
+        else if (V && V.email(form.email)) nuevos.email = V.email(form.email);
         else if (!REGEX_EMAIL.test(form.email.trim())) nuevos.email = 'Ingresá un correo electrónico válido.';
 
         return nuevos;
@@ -393,7 +398,7 @@ function Perfil() {
         }
     };
 
-    const inicial = (form.email.trim().charAt(0) || actual.inicial).toUpperCase();
+    const inicial = (form.nombre.trim().charAt(0) || actual.nombre.charAt(0) || '?').toUpperCase();
 
     return (
         <div className="container-fluid px-0">
