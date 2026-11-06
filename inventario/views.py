@@ -121,6 +121,7 @@ def usuario_autenticado(request):
 # LOGIN
 # ============================================================
 
+
 def login_view(request):
 
     error_message = None
@@ -130,58 +131,68 @@ def login_view(request):
         usuario_input = request.POST.get('usuario', '').strip()
         password_input = request.POST.get('password', '')
 
-        try:
-            usuario = Usuarios.objects.select_related(
-                'ID_Perfil'
-            ).get(
-                Usuario=usuario_input
+        # Validar que el usuario contenga únicamente letras.
+        if not re.fullmatch(r'[A-Za-z]+', usuario_input):
+
+            error_message = (
+                'El usuario debe contener únicamente letras, '
+                'sin números, espacios ni caracteres especiales.'
             )
 
-            if not usuario.Estado_usuario:
+        else:
 
-                error_message = 'El usuario se encuentra inactivo.'
-
-            elif not usuario.ID_Perfil:
-
-                error_message = 'El usuario no tiene un perfil asignado.'
-
-            elif not usuario.ID_Perfil.Estado_perfil:
-
-                error_message = 'El perfil del usuario se encuentra inactivo.'
-
-            elif check_password(
-                password_input,
-                usuario.Contrasena
-            ):
-
-                request.session['usuario_id'] = usuario.ID_Usuario
-                request.session['bloqueada'] = False
-                request.session['ultima_actividad'] = time_module.time()
-                request.session['usuario_nombre'] = usuario.Usuario
-                request.session['perfil_id'] = usuario.ID_Perfil.ID_Perfil
-                request.session['perfil_nombre'] = (
-                    usuario.ID_Perfil.Nombre_perfil
+            try:
+                usuario = Usuarios.objects.select_related(
+                    'ID_Perfil'
+                ).get(
+                    Usuario=usuario_input
                 )
 
-                registrar_auditoria(
-                    usuario=usuario,
-                    entidad="USUARIOS",
-                    objeto=usuario,
-                    accion="INICIO_SESION",
-                    antes={},
-                    despues={"accion": "Inicio de sesión"}
-                )
+                if not usuario.Estado_usuario:
 
-                if usuario.Cambiar_contrasena:
-                    return redirect('cambiar_contrasena')
+                    error_message = 'El usuario se encuentra inactivo.'
 
-                return redirect('panel_principal')
+                elif not usuario.ID_Perfil:
 
-            else:
+                    error_message = 'El usuario no tiene un perfil asignado.'
+
+                elif not usuario.ID_Perfil.Estado_perfil:
+
+                    error_message = 'El perfil del usuario se encuentra inactivo.'
+
+                elif check_password(
+                    password_input,
+                    usuario.Contrasena
+                ):
+
+                    request.session['usuario_id'] = usuario.ID_Usuario
+                    request.session['bloqueada'] = False
+                    request.session['ultima_actividad'] = time_module.time()
+                    request.session['usuario_nombre'] = usuario.Usuario
+                    request.session['perfil_id'] = usuario.ID_Perfil.ID_Perfil
+                    request.session['perfil_nombre'] = (
+                        usuario.ID_Perfil.Nombre_perfil
+                    )
+
+                    registrar_auditoria(
+                        usuario=usuario,
+                        entidad="USUARIOS",
+                        objeto=usuario,
+                        accion="INICIO_SESION",
+                        antes={},
+                        despues={"accion": "Inicio de sesión"}
+                    )
+
+                    if usuario.Cambiar_contrasena:
+                        return redirect('cambiar_contrasena')
+
+                    return redirect('panel_principal')
+
+                else:
+                    error_message = 'Usuario o contraseña incorrectos.'
+
+            except Usuarios.DoesNotExist:
                 error_message = 'Usuario o contraseña incorrectos.'
-
-        except Usuarios.DoesNotExist:
-            error_message = 'Usuario o contraseña incorrectos.'
 
     return render(
         request,
@@ -452,9 +463,6 @@ def panel_principal(request):
     )
 
 
-# ============================================================
-# PROVEEDORES
-# ============================================================
 
 # ============================================================
 # PROVEEDORES

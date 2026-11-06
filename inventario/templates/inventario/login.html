@@ -106,9 +106,13 @@
                                 id="usuario"
                                 name="usuario"
                                 maxlength="50"
+                                pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+"
+                                title="El usuario debe contener únicamente letras, sin espacios, números ni caracteres especiales."
                                 value="{{ request.POST.usuario|default:'' }}"
                                 placeholder="Ingresá tu usuario"
                                 autocomplete="username"
+                                autocapitalize="none"
+                                spellcheck="false"
                                 required
                             >
 
@@ -207,7 +211,7 @@
 
             <div class="footer-right">
 
-                © 2026 Agroquímicos del Valle. Todos los derechos reservados.
+                © 2026 Agroquímica del Valle.
 
             </div>
 
