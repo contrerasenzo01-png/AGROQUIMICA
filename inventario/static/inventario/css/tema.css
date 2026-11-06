@@ -509,6 +509,42 @@ html.modo-oscuro .aud-asm {
     color: #2dd4bf !important;
     border-color: #1b5a52 !important;
 }
+html.modo-oscuro .al-badge.aud-baj {
+    background: #3b1226 !important;
+    color: #f472b6 !important;
+    border-color: #5f1d3d !important;
+}
+html.modo-oscuro .al-badge.aud-act {
+    background: #0d3326 !important;
+    color: #34d399 !important;
+    border-color: #17523d !important;
+}
+html.modo-oscuro .al-badge.aud-anu-remito {
+    background: #2a1a4a !important;
+    color: #a78bfa !important;
+    border-color: #43297a !important;
+}
+html.modo-oscuro .al-badge.aud-egr-ven {
+    background: #3a1d0e !important;
+    color: #fb923c !important;
+    border-color: #5e2f17 !important;
+}
+/* Contraseñas */
+html.modo-oscuro .al-badge.aud-res {
+    background: #3a2f0b !important;
+    color: #facc15 !important;
+    border-color: #5c4a12 !important;
+}
+html.modo-oscuro .al-badge.aud-env {
+    background: #2f2e12 !important;
+    color: #e0dc6a !important;
+    border-color: #4d4a1d !important;
+}
+html.modo-oscuro .al-badge.aud-rec {
+    background: #25300f !important;
+    color: #bef264 !important;
+    border-color: #3f5418 !important;
+}
 
 /* Ícono de producto y filas inactivas */
 html.modo-oscuro .pr-prod-icono { background: #2a2315 !important; color: #d9a05b !important; }

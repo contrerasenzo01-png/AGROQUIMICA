@@ -2,7 +2,9 @@ from datetime import date, datetime, time, timedelta
 
 from django.utils import timezone
 
-from .models import Lotes, MovimientosStock, Stock, TiposProductos
+from .models import (
+    Lotes, MovimientosStock, Productos, Proveedores, Stock, TiposProductos,
+)
 
 TIPO_ENTRADA = 'Entrada de lote'
 
@@ -14,8 +16,12 @@ AMARILLO = '#f9a825'
 MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
          'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
-ETIQUETAS_TRAMOS = ['Vencidos', '0-30 días', '31-60 días', '61-90 días']
-COLORES_TRAMOS = [ROJO, NARANJA, AMARILLO, VERDE]
+AZUL = '#1565c0'
+
+ETIQUETAS_TRAMOS = [
+    'Vencidos', '0-30 días', '31-60 días', '61-90 días', '+90 días'
+]
+COLORES_TRAMOS = [ROJO, NARANJA, AMARILLO, VERDE, AZUL]
 
 # Filtro de fechas del gráfico 3:
 # hasta este largo se agrupa por día; más largo, por mes.
@@ -38,9 +44,47 @@ def _periodos(hoy, cantidad=12):
     return periodos
 
 
+def _proveedores_por_producto():
+    """ID de producto -> lista de IDs de sus proveedores."""
+    mapa = {}
+
+    filas = Productos.objects.filter(
+        proveedores__isnull=False
+    ).values_list('ID_Producto', 'proveedores')
+
+    for pid, prov_id in filas:
+        mapa.setdefault(pid, []).append(prov_id)
+
+    return mapa
+
+
+def filtrar_por_producto(queryset, prefijo, tipo_id=None,
+                         subtipo_id=None, proveedor_id=None):
+    """Filtra un queryset por tipo, subtipo y proveedor del producto.
+
+    `prefijo` es el camino hasta el producto, por ejemplo 'ID_Lote__ID_Producto__'.
+    """
+    if tipo_id:
+        queryset = queryset.filter(**{prefijo + 'ID_Tipo_producto': tipo_id})
+    if subtipo_id:
+        queryset = queryset.filter(**{prefijo + 'ID_Subtipo': subtipo_id})
+    if proveedor_id:
+        queryset = queryset.filter(**{prefijo + 'proveedores': proveedor_id})
+    return queryset
+
+
 # ============================================================
-# TIPOS Y SUBTIPOS (para los filtros de los gráficos 1 y 4)
+# TIPOS, SUBTIPOS Y PROVEEDORES (para los filtros de los gráficos)
 # ============================================================
+
+def _datos_proveedores():
+    return [
+        {'id': pid, 'nombre': nombre}
+        for pid, nombre in Proveedores.objects.order_by(
+            'nombre_proveedor'
+        ).values_list('ID_Proveedor', 'nombre_proveedor')
+    ]
+
 
 def _datos_tipos():
     tipos = TiposProductos.objects.order_by(
@@ -68,7 +112,7 @@ def _datos_tipos():
 # 1. STOCK ACTUAL VS MÍNIMO
 # ============================================================
 
-def _datos_stock():
+def _datos_stock(proveedores):
     filas = Stock.objects.filter(
         ID_Producto__Estado_producto='Activo'
     ).values_list(
@@ -77,6 +121,7 @@ def _datos_stock():
         'Stock_minimo',
         'ID_Producto__ID_Tipo_producto',
         'ID_Producto__ID_Subtipo',
+        'ID_Producto',
     )
 
     datos = [
@@ -86,8 +131,9 @@ def _datos_stock():
             'minimo': minimo,
             'tipo_id': tipo_id,
             'subtipo_id': subtipo_id,
+            'proveedores': proveedores.get(pid, []),
         }
-        for producto, stock, minimo, tipo_id, subtipo_id in filas
+        for producto, stock, minimo, tipo_id, subtipo_id, pid in filas
     ]
 
     # Los más críticos primero (los que están más por debajo del mínimo).
@@ -100,31 +146,53 @@ def _datos_stock():
 # 2. UNIDADES POR VENCER SEGÚN EL PLAZO
 # ============================================================
 
-def _datos_tramos(hoy):
-    valores = [0, 0, 0, 0]
+def _tramo(dias):
+    """Índice del tramo según los días que faltan para el vencimiento."""
+    if dias < 0:
+        return 0
+    if dias <= 30:
+        return 1
+    if dias <= 60:
+        return 2
+    if dias <= 90:
+        return 3
+    return 4
 
+
+def _datos_tramos(hoy, proveedores):
+    """Unidades por tramo de vencimiento, separadas por producto.
+
+    La suma se hace en el navegador, así se puede filtrar por
+    tipo, subtipo y proveedor.
+    """
     filas = Lotes.objects.filter(
         Cantidad_actual__gt=0,
         Fecha_vencimiento__isnull=False,
-    ).values_list('Fecha_vencimiento', 'Cantidad_actual')
+    ).values_list(
+        'ID_Producto',
+        'ID_Producto__ID_Tipo_producto',
+        'ID_Producto__ID_Subtipo',
+        'Fecha_vencimiento',
+        'Cantidad_actual',
+    )
 
-    for vencimiento, cantidad in filas:
-        dias = (vencimiento - hoy).days
+    productos = {}
 
-        if dias < 0:
-            valores[0] += cantidad
-        elif dias <= 30:
-            valores[1] += cantidad
-        elif dias <= 60:
-            valores[2] += cantidad
-        elif dias <= 90:
-            valores[3] += cantidad
-        # Lo que vence a más de 90 días no se cuenta.
+    for pid, tipo_id, subtipo_id, vencimiento, cantidad in filas:
+        if pid not in productos:
+            productos[pid] = {
+                'tipo_id': tipo_id,
+                'subtipo_id': subtipo_id,
+                'proveedores': proveedores.get(pid, []),
+                'valores': [0] * len(ETIQUETAS_TRAMOS),
+            }
+
+        productos[pid]['valores'][_tramo((vencimiento - hoy).days)] += cantidad
 
     return {
         'etiquetas': ETIQUETAS_TRAMOS,
-        'valores': valores,
         'colores': COLORES_TRAMOS,
+        'productos': list(productos.values()),
     }
 
 
@@ -132,7 +200,12 @@ def _datos_tramos(hoy):
 # 3. VENTAS VS INGRESOS POR MES
 # ============================================================
 
-def _datos_evolucion(periodos, tipo_venta):
+def datos_evolucion_12_meses(tipo_venta, **filtros):
+    """Ventas e ingresos de los últimos 12 meses (con filtros opcionales)."""
+    return _datos_evolucion(_periodos(timezone.localdate()), tipo_venta, **filtros)
+
+
+def _datos_evolucion(periodos, tipo_venta, **filtros):
     claves = [p.strftime('%Y-%m') for p in periodos]
     etiquetas = [f'{MESES[p.month - 1]} {str(p.year)[2:]}' for p in periodos]
 
@@ -144,6 +217,10 @@ def _datos_evolucion(periodos, tipo_venta):
         ID_Tipo_movimiento__Nombre_tipo_movimiento__in=[
             tipo_venta, TIPO_ENTRADA
         ]
+    )
+
+    filas = filtrar_por_producto(
+        filas, 'ID_Lote__ID_Producto__', **filtros
     ).values_list(
         'Fecha_hora_movimiento',
         'ID_Tipo_movimiento__Nombre_tipo_movimiento',
@@ -176,7 +253,7 @@ def _datos_evolucion(periodos, tipo_venta):
     }
 
 
-def datos_evolucion_rango(desde, hasta, tipo_venta):
+def datos_evolucion_rango(desde, hasta, tipo_venta, **filtros):
     """Ventas e ingresos entre dos fechas (inclusive).
 
     Hasta 62 días agrupa por día; más que eso, por mes.
@@ -232,6 +309,10 @@ def datos_evolucion_rango(desde, hasta, tipo_venta):
         ID_Tipo_movimiento__Nombre_tipo_movimiento__in=[
             tipo_venta, TIPO_ENTRADA
         ]
+    )
+
+    filas = filtrar_por_producto(
+        filas, 'ID_Lote__ID_Producto__', **filtros
     ).values_list(
         'Fecha_hora_movimiento',
         'ID_Tipo_movimiento__Nombre_tipo_movimiento',
@@ -267,11 +348,11 @@ def datos_evolucion_rango(desde, hasta, tipo_venta):
 # 4. PRODUCTOS CON MÁS UNIDADES VENCIDAS
 # ============================================================
 
-def _datos_vencidos(hoy):
+def _datos_vencidos(hoy, proveedores):
     """Unidades vencidas por producto (todos, de mayor a menor).
 
     El top 10 se arma en el navegador, así se puede recalcular
-    al filtrar por tipo y subtipo.
+    al filtrar por tipo, subtipo y proveedor.
     """
 
     filas = Lotes.objects.filter(
@@ -294,6 +375,7 @@ def _datos_vencidos(hoy):
                 'nombre': producto,
                 'tipo_id': tipo_id,
                 'subtipo_id': subtipo_id,
+                'proveedores': proveedores.get(pid, []),
                 'unidades': 0,
             }
 
@@ -315,11 +397,13 @@ def generar_reportes(tipo_venta):
 
     hoy = timezone.localdate()
     periodos = _periodos(hoy)
+    proveedores = _proveedores_por_producto()
 
     return {
         'tipos': _datos_tipos(),
-        'stock': _datos_stock(),
-        'tramos': _datos_tramos(hoy),
+        'proveedores': _datos_proveedores(),
+        'stock': _datos_stock(proveedores),
+        'tramos': _datos_tramos(hoy, proveedores),
         'evolucion': _datos_evolucion(periodos, tipo_venta),
-        'vencidos': _datos_vencidos(hoy),
+        'vencidos': _datos_vencidos(hoy, proveedores),
     }

@@ -163,6 +163,9 @@
             <label class="rep-filtro" id="stock-subtipo-wrap" hidden>Subtipo
                 <select id="stock-subtipo"><option value="">Todos los subtipos</option></select>
             </label>
+            <label class="rep-filtro">Proveedor
+                <select id="stock-proveedor"><option value="">Todos los proveedores</option></select>
+            </label>
         </div>
 
         <div class="rep-leyenda">
@@ -180,7 +183,20 @@
             <h2>Unidades por vencer según el plazo</h2>
             <button type="button" class="rep-btn-pdf" data-pdf="tramos">Descargar PDF</button>
         </div>
-        <p>Cantidad de unidades en stock agrupadas por el tiempo que falta para su vencimiento. Sirve para decidir qué vender primero y qué sacar de la venta.</p>
+        <p>Cantidad de unidades en stock agrupadas por el tiempo que falta para su vencimiento (incluye las que vencen en más de 90 días). Sirve para decidir qué vender primero y qué sacar de la venta.</p>
+
+        <div class="rep-filtros">
+            <label class="rep-filtro">Tipo de producto
+                <select id="tramos-tipo"><option value="">Todos los tipos</option></select>
+            </label>
+            <label class="rep-filtro" id="tramos-subtipo-wrap" hidden>Subtipo
+                <select id="tramos-subtipo"><option value="">Todos los subtipos</option></select>
+            </label>
+            <label class="rep-filtro">Proveedor
+                <select id="tramos-proveedor"><option value="">Todos los proveedores</option></select>
+            </label>
+        </div>
+
         <div id="grafico-tramos" class="rep-chart"></div>
     </section>
 
@@ -190,9 +206,18 @@
             <h2>Ventas vs. ingresos de mercadería por mes</h2>
             <button type="button" class="rep-btn-pdf" data-pdf="evolucion">Descargar PDF</button>
         </div>
-        <p>Unidades vendidas y unidades ingresadas por remito en los últimos 12 meses. Permite ver las épocas fuertes y si se está comprando de más o de menos respecto de lo que se vende. Con el filtro de fechas podés ver un período puntual.</p>
+        <p>Unidades vendidas y unidades ingresadas por remito en los últimos 12 meses. Permite ver las épocas fuertes y si se está comprando de más o de menos respecto de lo que se vende. Con los filtros podés ver un período puntual o un tipo, subtipo o proveedor en particular.</p>
 
         <div class="rep-filtros">
+            <label class="rep-filtro">Tipo de producto
+                <select id="evol-tipo"><option value="">Todos los tipos</option></select>
+            </label>
+            <label class="rep-filtro" id="evol-subtipo-wrap" hidden>Subtipo
+                <select id="evol-subtipo"><option value="">Todos los subtipos</option></select>
+            </label>
+            <label class="rep-filtro">Proveedor
+                <select id="evol-proveedor"><option value="">Todos los proveedores</option></select>
+            </label>
             <label class="rep-filtro">Desde
                 <input type="date" id="evol-desde">
             </label>
@@ -214,7 +239,7 @@
             <h2>Productos con más unidades vencidas</h2>
             <button type="button" class="rep-btn-pdf" data-pdf="vencidos">Descargar PDF</button>
         </div>
-        <p>Los 10 productos con mayor cantidad de unidades que se vencieron sin venderse. Ayuda a ajustar las próximas compras. Si filtrás por tipo o subtipo, se muestran los 10 primeros de esa selección.</p>
+        <p>Los 10 productos con mayor cantidad de unidades que se vencieron sin venderse. Ayuda a ajustar las próximas compras. Si filtrás por tipo, subtipo o proveedor, se muestran los 10 primeros de esa selección.</p>
 
         <div class="rep-filtros">
             <label class="rep-filtro">Tipo de producto
@@ -222,6 +247,9 @@
             </label>
             <label class="rep-filtro" id="venc-subtipo-wrap" hidden>Subtipo
                 <select id="venc-subtipo"><option value="">Todos los subtipos</option></select>
+            </label>
+            <label class="rep-filtro">Proveedor
+                <select id="venc-proveedor"><option value="">Todos los proveedores</option></select>
             </label>
         </div>
 
@@ -339,15 +367,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ------------------------------------------------------
-    // FILTRO TIPO / SUBTIPO (gráficos 1 y 4)
+    // FILTRO TIPO / SUBTIPO / PROVEEDOR (los 4 gráficos)
     // El subtipo solo aparece si el tipo elegido tiene subtipos.
     // ------------------------------------------------------
     function iniciarFiltroTipo(prefijo, alCambiar) {
         const selTipo = document.getElementById(prefijo + '-tipo');
         const selSub = document.getElementById(prefijo + '-subtipo');
         const wrapSub = document.getElementById(prefijo + '-subtipo-wrap');
+        const selProv = document.getElementById(prefijo + '-proveedor');
 
         D.tipos.forEach(t => selTipo.add(new Option(t.nombre, t.id)));
+        D.proveedores.forEach(p => selProv.add(new Option(p.nombre, p.id)));
 
         function tipoElegido() {
             return D.tipos.find(t => String(t.id) === selTipo.value);
@@ -372,13 +402,26 @@ document.addEventListener('DOMContentLoaded', function () {
             alCambiar();
         });
         selSub.addEventListener('change', alCambiar);
+        selProv.addEventListener('change', alCambiar);
 
         return {
-            activo: () => selTipo.value !== '',
+            activo: () => selTipo.value !== '' || selProv.value !== '',
             filtrar: lista => lista.filter(p =>
                 (selTipo.value === '' || String(p.tipo_id) === selTipo.value) &&
-                (selSub.value === '' || String(p.subtipo_id) === selSub.value)
+                (selSub.value === '' || String(p.subtipo_id) === selSub.value) &&
+                (selProv.value === '' || p.proveedores.some(id => String(id) === selProv.value))
             ),
+            // Valores para mandar al servidor (gráfico 3)
+            parametros: () => ({
+                tipo: selTipo.value,
+                subtipo: selSub.value,
+                proveedor: selProv.value,
+            }),
+            limpiar: function () {
+                selTipo.value = '';
+                selProv.value = '';
+                actualizarSubtipos();
+            },
             texto: function () {
                 const partes = [];
                 const t = tipoElegido();
@@ -388,6 +431,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (t && selSub.value !== '') {
                     const s = t.subtipos.find(x => String(x.id) === selSub.value);
                     if (s) partes.push('Subtipo: ' + s.nombre);
+                }
+
+                if (selProv.value !== '') {
+                    const pr = D.proveedores.find(x => String(x.id) === selProv.value);
+                    if (pr) partes.push('Proveedor: ' + pr.nombre);
                 }
 
                 return partes.join('  |  ');
@@ -506,19 +554,30 @@ document.addEventListener('DOMContentLoaded', function () {
     renderStock();
 
     // ------------------------------------------------------
-    // 2. UNIDADES POR VENCER SEGÚN EL PLAZO (4 tramos)
+    // 2. UNIDADES POR VENCER SEGÚN EL PLAZO (5 tramos)
     // ------------------------------------------------------
+    const filtroTramos = iniciarFiltroTipo('tramos', renderTramos);
+
+    function renderTramos() {
+        const valores = D.tramos.etiquetas.map(() => 0);
+
+        filtroTramos.filtrar(D.tramos.productos).forEach(function (p) {
+            p.valores.forEach((v, i) => { valores[i] += v; });
+        });
+
     dibujar(
         'grafico-tramos',
-        D.tramos.valores.some(v => v > 0),
-        'No hay unidades que venzan en los próximos 90 días.',
+        valores.some(v => v > 0),
+        filtroTramos.activo()
+            ? 'No hay unidades en stock con fecha de vencimiento para ese filtro.'
+            : 'No hay unidades en stock con fecha de vencimiento.',
         function (osc) {
             const P = paleta(osc);
 
             return {
                 chart: { ...baseChart(P), type: 'bar', height: 340 },
                 theme: modoTema(osc),
-                series: [{ name: 'Unidades', data: D.tramos.valores }],
+                series: [{ name: 'Unidades', data: valores }],
                 colors: D.tramos.colores,
                 plotOptions: {
                     bar: {
@@ -550,6 +609,9 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         }
     );
+    }
+
+    renderTramos();
 
     // ------------------------------------------------------
     // 3. VENTAS VS INGRESOS (líneas) con filtro de fechas
@@ -559,8 +621,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const elError = document.getElementById('evol-error');
     const elNota = document.getElementById('evol-nota');
 
-    // Texto del filtro de fechas aplicado ('' si no hay)
+    // Texto de los filtros aplicados ('' si no hay), para el PDF
     let textoFiltroEvolucion = '';
+    // Rango de fechas aplicado con "Aplicar" (null = últimos 12 meses)
+    let rangoEvolucion = null;
+    // Evita que una respuesta vieja pise a una más nueva
+    let pedidoEvolucion = 0;
+
+    const filtroEvol = iniciarFiltroTipo('evol', cargarEvolucion);
 
     function hoyISO() {
         const h = new Date();
@@ -584,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'grafico-evolucion',
             datos.ventas.some(v => v > 0) || datos.ingresos.some(v => v > 0),
             filtrado
-                ? 'No hay ventas ni ingresos en el período elegido.'
+                ? 'No hay ventas ni ingresos para los filtros elegidos.'
                 : 'Todavía no hay ventas ni ingresos en los últimos 12 meses.',
             function (osc) {
                 const P = paleta(osc);
@@ -638,7 +706,64 @@ document.addEventListener('DOMContentLoaded', function () {
 
     renderEvolucion(D.evolucion, false);
 
-    document.getElementById('evol-aplicar').addEventListener('click', async function () {
+    // Pide los datos al servidor con el rango y los filtros actuales.
+    async function cargarEvolucion() {
+        mostrarErrorEvolucion('');
+
+        const params = new URLSearchParams(filtroEvol.parametros());
+
+        if (rangoEvolucion) {
+            params.set('desde', rangoEvolucion.desde);
+            params.set('hasta', rangoEvolucion.hasta);
+        }
+
+        const numero = ++pedidoEvolucion;
+
+        try {
+            const resp = await fetch(
+                URL_EVOLUCION + '?' + params,
+                { headers: { 'X-Requested-With': 'XMLHttpRequest' } }
+            );
+            const datos = await resp.json();
+
+            if (numero !== pedidoEvolucion) { return; }
+
+            if (!resp.ok) {
+                mostrarErrorEvolucion(datos.error || 'No se pudo aplicar el filtro.');
+                return;
+            }
+
+            const partes = [];
+
+            if (rangoEvolucion) {
+                partes.push(
+                    'Desde ' + fechaLegible(rangoEvolucion.desde) +
+                    ' hasta ' + fechaLegible(rangoEvolucion.hasta) +
+                    ' (agrupado por ' + datos.agrupacion + ')'
+                );
+            }
+
+            if (filtroEvol.texto()) { partes.push(filtroEvol.texto()); }
+
+            textoFiltroEvolucion = partes.join('  |  ');
+
+            if (rangoEvolucion) {
+                elNota.textContent = 'Período mostrado: ' + partes[0] + '.';
+                elNota.hidden = false;
+            } else {
+                elNota.hidden = true;
+            }
+
+            renderEvolucion(datos, rangoEvolucion !== null || filtroEvol.activo());
+
+        } catch (e) {
+            if (numero === pedidoEvolucion) {
+                mostrarErrorEvolucion('No se pudo conectar con el servidor.');
+            }
+        }
+    }
+
+    document.getElementById('evol-aplicar').addEventListener('click', function () {
         mostrarErrorEvolucion('');
 
         const desde = inpDesde.value;
@@ -655,37 +780,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         inpHasta.value = hasta;
-
-        try {
-            const resp = await fetch(
-                URL_EVOLUCION + '?' + new URLSearchParams({ desde: desde, hasta: hasta }),
-                { headers: { 'X-Requested-With': 'XMLHttpRequest' } }
-            );
-            const datos = await resp.json();
-
-            if (!resp.ok) {
-                mostrarErrorEvolucion(datos.error || 'No se pudo aplicar el filtro.');
-                return;
-            }
-
-            textoFiltroEvolucion =
-                'Desde ' + fechaLegible(desde) + ' hasta ' + fechaLegible(hasta) +
-                ' (agrupado por ' + datos.agrupacion + ')';
-
-            elNota.textContent = 'Período mostrado: ' + textoFiltroEvolucion + '.';
-            elNota.hidden = false;
-
-            renderEvolucion(datos, true);
-
-        } catch (e) {
-            mostrarErrorEvolucion('No se pudo conectar con el servidor.');
-        }
+        rangoEvolucion = { desde: desde, hasta: hasta };
+        cargarEvolucion();
     });
 
+    // Limpiar: quita las fechas y los filtros y vuelve a los últimos 12 meses.
     document.getElementById('evol-limpiar').addEventListener('click', function () {
         inpDesde.value = '';
         inpHasta.value = '';
+        rangoEvolucion = null;
         textoFiltroEvolucion = '';
+        pedidoEvolucion++;
+        filtroEvol.limpiar();
         mostrarErrorEvolucion('');
         elNota.hidden = true;
         renderEvolucion(D.evolucion, false);
@@ -948,12 +1054,12 @@ document.addEventListener('DOMContentLoaded', function () {
         tramos: () => ({
             chartId: 'grafico-tramos',
             titulo: 'Unidades por vencer según el plazo',
-            filtros: '',
+            filtros: filtroTramos.texto(),
             archivo: 'unidades_por_vencer',
         }),
         evolucion: () => ({
             chartId: 'grafico-evolucion',
-            titulo: textoFiltroEvolucion
+            titulo: rangoEvolucion
                 ? 'Ventas vs. ingresos de mercadería'
                 : 'Ventas vs. ingresos de mercadería por mes (últimos 12 meses)',
             filtros: textoFiltroEvolucion,

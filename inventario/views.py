@@ -32,7 +32,9 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
-from .reportes import generar_reportes, datos_evolucion_rango
+from .reportes import (
+    generar_reportes, datos_evolucion_rango, datos_evolucion_12_meses,
+)
 from .pdf_remito import generar_pdf_remito
 from .paginacion import paginar
 from .alertas import (
@@ -5826,8 +5828,24 @@ def datos_evolucion(request):
             status=403
         )
 
-    desde = _fecha_iso(request.GET.get('desde', ''))
-    hasta = _fecha_iso(request.GET.get('hasta', ''))
+    # Filtros por producto (tipo, subtipo, proveedor). Los valores
+    # que no sean números se ignoran.
+    filtros = {}
+
+    for campo in ('tipo', 'subtipo', 'proveedor'):
+        valor = request.GET.get(campo, '').strip()
+        if valor.isdigit():
+            filtros[campo + '_id'] = int(valor)
+
+    texto_desde = request.GET.get('desde', '').strip()
+    texto_hasta = request.GET.get('hasta', '').strip()
+
+    # Sin fechas: los últimos 12 meses (solo con los filtros).
+    if not texto_desde and not texto_hasta:
+        return JsonResponse(datos_evolucion_12_meses(TIPO_EGRESO, **filtros))
+
+    desde = _fecha_iso(texto_desde)
+    hasta = _fecha_iso(texto_hasta)
 
     if not desde or not hasta:
         return JsonResponse(
@@ -5839,7 +5857,7 @@ def datos_evolucion(request):
     hasta = min(hasta, timezone.localdate())
 
     try:
-        datos = datos_evolucion_rango(desde, hasta, TIPO_EGRESO)
+        datos = datos_evolucion_rango(desde, hasta, TIPO_EGRESO, **filtros)
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
 
