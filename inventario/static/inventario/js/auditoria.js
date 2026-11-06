@@ -364,6 +364,35 @@ function crearFila(icono, etiqueta, valor) {
     return fila;
 }
 
+// ¿El nombre del registro ya se ve en el detalle? (usuario que hizo la
+// acción, o algún valor de la tabla de datos o de cambios). Si es así,
+// la tarjeta "Registro" no se muestra para no repetirlo.
+function nombreYaVisible(datos) {
+    const normalizar = t => String(t ?? '').trim().toLowerCase();
+
+    const visibles = new Set([normalizar(datos.usuario)]);
+
+    (datos.datos || []).forEach(d => visibles.add(normalizar(d.valor)));
+    (datos.cambios || []).forEach(c => {
+        visibles.add(normalizar(c.antes));
+        visibles.add(normalizar(c.despues));
+    });
+
+    const nombre = normalizar(datos.nombre_registro);
+    if (visibles.has(nombre)) {
+        return true;
+    }
+
+    // Nombres compuestos ("Apellido, Nombre", "Producto · Lote X",
+    // "Remito X"): están repetidos si cada parte ya aparece.
+    const partes = nombre
+        .split(/\s*·\s*|,\s*/)
+        .map(p => p.replace(/^(lote|remito)\s+/, ''))
+        .filter(Boolean);
+
+    return partes.length > 1 && partes.every(p => visibles.has(p));
+}
+
 function armarDetalle(contenido, datos) {
     contenido.replaceChildren();
 
@@ -403,7 +432,8 @@ function armarDetalle(contenido, datos) {
     );
 
     // Nombre del registro afectado (producto, proveedor, usuario...).
-    if (datos.nombre_registro) {
+    // Solo si no aparece ya en otro lado del detalle.
+    if (datos.nombre_registro && !nombreYaVisible(datos)) {
         const registro = crearFila('id', 'Registro', datos.nombre_registro);
         registro.classList.add('aud-det-fila-registro');
         lista.appendChild(registro);
@@ -477,9 +507,7 @@ function armarDetalle(contenido, datos) {
     const esAtencion = datos.accion === 'ATENCION_ALERTA';
     const esEgresoVencimiento = datos.accion === 'EGRESO_VENCIMIENTO';
 
-    let tituloSeccion = datos.nombre_registro
-        ? `Cambios realizados en «${datos.nombre_registro}»`
-        : 'Cambios realizados';
+    let tituloSeccion = 'Cambios realizados';
 
     if (datos.accion === 'ANULACION') {
         tituloSeccion = 'Datos de la anulación de venta';

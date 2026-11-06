@@ -476,3 +476,11 @@ html.modo-oscuro .av-stat-azul .av-stat-icono  { background: #172440; color: #93
     .us-header, .pf-page .pf-header, .pv-header, .pr-page .pr-header,
     .ts-header, .rm-header, .lt-header { align-items: stretch; }
 }
+
+/* ============================================================
+   8. FONDO GENERAL: el mismo verde claro del Panel principal
+   en todas las pantallas (el modo oscuro lo cambia en tema.css)
+   ============================================================ */
+html body {
+    background-color: #f0f5f1;
+}

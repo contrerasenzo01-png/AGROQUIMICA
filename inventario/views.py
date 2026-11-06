@@ -5358,6 +5358,23 @@ def _inicio_dia(d):
     return timezone.make_aware(datetime.combine(d, time.min))
 
 
+def _registro_sin_repetir(log):
+    """Nombre del registro afectado, salvo que sea el mismo usuario que
+    hizo la acción (inicio/cierre de sesión, bloqueo...): ahí ya figura
+    en la columna Usuario y no hace falta repetirlo."""
+    nombre = nombre_registro(log)
+    u = log.ID_Usuario
+
+    if nombre and u and nombre in (
+        f'{u.Apellido_usuario}, {u.Nombre_usuario}',
+        f'{u.Apellido_usuario} {u.Nombre_usuario}',
+        u.Usuario,
+    ):
+        return None
+
+    return nombre
+
+
 def _resumen_auditoria():
     hoy = _inicio_dia(timezone.localdate())
     semana = hoy - timedelta(days=6)
@@ -5417,7 +5434,7 @@ def gestion_auditoria(request):
 
     # Nombre del registro afectado (producto, proveedor, usuario...).
     for log in pagina:
-        log.nombre_registro = nombre_registro(log)
+        log.nombre_registro = _registro_sin_repetir(log)
 
     return render(
         request,
@@ -5523,7 +5540,7 @@ def detalle_auditoria(request, id_log):
         ),
         'entidad': log.Seccion,
         'registro': log.ID_Registro,
-        'nombre_registro': nombre_registro(log),
+        'nombre_registro': _registro_sin_repetir(log),
         'accion': log.Accion,
         'modo': modo,
         'datos': [

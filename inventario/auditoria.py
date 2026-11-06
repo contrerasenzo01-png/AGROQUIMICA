@@ -136,14 +136,16 @@ def nombre_registro(log):
         if producto:
             return f'{producto} · Lote {lote}' if lote else producto
 
+    # Primero el registro real (así un usuario sale como "Apellido, Nombre");
+    # si ya no existe, lo que haya quedado guardado en el log.
+    encontrado = _nombre_por_seccion(log.Seccion, log.ID_Registro)
+    if encontrado:
+        return encontrado
+
     if valor('Nombre'):
         return str(valor('Nombre'))
     if valor('Usuario'):
         return str(valor('Usuario'))
-
-    encontrado = _nombre_por_seccion(log.Seccion, log.ID_Registro)
-    if encontrado:
-        return encontrado
 
     return f'Lote {lote}' if lote else None
 

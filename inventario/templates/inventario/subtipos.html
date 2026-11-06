@@ -50,16 +50,6 @@
 
     {% include 'inventario/_resumen.html' %}
 
-    <!-- PESTAÑAS -->
-    <nav class="ts-tabs">
-
-        <a href="{% url 'gestion_subtipos' %}" class="ts-tab activa">
-            Subtipos
-            {% if total_subtipos is not None %}<span class="ts-contador">{{ total_subtipos }}</span>{% endif %}
-        </a>
-
-    </nav>
-
 
     <!-- BUSCADOR (se envía con Enter; la vista filtra por "q") -->
     <form method="GET" class="ts-search">
