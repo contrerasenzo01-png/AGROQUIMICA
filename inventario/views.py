@@ -208,6 +208,14 @@ def cerrar_sesion(request):
     return redirect('login')
 
 
+def movimientos_visibles(queryset, usuario):
+    """El administrador ve todos los movimientos de stock;
+    el resto de los usuarios solo los que registraron ellos mismos."""
+    if usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN:
+        return queryset
+    return queryset.filter(ID_Usuario=usuario)
+
+
 # ============================================================
 # PANEL PRINCIPAL
 # ============================================================
@@ -362,11 +370,14 @@ def _datos_panel(usuario):
 
     # ---------------- ÚLTIMOS MOVIMIENTOS ----------------
     if ver_movimientos:
-        ultimos = MovimientosStock.objects.select_related(
-            'ID_Tipo_movimiento',
-            'ID_Lote',
-            'ID_Lote__ID_Producto',
-            'ID_Usuario',
+        ultimos = movimientos_visibles(
+            MovimientosStock.objects.select_related(
+                'ID_Tipo_movimiento',
+                'ID_Lote',
+                'ID_Lote__ID_Producto',
+                'ID_Usuario',
+            ),
+            usuario
         ).order_by('-Fecha_hora_movimiento')[:8]
 
         for mov in ultimos:
@@ -2939,22 +2950,24 @@ def crear_producto(request):
     if request.method != 'POST':
         return redirect('gestion_productos')
 
+    # Leer y validar los datos del producto nuevo.
     datos, error = _leer_datos_producto(
         request,
-        producto.Estado_producto,
-        unidad_actual=producto.Unidad_medida_producto
+        estado_por_defecto='Activo'
     )
 
     if error:
         messages.error(request, error)
         return redirect('gestion_productos')
 
+    # Procesar imagen opcional.
     imagen, error = _leer_imagen(request)
 
     if error:
         messages.error(request, error)
         return redirect('gestion_productos')
 
+    # Comprobar si ya existe un producto con la misma presentación.
     if _producto_duplicado(
         datos['nombre'],
         datos['cantidad_presentacion'],
@@ -2969,6 +2982,7 @@ def crear_producto(request):
 
     with transaction.atomic():
 
+        # Crear producto.
         producto = Productos(
             ID_Tipo_producto=datos['tipo'],
             ID_Subtipo=datos['subtipo'],
@@ -2982,9 +2996,15 @@ def crear_producto(request):
         )
 
         if imagen:
-            producto.Imagen_producto.save(imagen.name, imagen, save=False)
+            producto.Imagen_producto.save(
+                imagen.name,
+                imagen,
+                save=False
+            )
 
         producto.save()
+
+        # Asociar proveedores al producto.
         producto.proveedores.set(datos['proveedores'])
 
         # El stock inicial es cero.
@@ -2997,6 +3017,7 @@ def crear_producto(request):
             }
         )
 
+        # Registrar auditoría.
         registrar_auditoria(
             usuario=usuario,
             entidad='Productos',
@@ -3455,6 +3476,9 @@ def gestion_movimientos_stock(request):
     ).filter(
         ID_Tipo_movimiento__Nombre_tipo_movimiento__in=tipos_visibles
     ).order_by('-Fecha_hora_movimiento')
+
+    # Cada usuario ve solo sus movimientos; el administrador ve todos.
+    movimientos = movimientos_visibles(movimientos, usuario)
 
     if busqueda:
         movimientos = movimientos.filter(
@@ -4013,15 +4037,18 @@ def comprobante_movimiento_pdf(request, id_movimiento):
         return redirect('panel_principal')
 
     movimiento = get_object_or_404(
-        MovimientosStock.objects.select_related(
-            'ID_Usuario',
-            'ID_Tipo_movimiento',
-            'ID_Lote',
-            'ID_Lote__ID_Producto',
-            'ID_Lote__ID_Producto__ID_Tipo_producto',
-            'ID_Lote__ID_Producto__ID_Subtipo',
-            'ID_Lote__ID_Remito',
-            'ID_Lote__ID_Remito__ID_Proveedor',
+        movimientos_visibles(
+            MovimientosStock.objects.select_related(
+                'ID_Usuario',
+                'ID_Tipo_movimiento',
+                'ID_Lote',
+                'ID_Lote__ID_Producto',
+                'ID_Lote__ID_Producto__ID_Tipo_producto',
+                'ID_Lote__ID_Producto__ID_Subtipo',
+                'ID_Lote__ID_Remito',
+                'ID_Lote__ID_Remito__ID_Proveedor',
+            ),
+            usuario
         ),
         ID_Movimiento_stock=id_movimiento
     )
@@ -5606,7 +5633,10 @@ def anular_egreso(request, id_movimiento):
         with transaction.atomic():
 
             # 1) Se bloquea el egreso: dos usuarios no pueden anularlo a la vez.
-            movimiento = MovimientosStock.objects.select_for_update().get(
+            movimiento = movimientos_visibles(
+                MovimientosStock.objects.select_for_update(),
+                usuario
+            ).get(
                 ID_Movimiento_stock=id_movimiento
             )
 
