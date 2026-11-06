@@ -402,6 +402,13 @@ function armarDetalle(contenido, datos) {
         crearFila('seccion', 'Sección', nombreSeccion(datos.entidad))
     );
 
+    // Nombre del registro afectado (producto, proveedor, usuario...).
+    if (datos.nombre_registro) {
+        const registro = crearFila('id', 'Registro', datos.nombre_registro);
+        registro.classList.add('aud-det-fila-registro');
+        lista.appendChild(registro);
+    }
+
     bloque.appendChild(lista);
     detalle.appendChild(bloque);
 
@@ -470,7 +477,9 @@ function armarDetalle(contenido, datos) {
     const esAtencion = datos.accion === 'ATENCION_ALERTA';
     const esEgresoVencimiento = datos.accion === 'EGRESO_VENCIMIENTO';
 
-    let tituloSeccion = 'Cambios realizados';
+    let tituloSeccion = datos.nombre_registro
+        ? `Cambios realizados en «${datos.nombre_registro}»`
+        : 'Cambios realizados';
 
     if (datos.accion === 'ANULACION') {
         tituloSeccion = 'Datos de la anulación de venta';

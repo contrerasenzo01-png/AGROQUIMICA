@@ -31,6 +31,7 @@
     <header class="pr-header">
         <div>
             <h1 class="pr-title">Gestión de tipos de producto</h1>
+            <p class="av-subtitulo">Clasificación principal de los productos del catálogo.</p>
         </div>
 
         {% if perm.tipos_gestionar %}
@@ -44,6 +45,8 @@
         </button>
         {% endif %}
     </header>
+
+    {% include 'inventario/_resumen.html' %}
 
     <!-- BÚSQUEDA -->
     <form method="GET" onsubmit="return false;" class="pr-filtros">

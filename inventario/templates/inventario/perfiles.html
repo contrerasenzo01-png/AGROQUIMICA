@@ -34,6 +34,7 @@
     <header class="pf-header">
         <div>
             <h1 class="pf-title">Perfiles de acceso</h1>
+            <p class="av-subtitulo">Grupos de permisos que se asignan a cada usuario.</p>
         </div>
         {% if perm.perfiles_gestionar %}
         <button type="button"
@@ -48,6 +49,8 @@
         </button>
         {% endif %}
     </header>
+
+    {% include 'inventario/_resumen.html' %}
 
     <!-- BUSCADOR -->
     <form method="GET"

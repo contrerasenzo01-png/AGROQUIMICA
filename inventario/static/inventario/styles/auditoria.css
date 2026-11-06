@@ -558,3 +558,126 @@
         min-width: 480px;
     }
 }
+
+
+/* ==========================================================
+   REGISTRO AFECTADO (nombre del producto, proveedor, usuario...)
+========================================================== */
+
+.aud-registro {
+    font-weight: 600;
+    color: #1c2a23;
+    max-width: 240px;
+    overflow-wrap: anywhere;
+}
+
+.aud-registro-vacio {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+/* En el detalle ocupa todo el ancho, debajo de los otros datos */
+.aud-det-fila-registro {
+    grid-column: 1 / -1;
+    border-color: #cfe3d6;
+    background: #eef6f1;
+}
+
+.aud-det-fila-registro strong {
+    font-size: 15px;
+    color: #0b311e;
+}
+
+
+/* ==========================================================
+   MODO OSCURO — DETALLE DE AUDITORÍA
+========================================================== */
+
+html.modo-oscuro .aud-registro { color: var(--d-text); }
+html.modo-oscuro .aud-registro-vacio { color: var(--d-text-3); }
+
+html.modo-oscuro .aud-modal-contenido {
+    background: var(--d-surface) !important;
+    border: 1px solid var(--d-border-2);
+}
+
+html.modo-oscuro .aud-modal-header,
+html.modo-oscuro .aud-det-cab {
+    border-color: var(--d-border) !important;
+}
+
+html.modo-oscuro .aud-det,
+html.modo-oscuro #contenidoDetalleAuditoria {
+    color: var(--d-text);
+}
+
+html.modo-oscuro .aud-det-fecha { color: var(--d-text-2); }
+
+html.modo-oscuro .aud-det-bloque h4 { color: var(--d-title); }
+
+html.modo-oscuro .aud-det-fila {
+    background: var(--d-surface-2);
+    border-color: var(--d-border);
+}
+
+html.modo-oscuro .aud-det-fila small { color: var(--d-text-2); }
+html.modo-oscuro .aud-det-fila strong { color: var(--d-text); }
+
+html.modo-oscuro .aud-det-fila-registro {
+    background: var(--d-green-bg);
+    border-color: var(--d-green-bd);
+}
+
+html.modo-oscuro .aud-det-fila-registro strong { color: var(--d-green-tx); }
+
+html.modo-oscuro .aud-det-icono {
+    background: var(--d-surface-3);
+    color: var(--d-green-tx);
+}
+
+html.modo-oscuro .aud-det-scroll { border-color: var(--d-border); }
+
+html.modo-oscuro .aud-det-tabla thead { background: var(--d-surface-3); }
+
+html.modo-oscuro .aud-det-tabla th {
+    color: var(--d-title);
+    background: var(--d-surface-3);
+    border-bottom-color: var(--d-border-2);
+}
+
+html.modo-oscuro .aud-det-tabla td {
+    color: var(--d-text);
+    background: transparent;
+    border-bottom-color: var(--d-border);
+}
+
+html.modo-oscuro .aud-det-tabla tbody tr:hover,
+html.modo-oscuro .aud-det-tabla tbody tr:hover td {
+    background: var(--d-hover);
+}
+
+html.modo-oscuro .aud-det-antes {
+    color: var(--d-red-tx);
+    background: var(--d-red-bg);
+}
+
+html.modo-oscuro .aud-det-despues {
+    color: var(--d-green-tx);
+    background: var(--d-green-bg);
+}
+
+html.modo-oscuro .aud-det-sinvalor { color: var(--d-text-3); }
+
+html.modo-oscuro .aud-det-nota {
+    background: var(--d-amb-bg);
+    border-left-color: var(--d-amb-tx);
+    color: var(--d-amb-tx);
+}
+
+html.modo-oscuro .aud-det-vacio {
+    background: var(--d-surface-2);
+    border-color: var(--d-border-2);
+    color: var(--d-text-2);
+}
+
+html.modo-oscuro .aud-modal-cerrar { color: var(--d-text-2); }

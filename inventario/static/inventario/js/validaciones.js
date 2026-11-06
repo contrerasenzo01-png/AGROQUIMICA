@@ -355,7 +355,7 @@
 
     /* ---------- 4. MENSAJES DE ERROR ---------- */
 
-    function ancla(el) { return el.closest('.input-group, .password-wrapper') || el; }
+    function ancla(el) { return el.closest('.input-group, .password-wrapper, .ojo-envoltorio') || el; }
 
     function nodoError(el) {
         if (!el._vError) {

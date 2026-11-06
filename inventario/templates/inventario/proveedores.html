@@ -33,6 +33,7 @@
     <header class="pv-header">
         <div>
             <h1 class="pv-title">Gestión de proveedores</h1>
+            <p class="av-subtitulo">Datos de contacto y estado de los proveedores con los que trabaja la empresa.</p>
         </div>
 
         {% if perm.proveedores_gestionar %}
@@ -47,6 +48,8 @@
         {% endif %}
     </header>
 
+
+    {% include 'inventario/_resumen.html' %}
 
     <!-- BUSCADOR -->
     <form method="GET" onsubmit="return false;" class="pv-search">

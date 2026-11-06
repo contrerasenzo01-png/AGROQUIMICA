@@ -35,6 +35,7 @@
 
         <div>
             <h1 class="ts-title">Gestión de subtipos</h1>
+            <p class="av-subtitulo">Subdivisiones de cada tipo de producto.</p>
         </div>
 
         {% if perm.subtipos_gestionar %}
@@ -46,6 +47,8 @@
 
     </header>
 
+
+    {% include 'inventario/_resumen.html' %}
 
     <!-- PESTAÑAS -->
     <nav class="ts-tabs">

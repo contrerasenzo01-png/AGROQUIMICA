@@ -46,9 +46,10 @@ from .alertas import (
 from .auditoria import (
     snapshot, registrar_auditoria, accion_por_estado,
     registrar_asignacion_perfil, registrar_asignacion_permisos,
-    registrar_bloqueo_inactividad,
+    registrar_bloqueo_inactividad, nombre_registro,
 )
 from .forms import ProveedorForm
+from .resumen import indicador
 from .permissions import (
     usuario_con_acceso, usuario_con_accion, puede, puede_accion,
     catalogo_plano, permisos_asignados, PERFILES_ADMIN,
@@ -567,6 +568,13 @@ def _render_proveedores(
             'proveedores': proveedores,
 
             'total_proveedores': Proveedores.objects.count(),
+
+            'resumen': [
+                indicador(Proveedores.objects.count(), 'Proveedores registrados', 'verde', 'camion'),
+                indicador(Proveedores.objects.filter(estado_proveedor=True).count(), 'Activos', 'azul', 'check'),
+                indicador(Proveedores.objects.filter(estado_proveedor=False).count(), 'Inactivos', 'rojo', 'pausa'),
+                indicador(len(con_remitos), 'Con remitos registrados', 'ambar', 'documento'),
+            ],
 
             'proveedores_activos': Proveedores.objects.filter(
                 estado_proveedor=True
@@ -1096,6 +1104,12 @@ def gestion_tipos_productos(request):
             'usuario': usuario,
             'total_tipos': TiposProductos.objects.count(),
             'total_subtipos': Subtipos.objects.count(),
+            'resumen': [
+                indicador(TiposProductos.objects.count(), 'Tipos de producto', 'verde', 'etiqueta'),
+                indicador(TiposProductos.objects.filter(Estado_tipo_producto=True).count(), 'Activos', 'azul', 'check'),
+                indicador(TiposProductos.objects.filter(Estado_tipo_producto=False).count(), 'Inactivos', 'rojo', 'pausa'),
+                indicador(Subtipos.objects.count(), 'Subtipos', 'ambar', 'capas'),
+            ],
         }
     )
 
@@ -1399,7 +1413,16 @@ def gestion_subtipos(request):
             'busqueda': busqueda,
             'usuario': usuario,
             'total_tipos': TiposProductos.objects.count(),
-            'total_subtipos': Subtipos.objects.count()
+            'total_subtipos': Subtipos.objects.count(),
+            'resumen': [
+                indicador(Subtipos.objects.count(), 'Subtipos', 'verde', 'capas'),
+                indicador(TiposProductos.objects.count(), 'Tipos de producto', 'azul', 'etiqueta'),
+                indicador(len(productos_por_subtipo), 'Con productos', 'ambar', 'caja'),
+                indicador(
+                    Subtipos.objects.exclude(pk__in=list(productos_por_subtipo)).count(),
+                    'Sin productos', 'rojo', 'pausa'
+                ),
+            ],
         }
     )
 
@@ -1658,6 +1681,15 @@ def gestion_usuarios(request):
             'usuario': usuario,
             # Solo el administrador ve las fotos de los demás usuarios.
             'ver_fotos': usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN,
+            'resumen': [
+                indicador(Usuarios.objects.count(), 'Usuarios registrados', 'verde', 'usuarios'),
+                indicador(Usuarios.objects.filter(Estado_usuario=True).count(), 'Activos', 'azul', 'check'),
+                indicador(Usuarios.objects.filter(Estado_usuario=False).count(), 'Inactivos', 'rojo', 'pausa'),
+                indicador(
+                    Usuarios.objects.filter(Estado_usuario=True, Cambiar_contrasena=True).count(),
+                    'Deben cambiar la contraseña', 'ambar', 'llave'
+                ),
+            ],
         }
     )
 
@@ -2227,6 +2259,15 @@ def gestion_perfiles(request):
             'busqueda': busqueda,
             'usuario': usuario,
             'perfiles_admin': PERFILES_ADMIN,
+            'resumen': [
+                indicador(Perfiles.objects.count(), 'Perfiles de acceso', 'verde', 'escudo'),
+                indicador(Perfiles.objects.filter(Estado_perfil=True).count(), 'Activos', 'azul', 'check'),
+                indicador(Perfiles.objects.filter(Estado_perfil=False).count(), 'Inactivos', 'rojo', 'pausa'),
+                indicador(
+                    Usuarios.objects.filter(Estado_usuario=True, ID_Perfil__isnull=False).count(),
+                    'Usuarios activos asignados', 'ambar', 'usuarios'
+                ),
+            ],
         }
     )
 
@@ -2549,6 +2590,11 @@ def gestion_permisos(request):
             'busqueda': busqueda,
             'usuario': usuario,
             'activo': 'permisos',
+            'resumen': [
+                indicador(len(catalogo_plano()), 'Permisos del sistema', 'verde', 'llave'),
+                indicador(len({g for _, _, g in catalogo_plano()}), 'Módulos', 'azul', 'cuadricula'),
+                indicador(Perfiles.objects.filter(Estado_perfil=True).count(), 'Perfiles activos', 'ambar', 'escudo'),
+            ],
         }
     )
 
@@ -3287,6 +3333,26 @@ def eliminar_producto(request, pk):
 # ============================================================
 
 
+def _resumen_lotes(hoy):
+    """Indicadores de Lotes (mismo criterio que Lotes.estado_actual)."""
+    con_stock = Lotes.objects.exclude(
+        ID_Remito__Estado_remito='Anulado'
+    ).filter(Cantidad_actual__gt=0)
+
+    return [
+        indicador(Lotes.objects.count(), 'Lotes registrados', 'verde', 'caja'),
+        indicador(con_stock.filter(Fecha_vencimiento__gte=hoy).count(), 'Vigentes con stock', 'azul', 'check'),
+        indicador(
+            con_stock.filter(
+                Fecha_vencimiento__gte=hoy,
+                Fecha_vencimiento__lte=hoy + timedelta(days=DIAS_AVISO_VENCIMIENTO)
+            ).count(),
+            f'Vencen en {DIAS_AVISO_VENCIMIENTO} días', 'ambar', 'reloj'
+        ),
+        indicador(con_stock.filter(Fecha_vencimiento__lt=hoy).count(), 'Vencidos con stock', 'rojo', 'alerta'),
+    ]
+
+
 def registrar_ingreso_lote(request):
     """Consulta de lotes. El alta se hace desde Remitos."""
 
@@ -3343,6 +3409,7 @@ def registrar_ingreso_lote(request):
             'proveedor_filtro': proveedor_filtro,
             'hoy': hoy,
             'limite': hoy + timedelta(days=DIAS_AVISO_VENCIMIENTO),
+            'resumen': _resumen_lotes(hoy),
         }
     )
 
@@ -3526,6 +3593,23 @@ def gestion_movimientos_stock(request):
     # Cada usuario ve solo sus movimientos; el administrador ve todos.
     movimientos = movimientos_visibles(movimientos, usuario)
 
+    # Resumen sobre todos los movimientos que puede ver (sin filtros).
+    por_tipo = dict(
+        movimientos.order_by()
+        .values('ID_Tipo_movimiento__Nombre_tipo_movimiento')
+        .annotate(c=Count('pk'))
+        .values_list('ID_Tipo_movimiento__Nombre_tipo_movimiento', 'c')
+    )
+    resumen = [
+        indicador(por_tipo.get('Entrada de lote', 0), 'Ingresos de lote', 'verde', 'entrada'),
+        indicador(por_tipo.get(TIPO_EGRESO, 0), 'Egresos por venta', 'azul', 'salida'),
+        indicador(por_tipo.get('Salida por vencimiento de producto', 0), 'Egresos por vencimiento', 'ambar', 'reloj'),
+        indicador(
+            por_tipo.get(TIPO_ANULACION_REMITO, 0) + por_tipo.get(TIPO_ANULACION_EGRESO, 0),
+            'Anulaciones', 'rojo', 'deshacer'
+        ),
+    ]
+
     if busqueda:
         movimientos = movimientos.filter(
             Q(ID_Lote__ID_Producto__Nombre_producto__icontains=busqueda)
@@ -3556,6 +3640,7 @@ def gestion_movimientos_stock(request):
             'usuario': usuario,
             'activo': 'movimientos',
             'puede_anular': puede_accion(usuario, 'anular_egresos'),
+            'resumen': resumen,
         }
     )
 
@@ -3706,6 +3791,18 @@ def gestion_alertas(request):
             'productos': productos,
             'usuarios': usuarios,
             'usuario': usuario,
+            'resumen': [
+                indicador(Alertas.objects.filter(Atendida=False).count(), 'Sin atender', 'rojo', 'alerta'),
+                indicador(
+                    Alertas.objects.filter(Atendida=False, Tipo_alerta__in=TIPOS_STOCK).count(),
+                    'Stock mínimo sin atender', 'ambar', 'bajada'
+                ),
+                indicador(
+                    Alertas.objects.filter(Atendida=False, Tipo_alerta='Vencimiento').count(),
+                    'Vencimientos sin atender', 'azul', 'reloj'
+                ),
+                indicador(Alertas.objects.filter(Atendida=True).count(), 'Atendidas', 'verde', 'check'),
+            ],
         }
     )
 
@@ -5148,6 +5245,15 @@ def gestion_remitos(request):
                 'ID_Proveedor'
             ).distinct().count(),
             'total_lotes': Lotes.objects.count(),
+            'resumen': [
+                indicador(Remitos.objects.count(), 'Remitos registrados', 'verde', 'documento'),
+                indicador(
+                    Remitos.objects.values('ID_Proveedor').distinct().count(),
+                    'Proveedores', 'azul', 'camion'
+                ),
+                indicador(Lotes.objects.count(), 'Lotes asociados', 'ambar', 'caja'),
+                indicador(Remitos.objects.filter(Estado_remito='Anulado').count(), 'Anulados', 'rojo', 'deshacer'),
+            ],
             'busqueda': busqueda,
             'proveedor_filtro': proveedor_filtro,
             'estado_filtro': estado_filtro,
@@ -5252,6 +5358,20 @@ def _inicio_dia(d):
     return timezone.make_aware(datetime.combine(d, time.min))
 
 
+def _resumen_auditoria():
+    hoy = _inicio_dia(timezone.localdate())
+    semana = hoy - timedelta(days=6)
+    return [
+        indicador(LogAuditoria.objects.count(), 'Registros totales', 'verde', 'documento'),
+        indicador(LogAuditoria.objects.filter(Fecha_hora__gte=hoy).count(), 'Registros de hoy', 'azul', 'calendario'),
+        indicador(LogAuditoria.objects.filter(Fecha_hora__gte=semana).count(), 'Últimos 7 días', 'ambar', 'actividad'),
+        indicador(
+            LogAuditoria.objects.filter(Fecha_hora__gte=semana).values('ID_Usuario').distinct().count(),
+            'Usuarios con actividad (7 días)', 'rojo', 'usuarios'
+        ),
+    ]
+
+
 def gestion_auditoria(request):
 
     usuario = usuario_con_acceso(request, 'auditoria')
@@ -5295,6 +5415,10 @@ def gestion_auditoria(request):
 
     pagina = paginar(request, logs, por_defecto=25)
 
+    # Nombre del registro afectado (producto, proveedor, usuario...).
+    for log in pagina:
+        log.nombre_registro = nombre_registro(log)
+
     return render(
         request,
         'inventario/auditoria.html',
@@ -5313,6 +5437,7 @@ def gestion_auditoria(request):
             'fecha_desde': fecha_desde,
             'fecha_hasta': fecha_hasta,
             'activo': 'auditoria',
+            'resumen': _resumen_auditoria(),
         }
     )
 
@@ -5398,6 +5523,7 @@ def detalle_auditoria(request, id_log):
         ),
         'entidad': log.Seccion,
         'registro': log.ID_Registro,
+        'nombre_registro': nombre_registro(log),
         'accion': log.Accion,
         'modo': modo,
         'datos': [

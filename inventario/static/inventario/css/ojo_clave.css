@@ -1,0 +1,60 @@
+/* ============================================================
+   BOTÓN DEL OJO EN LOS CAMPOS DE CONTRASEÑA (ojo_clave.js)
+   ============================================================ */
+
+.ojo-envoltorio {
+    position: relative;
+    width: 100%;
+}
+
+.ojo-envoltorio .ojo-campo,
+.lck-campo .ojo-envoltorio input {
+    padding-right: 44px !important;
+}
+
+.ojo-boton {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #6b7c73;
+    cursor: pointer;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.ojo-boton:hover { background: rgba(24, 90, 56, .08); color: #185a38; }
+
+.ojo-boton:focus-visible {
+    outline: 2px solid #2e9d66;
+    outline-offset: 1px;
+}
+
+.ojo-boton svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Muestra el ojo abierto o tachado según el estado */
+.ojo-boton .ojo-cerrado { display: none; }
+.ojo-boton.visible .ojo-abierto { display: none; }
+.ojo-boton.visible .ojo-cerrado { display: block; }
+
+/* Si Bootstrap marca el campo como inválido, el ojo no tapa el ícono de error */
+.ojo-envoltorio .ojo-campo.is-invalid { padding-right: 68px !important; background-position: right 40px center; }
+
+html.modo-oscuro .ojo-boton { color: var(--d-text-3, #7f9387); }
+html.modo-oscuro .ojo-boton:hover { background: rgba(255, 255, 255, .08); color: var(--d-text, #e3ece6); }

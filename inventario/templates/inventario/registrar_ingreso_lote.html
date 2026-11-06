@@ -16,6 +16,7 @@
     <header class="lt-header">
         <div>
             <h1 class="lt-title">Lotes</h1>
+            <p class="av-subtitulo">Lotes ingresados con cada remito, con su stock y su fecha de vencimiento.</p>
         </div>
     </header>
 
@@ -33,6 +34,8 @@
         {% endfor %}
     </div>
     {% endif %}
+
+    {% include 'inventario/_resumen.html' %}
 
     <!-- BÚSQUEDA Y FILTROS -->
     <form method="GET" class="lt-toolbar">

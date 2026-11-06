@@ -39,7 +39,7 @@
     <link rel="preload" as="image" href="{% static 'inventario/images/fachada_agroquimica.webp' %}" type="image/webp">
 
     <!-- Estilo compartido de todas las pantallas de acceso -->
-    <link rel="stylesheet" href="{% static 'inventario/styles/login.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'inventario/styles/login.css' %}?v=6">
 </head>
 
 <body>
@@ -69,7 +69,10 @@
             <div class="left-content">
 
                 <span class="hero-badge">
-                    <span class="hero-dot" aria-hidden="true"></span>
+                    <svg class="hero-pin" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 10c0 4.99-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
                     Cerrillos · Salta
                 </span>
 

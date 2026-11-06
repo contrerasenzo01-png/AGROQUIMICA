@@ -1,0 +1,21 @@
+{% comment %}
+    Indicadores de resumen (mismo diseño que los de Productos).
+    La vista manda 'resumen': lista armada con resumen.indicador().
+{% endcomment %}
+{% if resumen %}
+<div class="row g-3 mb-4 av-resumen">
+    {% for s in resumen %}
+        <div class="col-6 {% if resumen|length == 3 %}col-lg-4{% else %}col-lg-3{% endif %}">
+            <div class="av-stat av-stat-{{ s.color }}">
+                <span class="av-stat-icono">
+                    <svg class="av-stat-svg" viewBox="0 0 24 24" aria-hidden="true">{{ s.icono }}</svg>
+                </span>
+                <div>
+                    <strong>{{ s.valor }}</strong>
+                    <span>{{ s.etiqueta }}</span>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}

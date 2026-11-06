@@ -318,3 +318,161 @@ html.modo-oscuro .main-content .form-check-input:checked {
     background-color: var(--d-green-btn);
     border-color: var(--d-green-btn);
 }
+
+
+/* ============================================================
+   7. COMPONENTES DE PRODUCTOS PARA LAS DEMÁS PANTALLAS
+   - .av-subtitulo : texto debajo del título (como en Productos)
+   - .av-stat      : indicadores de resumen (_resumen.html)
+   - .av-buscador  : buscador con la lupa adentro del campo
+   ============================================================ */
+
+/* Subtítulo: todas las pantallas lo muestran igual */
+.av-subtitulo,
+.main-content .rm-subtitle,
+.main-content .page-header p {
+    margin: 4px 0 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--av-suave);
+}
+
+/* Títulos con el mismo tamaño que "Gestión de productos" */
+.us-title, .pf-title, .pv-title, .pr-page .pr-title, .ts-title,
+.rm-title, .lt-title, .al-title, .page-title, .pm-titulo {
+    margin: 0;
+    font-size: 30px;
+    color: var(--av-texto);
+}
+
+/* ---------- Indicadores ---------- */
+
+.av-stat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 100%;
+    padding: 16px 18px;
+    background: var(--av-tarjeta);
+    border: 1px solid var(--av-borde);
+    border-radius: 14px;
+    box-shadow: var(--av-sombra);
+    animation: av-subir .5s .05s ease-out both;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.av-resumen > :nth-child(2) > .av-stat { animation-delay: .08s; }
+.av-resumen > :nth-child(3) > .av-stat { animation-delay: .11s; }
+.av-resumen > :nth-child(4) > .av-stat { animation-delay: .14s; }
+
+.av-stat:hover { transform: translateY(-2px); box-shadow: var(--av-sombra-hover); }
+
+.av-stat-icono {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+}
+
+.av-stat-svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.av-stat strong {
+    display: block;
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--av-texto);
+}
+
+.av-stat div > span {
+    font-size: 12px;
+    color: var(--av-suave);
+}
+
+.av-stat-verde .av-stat-icono { background: #e6f4ec; color: var(--av-verde); }
+.av-stat-rojo  .av-stat-icono { background: #fdecec; color: #b91c1c; }
+.av-stat-ambar .av-stat-icono { background: #fff4d6; color: #a16207; }
+.av-stat-azul  .av-stat-icono { background: #e8f0fd; color: #1d4ed8; }
+
+/* ---------- Buscador con lupa ---------- */
+
+.av-buscador {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+}
+
+.av-buscador .av-lupa {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    fill: none;
+    stroke: var(--av-suave);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.av-buscador .form-control { width: 100%; padding-left: 40px; }
+
+/* ---------- Modo oscuro ---------- */
+
+html.modo-oscuro .main-content {
+    --av-texto: var(--d-text);
+    --av-suave: var(--d-text-3);
+    --av-borde: var(--d-border);
+    --av-tarjeta: var(--d-surface);
+    --av-sombra: 0 1px 2px rgba(0, 0, 0, .3);
+    --av-sombra-hover: 0 18px 40px rgba(0, 0, 0, .45);
+}
+
+html.modo-oscuro .us-title, html.modo-oscuro .pf-title, html.modo-oscuro .pv-title,
+html.modo-oscuro .pr-page .pr-title, html.modo-oscuro .ts-title, html.modo-oscuro .rm-title,
+html.modo-oscuro .lt-title, html.modo-oscuro .al-title, html.modo-oscuro .page-title,
+html.modo-oscuro .pm-titulo { color: var(--d-title); }
+
+html.modo-oscuro .av-stat-verde .av-stat-icono { background: var(--d-green-bg); color: var(--d-green-tx); }
+html.modo-oscuro .av-stat-rojo .av-stat-icono  { background: var(--d-red-bg); color: var(--d-red-tx); }
+html.modo-oscuro .av-stat-ambar .av-stat-icono { background: var(--d-amb-bg); color: var(--d-amb-tx); }
+html.modo-oscuro .av-stat-azul .av-stat-icono  { background: #172440; color: #93b4f5; }
+
+@media (max-width: 700px) {
+    .us-title, .pf-title, .pv-title, .pr-page .pr-title, .ts-title,
+    .rm-title, .lt-title, .al-title, .page-title, .pm-titulo { font-size: 24px; }
+    .av-stat { padding: 14px; gap: 10px; }
+    .av-stat-icono { width: 38px; height: 38px; }
+    .av-stat strong { font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .av-stat { animation: none; transition: none; }
+}
+
+/* Encabezados con botón: el botón se alinea con la base del título,
+   igual que en Productos */
+.us-header, .pf-page .pf-header, .pv-header, .pr-page .pr-header,
+.ts-header, .rm-header, .lt-header {
+    align-items: flex-end;
+    margin-bottom: 22px;
+}
+
+@media (max-width: 700px) {
+    .us-header, .pf-page .pf-header, .pv-header, .pr-page .pr-header,
+    .ts-header, .rm-header, .lt-header { align-items: stretch; }
+}

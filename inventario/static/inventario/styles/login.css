@@ -143,13 +143,17 @@ body {
     -webkit-backdrop-filter: blur(8px);
 }
 
-.hero-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--amarillo);
-    box-shadow: 0 0 0 0 rgba(242, 207, 74, 0.7);
-    animation: pulso 2s infinite;
+/* Ícono de ubicación junto a "Cerrillos · Salta" */
+.hero-pin {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: #ef4444;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.6));
 }
 
 .left-panel h1 {

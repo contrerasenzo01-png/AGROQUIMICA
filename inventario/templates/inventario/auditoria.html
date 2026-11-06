@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}?v=3">
     <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
@@ -18,7 +18,10 @@
     <!-- ENCABEZADO -->
     <header class="al-header">
         <h1 class="al-title">Auditoría del sistema</h1>
+            <p class="av-subtitulo">Registro de las acciones que realizan los usuarios en el sistema.</p>
     </header>
+
+    {% include 'inventario/_resumen.html' %}
 
     <!-- CRITERIOS DE BÚSQUEDA -->
     <form method="GET"
@@ -122,6 +125,7 @@
                         <th>Usuario</th>
                         <th>Perfil</th>
                         <th>Sección</th>
+                        <th>Registro</th>
                         <th>Acción</th>
                         <th>Detalle</th>
                     </tr>
@@ -150,6 +154,14 @@
 
                         <td>
                             <span class="al-producto">{{ log.Seccion }}</span>
+                        </td>
+
+                        <td class="aud-registro">
+                            {% if log.nombre_registro %}
+                                {{ log.nombre_registro }}
+                            {% else %}
+                                <span class="aud-registro-vacio">—</span>
+                            {% endif %}
                         </td>
 
                         <td>
@@ -229,7 +241,7 @@
                     {% empty %}
 
                     <tr>
-                        <td colspan="7" class="al-vacio">
+                        <td colspan="8" class="al-vacio">
                             No se encontraron registros
                             con los criterios seleccionados.
                         </td>
@@ -302,5 +314,5 @@
 
 {% block extra_js %}
     <script src="{% static 'inventario/js/paginacion.js' %}"></script>
-    <script src="{% static 'inventario/js/auditoria.js' %}"></script>
+    <script src="{% static 'inventario/js/auditoria.js' %}?v=2"></script>
 {% endblock %}

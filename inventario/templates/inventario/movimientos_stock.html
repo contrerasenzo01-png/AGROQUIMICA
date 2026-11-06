@@ -85,8 +85,12 @@
     </div>
 {% endif %}
 
+    {% include 'inventario/_resumen.html' %}
+
 <!-- FILTROS -->
 <form method="GET" class="toolbar">
+    <div class="av-buscador">
+        <svg class="av-lupa" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
 
     <input
         type="text"
@@ -95,6 +99,7 @@
         class="form-control search-box"
         placeholder="Buscar producto, lote u observaciones..."
     >
+    </div>
 
     <select name="tipo" class="form-select filter-select"
             onchange="this.form.submit()">

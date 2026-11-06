@@ -4,363 +4,163 @@
 {% block title %}Mis permisos - Agroquímica del Valle{% endblock %}
 
 {% block extra_css %}
-<style>
-    .mp-page {
-        --mp-borde: #e3eae6;
-        --mp-fondo: #ffffff;
-        --mp-fondo2: #fafcfb;
-        --mp-texto: #1c2a23;
-        --mp-suave: #6b7c73;
-        --mp-titulo: #0f3a24;
-        --mp-verde: #185a38;
-        --mp-verde-bg: #e8f5ee;
-        --mp-verde-tx: #1b7a4a;
-        --mp-barra-bg: #e3eae6;
-        --mp-aviso-bg: #e3f0fb;
-        --mp-aviso-tx: #0d4f8b;
-
-        width: 100%;
-        font-family: 'Inter', sans-serif;
-        color: var(--mp-texto);
-    }
-
-    html.modo-oscuro .mp-page {
-        --mp-borde: #263830;
-        --mp-fondo: #151f1a;
-        --mp-fondo2: #1a2620;
-        --mp-texto: #e3ece6;
-        --mp-suave: #a4b6ab;
-        --mp-titulo: #eef6f1;
-        --mp-verde: #2e9d66;
-        --mp-verde-bg: #12301f;
-        --mp-verde-tx: #6ee7a1;
-        --mp-barra-bg: #263830;
-        --mp-aviso-bg: #11273f;
-        --mp-aviso-tx: #7db8f5;
-    }
-
-    .mp-page *, .mp-page *::before, .mp-page *::after { box-sizing: border-box; }
-
-    .mp-icon {
-        width: 18px;
-        height: 18px;
-        flex-shrink: 0;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-
-    /* ---------- Encabezado ---------- */
-    .mp-header { margin-bottom: 22px; }
-
-    .mp-title {
-        margin: 0 0 6px;
-        font-family: 'Poppins', 'Inter', sans-serif;
-        font-size: 28px;
-        font-weight: 700;
-        letter-spacing: -.02em;
-        color: var(--mp-titulo);
-    }
-
-    .mp-sub { margin: 0; font-size: 13px; color: var(--mp-suave); }
-
-    /* ---------- Tarjeta del usuario ---------- */
-    .mp-perfil {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-        padding: 20px 22px;
-        background: var(--mp-fondo);
-        border: 1px solid var(--mp-borde);
-        border-radius: 12px;
-    }
-
-    .mp-avatar {
-        width: 56px;
-        height: 56px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: var(--mp-verde-bg);
-        color: var(--mp-verde-tx);
-        font-family: 'Poppins', sans-serif;
-        font-size: 19px;
-        font-weight: 700;
-    }
-
-    .mp-datos { flex: 1; min-width: 200px; }
-
-    .mp-nombre {
-        margin: 0 0 6px;
-        font-family: 'Poppins', 'Inter', sans-serif;
-        font-size: 17px;
-        font-weight: 600;
-        color: var(--mp-titulo);
-    }
-
-    .mp-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px 18px;
-        font-size: 12.5px;
-        color: var(--mp-suave);
-    }
-
-    .mp-chip {
-        display: inline-flex;
-        align-items: center;
-        padding: 5px 12px;
-        border-radius: 999px;
-        background: var(--mp-verde-bg);
-        color: var(--mp-verde-tx);
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    /* ---------- Resumen ---------- */
-    .mp-resumen {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-        padding: 14px 22px;
-        background: var(--mp-fondo);
-        border: 1px solid var(--mp-borde);
-        border-radius: 12px;
-        font-size: 13px;
-        color: var(--mp-suave);
-    }
-
-    .mp-resumen strong { font-size: 16px; color: var(--mp-titulo); }
-
-    .mp-barra {
-        flex: 1;
-        min-width: 160px;
-        height: 8px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: var(--mp-barra-bg);
-    }
-
-    .mp-barra span {
-        display: block;
-        height: 100%;
-        border-radius: 999px;
-        background: var(--mp-verde);
-    }
-
-    .mp-aviso {
-        margin-bottom: 16px;
-        padding: 12px 16px;
-        border-radius: 10px;
-        background: var(--mp-aviso-bg);
-        color: var(--mp-aviso-tx);
-        font-size: 13px;
-    }
-
-    /* ---------- Tarjetas por módulo ---------- */
-    .mp-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-        gap: 16px;
-        align-items: start;
-    }
-
-    .mp-modulo {
-        overflow: hidden;
-        background: var(--mp-fondo);
-        border: 1px solid var(--mp-borde);
-        border-radius: 12px;
-    }
-
-    .mp-modulo-cab {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 18px;
-        background: var(--mp-fondo2);
-        border-bottom: 1px solid var(--mp-borde);
-    }
-
-    .mp-modulo-icono {
-        width: 36px;
-        height: 36px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 9px;
-        background: var(--mp-verde-bg);
-        color: var(--mp-verde-tx);
-    }
-
-    .mp-modulo-titulo {
-        flex: 1;
-        margin: 0;
-        font-family: 'Poppins', 'Inter', sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--mp-titulo);
-    }
-
-    .mp-contador {
-        min-width: 24px;
-        padding: 2px 9px;
-        border-radius: 999px;
-        background: var(--mp-verde-bg);
-        color: var(--mp-verde-tx);
-        font-size: 11px;
-        font-weight: 700;
-        text-align: center;
-    }
-
-    .mp-lista { margin: 0; padding: 4px 0; list-style: none; }
-
-    .mp-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 12px 18px;
-    }
-
-    .mp-item + .mp-item { border-top: 1px solid var(--mp-borde); }
-
-    .mp-check {
-        width: 22px;
-        height: 22px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: 1px;
-        border-radius: 50%;
-        background: var(--mp-verde-bg);
-        color: var(--mp-verde-tx);
-    }
-
-    .mp-check svg {
-        width: 12px;
-        height: 12px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-
-    .mp-item strong {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--mp-texto);
-    }
-
-    .mp-item small {
-        display: block;
-        margin-top: 2px;
-        font-size: 12px;
-        line-height: 1.45;
-        color: var(--mp-suave);
-    }
-
-    .mp-vacio {
-        grid-column: 1 / -1;
-        padding: 40px 16px;
-        text-align: center;
-        background: var(--mp-fondo);
-        border: 1px dashed var(--mp-borde);
-        border-radius: 12px;
-        font-size: 13px;
-        color: var(--mp-suave);
-    }
-
-    @media (max-width: 700px) {
-        .mp-grid { grid-template-columns: 1fr; }
-        .mp-perfil, .mp-resumen { padding: 16px; }
-        .mp-title { font-size: 24px; }
-    }
-</style>
+    <link rel="stylesheet" href="{% static 'inventario/styles/mis_permisos.css' %}?v=2">
 {% endblock %}
 
 {% block contenido %}
 
-<div class="mp-page">
+<div class="bs-pantalla mp-pantalla">
 
-    <header class="mp-header">
-        <h1 class="mp-title">Mis permisos</h1>
-        <p class="mp-sub">Esto es lo que podés hacer en el sistema con tu perfil.</p>
+    <!-- ===================== ENCABEZADO ===================== -->
+
+    <header class="mp-encabezado">
+        <div>
+            <h1 class="mp-titulo">Mis permisos</h1>
+            <p class="mp-subtitulo">Esto es lo que podés hacer en el sistema con tu perfil.</p>
+        </div>
     </header>
 
-    <!-- DATOS DEL USUARIO -->
-    <section class="mp-perfil">
-        <div class="mp-avatar">{{ usuario.Nombre_usuario|first|upper }}{{ usuario.Apellido_usuario|first|upper }}</div>
 
-        <div class="mp-datos">
-            <h2 class="mp-nombre">{{ usuario.Nombre_usuario }} {{ usuario.Apellido_usuario }}</h2>
-            <div class="mp-meta">
-                <span>@{{ usuario.Usuario }}</span>
-                <span>{{ usuario.Email_usuario }}</span>
+    <!-- ===================== DATOS DEL USUARIO ===================== -->
+
+    <section class="card mp-tarjeta mp-usuario mb-3">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+
+            <div class="mp-avatar">{{ usuario.Nombre_usuario|first|upper }}{{ usuario.Apellido_usuario|first|upper }}</div>
+
+            <div class="flex-grow-1 mp-datos">
+                <h2 class="mp-nombre">{{ usuario.Nombre_usuario }} {{ usuario.Apellido_usuario }}</h2>
+                <div class="d-flex flex-wrap column-gap-3 row-gap-1 mp-meta">
+                    <span>@{{ usuario.Usuario }}</span>
+                    <span>{{ usuario.Email_usuario }}</span>
+                </div>
+            </div>
+
+            <span class="badge rounded-pill mp-chip">Perfil · {{ usuario.ID_Perfil.Nombre_perfil }}</span>
+
+        </div>
+    </section>
+
+
+    <!-- ===================== RESUMEN (4 indicadores) ===================== -->
+
+    <div class="row g-3 mb-3">
+
+        <div class="col-6 col-lg-3">
+            <div class="mp-stat mp-stat-verde">
+                <span class="mp-stat-icono">
+                    <svg class="mp-icon" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                </span>
+                <div>
+                    <strong>{{ total }}</strong>
+                    <span>Permisos habilitados</span>
+                </div>
             </div>
         </div>
 
-        <span class="mp-chip">Perfil · {{ usuario.ID_Perfil.Nombre_perfil }}</span>
-    </section>
+        <div class="col-6 col-lg-3">
+            <div class="mp-stat mp-stat-azul">
+                <span class="mp-stat-icono">
+                    <svg class="mp-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                </span>
+                <div>
+                    <strong>{{ modulos|length }}</strong>
+                    <span>Módulos con acceso</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="mp-stat mp-stat-ambar">
+                <span class="mp-stat-icono">
+                    <svg class="mp-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                </span>
+                <div>
+                    <strong>{{ total_catalogo }}</strong>
+                    <span>Permisos del sistema</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="mp-stat mp-stat-rojo">
+                <span class="mp-stat-icono">
+                    <svg class="mp-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/><path d="M12 7v5l3 2"/></svg>
+                </span>
+                <div>
+                    <strong>{{ porcentaje }}%</strong>
+                    <span>Del sistema habilitado</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ===================== AVISO Y BARRA DE AVANCE ===================== -->
 
     {% if es_admin %}
-        <div class="mp-aviso">
+        <div class="alert mp-aviso d-flex align-items-center gap-2 mb-3" role="status">
+            <svg class="mp-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
             Tu perfil tiene acceso total: podés usar todas las funciones del sistema.
         </div>
     {% endif %}
 
-    <!-- RESUMEN -->
-    <section class="mp-resumen">
-        <span><strong>{{ total }}</strong> de {{ total_catalogo }} permisos habilitados</span>
-        <div class="mp-barra" role="progressbar" aria-valuenow="{{ porcentaje }}" aria-valuemin="0" aria-valuemax="100">
-            <span style="width: {{ porcentaje }}%"></span>
+    <section class="card mp-tarjeta mb-4">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3 mp-resumen-cuerpo">
+            <span><strong>{{ total }}</strong> de {{ total_catalogo }} permisos habilitados</span>
+
+            <div class="progress flex-grow-1 mp-progreso"
+                 role="progressbar"
+                 aria-label="Permisos habilitados"
+                 aria-valuenow="{{ porcentaje }}"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+                <div class="progress-bar" style="width: {{ porcentaje }}%"></div>
+            </div>
+
+            <span class="fw-semibold">{{ porcentaje }}%</span>
         </div>
-        <span>{{ porcentaje }}%</span>
     </section>
 
-    <!-- PERMISOS POR MÓDULO -->
-    <div class="mp-grid">
+
+    <!-- ===================== PERMISOS POR MÓDULO ===================== -->
+
+    <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-3">
         {% for modulo in modulos %}
-            <section class="mp-modulo">
+            <div class="col mp-col">
+                <section class="card h-100 mp-tarjeta mp-modulo-card">
 
-                <div class="mp-modulo-cab">
-                    <span class="mp-modulo-icono">
-                        <svg class="mp-icon"><use href="#{{ modulo.icono }}"></use></svg>
-                    </span>
-                    <h3 class="mp-modulo-titulo">{{ modulo.nombre }}</h3>
-                    <span class="mp-contador">{{ modulo.permisos|length }}</span>
-                </div>
+                    <div class="card-header d-flex align-items-center gap-3 mp-modulo-cab">
+                        <span class="mp-modulo-icono">
+                            <svg class="mp-icon"><use href="#{{ modulo.icono }}"></use></svg>
+                        </span>
+                        <h3 class="flex-grow-1 mp-modulo-titulo">{{ modulo.nombre }}</h3>
+                        <span class="badge rounded-pill mp-contador">{{ modulo.permisos|length }}</span>
+                    </div>
 
-                <ul class="mp-lista">
-                    {% for permiso in modulo.permisos %}
-                        <li class="mp-item">
-                            <span class="mp-check">
-                                <svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
-                            </span>
-                            <div>
-                                <strong>{{ permiso.nombre }}</strong>
-                                <small>{{ permiso.descripcion }}</small>
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
+                    <ul class="list-group list-group-flush">
+                        {% for permiso in modulo.permisos %}
+                            <li class="list-group-item d-flex align-items-start gap-3 mp-item">
+                                <span class="mp-check">
+                                    <svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>
+                                </span>
+                                <div>
+                                    <strong>{{ permiso.nombre }}</strong>
+                                    <small>{{ permiso.descripcion }}</small>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
 
-            </section>
+                </section>
+            </div>
         {% empty %}
-            <div class="mp-vacio">
-                Tu perfil todavía no tiene permisos asignados.
-                Pedile a un administrador que te los asigne.
+            <div class="col-12">
+                <div class="mp-vacio">
+                    Tu perfil todavía no tiene permisos asignados.
+                    Pedile a un administrador que te los asigne.
+                </div>
             </div>
         {% endfor %}
     </div>

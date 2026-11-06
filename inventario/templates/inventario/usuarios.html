@@ -48,6 +48,7 @@
 
         <div>
             <h1 class="us-title">Gestión de usuarios</h1>
+            <p class="av-subtitulo">Cuentas de acceso al sistema, con su perfil y su estado.</p>
         </div>
         {% if perm.usuarios_gestionar %}
         <button type="button" class="us-btn us-btn-primary" onclick="abrirModalCrear()">
@@ -57,6 +58,8 @@
         {% endif %}
     </header>
 
+
+    {% include 'inventario/_resumen.html' %}
 
     <!-- ==========================================
          BUSCADOR
