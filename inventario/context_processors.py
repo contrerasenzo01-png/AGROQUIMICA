@@ -12,11 +12,14 @@ from .permissions import MENU, permisos_ui, puede, puede_accion, rutas_denegadas
 # pantalla nueva que se agregue al MENU aparece sola.
 # ------------------------------------------------------------
 
-# Pantallas que no están en el menú lateral: url_name -> (sección, pantalla)
+# Pantallas que no están en el menú lateral:
+#   url_name -> (sección, url_name de la sección o None, pantalla)
+# Si la sección tiene url_name, en el topbar se puede hacer clic para volver.
 PANTALLAS_EXTRA = {
-    'panel_principal': (None, 'Panel principal'),
-    'mis_permisos': ('Mi perfil', 'Mis permisos'),
-    'cambiar_contrasena': ('Mi cuenta', 'Cambiar contraseña'),
+    'panel_principal': (None, None, 'Panel principal'),
+    'mi_perfil': (None, None, 'Mi perfil'),
+    'mis_permisos': ('Mi perfil', 'mi_perfil', 'Mis permisos'),
+    'cambiar_contrasena': ('Mi cuenta', None, 'Cambiar contraseña'),
 }
 
 
@@ -48,10 +51,19 @@ def _ubicacion(request):
     match = getattr(request, 'resolver_match', None)
     nombre_url = match.url_name if match else ''
 
-    # 1. Pantallas fuera del menú (panel, mi cuenta).
+    # 1. Pantallas fuera del menú (panel, mi perfil, mi cuenta).
     if nombre_url in PANTALLAS_EXTRA:
-        seccion, pantalla = PANTALLAS_EXTRA[nombre_url]
-        tramos = [{'nombre': seccion, 'url': None}] if seccion else []
+        seccion, seccion_url, pantalla = PANTALLAS_EXTRA[nombre_url]
+        tramos = []
+
+        if seccion:
+            try:
+                url = reverse(seccion_url) if seccion_url else None
+            except NoReverseMatch:
+                url = None
+
+            tramos.append({'nombre': seccion, 'url': url})
+
         return tramos + [{'nombre': pantalla, 'url': None}]
 
     pantallas = _pantallas_del_menu()

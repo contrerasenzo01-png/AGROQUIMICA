@@ -1,59 +1,134 @@
 {% extends 'inventario/acceso_base.html' %}
-{% load static %}
 
 {% block titulo %}Recuperar contraseña{% endblock %}
 
 {% block formulario %}
 
-    <link rel="stylesheet" href="{% static 'inventario/css/validaciones.css' %}">
-
-    <span class="form-eyebrow">RECUPERAR ACCESO</span>
-    <h2>¿Olvidaste tu contraseña?</h2>
-
     {% if enviado %}
 
-        <div class="ok-box" role="status">
-            Si el correo está registrado, te enviamos un enlace para
-            restablecer tu contraseña. Revisá tu bandeja de entrada y la
-            carpeta de spam. El enlace vence en 1 hora.
+        <!-- =====================================
+             ENLACE ENVIADO
+        ====================================== -->
+
+        <div class="estado-icono ok anim" style="--d: 1" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                <path d="m22 7-10 6L2 7"></path>
+            </svg>
         </div>
+
+        <span class="form-eyebrow anim" style="--d: 2">Recuperar acceso</span>
+
+        <h2 class="anim" style="--d: 3">Revisá tu correo</h2>
+
+        <p class="description anim" style="--d: 4">
+            Si <strong>{{ email }}</strong> está registrado, te enviamos un enlace
+            para crear una nueva contraseña.
+        </p>
+
+        <ul class="pasos anim" style="--d: 5">
+            <li>Buscá el correo de <strong>Agroquímica del Valle</strong> en tu bandeja de entrada.</li>
+            <li>Si no aparece, revisá la carpeta de <strong>spam</strong> o correo no deseado.</li>
+            <li>El enlace vence en <strong>1 hora</strong>.</li>
+        </ul>
+
+        <a href="{% url 'login' %}" class="btn-submit btn-link-submit anim" style="--d: 6">
+            <span class="btn-text">Volver al inicio de sesión</span>
+            <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+        </a>
+
+        <a href="{% url 'recuperar_contrasena' %}" class="link-volver anim" style="--d: 7">
+            ¿No te llegó? Probá con otro correo
+        </a>
 
     {% else %}
 
-        <p class="description">
+        <!-- =====================================
+             PEDIR EL CORREO
+        ====================================== -->
+
+        <span class="form-eyebrow anim" style="--d: 1">Recuperar acceso</span>
+
+        <h2 class="anim" style="--d: 2">¿Olvidaste tu contraseña?</h2>
+
+        <p class="description anim" style="--d: 3">
             Ingresá el correo electrónico registrado en tu usuario y te
             enviaremos un enlace para crear una nueva contraseña.
         </p>
 
-        <form method="POST" action="{% url 'recuperar_contrasena' %}" novalidate>
+        <form method="POST" action="{% url 'recuperar_contrasena' %}" id="recuperarForm" novalidate>
+
             {% csrf_token %}
 
-            <div class="form-group">
-                <label for="email">Correo electrónico</label>
-                <input type="email"
-                       id="email"
-                       name="email"
-                       value="{{ email|default:'' }}"
-                       placeholder="nombre@empresa.com"
-                       autocomplete="email"
-                       maxlength="100"
-                       required>
-            </div>
-
             {% if error %}
-                <div class="error-box" role="alert">{{ error }}</div>
+                <div class="error-box" role="alert">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>{{ error }}</span>
+                </div>
             {% endif %}
 
-            <button type="submit" class="btn-submit">
-                <span>Enviar enlace</span>
-                <span class="arrow">›</span>
+            <!-- CORREO -->
+            <div class="field anim" style="--d: 4">
+
+                <label for="email" class="form-label">Correo electrónico</label>
+
+                <div class="input-icon">
+                    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <path d="m22 7-10 6L2 7"></path>
+                    </svg>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-control{% if errores.email %} is-invalid{% endif %}"
+                        value="{{ email|default:'' }}"
+                        placeholder="nombre@empresa.com"
+                        autocomplete="email"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        maxlength="100"
+                        aria-describedby="emailError"
+                        {% if errores.email %}aria-invalid="true"{% endif %}
+                        required
+                    >
+                </div>
+
+                <div class="invalid-feedback" id="emailError" aria-live="polite">{{ errores.email|default:'' }}</div>
+
+            </div>
+
+            <button type="submit" class="btn-submit anim" style="--d: 5">
+                <span class="btn-text">Enviar enlace</span>
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m22 2-7 20-4-9-9-4Z"></path>
+                    <path d="M22 2 11 13"></path>
+                </svg>
             </button>
+
         </form>
+
+        <a href="{% url 'login' %}" class="link-volver anim" style="--d: 6">
+            ← Volver al inicio de sesión
+        </a>
 
     {% endif %}
 
-    <a href="{% url 'login' %}" class="link-volver">Volver al inicio de sesión</a>
+{% endblock %}
 
-    <script src="{% static 'inventario/js/validaciones.js' %}"></script>
 
+{% block scripts %}
+    <script>
+        Acceso.formulario(document.getElementById('recuperarForm'), {
+            email: Acceso.reglas.email,
+        });
+    </script>
 {% endblock %}

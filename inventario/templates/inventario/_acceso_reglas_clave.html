@@ -1,0 +1,14 @@
+{% comment %}
+    Lista de requisitos de la nueva contraseña.
+    acceso.js marca en verde cada requisito a medida que se cumple
+    (data-regla) mientras el usuario escribe en el campo data-for.
+{% endcomment %}
+
+<ul class="reglas-clave anim" style="--d: {{ d|default:6 }}" data-for="{{ campo }}" aria-label="Requisitos de la contraseña">
+    <li data-regla="largo">Mínimo 8 caracteres</li>
+    <li data-regla="mayus">Una letra mayúscula</li>
+    <li data-regla="minus">Una letra minúscula</li>
+    <li data-regla="numero">Al menos un número</li>
+    <li data-regla="espacios">Sin espacios</li>
+    <li data-regla="usuario">Sin tu nombre de usuario</li>
+</ul>

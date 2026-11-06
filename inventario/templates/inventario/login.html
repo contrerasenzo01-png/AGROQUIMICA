@@ -1,251 +1,104 @@
-{% load static %}
+{% extends 'inventario/acceso_base.html' %}
 
-<!DOCTYPE html>
-<html lang="es">
+{% block titulo %}Ingresar{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Ícono de la pestaña -->
-    <link rel="icon" href="{% static 'inventario/images/favicon.ico' %}" sizes="any">
-    <link rel="icon" type="image/png" href="{% static 'inventario/images/logo_av.png' %}">
-    <link rel="apple-touch-icon" href="{% static 'inventario/images/apple-touch-icon.png' %}">
+{% block formulario %}
 
-    <title>Agroquímicos del Valle - Login</title>
+    <span class="form-eyebrow anim" style="--d: 1">Tu espacio de trabajo</span>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'inventario/styles/login.css' %}">
-</head>
+    <h2 class="anim" style="--d: 2">Bienvenido de nuevo</h2>
 
-<body>
+    <p class="description anim" style="--d: 3">
+        Ingresá tus credenciales para continuar.
+    </p>
 
-    <main class="login-page">
+    <form method="POST" action="{% url 'login' %}" id="loginForm" novalidate>
 
-        <!-- =====================================
-             PANEL IZQUIERDO
-        ====================================== -->
+        {% csrf_token %}
 
-        <section class="left-panel">
+        <!-- Mensajes de éxito (por ejemplo, después de recuperar la contraseña) -->
+        {% for mensaje in messages %}
+            {% if mensaje.level_tag == 'success' %}
+                <div class="ok-box anim" style="--d: 3" role="status">{{ mensaje }}</div>
+            {% endif %}
+        {% endfor %}
 
-            <div class="left-content">
+        <!-- Error general (credenciales incorrectas, usuario inactivo...) -->
+        {% if error %}
+            <div class="error-box" role="alert">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
 
-                <h1>
-                    <span>
-                        Agroquímica del Valle
-                    </span>
-                </h1>
+        <!-- USUARIO -->
+        <div class="field anim" style="--d: 4">
 
-                <p>
-                   Sistema de gestión interno
-                </p>
+            <label for="usuario" class="form-label">Usuario</label>
 
+            <div class="input-icon">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
 
+                <input
+                    type="text"
+                    id="usuario"
+                    name="usuario"
+                    class="form-control{% if errores.usuario %} is-invalid{% endif %}"
+                    maxlength="50"
+                    value="{{ usuario_ingresado|default:'' }}"
+                    placeholder="Ej.: perezm"
+                    autocomplete="username"
+                    autocapitalize="none"
+                    spellcheck="false"
+                    aria-describedby="usuarioError"
+                    {% if errores.usuario %}aria-invalid="true"{% endif %}
+                    required
+                >
             </div>
 
-            <!-- Pie del panel izquierdo -->
+            <div class="invalid-feedback" id="usuarioError" aria-live="polite">{{ errores.usuario|default:'' }}</div>
 
-            <div class="footer-left">
+        </div>
 
-                <span>Agroquímica del Valle</span>
+        <!-- CONTRASEÑA -->
+        {% include 'inventario/_acceso_campo_clave.html' with id='password' etiqueta='Contraseña' placeholder='Ingresá tu contraseña' autocompletar='current-password' error_campo=errores.password d=5 %}
 
-            </div>
+        <div class="forgot-row anim" style="--d: 6">
+            <a href="{% url 'recuperar_contrasena' %}">¿Olvidaste tu contraseña?</a>
+        </div>
 
-        </section>
+        <button type="submit" class="btn-submit anim" style="--d: 7">
+            <span class="btn-text">Ingresar al sistema</span>
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+        </button>
 
+    </form>
 
-        <!-- =====================================
-             PANEL DERECHO
-        ====================================== -->
+    <div class="security-text anim" style="--d: 8">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span>Acceso exclusivo para personal autorizado</span>
+    </div>
 
-        <section class="right-panel">
+{% endblock %}
 
-            <div class="login-container">
 
-                <!-- LOGO -->
-
-                <div class="logo-container">
-
-                    <img
-                        src="{% static 'inventario/images/logo.png' %}"
-                        alt="Logo Agroquímicos del Valle"
-                    >
-
-                </div>
-
-
-                <!-- FORMULARIO -->
-
-                <div class="login-content">
-
-                    <span class="form-eyebrow">
-                        TU ESPACIO DE TRABAJO
-                    </span>
-
-                    <h2>Bienvenido de nuevo</h2>
-
-                    <p class="description">
-                        Ingresá tus credenciales para continuar.
-                    </p>
-
-
-                    <form method="POST" action="{% url 'login' %}">
-
-                        {% csrf_token %}
-
-
-                        <!-- USUARIO -->
-
-                        <div class="form-group">
-
-                            <label for="usuario">
-                                Usuario
-                            </label>
-
-                            <input
-                                type="text"
-                                id="usuario"
-                                name="usuario"
-                                maxlength="50"
-                                pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+"
-                                title="El usuario debe contener únicamente letras, sin espacios, números ni caracteres especiales."
-                                value="{{ request.POST.usuario|default:'' }}"
-                                placeholder="Ingresá tu usuario"
-                                autocomplete="username"
-                                autocapitalize="none"
-                                spellcheck="false"
-                                required
-                            >
-
-                        </div>
-
-
-                        <!-- CONTRASEÑA -->
-
-                        <div class="form-group">
-
-                            <label for="password">
-                                Contraseña
-                            </label>
-
-                            <div class="password-wrapper">
-
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    maxlength="128"
-                                    placeholder="Ingresá tu contraseña"
-                                    autocomplete="current-password"
-                                    required
-                                >
-
-                                <button
-                                    type="button"
-                                    class="toggle-password"
-                                    id="togglePassword"
-                                    aria-label="Mostrar contraseña"
-                                >
-                                    Mostrar
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                        <div class="forgot-row">
-                            <a href="{% url 'recuperar_contrasena' %}">¿Olvidaste tu contraseña?</a>
-                        </div>
-
-                        {% for mensaje in messages %}
-                            {% if mensaje.level_tag == 'success' %}
-                                <div class="ok-box" role="status">{{ mensaje }}</div>
-                            {% endif %}
-                        {% endfor %}
-
-
-                        <!-- MENSAJE DE ERROR -->
-
-                        {% if error %}
-
-                            <div class="error-box" role="alert">
-                                {{ error }}
-                            </div>
-
-                        {% endif %}
-
-
-                        <!-- BOTÓN INGRESAR -->
-
-                        <button
-                            type="submit"
-                            class="btn-submit"
-                        >
-
-                            <span>Ingresar al sistema</span>
-
-                            <span class="arrow">›</span>
-
-                        </button>
-
-                    </form>
-
-
-                    <!-- INFORMACIÓN DE SEGURIDAD -->
-
-                    <div class="security-text">
-
-                        <span class="shield">♧</span>
-
-                        <span>
-                            Acceso exclusivo para personal autorizado
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- COPYRIGHT -->
-
-            <div class="footer-right">
-
-                © 2026 Agroquímica del Valle.
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- =====================================
-         MOSTRAR / OCULTAR CONTRASEÑA
-    ====================================== -->
-
+{% block scripts %}
     <script>
-
-        const togglePassword = document.getElementById("togglePassword");
-        const password = document.getElementById("password");
-
-        togglePassword.addEventListener("click", function () {
-
-            const mostrar = password.type === "password";
-
-            password.type = mostrar ? "text" : "password";
-
-            togglePassword.textContent = mostrar ? "Ocultar" : "Mostrar";
-
-            togglePassword.setAttribute(
-                "aria-label",
-                mostrar ? "Ocultar contraseña" : "Mostrar contraseña"
-            );
-
+        Acceso.formulario(document.getElementById('loginForm'), {
+            usuario: Acceso.reglas.usuario,
+            password: Acceso.reglas.claveLogin,
         });
-
     </script>
-
-</body>
-
-</html>
+{% endblock %}

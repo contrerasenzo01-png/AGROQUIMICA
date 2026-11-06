@@ -385,3 +385,56 @@ def validar_fecha(texto, etiqueta='', desde=None, hasta=None, obligatorio=True,
         )
 
     return fecha, None
+
+# ------------------------------------------------------------
+# LOGIN
+# Solo se revisa el FORMATO de lo que se escribe. Las reglas de
+# seguridad (mayúscula, número, etc.) se aplican al crear o cambiar
+# la contraseña (validar_contrasena en views.py), no al ingresar.
+# El navegador aplica las mismas reglas (script de login.html).
+# ------------------------------------------------------------
+
+def validar_usuario_login(texto):
+    """Usuario del login: solo letras a-z, sin espacios. Devuelve (valor, error)."""
+
+    valor = str(texto if texto is not None else '')
+
+    if not valor:
+        return '', 'Ingresá tu usuario.'
+
+    if re.search(r'\s', valor):
+        return valor, 'El usuario no puede tener espacios.'
+
+    if re.search(r'\d', valor):
+        return valor, 'El usuario no puede contener números.'
+
+    if not re.fullmatch(r'[A-Za-z]+', valor):
+        return valor, 'El usuario solo puede tener letras, sin tildes, ñ ni símbolos.'
+
+    if len(valor) < 3:
+        return valor, 'El usuario debe tener al menos 3 letras.'
+
+    if len(valor) > 50:
+        return valor, 'El usuario no puede superar los 50 caracteres.'
+
+    return valor, None
+
+
+def validar_contrasena_login(texto):
+    """Contraseña del login: obligatoria, sin espacios, entre 8 y 64 caracteres."""
+
+    valor = str(texto if texto is not None else '')
+
+    if not valor:
+        return '', 'Ingresá tu contraseña.'
+
+    if re.search(r'\s', valor):
+        return valor, 'La contraseña no puede tener espacios.'
+
+    if len(valor) < 8:
+        return valor, 'La contraseña debe tener al menos 8 caracteres.'
+
+    if len(valor) > 64:
+        return valor, 'La contraseña no puede superar los 64 caracteres.'
+
+    return valor, None

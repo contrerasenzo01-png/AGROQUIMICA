@@ -8,6 +8,7 @@ from io import BytesIO
 
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import JsonResponse
@@ -79,7 +80,7 @@ from .recuperacion import (
 from .validaciones import (
     validar_nombre, validar_persona, validar_texto, validar_codigo,
     validar_entero, validar_decimal, validar_dni, validar_email,
-    validar_fecha,
+    validar_fecha, validar_usuario_login, validar_contrasena_login,
 )
 
 # ============================================================
@@ -123,82 +124,99 @@ def usuario_autenticado(request):
 
 
 def login_view(request):
+    """Inicio de sesión.
+
+    Primero valida el formato de cada campo por separado (los errores
+    se muestran en rojo debajo del campo). Recién si los dos están bien
+    busca el usuario. Si la contraseña no coincide, el mensaje es
+    siempre el mismo para no revelar qué usuarios existen.
+    """
 
     error_message = None
+    errores = {}
+    usuario_ingresado = ''
 
     if request.method == 'POST':
 
-        usuario_input = request.POST.get('usuario', '').strip()
-        password_input = request.POST.get('password', '')
+        usuario_input, error_usuario = validar_usuario_login(
+            request.POST.get('usuario', '')
+        )
+        password_input, error_password = validar_contrasena_login(
+            request.POST.get('password', '')
+        )
 
-        # Validar que el usuario contenga únicamente letras.
-        if not re.fullmatch(r'[A-Za-z]+', usuario_input):
+        # Se devuelve al formulario lo que escribió (nunca la contraseña).
+        usuario_ingresado = usuario_input
 
-            error_message = (
-                'El usuario debe contener únicamente letras, '
-                'sin números, espacios ni caracteres especiales.'
-            )
+        if error_usuario:
+            errores['usuario'] = error_usuario
 
-        else:
+        if error_password:
+            errores['password'] = error_password
 
-            try:
-                usuario = Usuarios.objects.select_related(
-                    'ID_Perfil'
-                ).get(
-                    Usuario=usuario_input
+        if not errores:
+
+            usuario = Usuarios.objects.select_related(
+                'ID_Perfil'
+            ).filter(
+                Usuario=usuario_input
+            ).first()
+
+            # La contraseña se verifica ANTES que el estado: así,
+            # quien no la conoce no puede averiguar si un usuario
+            # existe o está inactivo.
+            if not usuario or not check_password(
+                password_input,
+                usuario.Contrasena
+            ):
+                error_message = 'Usuario o contraseña incorrectos.'
+
+            elif not usuario.Estado_usuario:
+                error_message = (
+                    'Tu usuario se encuentra inactivo. '
+                    'Comunicate con el administrador.'
                 )
 
-                if not usuario.Estado_usuario:
+            elif not usuario.ID_Perfil or not usuario.ID_Perfil.Estado_perfil:
+                error_message = (
+                    'Tu perfil no está habilitado. '
+                    'Comunicate con el administrador.'
+                )
 
-                    error_message = 'El usuario se encuentra inactivo.'
+            else:
+                # Nueva sesión: evita reutilizar un id de sesión anterior.
+                request.session.cycle_key()
 
-                elif not usuario.ID_Perfil:
+                request.session['usuario_id'] = usuario.ID_Usuario
+                request.session['bloqueada'] = False
+                request.session['ultima_actividad'] = time_module.time()
+                request.session['usuario_nombre'] = usuario.Usuario
+                request.session['perfil_id'] = usuario.ID_Perfil.ID_Perfil
+                request.session['perfil_nombre'] = (
+                    usuario.ID_Perfil.Nombre_perfil
+                )
 
-                    error_message = 'El usuario no tiene un perfil asignado.'
+                registrar_auditoria(
+                    usuario=usuario,
+                    entidad="USUARIOS",
+                    objeto=usuario,
+                    accion="INICIO_SESION",
+                    antes={},
+                    despues={"accion": "Inicio de sesión"}
+                )
 
-                elif not usuario.ID_Perfil.Estado_perfil:
+                if usuario.Cambiar_contrasena:
+                    return redirect('cambiar_contrasena')
 
-                    error_message = 'El perfil del usuario se encuentra inactivo.'
-
-                elif check_password(
-                    password_input,
-                    usuario.Contrasena
-                ):
-
-                    request.session['usuario_id'] = usuario.ID_Usuario
-                    request.session['bloqueada'] = False
-                    request.session['ultima_actividad'] = time_module.time()
-                    request.session['usuario_nombre'] = usuario.Usuario
-                    request.session['perfil_id'] = usuario.ID_Perfil.ID_Perfil
-                    request.session['perfil_nombre'] = (
-                        usuario.ID_Perfil.Nombre_perfil
-                    )
-
-                    registrar_auditoria(
-                        usuario=usuario,
-                        entidad="USUARIOS",
-                        objeto=usuario,
-                        accion="INICIO_SESION",
-                        antes={},
-                        despues={"accion": "Inicio de sesión"}
-                    )
-
-                    if usuario.Cambiar_contrasena:
-                        return redirect('cambiar_contrasena')
-
-                    return redirect('panel_principal')
-
-                else:
-                    error_message = 'Usuario o contraseña incorrectos.'
-
-            except Usuarios.DoesNotExist:
-                error_message = 'Usuario o contraseña incorrectos.'
+                return redirect('panel_principal')
 
     return render(
         request,
         'inventario/login.html',
         {
-            'error': error_message
+            'error': error_message,
+            'errores': errores,
+            'usuario_ingresado': usuario_ingresado,
         }
     )
 
@@ -1670,6 +1688,35 @@ def validar_contrasena(contrasena, usuario=''):
     return None
 
 
+def _errores_nueva_contrasena(nueva, confirmar, usuario):
+    """Errores por campo al elegir una contraseña nueva.
+
+    Devuelve {'nueva_contrasena': ..., 'confirmar_contrasena': ...}
+    solo con los campos que tienen error (vacío si está todo bien).
+    """
+
+    errores = {}
+
+    if not nueva:
+        errores['nueva_contrasena'] = 'Ingresá la nueva contraseña.'
+    else:
+        error = validar_contrasena(nueva, usuario.Usuario)
+
+        if error:
+            errores['nueva_contrasena'] = error
+        elif check_password(nueva, usuario.Contrasena):
+            errores['nueva_contrasena'] = (
+                'La nueva contraseña debe ser distinta de la actual.'
+            )
+
+    if not confirmar:
+        errores['confirmar_contrasena'] = 'Repetí la nueva contraseña.'
+    elif confirmar != nueva:
+        errores['confirmar_contrasena'] = 'Las contraseñas no coinciden.'
+
+    return errores
+
+
 def crear_usuario(request):
 
     usuario_admin = usuario_con_acceso(request, 'usuarios', gestionar=True)
@@ -2031,6 +2078,12 @@ def restablecer_contrasena(request, pk):
 
 
 def cambiar_contrasena(request):
+    """Pantalla "Debés cambiar tu contraseña" (después de una temporal).
+
+    Los errores se devuelven por campo para mostrarlos en rojo
+    debajo de cada uno (errores.nueva_contrasena / confirmar_contrasena).
+    """
+
     usuario = usuario_autenticado(request)
 
     if not usuario:
@@ -2038,36 +2091,18 @@ def cambiar_contrasena(request):
         return redirect('login')
 
     if request.method == 'POST':
-        nueva_contrasena = request.POST.get(
-            'nueva_contrasena',
-            ''
-        )
-        confirmar_contrasena = request.POST.get(
-            'confirmar_contrasena',
-            ''
+        nueva_contrasena = request.POST.get('nueva_contrasena', '')
+        confirmar_contrasena = request.POST.get('confirmar_contrasena', '')
+
+        errores = _errores_nueva_contrasena(
+            nueva_contrasena, confirmar_contrasena, usuario
         )
 
-        if nueva_contrasena != confirmar_contrasena:
-            messages.error(
-                request,
-                'Las contraseñas no coinciden.'
-            )
-
+        if errores:
             return render(
                 request,
                 'inventario/cambiar_contrasena.html',
-                {'usuario': usuario}
-            )
-
-        error = validar_contrasena(nueva_contrasena, usuario.Usuario)
-
-        if error:
-            messages.error(request, error)
-
-            return render(
-                request,
-                'inventario/cambiar_contrasena.html',
-                {'usuario': usuario}
+                {'usuario': usuario, 'errores': errores}
             )
 
         # cambiar_contrasena (la propia):
@@ -5943,7 +5978,15 @@ def bloqueo_sesion(request):
     return render(
         request,
         'inventario/bloqueo.html',
-        {'usuario': usuario, 'error': error, 'siguiente': siguiente}
+        {
+            'usuario': usuario,
+            'error': error,
+            'siguiente': siguiente,
+            # Mismo tiempo que settings.INACTIVIDAD_SEGUNDOS (antes decía 15 fijo).
+            'minutos_inactividad': getattr(
+                settings, 'INACTIVIDAD_SEGUNDOS', 30 * 60
+            ) // 60,
+        }
     )
 
 
@@ -5985,10 +6028,14 @@ def recuperar_contrasena(request):
     email_ingresado = request.POST.get('email', '').strip()
     contexto = {'email': email_ingresado}
 
-    email, error = validar_email(email_ingresado, '')
+    # El error del formato va debajo del campo (errores.email).
+    if not email_ingresado:
+        error = 'Ingresá tu correo electrónico.'
+    else:
+        email, error = validar_email(email_ingresado, '')
 
     if error:
-        contexto['error'] = error
+        contexto['errores'] = {'email': error}
         return render(request, 'inventario/recuperar_contrasena.html', contexto)
 
     if limite_superado(request, email):
@@ -6047,13 +6094,10 @@ def recuperar_confirmar(request, uidb64, token):
         nueva = request.POST.get('nueva_contrasena', '')
         confirmar = request.POST.get('confirmar_contrasena', '')
 
-        if nueva != confirmar:
-            error = 'Las contraseñas no coinciden.'
-        else:
-            error = validar_contrasena(nueva, usuario.Usuario)
+        errores = _errores_nueva_contrasena(nueva, confirmar, usuario)
 
-        if error:
-            contexto['error'] = error
+        if errores:
+            contexto['errores'] = errores
             return render(
                 request,
                 'inventario/recuperar_confirmar.html',

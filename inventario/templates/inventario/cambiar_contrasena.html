@@ -1,142 +1,73 @@
-{% load static %}
+{% extends 'inventario/acceso_base.html' %}
 
-<!DOCTYPE html>
-<html lang="es">
+{% block titulo %}Cambiar contraseña{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Ícono de la pestaña -->
-    <link rel="icon" href="{% static 'inventario/images/favicon.ico' %}" sizes="any">
-    <link rel="icon" type="image/png" href="{% static 'inventario/images/logo_av.png' %}">
-    <link rel="apple-touch-icon" href="{% static 'inventario/images/apple-touch-icon.png' %}">
+{% block formulario %}
 
-    <title>Cambiar contraseña - Agroquímica del Valle</title>
+    <div class="estado-icono aviso anim" style="--d: 1" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            <path d="M12 15v3"></path>
+        </svg>
+    </div>
 
-    <link rel="stylesheet"
-          href="{% static 'inventario/styles/cambiar_contrasena.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/css/validaciones.css' %}">
-</head>
+    <span class="form-eyebrow anim" style="--d: 2">Hola, {{ usuario.Nombre_usuario }}</span>
 
-<body>
+    <h2 class="anim" style="--d: 3">Debés cambiar tu contraseña</h2>
 
-    <main class="login-container">
+    <p class="description anim" style="--d: 4">
+        Por seguridad, elegí una contraseña nueva antes de ingresar al
+        sistema. La que usaste recién era temporal.
+    </p>
 
-        <header class="login-header">
-            <h1>Agroquímica del Valle</h1>
-            <p class="subtitle">Sistema de gestión de stock</p>
-        </header>
+    <form method="POST" id="cambiarClaveForm" data-usuario="{{ usuario.Usuario }}" novalidate>
 
-        <section class="card">
+        {% csrf_token %}
 
-            <div class="card-header">
-                <div class="icon-password">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         width="30"
-                         height="30"
-                         viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="1.8"
-                         stroke-linecap="round"
-                         stroke-linejoin="round">
-
-                        <rect x="3" y="11" width="18" height="11" rx="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        <path d="M12 15v3"/>
-
-                    </svg>
-                </div>
-
-                <h2>Debe cambiar su contraseña</h2>
-
-                <p class="description">
-                    Por seguridad, debe establecer una nueva contraseña
-                    antes de ingresar al sistema.
-                </p>
+        {% if error %}
+            <div class="error-box" role="alert">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>{{ error }}</span>
             </div>
+        {% endif %}
 
-            <form method="POST" novalidate data-usuario-valor="{{ usuario.Usuario }}">
+        {% include 'inventario/_acceso_campo_clave.html' with id='nueva_contrasena' etiqueta='Nueva contraseña' placeholder='Escribí la nueva contraseña' autocompletar='new-password' error_campo=errores.nueva_contrasena d=5 %}
 
-                {% csrf_token %}
+        {% include 'inventario/_acceso_reglas_clave.html' with campo='nueva_contrasena' d=6 %}
 
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="message-box">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
+        {% include 'inventario/_acceso_campo_clave.html' with id='confirmar_contrasena' etiqueta='Repetir nueva contraseña' placeholder='Repetí la nueva contraseña' autocompletar='new-password' error_campo=errores.confirmar_contrasena d=7 %}
 
-                {% if error %}
-                    <div class="message-box">
-                        {{ error }}
-                    </div>
-                {% endif %}
+        <button type="submit" class="btn-submit anim" style="--d: 8">
+            <span class="btn-text">Cambiar contraseña</span>
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+        </button>
 
-                <div class="form-group">
+    </form>
 
-                    <label for="nueva_contrasena">
-                        Nueva contraseña
-                    </label>
+    <a href="{% url 'cerrar_sesion' %}" class="link-volver anim" style="--d: 9">
+        Ahora no, cerrar sesión
+    </a>
 
-                    <input
-                        type="password"
-                        id="nueva_contrasena"
-                        name="nueva_contrasena"
-                        placeholder="Ingrese una nueva contraseña"
-                        autocomplete="new-password"
-                        required
-                        minlength="8"
-                        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^\s]{8,}"
-                        title="Mínimo 8 caracteres, una mayúscula, una minúscula y un número, sin espacios."
-                    >
+{% endblock %}
 
-                </div>
 
-                <div class="form-group">
+{% block scripts %}
+    <script>
+        (function () {
+            const form = document.getElementById('cambiarClaveForm');
 
-                    <label for="confirmar_contrasena">
-                        Confirmar contraseña
-                    </label>
-
-                    <input
-                        type="password"
-                        id="confirmar_contrasena"
-                        name="confirmar_contrasena"
-                        placeholder="Repita la nueva contraseña"
-                        autocomplete="new-password"
-                        required
-                        minlength="8"
-                    >
-
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    Cambiar contraseña
-                </button>
-
-                <div class="footer-text">
-                    <strong>Requisitos de seguridad</strong>
-
-                    <ul>
-                        <li>Mínimo 8 caracteres.</li>
-                        <li>Una letra mayúscula y una minúscula.</li>
-                        <li>Al menos un número.</li>
-                        <li>No puede contener tu nombre de usuario.</li>
-                    </ul>
-                </div>
-
-            </form>
-
-        </section>
-
-        <footer class="login-footer">
-            Agroquímica del Valle © 2026
-        </footer>
-
-    </main>
-<script src="{% static 'inventario/js/validaciones.js' %}"></script>
-</body>
-
-</html>
+            Acceso.formulario(form, {
+                nueva_contrasena: Acceso.reglas.claveNueva(form.dataset.usuario),
+                confirmar_contrasena: Acceso.reglas.coincide('nueva_contrasena'),
+            });
+        })();
+    </script>
+{% endblock %}

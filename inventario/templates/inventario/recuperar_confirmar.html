@@ -1,72 +1,107 @@
 {% extends 'inventario/acceso_base.html' %}
-{% load static %}
 
 {% block titulo %}Nueva contraseña{% endblock %}
 
 {% block formulario %}
 
-    <link rel="stylesheet" href="{% static 'inventario/css/validaciones.css' %}">
-
-    <span class="form-eyebrow">RECUPERAR ACCESO</span>
-
     {% if invalido %}
 
-        <h2>Enlace no válido</h2>
+        <!-- =====================================
+             ENLACE VENCIDO O YA USADO
+        ====================================== -->
 
-        <div class="error-box" role="alert">
-            Este enlace venció o ya fue usado. Pedí uno nuevo para
-            restablecer tu contraseña.
+        <div class="estado-icono error anim" style="--d: 1" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+            </svg>
         </div>
 
-        <a href="{% url 'recuperar_contrasena' %}" class="link-volver">
-            Pedir un enlace nuevo
+        <span class="form-eyebrow anim" style="--d: 2">Recuperar acceso</span>
+
+        <h2 class="anim" style="--d: 3">El enlace no es válido</h2>
+
+        <p class="description anim" style="--d: 4">
+            El enlace venció (dura 1 hora) o ya se usó para cambiar la contraseña.
+            Pedí uno nuevo para continuar.
+        </p>
+
+        <a href="{% url 'recuperar_contrasena' %}" class="btn-submit btn-link-submit anim" style="--d: 5">
+            <span class="btn-text">Pedir un enlace nuevo</span>
+            <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+        </a>
+
+        <a href="{% url 'login' %}" class="link-volver anim" style="--d: 6">
+            ← Volver al inicio de sesión
         </a>
 
     {% else %}
 
-        <h2>Elegí tu nueva contraseña</h2>
+        <!-- =====================================
+             CREAR LA NUEVA CONTRASEÑA
+        ====================================== -->
 
-        <p class="description">
-            Tiene que cumplir todos los requisitos de la lista.
+        <span class="form-eyebrow anim" style="--d: 1">Recuperar acceso</span>
+
+        <h2 class="anim" style="--d: 2">Creá tu nueva contraseña</h2>
+
+        <p class="description anim" style="--d: 3">
+            Usuario: <strong>{{ usuario_nombre }}</strong>.
+            Elegí una contraseña que no hayas usado antes.
         </p>
 
-        <form method="POST" novalidate data-usuario-valor="{{ usuario_nombre|default:'' }}">
+        <form method="POST" id="nuevaClaveForm" data-usuario="{{ usuario_nombre }}" novalidate>
+
             {% csrf_token %}
 
-            <div class="form-group">
-                <label for="nueva_contrasena">Nueva contraseña</label>
-                <input type="password"
-                       id="nueva_contrasena"
-                       name="nueva_contrasena"
-                       placeholder="Ingresá la nueva contraseña"
-                       autocomplete="new-password"
-                       maxlength="64"
-                       required>
-            </div>
-
-            <div class="form-group">
-                <label for="confirmar_contrasena">Confirmar contraseña</label>
-                <input type="password"
-                       id="confirmar_contrasena"
-                       name="confirmar_contrasena"
-                       placeholder="Repetí la nueva contraseña"
-                       autocomplete="new-password"
-                       maxlength="64"
-                       required>
-            </div>
-
             {% if error %}
-                <div class="error-box" role="alert">{{ error }}</div>
+                <div class="error-box" role="alert">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>{{ error }}</span>
+                </div>
             {% endif %}
 
-            <button type="submit" class="btn-submit">
-                <span>Guardar contraseña</span>
-                <span class="arrow">›</span>
+            {% include 'inventario/_acceso_campo_clave.html' with id='nueva_contrasena' etiqueta='Nueva contraseña' placeholder='Escribí la nueva contraseña' autocompletar='new-password' error_campo=errores.nueva_contrasena d=4 %}
+
+            {% include 'inventario/_acceso_reglas_clave.html' with campo='nueva_contrasena' d=5 %}
+
+            {% include 'inventario/_acceso_campo_clave.html' with id='confirmar_contrasena' etiqueta='Repetir nueva contraseña' placeholder='Repetí la nueva contraseña' autocompletar='new-password' error_campo=errores.confirmar_contrasena d=6 %}
+
+            <button type="submit" class="btn-submit anim" style="--d: 7">
+                <span class="btn-text">Guardar nueva contraseña</span>
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5"></path>
+                </svg>
             </button>
+
         </form>
 
-        <script src="{% static 'inventario/js/validaciones.js' %}"></script>
+        <a href="{% url 'login' %}" class="link-volver anim" style="--d: 8">
+            ← Volver al inicio de sesión
+        </a>
 
     {% endif %}
 
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+        (function () {
+            const form = document.getElementById('nuevaClaveForm');
+            if (!form) return;
+
+            Acceso.formulario(form, {
+                nueva_contrasena: Acceso.reglas.claveNueva(form.dataset.usuario),
+                confirmar_contrasena: Acceso.reglas.coincide('nueva_contrasena'),
+            });
+        })();
+    </script>
 {% endblock %}
