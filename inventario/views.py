@@ -2559,7 +2559,7 @@ def mis_permisos(request):
             'total_catalogo': len(catalogo),
             'porcentaje': round(total * 100 / len(catalogo)) if catalogo else 0,
             'es_admin': es_admin,
-            'activo': 'mis_permisos',
+            'activo': 'mi_perfil',
         }
     )
 

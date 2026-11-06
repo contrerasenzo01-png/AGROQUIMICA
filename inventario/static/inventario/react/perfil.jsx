@@ -248,6 +248,223 @@ function Permisos({ permisos, urlDetalle }) {
 
 
 /* ------------------------------------------------------------
+   CAMBIAR CONTRASEÑA (se despliega dentro de la misma tarjeta)
+   Va dentro del <form> de datos personales, por eso no usa un
+   <form> propio: Enter y el botón llaman a enviar().
+   ------------------------------------------------------------ */
+
+const CONTRASENA_VACIA = { actual: '', nueva: '', confirmar: '' };
+
+function reglasContrasena(clave, usuario) {
+    return [
+        { texto: 'Mínimo 8 caracteres', ok: clave.length >= 8 },
+        { texto: 'Una mayúscula y una minúscula', ok: /[A-Z]/.test(clave) && /[a-z]/.test(clave) },
+        { texto: 'Al menos un número', ok: /\d/.test(clave) },
+        { texto: 'Sin espacios', ok: clave.length > 0 && !/\s/.test(clave) },
+        { texto: 'Sin tu nombre de usuario', ok: clave.length > 0 && !(usuario && clave.toLowerCase().includes(usuario.toLowerCase())) },
+    ];
+}
+
+function CambiarContrasena({ usuario }) {
+    const [abierto, setAbierto] = useState(false);
+    const [claves, setClaves] = useState(CONTRASENA_VACIA);
+    const [ver, setVer] = useState(false);
+    const [errores, setErrores] = useState({});
+    const [enviando, setEnviando] = useState(false);
+    const [aviso, setAviso] = useState(null);   // { tipo, texto }
+    const primerCampo = useRef(null);
+
+    useEffect(() => {
+        if (abierto && primerCampo.current) primerCampo.current.focus();
+    }, [abierto]);
+
+    useEffect(() => {
+        if (!aviso || aviso.tipo !== 'success') return undefined;
+        const espera = setTimeout(() => setAviso(null), 4500);
+        return () => clearTimeout(espera);
+    }, [aviso]);
+
+    const reglas = reglasContrasena(claves.nueva, usuario);
+
+    const cambiar = (campo) => (e) => {
+        const valor = e.target.value;
+        setClaves(c => ({ ...c, [campo]: valor }));
+        setErrores(er => ({ ...er, [campo]: undefined }));
+    };
+
+    const cerrar = () => {
+        setAbierto(false);
+        setClaves(CONTRASENA_VACIA);
+        setErrores({});
+        setVer(false);
+    };
+
+    const validar = () => {
+        const nuevos = {};
+        if (!claves.actual) nuevos.actual = 'Ingresá tu contraseña actual.';
+        if (!claves.nueva) nuevos.nueva = 'Ingresá la nueva contraseña.';
+        else if (reglas.some(r => !r.ok)) nuevos.nueva = 'La nueva contraseña no cumple los requisitos.';
+        else if (claves.nueva === claves.actual) nuevos.nueva = 'La nueva contraseña debe ser distinta de la actual.';
+        if (!claves.confirmar) nuevos.confirmar = 'Repetí la nueva contraseña.';
+        else if (claves.confirmar !== claves.nueva) nuevos.confirmar = 'Las contraseñas no coinciden.';
+        return nuevos;
+    };
+
+    const enviar = async () => {
+        if (enviando) return;
+
+        const nuevos = validar();
+        setErrores(nuevos);
+        if (Object.keys(nuevos).length) return;
+
+        const datos = new FormData();
+        datos.append('actual', claves.actual);
+        datos.append('nueva', claves.nueva);
+        datos.append('confirmar', claves.confirmar);
+
+        setEnviando(true);
+        setAviso(null);
+
+        try {
+            const respuesta = await fetch(DATOS.urls.contrasena, {
+                method: 'POST',
+                body: datos,
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': tokenCsrf(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            let resultado = null;
+            try { resultado = await respuesta.json(); } catch (e) { resultado = null; }
+
+            if (!respuesta.ok || !resultado || !resultado.ok) {
+                setErrores((resultado && resultado.errores) || {});
+                setAviso({
+                    tipo: 'danger',
+                    texto: (resultado && resultado.error) || 'No se pudo cambiar la contraseña. Probá de nuevo en un momento.',
+                });
+                return;
+            }
+
+            cerrar();
+            setAviso({ tipo: 'success', texto: resultado.mensaje });
+        } catch (e) {
+            setAviso({ tipo: 'danger', texto: 'No hay conexión con el servidor. Revisá tu internet y probá de nuevo.' });
+        } finally {
+            setEnviando(false);
+        }
+    };
+
+    /* Enter dentro de estos campos cambia la contraseña
+       (y no envía el formulario de datos personales). */
+    const alTeclear = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            enviar();
+        } else if (e.key === 'Escape') {
+            cerrar();
+        }
+    };
+
+    const campo = (id, nombre, etiqueta, autocompletar, ref) => (
+        <div className="col-12 col-md-4">
+            <label className="form-label" htmlFor={id}>{etiqueta}</label>
+            <input
+                id={id}
+                ref={ref}
+                type={ver ? 'text' : 'password'}
+                className={'form-control' + (errores[nombre] ? ' is-invalid' : '')}
+                value={claves[nombre]}
+                maxLength={64}
+                autoComplete={autocompletar}
+                onChange={cambiar(nombre)}
+                onKeyDown={alTeclear}
+                aria-invalid={errores[nombre] ? 'true' : 'false'}
+            />
+            {errores[nombre] && <div className="invalid-feedback">{errores[nombre]}</div>}
+        </div>
+    );
+
+    return (
+        <div>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <div className="fw-semibold">Contraseña</div>
+                    <div className="small text-body-secondary">
+                        Cambiala cada tanto para mantener tu cuenta segura.
+                    </div>
+                </div>
+
+                {!abierto && (
+                    <button type="button" className="btn btn-outline-success" onClick={() => { setAviso(null); setAbierto(true); }}>
+                        <Icono nombre="candado" /> Cambiar contraseña
+                    </button>
+                )}
+            </div>
+
+            {aviso && (
+                <div className={`alert alert-${aviso.tipo} d-flex align-items-center justify-content-between gap-3 mt-3 mb-0 py-2 small`} role="status">
+                    <span>{aviso.texto}</span>
+                    <button type="button" className="btn-close" aria-label="Cerrar" onClick={() => setAviso(null)}></button>
+                </div>
+            )}
+
+            {abierto && (
+                <div className="pf-contrasena mt-3 pf-aparecer">
+                    <div className="row g-3">
+                        {campo('pf-clave-actual', 'actual', 'Contraseña actual', 'current-password', primerCampo)}
+                        {campo('pf-clave-nueva', 'nueva', 'Nueva contraseña', 'new-password')}
+                        {campo('pf-clave-confirmar', 'confirmar', 'Repetir nueva contraseña', 'new-password')}
+                    </div>
+
+                    <div className="form-check mt-3">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="pf-clave-ver"
+                            checked={ver}
+                            onChange={e => setVer(e.target.checked)}
+                        />
+                        <label className="form-check-label small" htmlFor="pf-clave-ver">
+                            Mostrar contraseñas
+                        </label>
+                    </div>
+
+                    <ul className="pf-reglas mt-3 mb-0">
+                        {reglas.map(r => (
+                            <li key={r.texto} className={r.ok ? 'ok' : ''}>
+                                <Icono nombre="check" /> {r.texto}
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div className="d-flex flex-wrap justify-content-end gap-2 mt-3">
+                        <button type="button" className="btn btn-outline-success" onClick={cerrar} disabled={enviando}>
+                            Cancelar
+                        </button>
+                        <button type="button" className="btn btn-success" onClick={enviar} disabled={enviando}>
+                            {enviando ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                                    Guardando…
+                                </>
+                            ) : (
+                                <>
+                                    <Icono nombre="candado" /> Guardar contraseña
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+
+/* ------------------------------------------------------------
    PANTALLA COMPLETA
    ------------------------------------------------------------ */
 
@@ -543,18 +760,7 @@ function Perfil() {
 
                                 <hr />
 
-                                <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                                    <div>
-                                        <div className="fw-semibold">Contraseña</div>
-                                        <div className="small text-body-secondary">
-                                            Cambiala cada tanto para mantener tu cuenta segura.
-                                        </div>
-                                    </div>
-
-                                    <a className="btn btn-outline-success" href={DATOS.urls.contrasena}>
-                                        <Icono nombre="candado" /> Cambiar contraseña
-                                    </a>
-                                </div>
+                                <CambiarContrasena usuario={actual.usuario} />
                             </div>
                         </div>
 

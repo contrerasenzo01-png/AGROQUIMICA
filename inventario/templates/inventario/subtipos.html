@@ -63,7 +63,7 @@
 
         <svg class="ts-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
 
-        <input type="text" name="q" value="{{ busqueda|default:'' }}" placeholder="Buscar subtipo...">
+        <input class="form-control" type="text" name="q" value="{{ busqueda|default:'' }}" placeholder="Buscar subtipo...">
 
     </form>
 
@@ -73,7 +73,7 @@
 
         <div class="ts-table-wrap">
 
-            <table class="ts-table">
+            <table class="table table-hover align-middle av-filas ts-table">
 
                 <thead>
                     <tr>
@@ -183,12 +183,12 @@
 
                 <div class="ts-grupo">
                     <label for="nombre_subtipo">Nombre</label>
-                    <input type="text" name="Nombre_subtipo" id="nombre_subtipo" maxlength="50" required>
+                    <input class="form-control" type="text" name="Nombre_subtipo" id="nombre_subtipo" maxlength="50" required>
                 </div>
 
                 <div class="ts-grupo">
                     <label for="tipo_producto">Tipo de producto</label>
-                    <select name="ID_Tipo_producto" id="tipo_producto" required>
+                    <select class="form-select" name="ID_Tipo_producto" id="tipo_producto" required>
                         <option value="">Seleccionar tipo</option>
                         {% for tipo in tipos_productos %}
                             <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
@@ -198,7 +198,7 @@
 
                 <div class="ts-grupo">
                     <label for="descripcion_subtipo">Descripción</label>
-                    <input type="text" name="Descripcion_subtipo" id="descripcion_subtipo" maxlength="200">
+                    <input class="form-control" type="text" name="Descripcion_subtipo" id="descripcion_subtipo" maxlength="200">
                 </div>
 
             </div>

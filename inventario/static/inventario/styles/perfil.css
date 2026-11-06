@@ -283,7 +283,7 @@ body {
     background: var(--bs-tertiary-bg);
 }
 
-.pf-dato span {
+.pf-dato > span {
     display: block;
     font-size: 10.5px;
     font-weight: 600;
@@ -357,6 +357,39 @@ body {
 
 
 /* ==========================================
+   CAMBIAR CONTRASEÑA (dentro de "Datos de tu cuenta")
+   ========================================== */
+
+.pf-contrasena {
+    padding: 16px;
+    border-radius: 10px;
+    background: var(--bs-tertiary-bg);
+}
+
+.pf-reglas {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    font-size: 12.5px;
+    color: var(--bs-secondary-color);
+}
+
+.pf-reglas li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color .2s;
+}
+
+.pf-reglas .pf-svg { width: 13px; height: 13px; opacity: .35; transition: opacity .2s; }
+
+.pf-reglas li.ok { color: var(--bs-success-text-emphasis); font-weight: 600; }
+.pf-reglas li.ok .pf-svg { opacity: 1; }
+
+
+/* ==========================================
    RESPONSIVE
    ========================================== */
 
@@ -414,6 +447,10 @@ html.modo-oscuro .pf-foto { border-color: var(--d-border-2); }
 html.modo-oscuro .pf-foto.con-foto { border-color: var(--d-surface); box-shadow: 0 0 0 3px var(--d-border-2); }
 
 html.modo-oscuro .pf-modulo { background: var(--d-surface-2); }
+
+html.modo-oscuro .pf-contrasena { background: var(--d-surface-2); }
+
+html.modo-oscuro .pf-contrasena .form-control { background: var(--d-surface); }
 
 /* tema.css pinta todos los .btn de gris en modo oscuro:
    dentro de esta pantalla se recuperan los verdes. */

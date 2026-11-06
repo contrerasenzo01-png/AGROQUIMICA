@@ -57,6 +57,7 @@ urlpatterns = [
     path('mis-permisos/', views.mis_permisos, name='mis_permisos'),
     path('mi-perfil/', perfil.mi_perfil, name='mi_perfil'),
     path('mi-perfil/guardar/', perfil.guardar_mi_perfil, name='guardar_mi_perfil'),
+    path('mi-perfil/contrasena/', perfil.cambiar_mi_contrasena, name='cambiar_mi_contrasena'),
     path('perfiles/eliminar/<int:pk>/', views.eliminar_perfil, name='eliminar_perfil'),
 
 

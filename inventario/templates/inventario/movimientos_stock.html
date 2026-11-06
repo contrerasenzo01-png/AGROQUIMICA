@@ -92,11 +92,11 @@
         type="text"
         name="q"
         value="{{ busqueda }}"
-        class="search-box"
+        class="form-control search-box"
         placeholder="Buscar producto, lote u observaciones..."
     >
 
-    <select name="tipo" class="filter-select"
+    <select name="tipo" class="form-select filter-select"
             onchange="this.form.submit()">
 
         <option value="">Todos los movimientos</option>
@@ -128,7 +128,7 @@
 <div class="card">
 
     <div class="table-wrap">
-        <table class="custom-table">
+        <table class="table table-hover align-middle av-filas custom-table">
 
             <thead>
                 <tr>
@@ -365,7 +365,7 @@
 
                 <div class="rm-grupo rm-full">
                     <label for="anuEgMotivo">Justificación de la anulación</label>
-                    <textarea name="Motivo_anulacion"
+                    <textarea class="form-control" name="Motivo_anulacion"
                               id="anuEgMotivo"
                               maxlength="200"
                               rows="4"

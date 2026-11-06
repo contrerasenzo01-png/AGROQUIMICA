@@ -56,7 +56,7 @@
             <path d="m21 21-4.3-4.3"/>
         </svg>
 
-        <input type="text"
+        <input class="form-control" type="text"
                id="searchInput"
                name="q"
                value="{{ busqueda|default:'' }}"
@@ -71,7 +71,7 @@
 
         <div class="pv-table-wrap">
 
-            <table class="pv-table">
+            <table class="table table-hover align-middle av-filas pv-table">
 
                 <thead>
                     <tr>
@@ -525,7 +525,7 @@
                            maxlength="150"
                            value="{{ form_editar.nombre_proveedor.value|default_if_none:'' }}"
                            required
-                           class="{% if form_editar.nombre_proveedor.errors %}is-invalid{% endif %}">
+                           class="form-control {% if form_editar.nombre_proveedor.errors %}is-invalid{% endif %}">
 
                     {% for error in form_editar.nombre_proveedor.errors %}
                         <span class="pv-error">{{ error }}</span>
@@ -544,7 +544,7 @@
                            inputmode="tel"
                            oninput="this.value = this.value.replace(/[^0-9+()\s-]/g, '')"
                            value="{{ form_editar.telefono_proveedor.value|default_if_none:'' }}"
-                           class="{% if form_editar.telefono_proveedor.errors %}is-invalid{% endif %}">
+                           class="form-control {% if form_editar.telefono_proveedor.errors %}is-invalid{% endif %}">
 
                     {% for error in form_editar.telefono_proveedor.errors %}
                         <span class="pv-error">{{ error }}</span>
@@ -560,7 +560,7 @@
                            id="edit_email"
                            name="email_proveedor"
                            value="{{ form_editar.email_proveedor.value|default_if_none:'' }}"
-                           class="{% if form_editar.email_proveedor.errors %}is-invalid{% endif %}">
+                           class="form-control {% if form_editar.email_proveedor.errors %}is-invalid{% endif %}">
 
                     {% for error in form_editar.email_proveedor.errors %}
                         <span class="pv-error">{{ error }}</span>
@@ -577,7 +577,7 @@
                            name="direccion_proveedor"
                            maxlength="255"
                            value="{{ form_editar.direccion_proveedor.value|default_if_none:'' }}"
-                           class="{% if form_editar.direccion_proveedor.errors %}is-invalid{% endif %}">
+                           class="form-control {% if form_editar.direccion_proveedor.errors %}is-invalid{% endif %}">
 
                     {% for error in form_editar.direccion_proveedor.errors %}
                         <span class="pv-error">{{ error }}</span>
@@ -659,7 +659,7 @@
                                maxlength="150"
                                value="{{ form_crear.nombre_proveedor.value|default_if_none:'' }}"
                                required
-                               class="{% if form_crear.nombre_proveedor.errors %}is-invalid{% endif %}">
+                               class="form-control {% if form_crear.nombre_proveedor.errors %}is-invalid{% endif %}">
 
                         {% for error in form_crear.nombre_proveedor.errors %}
                             <span class="pv-error">{{ error }}</span>
@@ -678,7 +678,7 @@
                                inputmode="tel"
                                oninput="this.value = this.value.replace(/[^0-9+()\s-]/g, '')"
                                value="{{ form_crear.telefono_proveedor.value|default_if_none:'' }}"
-                               class="{% if form_crear.telefono_proveedor.errors %}is-invalid{% endif %}">
+                               class="form-control {% if form_crear.telefono_proveedor.errors %}is-invalid{% endif %}">
 
                         {% for error in form_crear.telefono_proveedor.errors %}
                             <span class="pv-error">{{ error }}</span>
@@ -694,7 +694,7 @@
                                id="nuevo_email"
                                name="email_proveedor"
                                value="{{ form_crear.email_proveedor.value|default_if_none:'' }}"
-                               class="{% if form_crear.email_proveedor.errors %}is-invalid{% endif %}">
+                               class="form-control {% if form_crear.email_proveedor.errors %}is-invalid{% endif %}">
 
                         {% for error in form_crear.email_proveedor.errors %}
                             <span class="pv-error">{{ error }}</span>
@@ -711,7 +711,7 @@
                                name="direccion_proveedor"
                                maxlength="255"
                                value="{{ form_crear.direccion_proveedor.value|default_if_none:'' }}"
-                               class="{% if form_crear.direccion_proveedor.errors %}is-invalid{% endif %}">
+                               class="form-control {% if form_crear.direccion_proveedor.errors %}is-invalid{% endif %}">
 
                         {% for error in form_crear.direccion_proveedor.errors %}
                             <span class="pv-error">{{ error }}</span>

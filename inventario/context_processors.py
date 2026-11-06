@@ -15,7 +15,7 @@ from .permissions import MENU, permisos_ui, puede, puede_accion, rutas_denegadas
 # Pantallas que no están en el menú lateral: url_name -> (sección, pantalla)
 PANTALLAS_EXTRA = {
     'panel_principal': (None, 'Panel principal'),
-    'mis_permisos': ('Mi cuenta', 'Mis permisos'),
+    'mis_permisos': ('Mi perfil', 'Mis permisos'),
     'cambiar_contrasena': ('Mi cuenta', 'Cambiar contraseña'),
 }
 
