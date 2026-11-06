@@ -67,7 +67,7 @@
 
         <svg class="us-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
 
-        <input type="text" name="q" value="{{ busqueda }}"
+        <input class="form-control" type="text" name="q" value="{{ busqueda }}"
                placeholder="Buscar por nombre, usuario, DNI o correo...">
 
     </form>
@@ -81,7 +81,7 @@
 
         <div class="us-table-wrap">
 
-            <table class="us-table">
+            <table class="table table-hover align-middle av-filas us-table">
 
                 <thead>
                     <tr>
@@ -288,22 +288,22 @@
 
                 <div class="us-grupo">
                     <label>Nombre</label>
-                    <input type="text" name="Nombre_usuario" required>
+                    <input class="form-control" type="text" name="Nombre_usuario" required>
                 </div>
 
                 <div class="us-grupo">
                     <label>Apellido</label>
-                    <input type="text" name="Apellido_usuario" required>
+                    <input class="form-control" type="text" name="Apellido_usuario" required>
                 </div>
 
                 <div class="us-grupo us-full">
                     <label>DNI</label>
-                    <input type="number" name="DNI" required>
+                    <input class="form-control" type="number" name="DNI" required>
                 </div>
 
                 <div class="us-grupo us-full">
                     <label>Perfil de acceso</label>
-                    <select name="ID_Perfil" required>
+                    <select class="form-select" name="ID_Perfil" required>
                         <option value="">Seleccionar perfil</option>
                         {% for perfil in perfiles %}
                             <option value="{{ perfil.ID_Perfil }}">{{ perfil.Nombre_perfil }}</option>
@@ -313,13 +313,13 @@
 
                 <div class="us-grupo us-full">
                     <label>Nombre de usuario</label>
-                    <input type="text" id="Usuario_preview"
+                    <input class="form-control" type="text" id="Usuario_preview"
                            placeholder="Se genera a partir del apellido y nombre" readonly>
                 </div>
 
                 <div class="us-grupo us-full">
                     <label>Contraseña</label>
-                    <input type="password"
+                    <input class="form-control" type="password"
                            name="Contrasena"
                            autocomplete="new-password"
                            minlength="8"
@@ -332,7 +332,7 @@
                 <div class="us-grupo us-full">
                     <label>Email</label>
 
-                    <input type="email" name="Email_usuario" placeholder="usuario@agrovalle.com" required>
+                    <input class="form-control" type="email" name="Email_usuario" placeholder="usuario@agrovalle.com" required>
                 </div>
 
             </div>
@@ -372,47 +372,47 @@
 
                 <div class="us-grupo">
                     <label>ID_usuario</label>
-                    <input type="text" id="editar_ID_Usuario" readonly>
+                    <input class="form-control" type="text" id="editar_ID_Usuario" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Perfil</label>
-                    <input type="text" id="editar_ID_Perfil" readonly>
+                    <input class="form-control" type="text" id="editar_ID_Perfil" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>DNI</label>
-                    <input type="text" id="editar_DNI" readonly>
+                    <input class="form-control" type="text" id="editar_DNI" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Usuario</label>
-                    <input type="text" id="editar_Usuario" readonly>
+                    <input class="form-control" type="text" id="editar_Usuario" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Apellido</label>
-                    <input type="text" id="editar_Apellido" readonly>
+                    <input class="form-control" type="text" id="editar_Apellido" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Nombre</label>
-                    <input type="text" id="editar_Nombre" readonly>
+                    <input class="form-control" type="text" id="editar_Nombre" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Estado</label>
-                    <input type="text" id="editar_Estado" readonly>
+                    <input class="form-control" type="text" id="editar_Estado" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Última modificación</label>
-                    <input type="text" id="editar_Fecha" readonly>
+                    <input class="form-control" type="text" id="editar_Fecha" readonly>
                 </div>
 
                 <div class="us-grupo us-full">
                     <label>Email</label>
-                    <input type="email" name="Email_usuario" id="editar_Email" required>
+                    <input class="form-control" type="email" name="Email_usuario" id="editar_Email" required>
                 </div>
 
             </div>
@@ -479,7 +479,7 @@
 
                 <div class="us-grupo us-full">
                     <label>Nueva contraseña</label>
-                    <input type="password"
+                    <input class="form-control" type="password"
                            name="nueva_contrasena"
                            autocomplete="new-password"
                            minlength="8"
@@ -491,7 +491,7 @@
 
                 <div class="us-grupo us-full">
                     <label>Confirmar contraseña</label>
-                    <input type="password"
+                    <input class="form-control" type="password"
                            name="confirmar_contrasena"
                            autocomplete="new-password"
                            minlength="8"
@@ -535,57 +535,57 @@
 
                 <div class="us-grupo">
                     <label>ID_usuario</label>
-                    <input type="text" id="baja_ID_Usuario" readonly>
+                    <input class="form-control" type="text" id="baja_ID_Usuario" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Perfil</label>
-                    <input type="text" id="baja_ID_Perfil" readonly>
+                    <input class="form-control" type="text" id="baja_ID_Perfil" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>DNI</label>
-                    <input type="text" id="baja_DNI" readonly>
+                    <input class="form-control" type="text" id="baja_DNI" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Usuario</label>
-                    <input type="text" id="baja_Usuario" readonly>
+                    <input class="form-control" type="text" id="baja_Usuario" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Apellido</label>
-                    <input type="text" id="baja_Apellido" readonly>
+                    <input class="form-control" type="text" id="baja_Apellido" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Nombre</label>
-                    <input type="text" id="baja_Nombre" readonly>
+                    <input class="form-control" type="text" id="baja_Nombre" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Email</label>
-                    <input type="email" id="baja_Email" readonly>
+                    <input class="form-control" type="email" id="baja_Email" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Estado</label>
-                    <input type="text" id="baja_Estado" readonly>
+                    <input class="form-control" type="text" id="baja_Estado" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Última modificación</label>
-                    <input type="text" id="baja_Fecha_Modificacion" readonly>
+                    <input class="form-control" type="text" id="baja_Fecha_Modificacion" readonly>
                 </div>
 
                 <div class="us-grupo">
                     <label>Fecha de baja actual</label>
-                    <input type="text" id="baja_Fecha_Actual" readonly>
+                    <input class="form-control" type="text" id="baja_Fecha_Actual" readonly>
                 </div>
 
                 <div class="us-grupo us-full">
                     <label>Fecha de baja a registrar</label>
-                    <input type="text" id="baja_Fecha_Registrar" readonly>
+                    <input class="form-control" type="text" id="baja_Fecha_Registrar" readonly>
                 </div>
 
                 <div class="us-info us-alerta us-full">

@@ -15,6 +15,7 @@ Cada cambio queda en la Auditoría como MODIFICACION de "Usuarios".
 import uuid
 from io import BytesIO
 
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -30,7 +31,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from .auditoria import registrar_auditoria, snapshot
 from .models import Usuarios
 from .permissions import PERFILES_ADMIN, catalogo_plano, permisos_asignados
-from .views import IMAGEN_MAX_MB, IMAGEN_TIPOS, usuario_autenticado
+from .views import IMAGEN_MAX_MB, IMAGEN_TIPOS, usuario_autenticado, validar_contrasena
 
 
 # ============================================================
@@ -140,7 +141,7 @@ def mi_perfil(request):
         'permisos': _permisos_del_usuario(usuario),
         'urls': {
             'guardar': reverse('guardar_mi_perfil'),
-            'contrasena': reverse('cambiar_contrasena'),
+            'contrasena': reverse('cambiar_mi_contrasena'),
             'mis_permisos': reverse('mis_permisos'),
             'panel': reverse('panel_principal'),
         },
@@ -304,4 +305,77 @@ def guardar_mi_perfil(request):
         'ok': True,
         'mensaje': 'Tu perfil se actualizó correctamente.',
         'usuario': _datos_usuario(usuario),
+    })
+
+
+# ============================================================
+# CAMBIAR CONTRASEÑA (desde Mi perfil, sin salir de la pantalla)
+# ============================================================
+
+@require_POST
+def cambiar_mi_contrasena(request):
+    """Cambia la contraseña del usuario con sesión. Responde JSON.
+
+    Pide la contraseña actual para confirmar que es la misma persona.
+    """
+
+    usuario = usuario_autenticado(request)
+
+    if not usuario:
+        return _error_json('Tu sesión venció. Volvé a ingresar.', status=401)
+
+    actual = request.POST.get('actual', '')
+    nueva = request.POST.get('nueva', '')
+    confirmar = request.POST.get('confirmar', '')
+
+    errores = {}
+
+    if not actual:
+        errores['actual'] = 'Ingresá tu contraseña actual.'
+    elif not check_password(actual, usuario.Contrasena):
+        errores['actual'] = 'La contraseña actual no es correcta.'
+
+    if not nueva:
+        errores['nueva'] = 'Ingresá la nueva contraseña.'
+    else:
+        error = validar_contrasena(nueva, usuario.Usuario)
+
+        if error:
+            errores['nueva'] = error
+        elif actual and nueva == actual:
+            errores['nueva'] = 'La nueva contraseña debe ser distinta de la actual.'
+
+    if not confirmar:
+        errores['confirmar'] = 'Repetí la nueva contraseña.'
+    elif nueva and confirmar != nueva:
+        errores['confirmar'] = 'Las contraseñas no coinciden.'
+
+    if errores:
+        return _error_json('Revisá los datos marcados.', errores=errores)
+
+    try:
+        with transaction.atomic():
+            antes = snapshot(usuario)
+            antes['Contrasena'] = 'anterior'
+
+            usuario.Contrasena = make_password(nueva)
+            usuario.Cambiar_contrasena = False
+            usuario.save()
+
+            despues = snapshot(usuario)
+            despues['Contrasena'] = 'cambiada por el usuario'
+
+            registrar_auditoria(
+                usuario, 'Usuarios', usuario, 'MODIFICACION', antes, despues
+            )
+
+    except DatabaseError:
+        return _error_json(
+            'Ocurrió un error en la base de datos. No se cambió la contraseña.',
+            status=500
+        )
+
+    return JsonResponse({
+        'ok': True,
+        'mensaje': 'Tu contraseña se cambió correctamente.',
     })

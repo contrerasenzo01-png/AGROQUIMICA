@@ -70,6 +70,31 @@ body {
 
 
 /* ============================================================
+   CAMPOS EN LAS PANTALLAS ARMADAS ANTES DE BOOTSTRAP
+   Bootstrap pone todos los .form-control / .form-select en bloque
+   y al 100 % de ancho. Las pantallas que ya tenían su propio diseño
+   (usuarios, remitos, movimientos...) definen el ancho de cada campo
+   en su CSS: acá se vuelve al ancho natural y cada pantalla decide.
+   :where() no suma especificidad, así el CSS de cada pantalla
+   (que se carga después) siempre gana.
+   ============================================================ */
+
+:where(.main-content) .form-control,
+:where(.main-content) .form-select {
+    display: revert;
+    width: revert;
+}
+
+/* Las pantallas hechas con Bootstrap desde el principio mantienen
+   el comportamiento normal de Bootstrap. */
+:where(.pr-pantalla, .pf-panel, .pm-page, .pp-panel, .modal) .form-control,
+:where(.pr-pantalla, .pf-panel, .pm-page, .pp-panel, .modal) .form-select {
+    display: block;
+    width: 100%;
+}
+
+
+/* ============================================================
    MODO OSCURO
    tema.js pone data-bs-theme="dark" junto con .modo-oscuro;
    acá los grises de Bootstrap pasan a los verdes del sistema.

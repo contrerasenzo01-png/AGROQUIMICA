@@ -43,7 +43,7 @@
                 <path d="m21 21-4.3-4.3"/>
             </svg>
 
-            <input type="text"
+            <input class="form-control" type="text"
                    name="q"
                    value="{{ busqueda|default:'' }}"
                    placeholder="Buscar por lote, producto, proveedor o remito..."
@@ -51,7 +51,7 @@
         </div>
 
         <select name="proveedor"
-                class="lt-select"
+                class="form-select lt-select"
                 aria-label="Filtrar por proveedor"
                 onchange="this.form.submit()">
 
@@ -75,7 +75,7 @@
     <section class="lt-card">
 
         <div class="lt-table-wrap">
-            <table class="lt-table">
+            <table class="table table-hover align-middle av-filas lt-table">
 
                 <thead>
                     <tr>
@@ -301,7 +301,7 @@
 
                 <div class="lt-campo">
                     <label for="bvObservacion">Observación (opcional)</label>
-                    <textarea name="observacion"
+                    <textarea class="form-control" name="observacion"
                               id="bvObservacion"
                               maxlength="200"
                               rows="3"

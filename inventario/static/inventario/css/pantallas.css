@@ -1,0 +1,320 @@
+/* ============================================================
+   ESTILO COMÚN DE LAS PANTALLAS · Agroquímica del Valle
+
+   Lleva a todas las pantallas el estilo y las animaciones de
+   Productos (styles/productos.css):
+     - entrada escalonada: encabezado → resumen → filtros →
+       tarjeta/tabla → filas
+     - botón principal con degradé, sombra y "elevación"
+     - tarjetas con la misma sombra y elevación al pasar el mouse
+     - tablas de Bootstrap (.table) con los colores del sistema
+     - foco verde en campos de Bootstrap (.form-control / .form-select)
+
+   Se carga en base.html DESPUÉS del CSS de cada pantalla y ANTES
+   de tema.css (el modo oscuro sigue teniendo la última palabra).
+
+   Las clases propias de este archivo empiezan con "av-".
+   Cada pantalla conserva sus prefijos: us- (usuarios), pf- (perfiles),
+   pv- (proveedores), pr- (tipos), ts- (subtipos), rm- (remitos),
+   lt- (lotes), al- (alertas, auditoría, reportes), mp- (mis permisos).
+   ============================================================ */
+
+.main-content {
+    --av-verde: #185a38;
+    --av-verde-hover: #134a2e;
+    --av-acento: #2e9d66;
+    --av-texto: #1c2a23;
+    --av-suave: #6b7c73;
+    --av-borde: #e3eae6;
+    --av-tarjeta: #ffffff;
+    --av-fila-hover: #f4f9f6;
+    --av-sombra: 0 1px 2px rgba(15, 58, 36, .05), 0 6px 18px rgba(15, 58, 36, .06);
+    --av-sombra-hover: 0 18px 40px rgba(15, 58, 36, .16);
+    --av-curva: cubic-bezier(.2, .8, .2, 1);
+}
+
+
+/* ============================================================
+   1. TÍTULOS (igual que "Gestión de productos")
+   ============================================================ */
+
+.us-title, .pf-title, .pv-title, .pr-page .pr-title, .ts-title,
+.rm-title, .lt-title, .al-title, .mp-title, .page-title, .pm-titulo {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: -.02em;
+}
+
+
+/* ============================================================
+   2. ENTRADA ESCALONADA
+   ============================================================ */
+
+/* Encabezado */
+.us-header, .pf-page .pf-header, .pv-header, .pr-page .pr-header, .ts-header,
+.rm-header, .lt-header, .al-header, .mp-header, .page-header {
+    animation: av-subir .5s ease-out both;
+}
+
+/* Resúmenes y datos de arriba */
+.rm-barra, .mp-perfil, .mp-resumen, .profile-card {
+    animation: av-subir .5s .05s ease-out both;
+}
+
+/* Buscadores y filtros */
+.us-search, .pf-search, .pv-search, .pr-page .pr-search, .ts-search,
+.rm-filtros, .rm-search, .lt-toolbar, .al-filtros, .toolbar, .pm-buscador {
+    animation: av-subir .5s .1s ease-out both;
+}
+
+/* Tarjeta principal (la que contiene la tabla) */
+.us-card, .pf-page .pf-card, .pv-card, .pr-page .pr-card, .ts-card,
+.rm-card, .lt-card, .al-card, .table-wrap {
+    animation: av-subir .5s .15s ease-out both;
+}
+
+/* Filas de las tablas: aparecen una detrás de otra */
+.us-table tbody tr, .pf-page .pf-table tbody tr, .pv-table tbody tr,
+.pr-page .pr-table tbody tr, .ts-table tbody tr, .rm-table > tbody > tr,
+.lt-table tbody tr, .al-table tbody tr, .custom-table tbody tr {
+    animation: av-subir .35s calc(.2s + var(--av-fila, 0) * 35ms) var(--av-curva) both;
+}
+
+.av-filas tbody tr:nth-child(2)  { --av-fila: 1; }
+.av-filas tbody tr:nth-child(3)  { --av-fila: 2; }
+.av-filas tbody tr:nth-child(4)  { --av-fila: 3; }
+.av-filas tbody tr:nth-child(5)  { --av-fila: 4; }
+.av-filas tbody tr:nth-child(6)  { --av-fila: 5; }
+.av-filas tbody tr:nth-child(7)  { --av-fila: 6; }
+.av-filas tbody tr:nth-child(8)  { --av-fila: 7; }
+.av-filas tbody tr:nth-child(9)  { --av-fila: 8; }
+.av-filas tbody tr:nth-child(10) { --av-fila: 9; }
+.av-filas tbody tr:nth-child(n+11) { --av-fila: 10; }
+
+/* Tarjetas sueltas (reportes, módulos de "Mis permisos") */
+.rep-card, .mp-modulo {
+    animation: av-subir .5s calc(.1s + var(--av-i, 0) * 60ms) var(--av-curva) both;
+}
+
+.rep-card:nth-of-type(2), .mp-modulo:nth-child(2) { --av-i: 1; }
+.rep-card:nth-of-type(3), .mp-modulo:nth-child(3) { --av-i: 2; }
+.rep-card:nth-of-type(4), .mp-modulo:nth-child(4) { --av-i: 3; }
+.mp-modulo:nth-child(5) { --av-i: 4; }
+.mp-modulo:nth-child(6) { --av-i: 5; }
+.mp-modulo:nth-child(n+7) { --av-i: 6; }
+
+
+/* ============================================================
+   3. TARJETAS: misma sombra y elevación que Productos
+   ============================================================ */
+
+.us-card, .pf-page .pf-card, .pv-card, .pr-page .pr-card, .ts-card,
+.rm-card, .lt-card, .al-card, .table-wrap,
+.us-search, .pf-search, .pv-search, .pr-page .pr-search, .ts-search,
+.al-filtros, .rm-barra, .profile-card, .mp-resumen {
+    box-shadow: var(--av-sombra);
+}
+
+.rep-card, .mp-modulo {
+    box-shadow: var(--av-sombra);
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+.rep-card:hover, .mp-modulo:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--av-sombra-hover);
+}
+
+
+/* ============================================================
+   4. BOTONES (como "Registrar producto")
+   ============================================================ */
+
+.us-btn-primary, .pf-page .pf-btn-primary, .pv-btn-primary, .pr-page .pr-btn-primary,
+.ts-btn-primary, .rm-btn-primary, .lt-btn-primary, .al-btn-primary,
+.rep-btn-pdf, .rep-btn-principal {
+    background: linear-gradient(135deg, var(--av-verde), var(--av-acento));
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(24, 90, 56, .25);
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease, filter .2s ease;
+}
+
+.us-btn-primary:hover, .pf-page .pf-btn-primary:hover, .pv-btn-primary:hover,
+.pr-page .pr-btn-primary:hover, .ts-btn-primary:hover, .rm-btn-primary:hover,
+.lt-btn-primary:hover, .al-btn-primary:hover, .rep-btn-pdf:hover, .rep-btn-principal:hover {
+    background: linear-gradient(135deg, var(--av-verde-hover), var(--av-verde));
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(24, 90, 56, .32);
+    transform: translateY(-1px);
+}
+
+.us-btn-primary:active, .pf-page .pf-btn-primary:active, .pv-btn-primary:active,
+.pr-page .pr-btn-primary:active, .ts-btn-primary:active, .rm-btn-primary:active,
+.lt-btn-primary:active, .al-btn-primary:active, .rep-btn-pdf:active, .rep-btn-principal:active {
+    transform: translateY(0) scale(.98);
+}
+
+.us-btn-primary:disabled, .pf-page .pf-btn-primary:disabled, .pv-btn-primary:disabled,
+.pr-page .pr-btn-primary:disabled, .ts-btn-primary:disabled, .rm-btn-primary:disabled,
+.lt-btn-primary:disabled, .al-btn-primary:disabled {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Botones secundarios y de ícono: la misma pequeña elevación */
+.us-btn-claro, .pf-btn-claro, .pv-btn-claro, .pr-btn-claro, .ts-btn-claro,
+.al-btn-claro, .lt-btn-claro, .rm-btn-light, .rm-btn-secondary, .btn-secondary,
+.us-icon-btn, .pf-accion, .pv-accion-icono, .pr-icon-btn, .ts-icon-btn,
+.rm-icon-btn, .lt-btn-accion, .btn-comprobante, .aud-btn-detalle {
+    transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease,
+                border-color .2s ease, color .2s ease, filter .2s ease;
+}
+
+.us-btn-claro:hover, .pf-btn-claro:hover, .pv-btn-claro:hover, .pr-btn-claro:hover,
+.ts-btn-claro:hover, .al-btn-claro:hover, .lt-btn-claro:hover, .rm-btn-light:hover,
+.rm-btn-secondary:hover, .btn-secondary:hover, .btn-comprobante:hover, .aud-btn-detalle:hover {
+    transform: translateY(-1px);
+}
+
+.us-icon-btn:hover, .pf-accion:hover, .pv-accion-icono:hover, .pr-icon-btn:hover,
+.ts-icon-btn:hover, .rm-icon-btn:hover, .lt-btn-accion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(15, 58, 36, .12);
+}
+
+
+/* ============================================================
+   5. TABLAS DE BOOTSTRAP CON LOS COLORES DEL SISTEMA
+   Cada tabla lleva "table table-hover align-middle mb-0" más su
+   clase propia (us-table, pv-table...). El fondo de las celdas
+   queda transparente para que se vean los colores de cada pantalla
+   (por ejemplo, la cabecera verde).
+   ============================================================ */
+
+.main-content .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: inherit;
+    --bs-table-border-color: var(--av-borde);
+    --bs-table-hover-bg: var(--av-fila-hover);
+    --bs-table-hover-color: inherit;
+    --bs-table-striped-bg: transparent;
+    margin-bottom: 0;
+}
+
+/* La cabecera no se resalta al pasar el mouse */
+.main-content .table > thead > tr > * { box-shadow: none; }
+
+
+/* ============================================================
+   6. CAMPOS DE BOOTSTRAP: foco verde como en Productos
+   ============================================================ */
+
+.main-content .form-control:focus,
+.main-content .form-select:focus,
+.main-content .form-check-input:focus {
+    border-color: var(--av-acento);
+    box-shadow: 0 0 0 .2rem rgba(46, 157, 102, .18);
+}
+
+.main-content .form-check-input:checked {
+    background-color: var(--av-verde);
+    border-color: var(--av-verde);
+}
+
+/* Flecha de Bootstrap en todos los desplegables (algunas pantallas
+   pisaban el fondo completo y la flecha desaparecía). */
+.main-content .form-select {
+    background-image: var(--bs-form-select-bg-img) !important;
+    background-repeat: no-repeat !important;
+    background-position: right .75rem center !important;
+    background-size: 16px 12px !important;
+    padding-right: 2.25rem !important;
+}
+
+
+/* ============================================================
+   7. ANIMACIONES
+   ============================================================ */
+
+@keyframes av-subir {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .main-content *,
+    .main-content *::before,
+    .main-content *::after {
+        animation-duration: .01ms !important;
+        animation-delay: 0s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}
+
+
+/* ============================================================
+   8. MODO OSCURO (variables de tema.css)
+   tema.css pinta los botones principales de un verde plano con
+   !important: acá se recupera el degradé de Productos.
+   ============================================================ */
+
+html.modo-oscuro .main-content {
+    --av-texto: var(--d-text);
+    --av-suave: var(--d-text-3);
+    --av-borde: var(--d-border);
+    --av-tarjeta: var(--d-surface);
+    --av-fila-hover: var(--d-hover);
+    --av-sombra: 0 1px 2px rgba(0, 0, 0, .3);
+    --av-sombra-hover: 0 18px 40px rgba(0, 0, 0, .45);
+}
+
+html.modo-oscuro .main-content .us-btn-primary,
+html.modo-oscuro .main-content .pf-btn-primary,
+html.modo-oscuro .main-content .pv-btn-primary,
+html.modo-oscuro .main-content .pr-btn-primary,
+html.modo-oscuro .main-content .ts-btn-primary,
+html.modo-oscuro .main-content .rm-btn-primary,
+html.modo-oscuro .main-content .lt-btn-primary,
+html.modo-oscuro .main-content .al-btn-primary,
+html.modo-oscuro .main-content .rep-btn-pdf,
+html.modo-oscuro .main-content .rep-btn-principal,
+html.modo-oscuro .main-content .pr-btn-principal {
+    background: linear-gradient(135deg, var(--d-green-btn), #3fb57a) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .35);
+}
+
+html.modo-oscuro .main-content .us-btn-primary:hover,
+html.modo-oscuro .main-content .pf-btn-primary:hover,
+html.modo-oscuro .main-content .pv-btn-primary:hover,
+html.modo-oscuro .main-content .pr-btn-primary:hover,
+html.modo-oscuro .main-content .ts-btn-primary:hover,
+html.modo-oscuro .main-content .rm-btn-primary:hover,
+html.modo-oscuro .main-content .lt-btn-primary:hover,
+html.modo-oscuro .main-content .al-btn-primary:hover,
+html.modo-oscuro .main-content .rep-btn-pdf:hover,
+html.modo-oscuro .main-content .rep-btn-principal:hover,
+html.modo-oscuro .main-content .pr-btn-principal:hover {
+    background: linear-gradient(135deg, var(--d-green-btn-h), #4cc98a) !important;
+}
+
+html.modo-oscuro .main-content .us-icon-btn:hover,
+html.modo-oscuro .main-content .pf-accion:hover,
+html.modo-oscuro .main-content .pv-accion-icono:hover,
+html.modo-oscuro .main-content .pr-icon-btn:hover,
+html.modo-oscuro .main-content .ts-icon-btn:hover,
+html.modo-oscuro .main-content .rm-icon-btn:hover,
+html.modo-oscuro .main-content .lt-btn-accion:hover {
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .35);
+}
+
+/* Los números del resumen de Remitos quedaban verde oscuro sobre fondo oscuro */
+html.modo-oscuro .main-content .rm-barra-dato strong { color: var(--d-title); }
+
+html.modo-oscuro .main-content .form-check-input:checked {
+    background-color: var(--d-green-btn);
+    border-color: var(--d-green-btn);
+}

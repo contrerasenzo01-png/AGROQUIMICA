@@ -281,15 +281,7 @@ def menu_para(usuario):
         if visibles:
             secciones.append({'titulo': titulo, 'items': visibles})
 
-    if not _es_admin(usuario):
-        secciones.append({
-            'titulo': 'MI CUENTA',
-            'items': [{
-                'modulo': 'mis_permisos', 'url': 'mis_permisos',
-                'icono': 'i-key', 'texto': 'Mis permisos',
-            }],
-        })
-
+    # "Mis permisos" ya no va en el menú: los permisos se ven en Mi perfil.
     return secciones
 
 # ------------------------------------------------------------

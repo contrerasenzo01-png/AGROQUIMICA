@@ -92,7 +92,7 @@
                 <path d="m21 21-4.3-4.3"/>
             </svg>
 
-            <input type="text"
+            <input class="form-control" type="text"
                    name="q"
                    id="searchInput"
                    value="{{ busqueda|default:'' }}"
@@ -102,7 +102,7 @@
 
         <select name="proveedor"
                 id="filtroProveedor"
-                class="rm-select"
+                class="form-select rm-select"
                 onchange="this.form.submit()">
             <option value="">Todos los proveedores</option>
 
@@ -118,7 +118,7 @@
 
         <select name="estado"
                 id="filtroEstado"
-                class="rm-select"
+                class="form-select rm-select"
                 onchange="this.form.submit()">
             <option value="">Todos los estados</option>
             <option value="Confirmado" {% if estado_filtro == 'Confirmado' %}selected{% endif %}>Confirmado</option>
@@ -145,7 +145,7 @@
         </div>
 
         <div class="rm-table-wrap">
-            <table class="rm-table">
+            <table class="table table-hover align-middle av-filas rm-table">
                 <thead>
                     <tr>
                         <th>Número de remito</th>
@@ -291,7 +291,7 @@
                                     {% endif %}
 
                                     <div class="rm-table-wrap">
-                                        <table class="rm-table rm-table-lotes">
+                                        <table class="table table-hover align-middle av-filas rm-table rm-table-lotes">
                                             <thead>
                                                 <tr>
                                                     <th>Número de lote</th>
@@ -459,7 +459,7 @@
                 <div class="rm-grid">
                     <div class="rm-grupo">
                         <label for="crear_numero">Número de remito</label>
-                        <input type="text"
+                        <input class="form-control" type="text"
                                name="Numero_remito"
                                id="crear_numero"
                                maxlength="20"
@@ -470,7 +470,7 @@
 
                     <div class="rm-grupo">
                         <label for="crear_fecha">Fecha del remito</label>
-                        <input type="date"
+                        <input class="form-control" type="date"
                                name="Fecha_remito"
                                id="crear_fecha"
                                value="{{ hoy|date:'Y-m-d' }}"
@@ -480,7 +480,7 @@
 
                     <div class="rm-grupo rm-full">
                         <label for="crear_proveedor">Proveedor</label>
-                        <select name="ID_Proveedor"
+                        <select class="form-select" name="ID_Proveedor"
                                 id="crear_proveedor"
                                 required>
                             <option value="">Seleccioná un proveedor</option>
@@ -535,7 +535,7 @@
 
                         <div class="rm-grupo rm-full">
                             <label for="lote_producto___N__">Producto</label>
-                            <select name="lote_producto"
+                            <select class="form-select" name="lote_producto"
                                     id="lote_producto___N__"
                                     required>
                                 <option value="">Primero seleccioná un proveedor</option>
@@ -551,7 +551,7 @@
                         <div class="rm-grid">
                             <div class="rm-grupo">
                                 <label for="lote_numero___N__">Número de lote</label>
-                                <input type="text"
+                                <input class="form-control" type="text"
                                        name="lote_numero"
                                        id="lote_numero___N__"
                                        maxlength="50"
@@ -561,7 +561,7 @@
 
                             <div class="rm-grupo">
                                 <label for="lote_venc___N__">Fecha de vencimiento</label>
-                                <input type="date"
+                                <input class="form-control" type="date"
                                        name="lote_vencimiento"
                                        id="lote_venc___N__"
                                        min="{{ hoy|date:'Y-m-d' }}"
@@ -570,7 +570,7 @@
 
                             <div class="rm-grupo">
                                 <label for="lote_cajas___N__">Cantidad de cajas</label>
-                                <input type="number"
+                                <input class="form-control" type="number"
                                        name="lote_cajas"
                                        id="lote_cajas___N__"
                                        min="1"
@@ -581,7 +581,7 @@
 
                             <div class="rm-grupo">
                                 <label for="lote_upc___N__">Unidades por caja</label>
-                                <input type="number"
+                                <input class="form-control" type="number"
                                        name="lote_unidades_caja"
                                        id="lote_upc___N__"
                                        min="1"
@@ -593,7 +593,7 @@
                             <div class="rm-grupo">
                                 <label for="lote_total___N__">Unidades totales</label>
                                 <input type="text"
-                                       class="rm-lote-total"
+                                       class="form-control rm-lote-total"
                                        id="lote_total___N__"
                                        value="—"
                                        readonly
@@ -603,7 +603,7 @@
 
                             <div class="rm-grupo">
                                 <label for="lote_ingreso___N__">Fecha de ingreso</label>
-                                <input type="text"
+                                <input class="form-control" type="text"
                                        id="lote_ingreso___N__"
                                        value="{{ hoy|date:'d/m/Y' }}"
                                        readonly
@@ -664,7 +664,7 @@
                 <div class="rm-grid">
                     <div class="rm-grupo">
                         <label for="editar_numero">Número de remito</label>
-                        <input type="text"
+                        <input class="form-control" type="text"
                                name="Numero_remito"
                                id="editar_numero"
                                maxlength="20"
@@ -673,7 +673,7 @@
 
                     <div class="rm-grupo">
                         <label for="editar_fecha">Fecha del remito</label>
-                        <input type="date"
+                        <input class="form-control" type="date"
                                name="Fecha_remito"
                                id="editar_fecha"
                                required>
@@ -733,7 +733,7 @@
 
                     <div class="rm-grupo rm-full">
                         <label for="editar_lote_producto">Producto</label>
-                        <select name="ID_Producto"
+                        <select class="form-select" name="ID_Producto"
                                 id="editar_lote_producto"
                                 required>
                             <option value="">Seleccioná un producto</option>
@@ -747,7 +747,7 @@
 
                     <div class="rm-grupo">
                         <label for="editar_lote_numero">Número de lote</label>
-                        <input type="text"
+                        <input class="form-control" type="text"
                                name="Numero_lote"
                                id="editar_lote_numero"
                                maxlength="50"
@@ -756,7 +756,7 @@
 
                     <div class="rm-grupo">
                         <label for="editar_lote_cajas">Cantidad de cajas</label>
-                        <input type="number"
+                        <input class="form-control" type="number"
                                name="Cantidad_cajas"
                                id="editar_lote_cajas"
                                min="1"
@@ -766,7 +766,7 @@
 
                     <div class="rm-grupo">
                         <label for="editar_lote_upc">Unidades por caja</label>
-                        <input type="number"
+                        <input class="form-control" type="number"
                                name="Unidades_por_caja"
                                id="editar_lote_upc"
                                min="1"
@@ -776,7 +776,7 @@
 
                     <div class="rm-grupo">
                         <label for="editar_lote_total">Unidades totales</label>
-                        <input type="text"
+                        <input class="form-control" type="text"
                                id="editar_lote_total"
                                readonly
                                tabindex="-1">
@@ -784,7 +784,7 @@
 
                     <div class="rm-grupo">
                         <label for="editar_lote_actual">Cantidad actual</label>
-                        <input type="number"
+                        <input class="form-control" type="number"
                                name="Cantidad_actual"
                                id="editar_lote_actual"
                                min="0"
@@ -794,7 +794,7 @@
 
                     <div class="rm-grupo">
                         <label for="editar_lote_ingreso">Fecha de ingreso</label>
-                        <input type="date"
+                        <input class="form-control" type="date"
                                name="Fecha_ingreso"
                                id="editar_lote_ingreso"
                                required>
@@ -802,7 +802,7 @@
 
                     <div class="rm-grupo">
                         <label for="editar_lote_vencimiento">Fecha de vencimiento</label>
-                        <input type="date"
+                        <input class="form-control" type="date"
                                name="Fecha_vencimiento"
                                id="editar_lote_vencimiento"
                                required>
@@ -903,7 +903,7 @@
 
                 <div class="rm-grupo rm-full">
                     <label for="anular_motivo">Justificación de la anulación</label>
-                    <textarea name="Motivo_anulacion"
+                    <textarea class="form-control" name="Motivo_anulacion"
                               id="anular_motivo"
                               maxlength="200"
                               rows="4"

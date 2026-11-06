@@ -29,7 +29,7 @@
 
             <div class="al-campo">
                 <label for="entidad">Sección</label>
-                <select id="entidad" name="entidad">
+                <select class="form-select" id="entidad" name="entidad">
                     <option value="">Todas las secciones</option>
                     {% for e in entidades %}
                         <option value="{{ e }}" {% if e == entidad %}selected{% endif %}>
@@ -41,7 +41,7 @@
 
             <div class="al-campo">
                 <label for="accion">Acción</label>
-                <select id="accion" name="accion">
+                <select class="form-select" id="accion" name="accion">
                     <option value="">Todas las acciones</option>
                     <option value="CREACION" {% if accion == 'CREACION' %}selected{% endif %}>Creación</option>
                     <option value="MODIFICACION" {% if accion == 'MODIFICACION' %}selected{% endif %}>Modificación</option>
@@ -67,7 +67,7 @@
 
             <div class="al-campo">
                 <label for="usuario">Realizada por</label>
-                <select id="usuario" name="usuario">
+                <select class="form-select" id="usuario" name="usuario">
                     <option value="">Todos los usuarios</option>
                     {% for u in usuarios %}
                         <option value="{{ u.ID_Usuario }}"
@@ -80,12 +80,12 @@
 
             <div class="al-campo">
                 <label for="fecha_desde">Desde</label>
-                <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+                <input class="form-control" type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
             </div>
 
             <div class="al-campo">
                 <label for="fecha_hasta">Hasta</label>
-                <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+                <input class="form-control" type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
             </div>
 
         </div>
@@ -113,7 +113,7 @@
 
         <div class="al-table-wrap">
 
-            <table class="al-table">
+            <table class="table table-hover align-middle av-filas al-table">
 
                 <thead>
                     <tr>
