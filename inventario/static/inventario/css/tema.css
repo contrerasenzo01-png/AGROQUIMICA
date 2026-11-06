@@ -509,6 +509,11 @@ html.modo-oscuro .aud-asm {
     color: #2dd4bf !important;
     border-color: #1b5a52 !important;
 }
+html.modo-oscuro .al-badge.aud-blq {
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
 html.modo-oscuro .al-badge.aud-baj {
     background: #3b1226 !important;
     color: #f472b6 !important;

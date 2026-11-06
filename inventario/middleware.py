@@ -8,7 +8,9 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 
-RUTAS_LIBRES = {'/', '/login/', '/cerrar-sesion/', '/bloqueo/'}
+RUTAS_LIBRES = {
+    '/', '/login/', '/cerrar-sesion/', '/bloqueo/', '/bloqueo/registrar/',
+}
 
 class SesionInactivaMiddleware:
     """Bloquea la sesión si pasaron más de INACTIVIDAD_SEGUNDOS sin actividad."""

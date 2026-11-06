@@ -49,6 +49,7 @@
                     <option value="ANULACION" {% if accion == 'ANULACION' %}selected{% endif %}>Anulación</option>
                     <option value="INICIO_SESION" {% if accion == 'INICIO_SESION' %}selected{% endif %}>Inicio de sesión</option>
                     <option value="CIERRE_SESION" {% if accion == 'CIERRE_SESION' %}selected{% endif %}>Cierre de sesión</option>
+                    <option value="BLOQUEO_INACTIVIDAD" {% if accion == 'BLOQUEO_INACTIVIDAD' %}selected{% endif %}>Bloqueo por inactividad</option>
                     <option value="EGRESO_STOCK" {% if accion == 'EGRESO_STOCK' %}selected{% endif %}>Egreso de stock</option>
                     <option value="EGRESO_VENCIMIENTO" {% if accion == 'EGRESO_VENCIMIENTO' %}selected{% endif %}>Egreso por vencimiento</option>
                     <option value="INGRESO_LOTE" {% if accion == 'INGRESO_LOTE' %}selected{% endif %}>Ingreso de lote</option>
@@ -202,6 +203,9 @@
 
                             {% elif log.Accion == 'ENVIO_RECUPERACION' %}
                                 <span class="al-badge aud-env">Envío de enlace de recuperación</span>
+
+                            {% elif log.Accion == 'BLOQUEO_INACTIVIDAD' %}
+                                <span class="al-badge aud-blq">Bloqueo por inactividad</span>
 
                             {% elif log.Accion == 'RECUPERA_CONTRASENA' %}
                                 <span class="al-badge aud-rec">Recuperación de contraseña</span>

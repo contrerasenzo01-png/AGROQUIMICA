@@ -9,6 +9,7 @@
     var URL_BLOQUEO = script.dataset.bloqueoUrl;
     var URL_PING = script.dataset.pingUrl;
     var URL_LOGIN = script.dataset.loginUrl;
+    var URL_REGISTRO = script.dataset.registroUrl;
 
     var CLAVE_ACTIVIDAD = 'av:ultima';
     var CLAVE_RESTAURAR = 'av:restaurar';
@@ -138,6 +139,22 @@
             '</div>';
 
         document.body.appendChild(ov);
+
+        // Queda registrado en la auditoría que le apareció el aviso.
+        if (URL_REGISTRO) {
+            fetch(URL_REGISTRO, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    pantalla: location.pathname + location.search
+                })
+            }).catch(function () { /* sin conexión */ });
+        }
 
         var form = ov.querySelector('form');
         var error = ov.querySelector('.lck-error');

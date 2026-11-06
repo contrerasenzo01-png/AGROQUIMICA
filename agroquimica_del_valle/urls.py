@@ -104,6 +104,7 @@ urlpatterns = [
 
     # Bloqueo por inactividad
     path('bloqueo/', views.bloqueo_sesion, name='bloqueo'),
+    path('bloqueo/registrar/', views.registrar_bloqueo, name='registrar_bloqueo'),
     path('sesion/ping/', views.sesion_ping, name='sesion_ping'),
 
     # Recuperación de contraseña (sin sesión)

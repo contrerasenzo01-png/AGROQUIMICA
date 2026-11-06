@@ -260,7 +260,7 @@ MENU = [
     ('SEGURIDAD', [
         ('perfiles', 'gestion_perfiles', 'i-shield', 'Perfiles de acceso'),
         ('permisos', 'gestion_permisos', 'i-key', 'Permisos del sistema'),
-        ('auditoria', 'gestion_auditoria', 'i-shield', 'Auditoría'),
+        ('auditoria', 'gestion_auditoria', 'i-audit', 'Auditoría'),
     ]),
 ]
 

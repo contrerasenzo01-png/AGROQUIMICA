@@ -216,9 +216,10 @@
     <!-- CONFIRMACIONES, BLOQUEO POR INACTIVIDAD Y TEMA -->
     {{ rutas_denegadas|json_script:"rutas-denegadas" }}
     <script src="{% static 'inventario/js/confirmar.js' %}"></script>
-    <script src="{% static 'inventario/js/inactividad.js' %}"
+    <script src="{% static 'inventario/js/inactividad.js' %}?v=2"
             data-limite-ms="{{ inactividad_ms }}"
             data-bloqueo-url="{% url 'bloqueo' %}"
+            data-registro-url="{% url 'registrar_bloqueo' %}"
             data-ping-url="{% url 'sesion_ping' %}"
             data-login-url="{% url 'login' %}"></script>
     <script src="{% static 'inventario/js/tema.js' %}"></script>

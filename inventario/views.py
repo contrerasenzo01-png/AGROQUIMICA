@@ -45,6 +45,7 @@ from .alertas import (
 from .auditoria import (
     snapshot, registrar_auditoria, accion_por_estado,
     registrar_asignacion_perfil, registrar_asignacion_permisos,
+    registrar_bloqueo_inactividad,
 )
 from .forms import ProveedorForm
 from .permissions import (
@@ -5326,7 +5327,7 @@ def detalle_auditoria(request, id_log):
     #   ninguno -> inicio y cierre de sesión: nada más que los datos básicos
     ACCIONES_DATOS = (
         'CREACION', 'EGRESO_STOCK', 'EGRESO_VENCIMIENTO', 'INGRESO_LOTE',
-        'DESCARGA_PDF', 'ENVIO_RECUPERACION',
+        'DESCARGA_PDF', 'ENVIO_RECUPERACION', 'BLOQUEO_INACTIVIDAD',
     )
 
     if log.Accion in ACCIONES_DATOS:
@@ -5900,6 +5901,7 @@ def bloqueo_sesion(request):
         else:
             request.session['bloqueada'] = False
             request.session['bloqueo_intentos'] = 0
+            request.session['bloqueo_registrado'] = False
             request.session['ultima_actividad'] = time_module.time()
             request.session.cycle_key()
 
@@ -5926,11 +5928,33 @@ def bloqueo_sesion(request):
         if es_ajax:
             return JsonResponse({'ok': False, 'error': error}, status=400)
 
+    # Pantalla de bloqueo: queda registrado que le apareció el aviso.
+    if request.method == 'GET':
+        registrar_bloqueo_inactividad(request, usuario, siguiente)
+
     return render(
         request,
         'inventario/bloqueo.html',
         {'usuario': usuario, 'error': error, 'siguiente': siguiente}
     )
+
+
+@require_POST
+def registrar_bloqueo(request):
+    """El navegador avisa que mostró el cartel de bloqueo por inactividad."""
+
+    usuario = usuario_autenticado(request)
+
+    if not usuario:
+        return JsonResponse({'ok': False}, status=401)
+
+    # La sesión queda bloqueada también en el servidor.
+    request.session['bloqueada'] = True
+
+    pantalla = request.POST.get('pantalla', '')[:200]
+    registrar_bloqueo_inactividad(request, usuario, pantalla)
+
+    return JsonResponse({'ok': True})
 
 
 def sesion_ping(request):

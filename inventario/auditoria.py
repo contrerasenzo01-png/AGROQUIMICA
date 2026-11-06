@@ -2,6 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from django.apps import apps
+from django.conf import settings
 from django.db.models.fields.files import FieldFile
 
 from .models import LogAuditoria
@@ -111,3 +112,31 @@ def accion_por_estado(antes, despues, campo_estado, valor_activo):
         return 'BAJA'
 
     return 'MODIFICACION'
+
+
+def registrar_bloqueo_inactividad(request, usuario, pantalla=''):
+    """Registra que al usuario le apareció el aviso de bloqueo por inactividad.
+
+    Se registra una sola vez por bloqueo (aunque tenga varias pestañas
+    abiertas); la marca se borra al desbloquear la sesión.
+    """
+    if request.session.get('bloqueo_registrado'):
+        return None
+
+    request.session['bloqueo_registrado'] = True
+
+    minutos = settings.INACTIVIDAD_SEGUNDOS // 60
+
+    return LogAuditoria.objects.create(
+        ID_Usuario=usuario,
+        Seccion='Usuarios',
+        ID_Registro=usuario.pk,
+        Accion='BLOQUEO_INACTIVIDAD',
+        Valores_anteriores={},
+        Valores_actuales={
+            'Usuario': usuario.Usuario,
+            'Nombre': f'{usuario.Apellido_usuario}, {usuario.Nombre_usuario}',
+            'Motivo': f'Más de {minutos} minutos sin actividad',
+            'Pantalla': pantalla or '—',
+        },
+    )
