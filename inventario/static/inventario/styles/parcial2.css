@@ -90,7 +90,140 @@
 .p2-config-acc { padding: 14px 16px; }
 
 
+/* ---------- Configuración de alertas (pantalla por reglas) ---------- */
+
+.cf-regla {
+    margin-bottom: 16px;
+    border: 1px solid var(--al-borde);
+    border-left: 5px solid var(--cf-color, #2e7d32);
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.cf-regla-venc   { --cf-color: #d4a017; }
+.cf-regla-stock  { --cf-color: #dc2626; }
+.cf-regla-egreso { --cf-color: #7c3aed; }
+.cf-regla-correo { --cf-color: #2563eb; }
+
+.cf-regla-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 14px 20px;
+}
+
+.cf-chip {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.cf-chip-venc   { background: #fef6dc; color: #a16207; }
+.cf-chip-stock  { background: #fee9e9; color: #b91c1c; }
+.cf-chip-egreso { background: #efe9fe; color: #6d28d9; }
+.cf-chip-correo { background: #e6effe; color: #1d4ed8; }
+
+.cf-regla-titulo {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--al-titulo);
+}
+
+.cf-datos {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 18px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12.5px;
+    color: var(--al-suave);
+}
+.cf-datos span { font-weight: 600; color: var(--al-texto); margin-right: 2px; }
+
+.cf-campos { border-top: 1px solid var(--al-borde); }
+
+.cf-campo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--al-borde);
+}
+
+.cf-campo:last-child { border-bottom: none; }
+.cf-campo-error { background: #fff5f5; }
+
+.cf-campo-texto { flex: 1; min-width: 0; }
+
+.cf-label { display: block; font-weight: 600; font-size: 14px; color: var(--al-texto); margin-bottom: 1px; }
+.cf-ayuda { margin: 0; font-size: 12.5px; color: #4b5d53; }
+.cf-meta  { margin: 2px 0 0; font-size: 11.5px; color: var(--al-suave); }
+.cf-error { margin: 4px 0 0; font-size: 12.5px; font-weight: 600; color: #b91c1c; }
+
+.cf-control { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.cf-input   { width: 100px; text-align: right; font-weight: 600; }
+.cf-select  { text-align: left; }
+.cf-unidad  { min-width: 58px; font-size: 13px; color: var(--al-suave); }
+
+.cf-ejemplo {
+    margin: 0;
+    padding: 9px 20px;
+    border-top: 1px dashed var(--al-borde);
+    background: #fafcfb;
+    font-size: 12.5px;
+    color: #4b5d53;
+}
+
+.cf-ejemplo span[data-ej] { font-weight: 700; color: var(--al-titulo); }
+
+/* Guardar va primero en el HTML (Enter); visualmente queda a la derecha */
+.cf-acciones {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-top: 4px;
+    padding-bottom: 8px;
+}
+
+@media (max-width: 640px) {
+    .cf-campo { flex-direction: column; align-items: stretch; gap: 10px; }
+    .cf-acciones { flex-direction: column; }
+    .cf-acciones .al-btn { width: 100%; }
+}
+
+
 /* ---------- Modo oscuro ---------- */
+html.modo-oscuro .cf-regla { background: #1a2620; border-color: #2a3a32; }
+html.modo-oscuro .cf-regla { border-left-color: var(--cf-color); }
+html.modo-oscuro .cf-campos,
+html.modo-oscuro .cf-campo,
+html.modo-oscuro .cf-ejemplo { border-color: #2a3a32; }
+html.modo-oscuro .cf-regla-titulo { color: #e6efe9; }
+html.modo-oscuro .cf-ayuda,
+html.modo-oscuro .cf-label,
+html.modo-oscuro .cf-datos span { color: #d5e2da; }
+html.modo-oscuro .cf-datos,
+html.modo-oscuro .cf-meta,
+html.modo-oscuro .cf-unidad { color: #a4b6ab; }
+html.modo-oscuro .cf-ejemplo { background: #15201a; color: #c3d2c9; }
+html.modo-oscuro .cf-ejemplo span[data-ej] { color: #6ee7a1; }
+html.modo-oscuro .cf-campo-error { background: #2a1717; }
+html.modo-oscuro .cf-error { color: #f87171; }
+html.modo-oscuro .cf-chip-venc   { background: #3a2f10; color: #facc15; }
+html.modo-oscuro .cf-chip-stock  { background: #381616; color: #f87171; }
+html.modo-oscuro .cf-chip-egreso { background: #2a1a4a; color: #a78bfa; }
+html.modo-oscuro .cf-chip-correo { background: #172a4a; color: #93c5fd; }
 html.modo-oscuro .p2-tab { background: #1a2620; border-color: #324539; color: #a7e3bf; }
 html.modo-oscuro .p2-tab:hover { background: #223029; }
 html.modo-oscuro .p2-tab.activa { background: #26905c; border-color: #26905c; color: #ffffff; }

@@ -123,7 +123,7 @@
 
     </select>
 
-    <button type="submit" class="btn btn-secondary">
+    <button type="submit" class="btn btn-secondary av-btn-buscar">
         Buscar
     </button>
 
@@ -239,7 +239,8 @@
                                     class="btn-comprobante"
                                     title="Generar comprobante PDF"
                                 >
-                                    📄 Generar PDF
+                                    <svg class="av-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
+                                    Generar PDF
                                 </a>
                             </td>
                             {% endif %}
@@ -258,10 +259,7 @@
                                                 data-cantidad="{{ m.Cantidad_movimiento_stock }}"
                                                 data-fecha="{{ m.Fecha_hora_movimiento|date:'d/m/Y H:i' }}"
                                                 onclick="abrirModalAnularEgreso(this)">
-                                            <svg class="rm-icon" viewBox="0 0 24 24">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <path d="m4.9 4.9 14.2 14.2"/>
-                                            </svg>
+                                            <svg class="rm-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
                                         </button>
                                     </div>
                                 {% else %}

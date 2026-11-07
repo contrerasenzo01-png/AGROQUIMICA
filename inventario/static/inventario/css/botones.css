@@ -1,0 +1,510 @@
+/* ============================================================
+   BOTONES E ÍCONOS UNIFICADOS · Agroquímica del Valle
+   ------------------------------------------------------------
+   Cada pantalla tiene sus propias clases (al-, rm-, pr-, pv-, ts-,
+   us-, pf-, lt-, rep-...). Acá NO se renombran (el JS las usa):
+   solo se igualan tamaño, forma, tipografía e íconos según la
+   función del botón. Se carga al final de base.html.
+
+   Grupos:
+     1. Botón de texto (base común)
+     2. Principal (guardar, registrar, nuevo, consultar, buscar)
+     3. Secundario (cancelar, limpiar)
+     4. Peligro (eliminar, dar de baja, anular)
+     5. Botón de ícono en tablas (editar, eliminar, ver...)
+     6. Acción de fila con texto (Atender, Ver detalle, Generar PDF...)
+     7. Cerrar (modales y avisos)
+     8. Íconos agregados por CSS (buscar, PDF, ver)
+     9. Modo oscuro
+   ============================================================ */
+
+:root {
+    --bt-alto: 38px;
+    --bt-alto-chico: 32px;
+    --bt-radio: 10px;
+    --bt-radio-chico: 8px;
+    --bt-verde: #185a38;
+    --bt-verde-claro: #eef7f1;
+    --bt-verde-borde: #cfe3d7;
+    --bt-borde: #dde7e0;
+    --bt-texto: #1c2a23;
+    --bt-suave: #5c7367;
+    --bt-rojo: #dc2626;
+    --bt-rojo-hover: #b91c1c;
+    --bt-rojo-claro: #fee9e9;
+    --bt-rojo-borde: #f5c2c2;
+
+    /* Íconos (estilo Lucide, trazo 2) para usar como máscara */
+    --ico-cerrar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+    --ico-buscar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+    --ico-pdf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3Cpath d='M12 18v-6'/%3E%3Cpath d='m9 15 3 3 3-3'/%3E%3C/svg%3E");
+    --ico-ver: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");
+}
+
+
+/* ---------- 1. BOTÓN DE TEXTO: base común ---------- */
+body .main-content :is(
+    .al-btn, .rm-btn, .pr-btn, .pv-btn, .ts-btn, .us-btn, .pf-btn, .lt-btn,
+    .lt-btn-peligro, .rep-btn, .rep-btn-pdf, .av-btn-buscar
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: var(--bt-alto);
+    min-height: var(--bt-alto);
+    padding: 0 16px;
+    border-radius: var(--bt-radio);
+    border-width: 1px;
+    border-style: solid;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+body .main-content :is(
+    .al-btn, .rm-btn, .pr-btn, .pv-btn, .ts-btn, .us-btn, .pf-btn, .lt-btn,
+    .lt-btn-peligro, .rep-btn, .rep-btn-pdf, .av-btn-buscar
+) svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+body .main-content .rm-btn-chico { height: var(--bt-alto-chico); min-height: var(--bt-alto-chico); padding: 0 12px; font-size: 12.5px; }
+
+
+/* ---------- 2. PRINCIPAL ----------
+   El color (degradé verde) ya lo pone pantallas.css; acá se suman
+   los buscadores que antes eran grises. */
+body .main-content .av-btn-buscar {
+    background: linear-gradient(135deg, var(--av-verde, #185a38), var(--av-acento, #2e9d66));
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(24, 90, 56, .25);
+}
+
+body .main-content .av-btn-buscar:hover {
+    background: linear-gradient(135deg, var(--av-verde-hover, #134a2e), var(--av-verde, #185a38));
+    color: #fff;
+}
+
+
+/* ---------- 3. SECUNDARIO (Cancelar, Limpiar) ---------- */
+body .main-content :is(
+    .al-btn-claro, .rm-btn-light, .pr-btn-claro, .pv-btn-claro, .ts-btn-claro,
+    .us-btn-claro, .pf-btn-claro, .lt-btn-claro, .rep-btn-sec
+) {
+    background: #fff;
+    border-color: var(--bt-borde);
+    color: var(--bt-texto);
+    box-shadow: none;
+}
+
+body .main-content :is(
+    .al-btn-claro, .rm-btn-light, .pr-btn-claro, .pv-btn-claro, .ts-btn-claro,
+    .us-btn-claro, .pf-btn-claro, .lt-btn-claro, .rep-btn-sec
+):hover {
+    background: #f4f7f5;
+    border-color: #c9d8cf;
+    color: var(--bt-texto);
+}
+
+
+/* ---------- 4. PELIGRO (Eliminar, Dar de baja, Anular) ---------- */
+body .main-content :is(
+    .rm-btn-anular, .pr-btn-peligro, .pv-btn-peligro, .pf-btn-peligro,
+    .us-btn-peligro, .lt-btn-peligro, .ts-btn-eliminar, .pr-btn.pr-btn-eliminar
+) {
+    background: var(--bt-rojo);
+    border-color: var(--bt-rojo);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(220, 38, 38, .22);
+}
+
+body .main-content :is(
+    .rm-btn-anular, .pr-btn-peligro, .pv-btn-peligro, .pf-btn-peligro,
+    .us-btn-peligro, .lt-btn-peligro, .ts-btn-eliminar, .pr-btn.pr-btn-eliminar
+):hover {
+    background: var(--bt-rojo-hover);
+    border-color: var(--bt-rojo-hover);
+    color: #fff;
+}
+
+
+/* ---------- 5. BOTÓN DE ÍCONO EN TABLAS ---------- */
+body .main-content :is(
+    .rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--bt-borde);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--bt-suave);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+body .main-content :is(
+    .rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion
+) svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+body .main-content :is(
+    .rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion
+):hover {
+    background: var(--bt-verde-claro);
+    border-color: var(--bt-verde-borde);
+    color: var(--bt-verde);
+}
+
+/* Variante peligro */
+body .main-content :is(
+    .rm-anular, .pr-btn-eliminar, .pr-baja, .pv-baja, .ts-baja, .us-peligro, .pf-baja
+):is(.rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion) {
+    color: var(--bt-rojo);
+}
+
+body .main-content :is(
+    .rm-anular, .pr-btn-eliminar, .pr-baja, .pv-baja, .ts-baja, .us-peligro, .pf-baja
+):is(.rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion):hover {
+    background: var(--bt-rojo-claro);
+    border-color: var(--bt-rojo-borde);
+    color: var(--bt-rojo-hover);
+}
+
+/* Variante activar */
+body .main-content :is(.pv-activar, .us-activar, .pf-activar):is(.pv-accion-icono, .us-icon-btn, .pf-accion) {
+    color: #1b7a4a;
+}
+
+/* Deshabilitados (por ejemplo, no se puede eliminar porque tiene productos) */
+body .main-content :is(
+    .rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion
+):disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+
+/* ---------- 6. ACCIÓN DE FILA CON TEXTO ---------- */
+body .main-content :is(
+    .al-btn-atender, .aud-btn-detalle, .btn-comprobante, .pr-btn-lotes, .lt-btn-accion
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: var(--bt-alto-chico);
+    padding: 0 12px;
+    border: 1px solid var(--bt-verde-borde);
+    border-radius: var(--bt-radio-chico);
+    background: #fff;
+    color: var(--bt-verde);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+body .main-content :is(
+    .al-btn-atender, .aud-btn-detalle, .btn-comprobante, .pr-btn-lotes, .lt-btn-accion
+) svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+body .main-content :is(
+    .al-btn-atender, .aud-btn-detalle, .btn-comprobante, .pr-btn-lotes, .lt-btn-accion
+):hover {
+    background: var(--bt-verde-claro);
+    color: var(--bt-verde);
+}
+
+/* Acciones de fila que dan de baja o quitan algo */
+body .main-content :is(.lt-btn-vencimiento, .rm-lote-quitar, .pr-btn-suave-rojo) {
+    border: 1px solid var(--bt-rojo-borde);
+    border-radius: var(--bt-radio-chico);
+    background: #fff;
+    color: var(--bt-rojo);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+body .main-content :is(.lt-btn-vencimiento, .rm-lote-quitar, .pr-btn-suave-rojo):hover {
+    background: var(--bt-rojo-claro);
+    color: var(--bt-rojo-hover);
+}
+
+
+/* ---------- 7. CERRAR (modales y avisos) ----------
+   Los que tenían "✕" o "&times;" como texto muestran el mismo ícono
+   que los que ya tenían SVG. El texto queda (lo leen los lectores de
+   pantalla y el JS), pero no se ve. */
+body .main-content :is(
+    .pr-modal-x, .pv-modal-x, .ts-modal-x, .us-modal-x, .pf-modal-x,
+    .rm-modal-x, .lt-modal-x, .aud-modal-cerrar
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--bt-radio-chico);
+    background: transparent;
+    color: var(--bt-suave);
+    cursor: pointer;
+}
+
+body .main-content :is(
+    .pr-modal-x, .pv-modal-x, .ts-modal-x, .us-modal-x, .pf-modal-x,
+    .rm-modal-x, .lt-modal-x, .aud-modal-cerrar
+):hover {
+    background: #eef1ef;
+    color: var(--bt-texto);
+}
+
+body .main-content :is(.pr-modal-x, .pv-modal-x, .ts-modal-x, .us-modal-x, .pf-modal-x) svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+}
+
+body .main-content :is(
+    .rm-modal-x, .lt-modal-x, .aud-modal-cerrar,
+    .rm-toast-x, .pr-toast-x, .pv-toast-x, .ts-toast-x, .us-toast-x, .pf-toast-x,
+    .lt-message-cerrar
+) {
+    font-size: 0;
+    line-height: 0;
+}
+
+body .main-content :is(.rm-modal-x, .lt-modal-x, .aud-modal-cerrar)::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    background: currentColor;
+    -webkit-mask: var(--ico-cerrar) center / contain no-repeat;
+            mask: var(--ico-cerrar) center / contain no-repeat;
+}
+
+body .main-content :is(
+    .rm-toast-x, .pr-toast-x, .pv-toast-x, .ts-toast-x, .us-toast-x, .pf-toast-x,
+    .lt-message-cerrar
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    opacity: .7;
+    cursor: pointer;
+}
+
+body .main-content :is(
+    .rm-toast-x, .pr-toast-x, .pv-toast-x, .ts-toast-x, .us-toast-x, .pf-toast-x,
+    .lt-message-cerrar
+):hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, .06);
+}
+
+body .main-content :is(
+    .rm-toast-x, .pr-toast-x, .pv-toast-x, .ts-toast-x, .us-toast-x, .pf-toast-x,
+    .lt-message-cerrar
+)::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    background: currentColor;
+    -webkit-mask: var(--ico-cerrar) center / contain no-repeat;
+            mask: var(--ico-cerrar) center / contain no-repeat;
+}
+
+
+/* ---------- 8. ÍCONOS AGREGADOS POR CSS ----------
+   Se usan en botones cuyo texto cambia el JS o que no tenían ícono. */
+body .main-content .av-btn-buscar:not(:has(svg))::before,
+body .main-content .av-ico-pdf::before,
+body .main-content .av-ico-ver::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    background: currentColor;
+}
+
+body .main-content .av-btn-buscar:not(:has(svg))::before {
+    -webkit-mask: var(--ico-buscar) center / contain no-repeat;
+            mask: var(--ico-buscar) center / contain no-repeat;
+}
+
+body .main-content .av-ico-pdf::before {
+    -webkit-mask: var(--ico-pdf) center / contain no-repeat;
+            mask: var(--ico-pdf) center / contain no-repeat;
+}
+
+body .main-content .av-ico-ver::before {
+    width: 15px;
+    height: 15px;
+    -webkit-mask: var(--ico-ver) center / contain no-repeat;
+            mask: var(--ico-ver) center / contain no-repeat;
+}
+
+/* Ícono suelto dentro de un enlace (Generar PDF de Movimientos) */
+.av-ico { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+
+/* ---------- 9. MODO OSCURO ----------
+   tema.css usa !important; acá también, para que gane lo unificado. */
+html.modo-oscuro body .main-content .av-btn-buscar {
+    background: linear-gradient(135deg, var(--d-green-btn), #3fb57a) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+html.modo-oscuro body .main-content .av-btn-buscar:hover {
+    background: linear-gradient(135deg, var(--d-green-btn-h), #4cc98a) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .al-btn-claro, .rm-btn-light, .pr-btn-claro, .pv-btn-claro, .ts-btn-claro,
+    .us-btn-claro, .pf-btn-claro, .lt-btn-claro, .rep-btn-sec
+) {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border-2) !important;
+    color: var(--d-text) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .al-btn-claro, .rm-btn-light, .pr-btn-claro, .pv-btn-claro, .ts-btn-claro,
+    .us-btn-claro, .pf-btn-claro, .lt-btn-claro, .rep-btn-sec
+):hover {
+    background: var(--d-surface-3) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .rm-btn-anular, .pr-btn-peligro, .pv-btn-peligro, .pf-btn-peligro,
+    .us-btn-peligro, .lt-btn-peligro, .ts-btn-eliminar, .pr-btn.pr-btn-eliminar
+) {
+    background: #c62828 !important;
+    border-color: #c62828 !important;
+    color: #fff !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .35);
+}
+
+html.modo-oscuro body .main-content :is(
+    .rm-btn-anular, .pr-btn-peligro, .pv-btn-peligro, .pf-btn-peligro,
+    .us-btn-peligro, .lt-btn-peligro, .ts-btn-eliminar, .pr-btn.pr-btn-eliminar
+):hover {
+    background: #e04343 !important;
+    border-color: #e04343 !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion,
+    .al-btn-atender, .aud-btn-detalle, .btn-comprobante, .pr-btn-lotes, .lt-btn-accion
+) {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border-2) !important;
+    color: var(--d-text-2) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .al-btn-atender, .aud-btn-detalle, .btn-comprobante, .pr-btn-lotes, .lt-btn-accion
+) {
+    color: var(--d-green-tx) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion,
+    .al-btn-atender, .aud-btn-detalle, .btn-comprobante, .pr-btn-lotes, .lt-btn-accion
+):hover {
+    background: var(--d-green-bg) !important;
+    border-color: var(--d-green-bd) !important;
+    color: var(--d-green-tx) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .rm-anular, .pr-btn-eliminar, .pr-baja, .pv-baja, .ts-baja, .us-peligro, .pf-baja
+):is(.rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion),
+html.modo-oscuro body .main-content :is(.lt-btn-vencimiento, .rm-lote-quitar, .pr-btn-suave-rojo) {
+    background: var(--d-surface-2) !important;
+    border-color: var(--d-border-2) !important;
+    color: var(--d-red-tx) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .rm-anular, .pr-btn-eliminar, .pr-baja, .pv-baja, .ts-baja, .us-peligro, .pf-baja
+):is(.rm-icon-btn, .pr-icon-btn, .pv-accion-icono, .ts-icon-btn, .us-icon-btn, .pf-accion):hover,
+html.modo-oscuro body .main-content :is(.lt-btn-vencimiento, .rm-lote-quitar, .pr-btn-suave-rojo):hover {
+    background: var(--d-red-bg) !important;
+    border-color: #5a2323 !important;
+}
+
+html.modo-oscuro body .main-content :is(.pv-activar, .us-activar, .pf-activar):is(.pv-accion-icono, .us-icon-btn, .pf-accion) {
+    color: var(--d-green-tx) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .pr-modal-x, .pv-modal-x, .ts-modal-x, .us-modal-x, .pf-modal-x,
+    .rm-modal-x, .lt-modal-x, .aud-modal-cerrar
+) {
+    background: transparent !important;
+    border: none !important;
+    color: var(--d-text-2) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .pr-modal-x, .pv-modal-x, .ts-modal-x, .us-modal-x, .pf-modal-x,
+    .rm-modal-x, .lt-modal-x, .aud-modal-cerrar
+):hover {
+    background: var(--d-surface-3) !important;
+    color: var(--d-text) !important;
+}
+
+html.modo-oscuro body .main-content :is(
+    .rm-toast-x, .pr-toast-x, .pv-toast-x, .ts-toast-x, .us-toast-x, .pf-toast-x,
+    .lt-message-cerrar
+):hover {
+    background: rgba(255, 255, 255, .08);
+}

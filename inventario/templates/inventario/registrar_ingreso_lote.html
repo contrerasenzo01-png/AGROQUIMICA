@@ -68,7 +68,7 @@
             {% endfor %}
         </select>
 
-        <button type="submit" class="lt-btn lt-btn-primary">
+        <button type="submit" class="lt-btn lt-btn-primary av-btn-buscar">
             Buscar
         </button>
 
@@ -186,13 +186,7 @@
                                         data-vence="{{ l.Fecha_vencimiento|date:'d/m/Y' }}"
                                         data-cantidad="{{ l.Cantidad_actual }}"
                                         onclick="abrirModalBajaVencimiento(this)">
-                                    <svg class="lt-icon" viewBox="0 0 24 24">
-                                        <path d="M3 6h18"/>
-                                        <path d="M8 6V4h8v2"/>
-                                        <path d="m19 6-1 14H6L5 6"/>
-                                        <path d="M10 11v5"/>
-                                        <path d="M14 11v5"/>
-                                    </svg>
+                                    <svg class="lt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
                                     Dar de baja
                                 </button>
                             </div>

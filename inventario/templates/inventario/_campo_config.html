@@ -1,0 +1,23 @@
+{% comment %}
+    Un parámetro de la configuración de alertas.
+    Recibe: p (parámetro armado en la vista), etiqueta, ayuda, unidad.
+    El input conserva name/min/max/required: la vista lo procesa igual que antes.
+{% endcomment %}
+<div class="cf-campo{% if p.error %} cf-campo-error{% endif %}">
+    <div class="cf-campo-texto">
+        <label class="cf-label" for="cf-{{ p.clave }}">{{ etiqueta }}</label>
+        <p class="cf-ayuda">{{ ayuda }}</p>
+        <p class="cf-meta"{% if p.modificado %} title="Último cambio: {{ p.modificado|date:'d/m/Y H:i' }}"{% endif %}>
+            Recomendado {{ p.defecto }} · entre {{ p.minimo }} y {{ p.maximo }}
+        </p>
+        {% if p.error %}<p class="cf-error">{{ p.error }}</p>{% endif %}
+    </div>
+    <div class="cf-control">
+        <input type="number" id="cf-{{ p.clave }}"
+               class="form-control cf-input{% if p.error %} is-invalid{% endif %}"
+               name="{{ p.clave }}" value="{{ p.valor }}"
+               min="{{ p.minimo }}" max="{{ p.maximo }}" step="1" required
+               data-clave="{{ p.clave }}">
+        {% if unidad %}<span class="cf-unidad">{{ unidad }}</span>{% endif %}
+    </div>
+</div>
