@@ -20,6 +20,7 @@ PANTALLAS_EXTRA = {
     'mi_perfil': (None, None, 'Mi perfil'),
     'mis_permisos': ('Mi perfil', 'mi_perfil', 'Mis permisos'),
     'cambiar_contrasena': ('Mi cuenta', None, 'Cambiar contraseña'),
+    'bandeja_notificaciones': ('Mi cuenta', None, 'Notificaciones'),
 }
 
 
@@ -111,29 +112,26 @@ def _fecha_de_hoy():
 
 
 # ------------------------------------------------------------
-# BANDEJA DE NOTIFICACIONES (topbar)
-# Solo aparece si el perfil puede ver el historial de alertas.
-# Antes de contar, se revisan los vencimientos (como mucho una vez
-# cada 10 minutos), así el número siempre está al día.
+# BANDEJA DE NOTIFICACIONES (header)
+# Todos los usuarios la ven: muestra las notificaciones dirigidas a su
+# perfil (tabla NOTIFICACION) y el número de no leídas.
+# Antes de contar, se revisan los vencimientos (cada
+# "minutos_revision_vencimientos"), así el número siempre está al día.
 # ------------------------------------------------------------
 
 def _datos_alertas(usuario):
     """Devuelve el diccionario con los datos de la bandeja."""
 
-    if not puede(usuario, 'alertas'):
-        return {'puede_ver_alertas': False}
-
     from .alertas import revisar_vencimientos_si_corresponde
-    from .models import Alertas
+    from .notificaciones import no_leidas
 
     revisar_vencimientos_si_corresponde()
 
     return {
-        'puede_ver_alertas': True,
-        'puede_atender_alertas': puede_accion(usuario, 'atender_alertas'),
+        'puede_ver_alertas': puede(usuario, 'alertas'),
         'url_alertas': reverse('historial_alertas'),
-        'url_notificaciones': reverse('notificaciones_alertas'),
-        'alertas_pendientes': Alertas.objects.filter(Atendida=False).count(),
+        'url_notificaciones': reverse('datos_notificaciones'),
+        'notificaciones_no_leidas': no_leidas(usuario),
     }
 
 

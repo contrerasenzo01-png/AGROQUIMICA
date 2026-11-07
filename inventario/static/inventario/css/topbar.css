@@ -732,3 +732,49 @@ html.modo-oscuro .tb-notif-pie:hover { background: var(--d-surface-3); }
 
     .tb-notif-panel::before { display: none; }
 }
+
+/* ==========================================
+   NOTIFICACIONES (tabla NOTIFICACION)
+   ========================================== */
+
+/* Encabezado con el botón "Marcar todas como leídas" */
+.tb-notif-cab {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.tb-notif-todas {
+    flex-shrink: 0;
+    margin-top: 2px;
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--tb-verde);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tb-notif-todas:hover { background: #e6f4ec; }
+
+/* Egreso inusual: violeta */
+.tb-notif-inusual .tb-notif-icono     { background: #efe9fe; color: #6d28d9; }
+.tb-notif-inusual .tb-notif-etiqueta  { color: #6d28d9; }
+
+/* No leída: fondo suave y punto a la izquierda del texto */
+.tb-notif-item.tb-notif-noleida { background: #f2f8f4; }
+.tb-notif-item.tb-notif-noleida .tb-notif-mensaje { color: var(--tb-texto); font-weight: 500; }
+
+/* Leída: más apagada */
+.tb-notif-item.tb-notif-leida { opacity: .62; }
+.tb-notif-item.tb-notif-leida:hover { opacity: 1; }
+
+html.modo-oscuro .tb-notif-todas { color: #6ee7a1; }
+html.modo-oscuro .tb-notif-todas:hover { background: #1f3328; }
+html.modo-oscuro .tb-notif-item.tb-notif-noleida { background: #1a2a22; }
+html.modo-oscuro .tb-notif-inusual .tb-notif-icono { background: #2a1a4a; color: #a78bfa; }
+html.modo-oscuro .tb-notif-inusual .tb-notif-etiqueta { color: #a78bfa; }

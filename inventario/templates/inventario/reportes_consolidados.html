@@ -1,0 +1,149 @@
+{% extends 'inventario/base.html' %}
+{% load static %}
+
+{% block title %}
+    Reportes consolidados - Agroquímica del Valle
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/styles/parcial2.css' %}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="al-page">
+
+    <header class="al-header">
+        <h1 class="al-title">Reportes consolidados</h1>
+        <p class="av-subtitulo">Información que cruza compras, ventas y vencimientos.</p>
+    </header>
+
+    <!-- PESTAÑAS: un reporte por pestaña (el sensible solo con permiso) -->
+    <nav class="p2-tabs" aria-label="Reportes">
+        {% for c, r in visibles %}
+            <a href="{% url 'reporte_consolidado' c %}?{{ request.GET.urlencode }}"
+               class="p2-tab{% if c == clave %} activa{% endif %}">
+                {{ r.titulo }}
+                {% if r.sensible %}<span class="p2-sensible" title="Reporte sensible: restringido por perfil">Sensible</span>{% endif %}
+            </a>
+        {% endfor %}
+    </nav>
+
+    <section class="p2-info">
+        <p>{{ reporte.descripcion }}</p>
+        <p class="p2-procesos"><strong>Procesos que cruza:</strong> {{ reporte.procesos }}</p>
+    </section>
+
+    <!-- FILTROS: rango de fechas + tipo de producto + proveedor -->
+    <form method="GET" action="{% url 'reporte_consolidado' clave %}" class="al-filtros">
+
+        <div class="al-filtros-grid">
+            <div class="al-campo">
+                <label for="desde">Desde</label>
+                <input class="form-control" type="date" id="desde" name="desde"
+                       value="{{ filtros.desde|date:'Y-m-d' }}" required>
+            </div>
+
+            <div class="al-campo">
+                <label for="hasta">Hasta</label>
+                <input class="form-control" type="date" id="hasta" name="hasta"
+                       value="{{ filtros.hasta|date:'Y-m-d' }}" required>
+            </div>
+
+            <div class="al-campo">
+                <label for="tipo">Tipo de producto</label>
+                <select class="form-select" id="tipo" name="tipo">
+                    <option value="">Todos los tipos</option>
+                    {% for t in tipos %}
+                        <option value="{{ t.ID_Tipo_producto }}" {% if filtros.tipo == t.ID_Tipo_producto %}selected{% endif %}>
+                            {{ t.Nombre_tipo_producto }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="al-campo">
+                <label for="proveedor">Proveedor</label>
+                <select class="form-select" id="proveedor" name="proveedor">
+                    <option value="">Todos los proveedores</option>
+                    {% for p in proveedores %}
+                        <option value="{{ p.ID_Proveedor }}" {% if filtros.proveedor == p.ID_Proveedor %}selected{% endif %}>
+                            {{ p.nombre_proveedor }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="al-filtros-acc">
+            <button type="submit" class="al-btn al-btn-primary">
+                <svg class="al-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                Consultar
+            </button>
+
+            <a href="{% url 'reporte_consolidado' clave %}" class="al-btn al-btn-claro">Limpiar</a>
+
+            <a href="{% url 'reporte_consolidado' clave %}?{{ query_pdf }}" class="al-btn al-btn-primary p2-btn-pdf">
+                <svg class="al-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M12 12v6"/><path d="m9 15 3 3 3-3"/></svg>
+                Exportar PDF
+            </a>
+        </div>
+    </form>
+
+    <!-- GRILLA PAGINADA CON TOTALES AL PIE -->
+    <section class="al-card">
+
+        <div class="al-table-wrap">
+            <table class="table table-hover align-middle av-filas al-table p2-tabla">
+                <thead>
+                    <tr>
+                        {% for c, titulo, fmt in columnas %}
+                            <th class="{% if fmt == 'entero' or fmt == 'moneda' or fmt == 'pct' %}p2-num{% elif fmt == 'fecha' %}al-centro{% endif %}">{{ titulo }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+
+                <tbody data-pg-animar>
+                    {% for fila in filas %}
+                        <tr>
+                            {% for texto, fmt in fila %}
+                                <td class="{% if fmt == 'entero' or fmt == 'moneda' or fmt == 'pct' %}p2-num{% elif fmt == 'fecha' %}al-centro{% endif %}">{{ texto }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="{{ columnas|length }}" class="al-vacio">
+                                No hay datos para los filtros seleccionados.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+
+                <!-- Totales de todo el resultado (no solo de esta página) -->
+                <tfoot>
+                    <tr class="p2-totales">
+                        {% for texto, fmt in totales %}
+                            <td class="{% if fmt == 'entero' or fmt == 'moneda' or fmt == 'pct' %}p2-num{% endif %}">{{ texto }}</td>
+                        {% endfor %}
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        {% include 'inventario/_paginacion.html' %}
+
+        <div class="al-pie">
+            <span>{{ cantidad }} fila{{ cantidad|pluralize }} · {{ texto_filtros }}</span>
+            <span>Agroquímica del Valle</span>
+        </div>
+    </section>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
+{% endblock %}

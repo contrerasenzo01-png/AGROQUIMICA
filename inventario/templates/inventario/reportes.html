@@ -261,6 +261,12 @@
 
 {{ graficos|json_script:"datos-reportes" }}
 
+{% with u=usuario_sesion|default:usuario %}
+<div id="datos-pdf" hidden
+     data-logo="{% static 'inventario/images/logo_agroquimica.png' %}"
+     data-usuario="{{ u.Nombre_usuario }} {{ u.Apellido_usuario }}{% if u.ID_Perfil %} ({{ u.ID_Perfil.Nombre_perfil }}){% endif %}"></div>
+{% endwith %}
+
 {% endblock %}
 
 
@@ -959,60 +965,210 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Colores de la agroquímica (los mismos del PDF del remito)
+    const PDF_COL = {
+        verdeOscuro: [15, 58, 36],
+        verdeMedio: [46, 125, 50],
+        verde: [24, 90, 56],
+        amarillo: [245, 196, 0],
+        borde: [214, 230, 212],
+        fila: [246, 251, 244],
+        texto: [28, 42, 35],
+        suave: [107, 124, 115],
+        claroBanda: [217, 239, 224],
+    };
+
+    const datosPDF = document.getElementById('datos-pdf').dataset;
+    let logoPDF = null;
+
+    async function cargarLogoPDF() {
+        if (logoPDF !== null) return logoPDF;
+        try {
+            logoPDF = await cargarImagen(datosPDF.logo);
+        } catch (e) {
+            logoPDF = false;
+        }
+        return logoPDF;
+    }
+
+    // Banda verde con degradado, logo, título REPORTE y fecha (igual al remito)
+    function dibujarEncabezadoPDF(doc, W, margen, altoBanda, fecha, logo) {
+        const pasos = 90;
+        for (let i = 0; i < pasos; i++) {
+            const t = i / (pasos - 1);
+            const col = PDF_COL.verdeOscuro.map((v, k) =>
+                Math.round(v + (PDF_COL.verdeMedio[k] - v) * t));
+            doc.setFillColor(col[0], col[1], col[2]);
+            doc.rect(W * i / pasos, 0, W / pasos + 0.3, altoBanda, 'F');
+        }
+
+        // Círculos decorativos
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({ opacity: 0.06 }));
+        doc.setFillColor(255, 255, 255);
+        doc.circle(W * 0.42, altoBanda + 2, 26, 'F');
+        doc.circle(W * 0.70, -4, 20, 'F');
+        doc.restoreGraphicsState();
+
+        // Línea amarilla
+        doc.setFillColor(...PDF_COL.amarillo);
+        doc.rect(0, altoBanda, W, 1.2, 'F');
+
+        // Logo
+        if (logo) {
+            const anchoLogo = 68;
+            const altoLogo = anchoLogo * logo.height / logo.width;
+            doc.addImage(logo, 'PNG', margen - 2, (altoBanda - altoLogo) / 2, anchoLogo, altoLogo);
+        } else {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text('AGROQUÍMICA', margen, altoBanda / 2 - 1);
+            doc.setTextColor(...PDF_COL.amarillo);
+            doc.text('DEL VALLE', margen, altoBanda / 2 + 6);
+        }
+
+        // Título a la derecha
+        const xDer = W - margen;
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.text('REPORTE', xDer, 12.5, { align: 'right' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...PDF_COL.claroBanda);
+        doc.text('Sistema de Gestión de Stock', xDer, 18, { align: 'right' });
+
+        // Fecha en recuadro amarillo
+        const textoFecha = 'Fecha  ' + fecha;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        const anchoFecha = doc.getTextWidth(textoFecha) + 6;
+        doc.setFillColor(...PDF_COL.amarillo);
+        doc.roundedRect(xDer - anchoFecha, altoBanda - 9.5, anchoFecha, 6.2, 1.4, 1.4, 'F');
+        doc.setTextColor(...PDF_COL.verdeOscuro);
+        doc.text(textoFecha, xDer - 3, altoBanda - 5.2, { align: 'right' });
+    }
+
+    // Recuadro con etiqueta chica y valor (como las cajas del remito)
+    function cajaDatoPDF(doc, x, y, w, h, etiqueta, lineas) {
+        doc.setFillColor(...PDF_COL.fila);
+        doc.setDrawColor(...PDF_COL.borde);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.setTextColor(...PDF_COL.suave);
+        doc.text(etiqueta, x + 4, y + 5.2);
+
+        doc.setFontSize(9.5);
+        doc.setTextColor(...PDF_COL.texto);
+        doc.text(lineas, x + 4, y + 10.2);
+    }
+
     async function generarPDF(cfg) {
         const jsPDF = window.jspdf.jsPDF;
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
         const W = doc.internal.pageSize.getWidth();
         const H = doc.internal.pageSize.getHeight();
-        const margen = 10;
+        const margen = 14;
+        const ancho = W - 2 * margen;
+        const altoBanda = 30;
 
         const ahora = new Date();
-        const emitido = ahora.toLocaleDateString('es-AR') + ' ' +
-            ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        const fecha = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const hora = String(ahora.getHours()).padStart(2, '0') + ':' +
+            String(ahora.getMinutes()).padStart(2, '0') + ' hs';
 
-        // Encabezado
-        doc.setFillColor(46, 125, 50);
-        doc.rect(0, 0, W, 20, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(15);
-        doc.text('AGROQUÍMICA DEL VALLE', margen, 9);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.text('Sistema de gestión de stock', margen, 15);
-        doc.text('Emitido el ' + emitido, W - margen, 9, { align: 'right' });
-        doc.text('Reporte', W - margen, 15, { align: 'right' });
+        dibujarEncabezadoPDF(doc, W, margen, altoBanda, fecha, await cargarLogoPDF());
 
-        // Título
-        let y = 29;
-        doc.setTextColor(27, 94, 32);
+        // Título del gráfico y descripción
+        let y = altoBanda + 10;
+        doc.setTextColor(...PDF_COL.verde);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
-        doc.text(doc.splitTextToSize(cfg.titulo, W - 2 * margen), margen, y);
-        y += 8;
+        doc.text(cfg.titulo, margen, y);
 
-        // Filtros aplicados (el ancho de la etiqueta se mide en negrita)
-        doc.setFontSize(10);
-        doc.setTextColor(60, 60, 60);
+        y += 5.5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...PDF_COL.suave);
+        const lineasDesc = doc.splitTextToSize(cfg.descripcion || '', ancho);
+        doc.text(lineasDesc, margen, y);
+        y += 3.8 * lineasDesc.length + 2.5;
+
+        // Cajas: filtros aplicados / emitido por / fecha y hora
+        const sep = 4;
+        const anchoUsuario = 62;
+        const anchoFecha = 42;
+        const anchoFiltros = ancho - anchoUsuario - anchoFecha - 2 * sep;
 
         doc.setFont('helvetica', 'bold');
-        const etiquetaFiltros = 'Filtros aplicados:';
-        const anchoEtiqueta = doc.getTextWidth(etiquetaFiltros) + 2;
-        doc.text(etiquetaFiltros, margen, y);
+        doc.setFontSize(9.5);
+        let lineasFiltros = doc.splitTextToSize(cfg.filtros || 'Sin filtros', anchoFiltros - 8);
+        if (lineasFiltros.length > 2) {
+            lineasFiltros = lineasFiltros.slice(0, 2);
+            lineasFiltros[1] = lineasFiltros[1].replace(/.{0,3}$/, '...');
+        }
+        const lineasUsuario = doc.splitTextToSize(datosPDF.usuario || '—', anchoUsuario - 8).slice(0, 2);
+        const altoCaja = 13.5 + (Math.max(lineasFiltros.length, lineasUsuario.length) - 1) * 4.2;
 
-        doc.setFont('helvetica', 'normal');
-        const lineasFiltro = doc.splitTextToSize(
-            cfg.filtros || 'Sin filtros',
-            W - 2 * margen - anchoEtiqueta
-        );
-        doc.text(lineasFiltro, margen + anchoEtiqueta, y);
-        y += 5 * lineasFiltro.length + 2;
+        cajaDatoPDF(doc, margen, y, anchoFiltros, altoCaja, 'FILTROS APLICADOS', lineasFiltros);
+        cajaDatoPDF(doc, margen + anchoFiltros + sep, y, anchoUsuario, altoCaja, 'EMITIDO POR', lineasUsuario);
+        cajaDatoPDF(doc, margen + anchoFiltros + anchoUsuario + 2 * sep, y, anchoFecha, altoCaja,
+            'FECHA Y HORA', fecha + '  ' + hora);
+        y += altoCaja + 5;
 
-        // Gráfico: ocupa todo el espacio que queda en la hoja
-        const maxW = W - 2 * margen;
-        const maxH = H - y - 12;
+        // Gráfico dentro de una tarjeta con borde redondeado
+        const pieY = H - 13;
+        const altoTarjeta = pieY - 4 - y;
 
-        const ANCHO_PX = 1100;
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(...PDF_COL.borde);
+        doc.setLineWidth(0.4);
+        doc.roundedRect(margen, y, ancho, altoTarjeta, 3, 3, 'FD');
+
+        // Franja de título de la tarjeta
+        doc.setFillColor(...PDF_COL.fila);
+        doc.roundedRect(margen + 0.2, y + 0.2, ancho - 0.4, 8.6, 2.8, 2.8, 'F');
+        doc.rect(margen + 0.2, y + 5, ancho - 0.4, 3.8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...PDF_COL.verde);
+        doc.text('GRÁFICO', margen + 5, y + 5.8);
+
+        // Leyenda (si el gráfico la tiene fuera del dibujo), alineada a la derecha
+        if (cfg.leyenda) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            let xLey = margen + ancho - 5;
+            cfg.leyenda.slice().reverse().forEach(function (item) {
+                const anchoTxt = doc.getTextWidth(item.texto);
+                xLey -= anchoTxt;
+                doc.setTextColor(...PDF_COL.texto);
+                doc.text(item.texto, xLey, y + 5.8);
+                doc.setFillColor(...item.color);
+                if (item.marca) {
+                    doc.rect(xLey - 2.6, y + 2.6, 1, 4, 'F');
+                    xLey -= 2.6 + 7;
+                } else {
+                    doc.roundedRect(xLey - 5, y + 2.9, 3.4, 3.4, 0.6, 0.6, 'F');
+                    xLey -= 5 + 7;
+                }
+            });
+        }
+
+        doc.setDrawColor(...PDF_COL.borde);
+        doc.line(margen, y + 9, margen + ancho, y + 9);
+
+        const pad = 5;
+        const maxW = ancho - 2 * pad;
+        const maxH = altoTarjeta - 9 - 2 * pad;
+        const yGrafico = y + 9 + pad;
+
+        const ANCHO_PX = 1200;
         const altoPx = Math.round(ANCHO_PX * maxH / maxW);
         const imgURI = await imagenParaPDF(cfg.chartId, ANCHO_PX, altoPx);
 
@@ -1023,24 +1179,30 @@ document.addEventListener('DOMContentLoaded', function () {
             const w = img.width * escala;
             const h = img.height * escala;
 
-            doc.addImage(recortada, 'PNG', margen + (maxW - w) / 2, y, w, h);
+            doc.addImage(recortada, 'PNG', margen + pad + (maxW - w) / 2, yGrafico + (maxH - h) / 2, w, h);
         } else {
+            doc.setFont('helvetica', 'normal');
             doc.setFontSize(11);
-            doc.text('No hay datos para mostrar con los filtros aplicados.', margen, y + 6);
+            doc.setTextColor(...PDF_COL.suave);
+            doc.text('No hay datos para mostrar con los filtros aplicados.',
+                W / 2, yGrafico + maxH / 2, { align: 'center' });
         }
 
-        // Pie
-        doc.setFontSize(8);
-        doc.setTextColor(120, 138, 120);
-        doc.text(
-            'Documento generado por el Sistema de Gestión de Stock.',
-            W / 2, H - 5, { align: 'center' }
-        );
+        // Pie de página (igual al remito)
+        doc.setDrawColor(...PDF_COL.borde);
+        doc.setLineWidth(0.3);
+        doc.line(margen, pieY, W - margen, pieY);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...PDF_COL.suave);
+        doc.text('Reporte generado por el Sistema de Gestión de Stock · Agroquímica del Valle.',
+            margen, pieY + 4.5);
+        doc.text('Emitido el ' + fecha + ' ' + hora + '  ·  Página 1', W - margen, pieY + 4.5,
+            { align: 'right' });
 
-        const hoy = new Date();
-        const sello = hoy.getFullYear() +
-            String(hoy.getMonth() + 1).padStart(2, '0') +
-            String(hoy.getDate()).padStart(2, '0');
+        const sello = ahora.getFullYear() +
+            String(ahora.getMonth() + 1).padStart(2, '0') +
+            String(ahora.getDate()).padStart(2, '0');
 
         doc.save('reporte_' + cfg.archivo + '_' + sello + '.pdf');
     }
@@ -1051,6 +1213,11 @@ document.addEventListener('DOMContentLoaded', function () {
             titulo: 'Stock actual vs. stock mínimo por producto',
             filtros: filtroStock.texto(),
             archivo: 'stock_vs_minimo',
+            leyenda: [
+                { color: [46, 125, 50], texto: 'Stock suficiente' },
+                { color: [198, 40, 40], texto: 'En el mínimo o por debajo' },
+                { color: [15, 27, 20], texto: 'Stock mínimo', marca: true },
+            ],
         }),
         tramos: () => ({
             chartId: 'grafico-tramos',
@@ -1081,7 +1248,10 @@ document.addEventListener('DOMContentLoaded', function () {
             boton.textContent = 'Generando...';
 
             try {
-                await generarPDF(configPDF[boton.dataset.pdf]());
+                const cfg = configPDF[boton.dataset.pdf]();
+                const parrafo = boton.closest('.rep-card').querySelector(':scope > p');
+                cfg.descripcion = parrafo ? parrafo.textContent.trim() : '';
+                await generarPDF(cfg);
             } catch (e) {
                 console.error(e);
                 alert('No se pudo generar el PDF. Intente nuevamente.');

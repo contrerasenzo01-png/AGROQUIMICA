@@ -669,3 +669,74 @@ class LogAuditoria(models.Model):
             for campo in sorted(set(ant) | set(act))
             if ant.get(campo) != act.get(campo)
         ]
+
+# ============================================================
+# CONFIGURACIÓN (umbrales de las reglas de alertas)
+# Los valores se editan desde la pantalla "Configuración de alertas";
+# las reglas los leen de esta tabla, no están fijos en el código.
+# ============================================================
+
+class Configuracion(models.Model):
+    ID_Configuracion = models.AutoField(primary_key=True)
+    Clave = models.CharField(max_length=50, unique=True)
+    Valor = models.CharField(max_length=100)
+    Descripcion = models.CharField(max_length=255, blank=True, default='')
+    Fecha_modificacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'CONFIGURACION'
+        verbose_name = 'Configuración'
+        verbose_name_plural = 'Configuración'
+
+    def __str__(self):
+        return f'{self.Clave} = {self.Valor}'
+
+
+# ============================================================
+# NOTIFICACIONES (bandeja del header)
+# Cada regla de alerta deja una notificación por perfil destinatario.
+# "Clave" identifica el evento que la disparó: con la restricción
+# única (Clave, Destino_perfil) un mismo evento no se notifica dos veces.
+# ============================================================
+
+class Notificacion(models.Model):
+    ID_Notificacion = models.AutoField(primary_key=True)
+    Fecha = models.DateTimeField(auto_now_add=True)
+    Tipo = models.CharField(max_length=50)
+    Mensaje = models.CharField(max_length=255)
+
+    Destino_perfil = models.ForeignKey(
+        Perfiles,
+        on_delete=models.CASCADE,
+        db_column='Destino_perfil',
+        related_name='notificaciones'
+    )
+
+    Leida = models.BooleanField(default=False)
+    Fecha_lectura = models.DateTimeField(null=True, blank=True)
+
+    ID_Usuario_lectura = models.ForeignKey(
+        Usuarios,
+        on_delete=models.SET_NULL,
+        db_column='ID_Usuario_lectura',
+        related_name='notificaciones_leidas',
+        null=True,
+        blank=True
+    )
+
+    Clave = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'NOTIFICACION'
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'
+        ordering = ['-Fecha']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['Clave', 'Destino_perfil'],
+                name='uq_notificacion_clave_perfil'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.Tipo}: {self.Mensaje[:40]}'

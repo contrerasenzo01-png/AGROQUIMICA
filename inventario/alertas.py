@@ -11,10 +11,20 @@ desde cualquier pantalla:
     El correo le llega al usuario que hizo ese movimiento.
 
   - VENCIMIENTO: cuando a un lote con stock le faltan
-    DIAS_AVISO_VENCIMIENTO días o menos para vencer (o ya venció).
-    Se revisa sola, como mucho una vez cada 10 minutos, mientras
-    alguien usa el sistema.
+    "dias_aviso_vencimiento" días o menos para vencer (o ya venció).
+    Se revisa sola mientras alguien usa el sistema (cada
+    "minutos_revision_vencimientos") y con el job diario
+    `python manage.py revisar_alertas`.
     El correo les llega a todos los usuarios que pueden ver alertas.
+
+  - EGRESO INUSUAL: cuando un egreso por venta supera la media de los
+    egresos anteriores del producto en "egreso_inusual_desvios" desvíos
+    estándar (regla de 3σ). Se evalúa en tiempo real al registrar el
+    egreso. Se notifica al Administrador (bandeja y correo).
+
+Los umbrales entre comillas se leen de la tabla CONFIGURACION
+(ver notificaciones.py). Cada regla deja además una notificación en la
+tabla NOTIFICACION para los perfiles destinatarios.
 
 Cada alerta se envía por correo una sola vez: cuando se crea.
 """
@@ -32,8 +42,9 @@ from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from .models import Alertas, Lotes, Stock, Usuarios
-from .permissions import puede
+from .models import Alertas, Lotes, MovimientosStock, Stock, Usuarios
+from .notificaciones import config, notificar, perfiles_admin, perfiles_con_permiso
+from .permissions import PERFILES_ADMIN, puede
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +53,15 @@ logger = logging.getLogger(__name__)
 # REGLAS
 # ------------------------------------------------------------
 
-DIAS_AVISO_VENCIMIENTO = 30
-
 TIPO_STOCK = 'Stock mínimo'
 TIPO_VENCIMIENTO = 'Vencimiento'
+TIPO_INUSUAL = 'Egreso inusual'
+
+# Tipos de movimiento que cuentan como venta (el segundo es el nombre viejo).
+TIPOS_VENTA = ('Egreso por venta', 'Salida por venta')
 
 # Las alertas viejas de stock se guardaban como "Stock bajo".
 TIPOS_STOCK = (TIPO_STOCK, 'Stock bajo')
-
-# Cada cuánto se revisan solos los vencimientos (en segundos).
-REVISION_VENCIMIENTOS_SEGUNDOS = 10 * 60
 
 
 # ------------------------------------------------------------
@@ -94,6 +104,9 @@ def _enviar_correo(asunto, texto, html, destinatarios):
     Si el envío falla, queda registrado en la terminal pero no corta
     la operación que disparó la alerta.
     """
+
+    if not config('correo_alertas_activo'):
+        return
 
     destinatarios = sorted({
         d.strip() for d in destinatarios if d and d.strip()
@@ -162,41 +175,75 @@ def destinatarios_alertas():
     return [u.Email_usuario for u in usuarios if puede(u, 'alertas')]
 
 
+def correos_administradores():
+    """Correos de los usuarios activos con perfil Administrador."""
+    return list(Usuarios.objects.filter(
+        Estado_usuario=True,
+        ID_Perfil__Estado_perfil=True,
+        ID_Perfil__Nombre_perfil__in=PERFILES_ADMIN,
+    ).exclude(Email_usuario='').exclude(Email_usuario__isnull=True).values_list(
+        'Email_usuario', flat=True
+    ))
+
+
 # ------------------------------------------------------------
 # ALERTAS DE STOCK MÍNIMO
 # ------------------------------------------------------------
 
-def revisar_stock(stock, usuario=None):
-    """Genera la alerta si el stock quedó en el mínimo o por debajo.
+def umbral_stock(stock):
+    """Stock a partir del cual se avisa: el mínimo más el margen configurado."""
+    margen = config('margen_stock_minimo')
+    return stock.Stock_minimo + (stock.Stock_minimo * margen + 99) // 100
 
-    Devuelve True si el producto está en o bajo el mínimo (haya
+
+def revisar_stock(stock, usuario=None):
+    """Genera la alerta si el stock quedó en el umbral o por debajo.
+
+    El umbral es el stock mínimo del producto más el margen de la
+    configuración (con margen 0, el stock mínimo).
+    Devuelve True si el producto está en o bajo el umbral (haya
     creado una alerta nueva o ya hubiera una pendiente).
     """
 
-    if stock is None or stock.Cantidad_stock > stock.Stock_minimo:
+    if stock is None or stock.Cantidad_stock > umbral_stock(stock):
         return False
 
     # Si ya hay una alerta de stock pendiente, no se repite.
-    if Alertas.objects.filter(
+    # (Se asegura su notificación: alertas de antes de la bandeja nueva.)
+    pendiente = Alertas.objects.filter(
         ID_Stock=stock,
         Tipo_alerta__in=TIPOS_STOCK,
         Atendida=False,
-    ).exists():
+    ).order_by('ID_Historial_alerta').first()
+
+    if pendiente:
+        notificar(
+            TIPO_STOCK, mensaje_visible(pendiente.Mensaje), f'stock:{pendiente.pk}',
+            perfiles_con_permiso('alertas'),
+        )
         return True
 
     producto = stock.ID_Producto
 
-    Alertas.objects.create(
+    mensaje = (
+        f'El producto {producto.Nombre_producto} quedó con '
+        f'{stock.Cantidad_stock} unidades '
+        f'(stock mínimo: {stock.Stock_minimo}).'
+    )[:255]
+
+    alerta = Alertas.objects.create(
         ID_Stock=stock,
         Tipo_alerta=TIPO_STOCK,
-        Mensaje=(
-            f'El producto {producto.Nombre_producto} quedó con '
-            f'{stock.Cantidad_stock} unidades '
-            f'(stock mínimo: {stock.Stock_minimo}).'
-        )[:255],
+        Mensaje=mensaje,
         Cantidad_al_generar=stock.Cantidad_stock,
         Stock_minimo_al_generar=stock.Stock_minimo,
         Atendida=False,
+    )
+
+    # Bandeja: a los perfiles que pueden ver alertas.
+    notificar(
+        TIPO_STOCK, mensaje, f'stock:{alerta.pk}',
+        perfiles_con_permiso('alertas'),
     )
 
     # Correo al usuario que hizo el movimiento.
@@ -252,7 +299,9 @@ def revisar_vencimientos():
     """
 
     hoy = timezone.localdate()
-    limite = hoy + timedelta(days=DIAS_AVISO_VENCIMIENTO)
+    dias_aviso = config('dias_aviso_vencimiento')
+    limite = hoy + timedelta(days=dias_aviso)
+    destinos = None   # perfiles destinatarios (se buscan una sola vez)
 
     lotes = Lotes.objects.select_related('ID_Producto').filter(
         Fecha_vencimiento__isnull=False,
@@ -291,8 +340,18 @@ def revisar_vencimientos():
                 if alerta.Mensaje != mensaje_guardado:
                     alerta.Mensaje = mensaje_guardado
                     alerta.save(update_fields=['Mensaje'])
+
+                # Alertas pendientes de antes de la bandeja nueva: se
+                # notifican una vez (la clave evita repetirlas).
+                if not alerta.Atendida:
+                    if destinos is None:
+                        destinos = perfiles_con_permiso('alertas')
+                    notificar(
+                        TIPO_VENCIMIENTO, mensaje,
+                        f'vencimiento:lote:{lote.ID_Lote}', destinos,
+                    )
             else:
-                Alertas.objects.create(
+                alerta = Alertas.objects.create(
                     ID_Stock=stock,
                     Tipo_alerta=TIPO_VENCIMIENTO,
                     Mensaje=mensaje_guardado,
@@ -301,6 +360,15 @@ def revisar_vencimientos():
                     Atendida=False,
                 )
                 nuevas.append((lote, dias))
+
+                if destinos is None:
+                    destinos = perfiles_con_permiso('alertas')
+
+                # Clave por lote: el mismo lote no se notifica dos veces.
+                notificar(
+                    TIPO_VENCIMIENTO, mensaje,
+                    f'vencimiento:lote:{lote.ID_Lote}', destinos,
+                )
 
         resultado.append({
             'producto': producto,
@@ -325,7 +393,7 @@ def revisar_vencimientos():
             ),
             introduccion=(
                 f'Le informamos que los siguientes lotes vencen en los próximos '
-                f'{DIAS_AVISO_VENCIMIENTO} días y todavía tienen stock.'
+                f'{dias_aviso} días y todavía tienen stock.'
             ),
             filas=[
                 (
@@ -344,19 +412,91 @@ def revisar_vencimientos():
 
 
 def revisar_vencimientos_si_corresponde():
-    """Revisa los vencimientos como mucho una vez cada 10 minutos.
+    """Revisa los vencimientos como mucho una vez cada
+    "minutos_revision_vencimientos" (tabla CONFIGURACION).
 
     La llama context_processors.py en cada página, así el número
-    de alertas del topbar siempre está al día.
+    de notificaciones del header siempre está al día.
     """
 
-    if cache.add('alertas:revision_vencimientos', True, REVISION_VENCIMIENTOS_SEGUNDOS):
+    segundos = config('minutos_revision_vencimientos') * 60
+
+    if cache.add('alertas:revision_vencimientos', True, segundos):
         try:
             revisar_vencimientos()
         except Exception:
             # Si falla, se reintenta en la próxima página.
             cache.delete('alertas:revision_vencimientos')
             logger.exception('No se pudieron revisar los vencimientos.')
+
+
+# ------------------------------------------------------------
+# EGRESO INUSUAL (regla de 3σ)
+# ------------------------------------------------------------
+
+def revisar_egreso_inusual(movimiento):
+    """Notifica si un egreso supera media + k·σ de los egresos anteriores.
+
+    Se evalúa en tiempo real, al registrar el egreso. k y la cantidad
+    mínima de egresos previos salen de la tabla CONFIGURACION.
+    Devuelve True si el egreso resultó inusual.
+    """
+
+    if not movimiento or not movimiento.ID_Lote_id:
+        return False
+
+    producto = movimiento.ID_Lote.ID_Producto
+    k = config('egreso_inusual_desvios')
+    minimo_muestras = config('egreso_inusual_min_muestras')
+
+    previos = list(MovimientosStock.objects.filter(
+        ID_Lote__ID_Producto=producto,
+        ID_Tipo_movimiento__Nombre_tipo_movimiento__in=TIPOS_VENTA,
+        Anulado=False,
+    ).exclude(pk=movimiento.pk).values_list('Cantidad_movimiento_stock', flat=True))
+
+    if len(previos) < minimo_muestras:
+        return False
+
+    media = sum(previos) / len(previos)
+    desvio = (sum((x - media) ** 2 for x in previos) / len(previos)) ** 0.5
+    limite = media + k * desvio
+    cantidad = movimiento.Cantidad_movimiento_stock
+
+    if desvio == 0 or cantidad <= limite:
+        return False
+
+    mensaje = (
+        f'Egreso inusual de {producto.Nombre_producto}: {cantidad} unidades '
+        f'(media {media:.1f}, límite {limite:.1f} = media + {k}σ). '
+        f'Registrado por {movimiento.ID_Usuario.Usuario}.'
+    )[:255]
+
+    creadas = notificar(
+        TIPO_INUSUAL, mensaje, f'egreso:{movimiento.pk}', perfiles_admin()
+    )
+
+    if creadas:
+        asunto, texto, html = _correo_alerta(
+            asunto=f'Egreso inusual: {producto.Nombre_producto}',
+            titulo='Egreso de cantidad inusual',
+            introduccion=(
+                'Se registró un egreso por venta muy superior a lo habitual '
+                'para este producto. Verifique que no se trate de un error de carga.'
+            ),
+            filas=[
+                ('Producto', producto.Nombre_producto),
+                ('Cantidad egresada', f'{cantidad} unidades'),
+                ('Media de egresos', f'{media:.1f} unidades'),
+                ('Límite (media + {}σ)'.format(k), f'{limite:.1f} unidades'),
+                ('Registrado por', movimiento.ID_Usuario.Usuario),
+            ],
+            color='#6d28d9',
+        )
+
+        _enviar_correo(asunto, texto, html, correos_administradores())
+
+    return True
 
 
 # ------------------------------------------------------------

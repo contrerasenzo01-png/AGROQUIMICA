@@ -39,10 +39,12 @@ from .reportes import (
 from .pdf_remito import generar_pdf_remito
 from .paginacion import paginar
 from .alertas import (
-    DIAS_AVISO_VENCIMIENTO, TIPO_STOCK, TIPOS_STOCK,
+    TIPO_STOCK, TIPOS_STOCK,
     listar_notificaciones, mensaje_visible, revisar_stock,
+    revisar_egreso_inusual,
     revisar_vencimientos as generar_alertas_vencimiento,
 )
+from .notificaciones import config
 from .auditoria import (
     snapshot, registrar_auditoria, accion_por_estado,
     registrar_asignacion_perfil, registrar_asignacion_permisos,
@@ -3348,9 +3350,9 @@ def _resumen_lotes(hoy):
         indicador(
             con_stock.filter(
                 Fecha_vencimiento__gte=hoy,
-                Fecha_vencimiento__lte=hoy + timedelta(days=DIAS_AVISO_VENCIMIENTO)
+                Fecha_vencimiento__lte=hoy + timedelta(days=config('dias_aviso_vencimiento'))
             ).count(),
-            f'Vencen en {DIAS_AVISO_VENCIMIENTO} días', 'ambar', 'reloj'
+            f'Vencen en {config('dias_aviso_vencimiento')} días', 'ambar', 'reloj'
         ),
         indicador(con_stock.filter(Fecha_vencimiento__lt=hoy).count(), 'Vencidos con stock', 'rojo', 'alerta'),
     ]
@@ -3411,7 +3413,7 @@ def registrar_ingreso_lote(request):
             'busqueda': busqueda,
             'proveedor_filtro': proveedor_filtro,
             'hoy': hoy,
-            'limite': hoy + timedelta(days=DIAS_AVISO_VENCIMIENTO),
+            'limite': hoy + timedelta(days=config('dias_aviso_vencimiento')),
             'resumen': _resumen_lotes(hoy),
         }
     )
@@ -5761,6 +5763,9 @@ def registrar_egreso(request):
             )
 
             stock_bajo = revisar_stock(stock, usuario)
+
+            # Regla de 3σ: avisa al Administrador si la cantidad es inusual.
+            revisar_egreso_inusual(movimiento)
 
     except DatabaseError:
         messages.error(

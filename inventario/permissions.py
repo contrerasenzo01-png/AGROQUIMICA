@@ -85,6 +85,16 @@ CATALOGO = {
         'consultar': ('Consultar reportes',
                       'Ver los gráficos y reportes del sistema.'),
     },
+    'consolidados': {
+        'titulo': 'Reportes',
+        'consultar': ('Consultar reportes consolidados',
+                      'Ver y exportar a PDF los reportes que cruzan compras, ventas y vencimientos.'),
+    },
+    'configuracion': {
+        'titulo': 'Alertas',
+        'gestionar': ('Gestionar configuración de alertas',
+                      'Modificar los umbrales de las reglas de alertas y notificaciones.'),
+    },
     'perfiles': {
         'titulo': 'Seguridad',
         'consultar': ('Consultar perfiles',
@@ -113,6 +123,9 @@ ACCIONES = {
     'anular_egresos': ('Anular egresos de stock',
                        'Anular un egreso por venta registrado por error y devolver las unidades al stock.',
                        'Movimientos de stock'),
+    'reportes_sensibles': ('Ver reportes sensibles',
+                           'Ver el reporte consolidado de pérdidas por vencimiento valorizadas en pesos.',
+                           'Reportes'),
 }
 
 # Derivado del catálogo: modulo -> (nombre_consultar, nombre_gestionar)
@@ -253,9 +266,11 @@ MENU = [
         ('lotes', 'registrar_ingreso_lote', 'i-package', 'Lotes'),
         ('movimientos', 'gestion_movimientos_stock', 'i-swap', 'Movimientos de stock'),
         ('alertas', 'historial_alertas', 'i-bell', 'Historial de alertas'),
+        ('configuracion', 'configuracion_alertas', 'i-sliders', 'Configuración de alertas'),
     ]),
     ('ANÁLISIS', [
         ('reportes', 'gestion_reportes', 'i-chart', 'Reportes'),
+        ('consolidados', 'reportes_consolidados', 'i-table', 'Reportes consolidados'),
     ]),
     ('SEGURIDAD', [
         ('perfiles', 'gestion_perfiles', 'i-shield', 'Perfiles de acceso'),

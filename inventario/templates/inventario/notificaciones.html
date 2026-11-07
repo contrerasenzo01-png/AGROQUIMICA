@@ -1,0 +1,146 @@
+{% extends 'inventario/base.html' %}
+{% load static %}
+
+{% block title %}
+    Notificaciones - Agroquímica del Valle
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/styles/parcial2.css' %}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="al-page">
+
+    <header class="al-header">
+        <h1 class="al-title">Notificaciones</h1>
+        <p class="av-subtitulo">
+            Avisos automáticos dirigidos a tu perfil ({{ usuario.ID_Perfil.Nombre_perfil }}).
+            {% if no_leidas %}Tenés {{ no_leidas }} sin leer.{% else %}Estás al día.{% endif %}
+        </p>
+    </header>
+
+    <form method="GET" action="{% url 'bandeja_notificaciones' %}" class="al-filtros">
+        <div class="al-filtros-grid">
+            <div class="al-campo">
+                <label for="estado">Estado</label>
+                <select class="form-select" id="estado" name="estado">
+                    <option value="">Todas</option>
+                    <option value="no_leidas" {% if estado == 'no_leidas' %}selected{% endif %}>No leídas</option>
+                    <option value="leidas" {% if estado == 'leidas' %}selected{% endif %}>Leídas</option>
+                </select>
+            </div>
+
+            <div class="al-campo">
+                <label for="tipo">Tipo</label>
+                <select class="form-select" id="tipo" name="tipo">
+                    <option value="">Todos los tipos</option>
+                    {% for t in tipos %}
+                        <option value="{{ t }}" {% if tipo == t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="al-filtros-acc">
+            <button type="submit" class="al-btn al-btn-primary">Consultar</button>
+            <a href="{% url 'bandeja_notificaciones' %}" class="al-btn al-btn-claro">Limpiar</a>
+        </div>
+    </form>
+
+    {% if no_leidas %}
+    <form method="POST" action="{% url 'leer_todas_notificaciones' %}" class="p2-acciones">
+        {% csrf_token %}
+        <button type="submit" class="al-btn al-btn-claro">Marcar todas como leídas</button>
+    </form>
+    {% endif %}
+
+    <section class="al-card">
+        <div class="al-table-wrap">
+            <table class="table table-hover align-middle av-filas al-table">
+                <thead>
+                    <tr>
+                        <th class="al-centro">Fecha</th>
+                        <th class="al-centro">Hora</th>
+                        <th>Tipo</th>
+                        <th>Mensaje</th>
+                        <th>Estado</th>
+                        <th>Leída por</th>
+                        <th class="al-centro">Fecha de lectura</th>
+                        <th class="al-col-acciones">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody data-pg-animar>
+                    {% for n in notificaciones %}
+                        <tr class="{% if not n.Leida %}al-fila-pendiente{% endif %}">
+                            <td class="al-centro">{{ n.Fecha|date:"d/m/Y" }}</td>
+                            <td class="al-centro">{{ n.Fecha|date:"H:i" }}</td>
+                            <td>
+                                {% if n.Tipo == 'Vencimiento' %}
+                                    <span class="al-badge al-vencimiento">Vencimiento</span>
+                                {% elif n.Tipo == 'Stock mínimo' %}
+                                    <span class="al-badge al-stock-minimo">Stock mínimo</span>
+                                {% else %}
+                                    <span class="al-badge p2-inusual">{{ n.Tipo }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="al-mensaje">{{ n.Mensaje }}</td>
+                            <td>
+                                {% if n.Leida %}
+                                    <span class="al-estado al-atendida">Leída</span>
+                                {% else %}
+                                    <span class="al-estado al-pendiente">No leída</span>
+                                {% endif %}
+                            </td>
+                            <td class="al-muted">
+                                {% if n.ID_Usuario_lectura %}
+                                    {{ n.ID_Usuario_lectura.Apellido_usuario }} {{ n.ID_Usuario_lectura.Nombre_usuario }}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="al-centro">
+                                {% if n.Fecha_lectura %}{{ n.Fecha_lectura|date:"d/m/Y H:i" }}{% else %}<span class="al-muted">—</span>{% endif %}
+                            </td>
+                            <td class="al-col-acciones">
+                                {% if not n.Leida %}
+                                    <form method="POST" action="{% url 'leer_notificacion' n.ID_Notificacion %}" class="al-form-atender">
+                                        {% csrf_token %}
+                                        <button type="submit" class="al-btn-atender">
+                                            <svg class="al-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
+                                            Leída
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="al-hecho" title="Leída">
+                                        <svg class="al-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="al-vacio">No hay notificaciones con los criterios seleccionados.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% include 'inventario/_paginacion.html' %}
+
+        <div class="al-pie">
+            <span>{{ pagina.paginator.count }} notificaci{{ pagina.paginator.count|pluralize:"ón,ones" }}</span>
+            <span>Agroquímica del Valle</span>
+        </div>
+    </section>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'inventario/js/paginacion.js' %}"></script>
+{% endblock %}

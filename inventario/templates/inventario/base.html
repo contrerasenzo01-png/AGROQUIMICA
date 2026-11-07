@@ -45,7 +45,7 @@
     {% endblock %}
 
     <link rel="stylesheet" href="{% static 'inventario/css/sidebar.css' %}?v=2">
-    <link rel="stylesheet" href="{% static 'inventario/css/topbar.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/css/topbar.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'inventario/css/confirmar.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/css/bootstrap_ajustes.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'inventario/css/ojo_clave.css' %}">
@@ -148,30 +148,31 @@
 
                     <span class="topbar-sep" aria-hidden="true"></span>
 
-                    <!-- BANDEJA DE NOTIFICACIONES: alertas de stock mínimo y vencimiento.
+                    <!-- BANDEJA DE NOTIFICACIONES (tabla NOTIFICACION): las dirigidas al
+                         perfil del usuario, con el número de no leídas.
                          La lista la carga notificaciones.js desde url_notificaciones. -->
-                    {% if puede_ver_alertas %}
+                    {% with n=notificaciones_no_leidas %}
                     <div class="topbar-notif"
                          id="topbarNotif"
                          data-url="{{ url_notificaciones }}"
-                         data-url-atender="{% url 'atender_alerta' 0 %}"
-                         data-puede-atender="{% if puede_atender_alertas %}1{% else %}0{% endif %}">
+                         data-url-leer="{% url 'leer_notificacion' 0 %}"
+                         data-url-leer-todas="{% url 'leer_todas_notificaciones' %}">
 
                         {% csrf_token %}
 
                         <button type="button"
-                                class="topbar-icon-btn topbar-alertas{% if alertas_pendientes %} tiene-alertas{% endif %}"
+                                class="topbar-icon-btn topbar-alertas{% if n %} tiene-alertas{% endif %}"
                                 id="btnNotif"
                                 aria-haspopup="dialog"
                                 aria-expanded="false"
                                 aria-controls="panelNotif"
-                                title="{% if alertas_pendientes %}{{ alertas_pendientes }} alerta{{ alertas_pendientes|pluralize }} sin atender{% else %}Sin alertas pendientes{% endif %}"
-                                aria-label="Notificaciones{% if alertas_pendientes %}: {{ alertas_pendientes }} sin atender{% endif %}">
+                                title="{% if n %}{{ n }} notificaci{{ n|pluralize:'ón,ones' }} sin leer{% else %}Sin notificaciones nuevas{% endif %}"
+                                aria-label="Notificaciones{% if n %}: {{ n }} sin leer{% endif %}">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <rect x="3" y="5" width="18" height="14" rx="2.5"></rect>
-                                <path d="m3.5 7 8.5 6 8.5-6"></path>
+                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                                <path d="M10 21h4"></path>
                             </svg>
-                            <span class="topbar-badge" id="notifContador" {% if not alertas_pendientes %}hidden{% endif %}>{% if alertas_pendientes > 99 %}99+{% else %}{{ alertas_pendientes }}{% endif %}</span>
+                            <span class="topbar-badge" id="notifContador" {% if not n %}hidden{% endif %}>{% if n > 99 %}99+{% else %}{{ n }}{% endif %}</span>
                         </button>
 
                         <div class="tb-notif-panel" id="panelNotif" role="dialog" aria-label="Notificaciones" hidden>
@@ -180,17 +181,20 @@
                                 <div>
                                     <strong>Notificaciones</strong>
                                     <span id="notifResumen">
-                                        {% if alertas_pendientes %}{{ alertas_pendientes }} sin atender{% else %}Todo al día{% endif %}
+                                        {% if n %}{{ n }} sin leer{% else %}Todo al día{% endif %}
                                     </span>
                                 </div>
+                                <button type="button" class="tb-notif-todas" id="notifLeerTodas" {% if not n %}hidden{% endif %}>
+                                    Marcar todas como leídas
+                                </button>
                             </div>
 
                             <ul class="tb-notif-lista" id="notifLista" aria-live="polite">
                                 <li class="tb-notif-vacio">Cargando…</li>
                             </ul>
 
-                            <a class="tb-notif-pie" href="{{ url_alertas }}">
-                                Ver historial de alertas
+                            <a class="tb-notif-pie" href="{% url 'bandeja_notificaciones' %}">
+                                Ver todas las notificaciones
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M5 12h14M13 6l6 6-6 6"></path>
                                 </svg>
@@ -199,7 +203,7 @@
                         </div>
 
                     </div>
-                    {% endif %}
+                    {% endwith %}
 
                     <!-- tema.js dibuja el ícono (sol/luna) dentro de este botón -->
                     <button
@@ -237,7 +241,7 @@
             data-ping-url="{% url 'sesion_ping' %}"
             data-login-url="{% url 'login' %}"></script>
     <script src="{% static 'inventario/js/tema.js' %}"></script>
-    <script src="{% static 'inventario/js/notificaciones.js' %}"></script>
+    <script src="{% static 'inventario/js/notificaciones.js' %}?v=2"></script>
 
     <!-- BOOTSTRAP (modales, menús desplegables, tooltips) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

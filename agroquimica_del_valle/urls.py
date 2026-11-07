@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.urls import path
 from inventario import views
 from inventario import perfil
+from inventario import vistas_parcial2
 
 urlpatterns = [
     # Login
@@ -102,6 +103,17 @@ urlpatterns = [
     # Reportes (solo administrador)
     path('reportes/', views.gestion_reportes, name='gestion_reportes'),
     path('reportes/evolucion/', views.datos_evolucion, name='datos_evolucion'),
+
+    # Reportes consolidados (Parcial 2 - M2)
+    path('reportes/consolidados/', vistas_parcial2.reportes_consolidados, name='reportes_consolidados'),
+    path('reportes/consolidados/<slug:clave>/', vistas_parcial2.reportes_consolidados, name='reporte_consolidado'),
+
+    # Notificaciones y configuración de alertas (Parcial 2 - M3)
+    path('notificaciones/', vistas_parcial2.bandeja_notificaciones, name='bandeja_notificaciones'),
+    path('notificaciones/datos/', vistas_parcial2.datos_notificaciones, name='datos_notificaciones'),
+    path('notificaciones/<int:id_notificacion>/leer/', vistas_parcial2.leer_notificacion, name='leer_notificacion'),
+    path('notificaciones/leer-todas/', vistas_parcial2.leer_todas_notificaciones, name='leer_todas_notificaciones'),
+    path('configuracion-alertas/', vistas_parcial2.configuracion_alertas, name='configuracion_alertas'),
 
     # Bloqueo por inactividad
     path('bloqueo/', views.bloqueo_sesion, name='bloqueo'),

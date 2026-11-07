@@ -1,0 +1,77 @@
+{% extends 'inventario/base.html' %}
+{% load static %}
+
+{% block title %}
+    Configuración de alertas - Agroquímica del Valle
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/styles/parcial2.css' %}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="al-page">
+
+    <header class="al-header">
+        <h1 class="al-title">Configuración de alertas</h1>
+        <p class="av-subtitulo">
+            Umbrales de las reglas automáticas de notificación. Se guardan en la tabla
+            CONFIGURACION y las reglas los leen de ahí.
+        </p>
+    </header>
+
+    <section class="p2-info">
+        <p><strong>Reglas activas:</strong></p>
+        <ul class="p2-reglas">
+            <li><strong>Stock mínimo</strong> (en tiempo real, al bajar el stock y en el job diario): avisa cuando el stock llega al mínimo del producto más el margen. Correo al usuario que hizo el movimiento.</li>
+            <li><strong>Vencimiento</strong> (job diario y revisión automática): avisa los lotes con stock que vencen dentro de los días configurados. Correo a quienes ven alertas.</li>
+            <li><strong>Egreso inusual</strong> (en tiempo real, al registrar un egreso): avisa al Administrador si la cantidad supera la media + k desvíos estándar de los egresos anteriores del producto. Correo al Administrador.</li>
+        </ul>
+    </section>
+
+    <form method="POST" class="al-card p2-config">
+        {% csrf_token %}
+
+        <div class="al-table-wrap">
+            <table class="table align-middle al-table">
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Descripción</th>
+                        <th class="p2-num">Valor</th>
+                        <th class="al-centro">Rango</th>
+                        <th class="al-centro">Última modificación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in parametros %}
+                        <tr>
+                            <td><strong>{{ p.titulo }}</strong><div class="al-muted p2-clave">{{ p.clave }}</div></td>
+                            <td class="al-mensaje">{{ p.descripcion }}</td>
+                            <td class="p2-num">
+                                <input type="number" class="form-control p2-valor{% if p.error %} is-invalid{% endif %}"
+                                       name="{{ p.clave }}" value="{{ p.valor }}"
+                                       min="{{ p.minimo }}" max="{{ p.maximo }}" step="1" required>
+                            </td>
+                            <td class="al-centro al-muted">{{ p.minimo }} – {{ p.maximo }}<br><small>Por defecto: {{ p.defecto }}</small></td>
+                            <td class="al-centro al-muted">{{ p.modificado|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="al-filtros-acc p2-config-acc">
+            <button type="submit" class="al-btn al-btn-primary">Guardar configuración</button>
+            <button type="submit" name="accion" value="revisar" class="al-btn al-btn-claro" formnovalidate
+                    title="Evalúa ahora las reglas de vencimiento y stock mínimo (lo mismo que hace el job diario)">
+                Evaluar reglas ahora
+            </button>
+        </div>
+    </form>
+
+</div>
+
+{% endblock %}
