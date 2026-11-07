@@ -9,7 +9,6 @@
     var URL_BLOQUEO = script.dataset.bloqueoUrl;
     var URL_PING = script.dataset.pingUrl;
     var URL_LOGIN = script.dataset.loginUrl;
-    var URL_REGISTRO = script.dataset.registroUrl;
 
     var CLAVE_ACTIVIDAD = 'av:ultima';
     var CLAVE_RESTAURAR = 'av:restaurar';
@@ -95,16 +94,10 @@
     window.addEventListener('focus', revisar);
 
     // ======================================================
-    // CARTEL DE BLOQUEO (la página no se recarga)
+    // BLOQUEO: siempre se usa la pantalla de bloqueo (bloqueo.html),
+    // la misma a la que redirige el servidor. Antes de salir se
+    // guarda lo escrito en los formularios para restaurarlo al volver.
     // ======================================================
-
-    function csrf() {
-        var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-        if (m) { return decodeURIComponent(m[1]); }
-
-        var i = document.querySelector('input[name=csrfmiddlewaretoken]');
-        return i ? i.value : '';
-    }
 
     function mostrarBloqueo() {
         if (bloqueado) { return; }
@@ -112,97 +105,8 @@
         bloqueado = true;
         guardarTodos();
 
-        var token = csrf();
-
-        // Sin token no se puede validar por ajax: se usa la pantalla de bloqueo.
-        if (!token) {
-            window.location.href = URL_BLOQUEO + '?next=' +
-                encodeURIComponent(location.pathname + location.search);
-            return;
-        }
-
-        var ov = document.createElement('div');
-        ov.className = 'lck-overlay lck-visible';
-        ov.innerHTML =
-            '<div class="lck-caja" role="dialog" aria-modal="true">' +
-                '<h3>Sesión bloqueada por inactividad</h3>' +
-                '<p>Ingrese su usuario y contraseña para continuar. ' +
-                'Lo que estaba haciendo sigue en pantalla.</p>' +
-                '<div class="lck-error" style="display:none"></div>' +
-                '<form autocomplete="on">' +
-                    '<div class="lck-campo"><label>Usuario</label>' +
-                    '<input type="text" name="usuario" autocomplete="username" required></div>' +
-                    '<div class="lck-campo"><label>Contraseña</label>' +
-                    '<input type="password" name="password" autocomplete="current-password" required></div>' +
-                    '<button type="submit" class="lck-btn">Continuar</button>' +
-                '</form>' +
-            '</div>';
-
-        document.body.appendChild(ov);
-
-        // Queda registrado en la auditoría que le apareció el aviso.
-        if (URL_REGISTRO) {
-            fetch(URL_REGISTRO, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': token,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: new URLSearchParams({
-                    pantalla: location.pathname + location.search
-                })
-            }).catch(function () { /* sin conexión */ });
-        }
-
-        var form = ov.querySelector('form');
-        var error = ov.querySelector('.lck-error');
-        var boton = ov.querySelector('.lck-btn');
-
-        form.elements.usuario.focus();
-
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            boton.disabled = true;
-            error.style.display = 'none';
-
-            fetch(URL_BLOQUEO, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': token,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: new URLSearchParams({
-                    usuario: form.elements.usuario.value,
-                    password: form.elements.password.value
-                })
-            }).then(function (r) {
-                return r.json().then(function (d) { return { r: r, d: d }; });
-            }).then(function (res) {
-                if (res.d.ok) {
-                    ov.remove();
-                    bloqueado = false;
-                    ultimoPing = Date.now();
-                    ultimoRegistro = 0;
-                    registrar();
-                    return;
-                }
-
-                if (res.d.cerrada) { irAlLogin(); return; }
-
-                error.textContent = res.d.error || 'No se pudo validar.';
-                error.style.display = 'block';
-                form.elements.password.value = '';
-                boton.disabled = false;
-            }).catch(function () {
-                error.textContent = 'Sin conexión con el servidor. Reintente.';
-                error.style.display = 'block';
-                boton.disabled = false;
-            });
-        });
+        window.location.href = URL_BLOQUEO + '?next=' +
+            encodeURIComponent(location.pathname + location.search);
     }
 
     // ======================================================

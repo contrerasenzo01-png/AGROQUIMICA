@@ -63,7 +63,7 @@
 
 /* Buscadores y filtros */
 .us-search, .pf-search, .pv-search, .pr-page .pr-search, .ts-search,
-.rm-filtros, .rm-search, .lt-toolbar, .al-filtros, .toolbar, .pm-buscador {
+.rm-filtros, .rm-search, .lt-toolbar, .al-filtros, .toolbar, .pm-search {
     animation: av-subir .5s .1s ease-out both;
 }
 
@@ -110,7 +110,7 @@
 
 .us-card, .pf-page .pf-card, .pv-card, .pr-page .pr-card, .ts-card,
 .rm-card, .lt-card, .al-card, .table-wrap,
-.us-search, .pf-search, .pv-search, .pr-page .pr-search, .ts-search,
+.us-search, .pf-search, .pv-search, .pr-page .pr-search, .ts-search, .pm-search,
 .al-filtros, .rm-barra, .profile-card, .mp-resumen {
     box-shadow: var(--av-sombra);
 }
