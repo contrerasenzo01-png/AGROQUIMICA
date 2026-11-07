@@ -38,7 +38,7 @@ body {
     margin: 0;
     font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
     color: var(--texto);
-    background: #ffffff;
+    background: #f4f8f5;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -110,7 +110,7 @@ body {
     bottom: -30%;
     border-radius: 50%;
     background: radial-gradient(circle,
-        rgba(70, 165, 109, 0.45) 0%,
+        rgba(37, 81, 55, 0.45) 0%,
         rgba(242, 207, 74, 0.12) 40%,
         transparent 70%);
     filter: blur(20px);
@@ -149,7 +149,7 @@ body {
     height: 15px;
     flex-shrink: 0;
     fill: none;
-    stroke: #ef4444;
+    stroke: #ff0202cc;
     stroke-width: 2.2;
     stroke-linecap: round;
     stroke-linejoin: round;
