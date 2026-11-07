@@ -864,6 +864,145 @@
 
 
     /* ==========================================
+       ACTUALIZAR LAS TARJETAS DE ARRIBA (Activos / Inactivos)
+       sin recargar la página.
+
+       1) Busca cada número por data-resumen-valor="activos" (lo pone
+          _resumen.html). Si no lo encuentra, lo busca por el texto
+          de la tarjeta ("Activos", "Inactivos").
+       2) Usa los totales que manda el servidor (datos.resumen). Si el
+          servidor no los manda, suma o resta 1 según la acción.
+    ========================================== */
+
+    function animarNumero(elemento, valorFinal) {
+
+        const inicial = parseInt(elemento.textContent.replace(/\D/g, ''), 10) || 0;
+
+        if (inicial === valorFinal) {
+            return;
+        }
+
+        const duracion = 600;
+        let comienzo = null;
+
+        function paso(marca) {
+
+            if (comienzo === null) {
+                comienzo = marca;
+            }
+
+            const avance = Math.min((marca - comienzo) / duracion, 1);
+            const suave = 1 - Math.pow(1 - avance, 3);
+
+            elemento.textContent = Math.round(inicial + (valorFinal - inicial) * suave);
+
+            if (avance < 1) {
+                requestAnimationFrame(paso);
+            }
+
+        }
+
+        requestAnimationFrame(paso);
+
+        // Pequeño "salto" de la tarjeta para que se note el cambio
+        const tarjeta = elemento.closest('.av-stat') || elemento.parentElement;
+
+        if (tarjeta && tarjeta.animate) {
+            tarjeta.animate(
+                [
+                    { transform: 'scale(1)' },
+                    { transform: 'scale(1.04)' },
+                    { transform: 'scale(1)' }
+                ],
+                { duration: 450, easing: 'ease-out' }
+            );
+        }
+
+    }
+
+
+    function buscarNumeroResumen(clave) {
+
+        // Forma directa: el atributo que pone _resumen.html
+        const directo = document.querySelector('[data-resumen-valor="' + clave + '"]');
+
+        if (directo) {
+            return directo;
+        }
+
+        // Respaldo: buscar la tarjeta por su texto
+        const textos = { activos: 'activos', inactivos: 'inactivos' };
+        const buscado = textos[clave];
+
+        if (!buscado) {
+            return null;
+        }
+
+        const etiquetas = document.querySelectorAll('.av-stat span, .av-stat div, .av-stat p');
+
+        for (const etiqueta of etiquetas) {
+
+            if (etiqueta.children.length === 0 &&
+                etiqueta.textContent.trim().toLowerCase() === buscado) {
+
+                const tarjeta = etiqueta.closest('.av-stat');
+                return tarjeta ? tarjeta.querySelector('strong') : null;
+
+            }
+
+        }
+
+        return null;
+
+    }
+
+
+    function actualizarResumen(resumen, esBaja) {
+
+        let activos;
+        let inactivos;
+
+        const numActivos = buscarNumeroResumen('activos');
+        const numInactivos = buscarNumeroResumen('inactivos');
+
+        if (resumen && typeof resumen.activos === 'number') {
+
+            // Totales exactos calculados por el servidor
+            activos = resumen.activos;
+            inactivos = resumen.inactivos;
+
+        } else {
+
+            // El servidor no mandó los totales: se ajusta en 1
+            const leer = function (el) {
+                return el ? (parseInt(el.textContent.replace(/\D/g, ''), 10) || 0) : 0;
+            };
+
+            activos = leer(numActivos) + (esBaja ? -1 : 1);
+            inactivos = leer(numInactivos) + (esBaja ? 1 : -1);
+
+            console.warn(
+                'El servidor no devolvió "resumen": revisá _resumen_proveedores() en views.py.'
+            );
+
+        }
+
+        if (numActivos) {
+            animarNumero(numActivos, Math.max(activos, 0));
+        } else {
+            console.warn('No se encontró la tarjeta "Activos".');
+        }
+
+        if (numInactivos) {
+            animarNumero(numInactivos, Math.max(inactivos, 0));
+        } else {
+            console.warn('No se encontró la tarjeta "Inactivos".');
+        }
+
+    }
+
+
+    /* ==========================================
        BUSCADOR
     ========================================== */
 
@@ -1219,6 +1358,9 @@
                 );
 
             }
+
+            // Actualiza las tarjetas de Activos / Inactivos sin recargar
+            actualizarResumen(datos.resumen, esBaja);
 
             if (esBaja) {
 

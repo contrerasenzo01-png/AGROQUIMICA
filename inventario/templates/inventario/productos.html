@@ -9,6 +9,15 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
+    <style>
+        /* Etiqueta gris para productos que todavía no tuvieron ingresos */
+        .pr-chip-bajo.pr-chip-nuevo {
+            background: #eef1ef;
+            color: #4d5f55;
+            border-color: #dfe5e1;
+            box-shadow: none;
+        }
+    </style>
 {% endblock %}
 
 {% block contenido %}
@@ -60,9 +69,9 @@
     <div class="row g-3 mb-4">
 
         <div class="col-6 col-lg-3">
-            <div class="pr-stat pr-stat-verde">
+            <div class="pr-stat pr-stat-azul">
                 <span class="pr-stat-icono">
-                    <svg class="pr-icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+                    <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
                 </span>
                 <div>
                     <strong id="statActivos">0</strong>
@@ -72,7 +81,7 @@
         </div>
 
         <div class="col-6 col-lg-3">
-            <div class="pr-stat pr-stat-rojo">
+            <div class="pr-stat pr-stat-ambar">
                 <span class="pr-stat-icono">
                     <svg class="pr-icon" viewBox="0 0 24 24"><path d="M22 17 13.5 8.5 8.5 13.5 2 7"/><path d="M16 17h6v-6"/></svg>
                 </span>
@@ -84,9 +93,9 @@
         </div>
 
         <div class="col-6 col-lg-3">
-            <div class="pr-stat pr-stat-ambar">
-                <span class="pr-stat-icono">
-                    <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+            <div class="pr-stat pr-stat-gris">
+                <span class="pr-stat-icono" style="background:#eef1ef;color:#65756c;">
+                    <svg class="pr-icon" viewBox="0 0 24 24"><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/><path d="m17 13 5 5M22 13l-5 5"/></svg>
                 </span>
                 <div>
                     <strong id="statSinStock">0</strong>
@@ -96,13 +105,13 @@
         </div>
 
         <div class="col-6 col-lg-3">
-            <div class="pr-stat pr-stat-azul">
+            <div class="pr-stat pr-stat-rojo">
                 <span class="pr-stat-icono">
-                    <svg class="pr-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+                    <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
                 </span>
                 <div>
-                    <strong id="statConFoto">0</strong>
-                    <span>Con foto</span>
+                    <strong id="statInactivos">0</strong>
+                    <span>Productos inactivos</span>
                 </div>
             </div>
         </div>
@@ -139,6 +148,7 @@
         </select>
 
         <select id="ordenProductos" class="form-select" aria-label="Ordenar productos">
+            <option value="recientes">Más recientes primero</option>
             <option value="nombre">Nombre (A-Z)</option>
             <option value="precio-asc">Precio: menor a mayor</option>
             <option value="precio-desc">Precio: mayor a menor</option>
@@ -165,6 +175,7 @@
                  data-stock="{% if stock %}{{ stock.Cantidad_stock }}{% else %}0{% endif %}"
                  data-minimo="{% if stock %}{{ stock.Stock_minimo }}{% else %}0{% endif %}"
                  data-foto="{% if producto.Imagen_producto %}1{% else %}0{% endif %}"
+                 data-lotes="{{ producto.num_lotes|default:0 }}"
                  data-search="{{ producto.Nombre_producto|lower }} {% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo|lower }}{% endif %} {{ producto.ID_Tipo_producto.Nombre_tipo_producto|lower }} {% for p in producto.proveedores.all %}{{ p.nombre_proveedor|lower }} {% endfor %}">
 
                 <article class="card pr-card h-100 {% if producto.Estado_producto != 'Activo' %}pr-card-inactiva{% endif %}">
@@ -201,6 +212,12 @@
                             Stock mínimo
                         </span>
 
+                        <!-- Producto recién creado: todavía no entró mercadería -->
+                        <span class="pr-chip-bajo pr-chip-nuevo" hidden>
+                            <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                            Sin ingresos
+                        </span>
+
                     </div>
 
                     <!-- DATOS -->
@@ -220,13 +237,15 @@
                         <div class="pr-datos">
                             <div>
                                 <span>Precio</span>
-                                <strong class="pr-precio">$ {{ producto.Precio|floatformat:"-2g" }}</strong>
+                                <!-- El JavaScript lo muestra con formato argentino: $ 10.000 -->
+                                <strong class="pr-precio" data-pesos="{{ producto.Precio|unlocalize }}">$ {{ producto.Precio|floatformat:"-2g" }}</strong>
                             </div>
                             <div>
                                 <span>Presentación</span>
                                 <strong>
                                     {% if producto.Cantidad_presentacion %}
-                                        {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}
+                                        {{ producto.Cantidad_presentacion|floatformat:"-2" }}
+                                        {% if producto.Unidad_medida_producto == 'litros' %}{% if producto.Cantidad_presentacion == 1 %}litro{% else %}litros{% endif %}{% else %}{{ producto.Unidad_medida_producto|default:"" }}{% endif %}
                                     {% else %}—{% endif %}
                                 </strong>
                             </div>
@@ -295,8 +314,8 @@
                                         data-descripcion="{{ producto.Descripcion_producto|default:'' }}"
                                         data-tipo="{{ producto.ID_Tipo_producto.Nombre_tipo_producto }}"
                                         data-subtipo="{% if producto.ID_Subtipo %}{{ producto.ID_Subtipo.Nombre_subtipo }}{% else %}Sin subtipo{% endif %}"
-                                        data-precio="$ {{ producto.Precio|floatformat:'-2g' }}"
-                                        data-presentacion="{{ producto.Cantidad_presentacion|floatformat:'-2' }} {{ producto.Unidad_medida_producto|default:'' }}"
+                                        data-precio="{{ producto.Precio|unlocalize }}"
+                                        data-presentacion="{{ producto.Cantidad_presentacion|floatformat:'-2' }} {% if producto.Unidad_medida_producto == 'litros' %}{% if producto.Cantidad_presentacion == 1 %}litro{% else %}litros{% endif %}{% else %}{{ producto.Unidad_medida_producto|default:'' }}{% endif %}"
                                         data-stock="{% if stock %}{{ stock.Cantidad_stock }}{% else %}0{% endif %}"
                                         data-estado="{{ producto.Estado_producto }}"
                                         data-lotes="{{ producto.num_lotes|default:0 }}"
@@ -963,11 +982,35 @@
 
 
     /* =====================================================
+       PRECIOS CON FORMATO ARGENTINO: $ 10.000 o $ 1.250,50
+    ===================================================== */
+
+    function pesos(valor) {
+        return '$ ' + Number(valor).toLocaleString('es-AR', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+        });
+    }
+
+    document.querySelectorAll('.pr-precio[data-pesos]').forEach(function (el) {
+        el.textContent = pesos(el.dataset.pesos);
+    });
+
+
+    /* =====================================================
        TARJETAS: barra de stock, aviso de mínimo y entrada animada
     ===================================================== */
 
+    // Producto que todavía no tuvo ningún ingreso (sin lotes).
+    function esNuevo(col) {
+        return Number(col.dataset.lotes) === 0;
+    }
+
+    // Alerta de stock mínimo: solo productos activos que ya tuvieron ingresos.
     function esStockBajo(col) {
-        return Number(col.dataset.stock) <= Number(col.dataset.minimo);
+        return col.dataset.estado === 'Activo' &&
+               !esNuevo(col) &&
+               Number(col.dataset.stock) <= Number(col.dataset.minimo);
     }
 
     columnas.forEach(function (col) {
@@ -988,8 +1031,10 @@
         setTimeout(function () { barra.style.width = porcentaje + '%'; }, 300);
 
         if (esStockBajo(col)) {
-            col.querySelector('.pr-chip-bajo').hidden = false;
+            col.querySelector('.pr-chip-bajo:not(.pr-chip-nuevo)').hidden = false;
             col.querySelector('.pr-stock-valor').classList.add('pr-texto-rojo');
+        } else if (col.dataset.estado === 'Activo' && esNuevo(col)) {
+            col.querySelector('.pr-chip-nuevo').hidden = false;
         }
     });
 
@@ -1018,14 +1063,17 @@
         })(inicio);
     }
 
-    contar(document.getElementById('statActivos'),
-        columnas.filter(function (c) { return c.dataset.estado === 'Activo'; }).length);
+    // Activos + Inactivos = total de productos.
+    // Stock mínimo y Sin stock cuentan solo los activos.
+    const activos = columnas.filter(function (c) { return c.dataset.estado === 'Activo'; });
+
+    contar(document.getElementById('statActivos'), activos.length);
     contar(document.getElementById('statBajo'),
-        columnas.filter(function (c) { return c.dataset.estado === 'Activo' && esStockBajo(c); }).length);
+        activos.filter(esStockBajo).length);
     contar(document.getElementById('statSinStock'),
-        columnas.filter(function (c) { return Number(c.dataset.stock) === 0; }).length);
-    contar(document.getElementById('statConFoto'),
-        columnas.filter(function (c) { return c.dataset.foto === '1'; }).length);
+        activos.filter(function (c) { return Number(c.dataset.stock) === 0; }).length);
+    contar(document.getElementById('statInactivos'),
+        columnas.length - activos.length);
 
 
     /* =====================================================
@@ -1038,6 +1086,7 @@
     const orden = document.getElementById('ordenProductos');
 
     const ORDENES = {
+        'recientes': function (a, b) { return b.dataset.id - a.dataset.id; },
         'nombre': function (a, b) { return a.dataset.nombre.localeCompare(b.dataset.nombre); },
         'precio-asc': function (a, b) { return a.dataset.precio - b.dataset.precio; },
         'precio-desc': function (a, b) { return b.dataset.precio - a.dataset.precio; },
@@ -1339,7 +1388,7 @@
             document.getElementById('el_descripcion').textContent = d.descripcion || 'Sin descripción';
             document.getElementById('el_tipo').textContent = d.tipo;
             document.getElementById('el_subtipo').textContent = d.subtipo;
-            document.getElementById('el_precio').textContent = d.precio;
+            document.getElementById('el_precio').textContent = pesos(d.precio);
             document.getElementById('el_presentacion').textContent = d.presentacion;
             document.getElementById('el_stock').textContent = stock + ' un.';
             document.getElementById('el_lotes').textContent = lotes;
@@ -1375,17 +1424,29 @@
             const confirmar = document.getElementById('el_confirmar');
 
             if (stock > 0 || lotes > 0) {
+                const motivo = stock > 0
+                    ? 'Tiene ' + stock + ' unidades en stock'
+                    : 'Tiene ' + lotes + (lotes === 1 ? ' lote asociado' : ' lotes asociados');
+
                 aviso.className = 'pr-aviso pr-aviso-bloqueo';
                 document.getElementById('el_aviso_titulo').textContent = 'No se puede eliminar este producto.';
-                document.getElementById('el_aviso_texto').textContent = stock > 0
-                    ? 'Tiene ' + stock + ' unidades en stock. Para dejar de usarlo, cambie su estado a Inactivo desde Editar.'
-                    : 'Tiene ' + lotes + (lotes === 1 ? ' lote asociado' : ' lotes asociados') +
-                      '. Para conservar la trazabilidad, cambie su estado a Inactivo desde Editar.';
+
+                if (d.estado === 'Activo') {
+                    // Todavía se usa: se sugiere desactivarlo.
+                    document.getElementById('el_aviso_texto').textContent = motivo +
+                        '. Para dejar de usarlo, cambie su estado a Inactivo desde Editar.';
+                } else {
+                    // Ya está inactivo: no hay que hacer nada más.
+                    document.getElementById('el_aviso_texto').textContent = motivo +
+                        '. Ya está inactivo y se conserva en el sistema para mantener la trazabilidad.';
+                }
+
                 confirmar.disabled = true;
             } else {
                 aviso.className = 'pr-aviso';
                 document.getElementById('el_aviso_titulo').textContent = '¿Eliminar este producto definitivamente?';
-                document.getElementById('el_aviso_texto').textContent = 'Esta acción no se puede deshacer. También se borra su foto.';
+                document.getElementById('el_aviso_texto').textContent = 'Esta acción no se puede deshacer.' +
+                (d.imagen ? ' También se borra su foto.' : '');
                 confirmar.disabled = false;
             }
 

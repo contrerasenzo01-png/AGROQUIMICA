@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}?v=13">
     <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
@@ -18,7 +18,7 @@
     <!-- ENCABEZADO -->
     <header class="al-header">
         <h1 class="al-title">Auditoría del sistema</h1>
-            <p class="av-subtitulo">Registro de las acciones que realizan los usuarios en el sistema.</p>
+        <p class="av-subtitulo">Registro de las acciones que realizan los usuarios en el sistema.</p>
     </header>
 
     {% include 'inventario/_resumen.html' %}
@@ -116,12 +116,11 @@
 
         <div class="al-table-wrap">
 
-            <table class="table table-hover align-middle av-filas al-table">
+            <table class="table table-hover align-middle av-filas al-table aud-tabla">
 
                 <thead>
                     <tr>
-                        <th class="al-centro">Fecha</th>
-                        <th class="al-centro">Hora</th>
+                        <th>Fecha y hora</th>
                         <th>Usuario</th>
                         <th>Perfil</th>
                         <th>Sección</th>
@@ -136,34 +135,47 @@
                     {% for log in pagina %}
                     <tr>
 
-                        <td class="al-centro">{{ log.Fecha_hora|date:"d/m/Y" }}</td>
-                        <td class="al-centro">{{ log.Fecha_hora|date:"H:i" }}</td>
-
+                        <!-- FECHA Y HORA -->
                         <td>
+                            <div class="aud-doble">
+                                <span>{{ log.Fecha_hora|date:"d/m/Y" }}</span>
+                                <span class="aud-sub">{{ log.Fecha_hora|date:"H:i" }}</span>
+                            </div>
+                        </td>
+
+                        <!-- USUARIO -->
+                        <td class="aud-nowrap">
                             {% if log.ID_Usuario %}
-                                {{ log.ID_Usuario.Apellido_usuario }}
-                                {{ log.ID_Usuario.Nombre_usuario }}
+                                {{ log.ID_Usuario.Apellido_usuario }} {{ log.ID_Usuario.Nombre_usuario }}
                             {% else %}
                                 Sistema
                             {% endif %}
                         </td>
 
-                        <td>
+                        <!-- PERFIL -->
+                        <td class="aud-nowrap">
                             {{ log.ID_Usuario.ID_Perfil.Nombre_perfil|default:"Sin perfil" }}
                         </td>
 
+                        <!-- SECCIÓN -->
                         <td>
                             <span class="al-producto">{{ log.Seccion }}</span>
                         </td>
 
+                        <!-- REGISTRO
+                             En las acciones de sesión no hay un registro afectado:
+                             se muestra el usuario que entró, salió o se bloqueó. -->
                         <td class="aud-registro">
                             {% if log.nombre_registro %}
                                 {{ log.nombre_registro }}
+                            {% elif log.ID_Usuario and log.Accion == 'INICIO_SESION' or log.ID_Usuario and log.Accion == 'CIERRE_SESION' or log.ID_Usuario and log.Accion == 'BLOQUEO_INACTIVIDAD' %}
+                                {{ log.ID_Usuario.Usuario }}
                             {% else %}
                                 <span class="aud-registro-vacio">—</span>
                             {% endif %}
                         </td>
 
+                        <!-- ACCIÓN -->
                         <td>
                             {% if log.Accion == 'CREACION' %}
                                 <span class="al-badge aud-cre">Creación</span>
@@ -227,12 +239,14 @@
                             {% endif %}
                         </td>
 
+                        <!-- DETALLE -->
                         <td>
                             <button type="button"
                                     class="aud-btn-detalle av-ico-ver"
                                     data-url="{% url 'detalle_auditoria' log.pk %}"
-                                    onclick="abrirDetalleAuditoria(this)">
-                                Ver detalle
+                                    onclick="abrirDetalleAuditoria(this)"
+                                    aria-label="Ver detalle del registro">
+                                Ver
                             </button>
                         </td>
 
@@ -241,7 +255,7 @@
                     {% empty %}
 
                     <tr>
-                        <td colspan="8" class="al-vacio">
+                        <td colspan="7" class="al-vacio">
                             No se encontraron registros
                             con los criterios seleccionados.
                         </td>

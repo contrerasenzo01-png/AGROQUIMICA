@@ -7,6 +7,59 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/styles/gestion_remitos.css' %}">
 <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
+<style>
+    /* Campos que se muestran pero no se pueden editar */
+    .rm-solo-lectura,
+    .rm-solo-lectura:focus {
+        background-color: #f3f6f4;
+        color: #5c6b62;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .rm-candado {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #8a9a90;
+    }
+
+    .rm-candado svg {
+        width: 12px;
+        height: 12px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .rm-info-aviso {
+        background: #fff8e6;
+        border-color: #f3dfa6;
+        color: #7a5a00;
+    }
+
+    .rm-icon-btn[disabled] {
+        opacity: .45;
+        cursor: not-allowed;
+    }
+
+    html.modo-oscuro .rm-solo-lectura,
+    html.modo-oscuro .rm-solo-lectura:focus {
+        background-color: var(--d-surface-2, #1a2620);
+        color: var(--d-text-2, #a4b6ab);
+    }
+
+    html.modo-oscuro .rm-info-aviso {
+        background: rgba(245, 196, 0, .08);
+        border-color: rgba(245, 196, 0, .25);
+        color: #f5d76e;
+    }
+</style>
 {% endblock %}
 
 {% block contenido %}
@@ -121,7 +174,7 @@
                         <th>Proveedor</th>
                         <th>Fecha</th>
                         <th>Lotes asociados</th>
-                        <th>Unidades totales</th>
+                        <th>Cantidad ingresada</th>
                         <th>Estado</th>
                         <th style="text-align: right;">Acciones</th>
                     </tr>
@@ -255,11 +308,11 @@
                                                 <tr>
                                                     <th>Número de lote</th>
                                                     <th>Producto</th>
-                                                    <th>Vencimiento</th>
+                                                    <th>Fecha de vencimiento</th>
                                                     <th>Cajas</th>
                                                     <th>Unidades por caja</th>
-                                                    <th>Unidades totales</th>
-                                                    <th>Stock actual del lote</th>
+                                                    <th>Cantidad ingresada</th>
+                                                    <th>Cantidad actual</th>
                                                     <th>Estado</th>
                                                     <th style="text-align: right;">Acciones</th>
                                                 </tr>
@@ -270,13 +323,15 @@
                                                     <tr
                                                         data-lote-id="{{ lote.ID_Lote }}"
                                                         data-producto="{{ lote.ID_Producto_id }}"
+                                                        data-producto-nombre="{{ lote.ID_Producto.Nombre_producto }}{% if lote.ID_Producto.Cantidad_presentacion %} · {{ lote.ID_Producto.Cantidad_presentacion|floatformat:'-2' }} {{ lote.ID_Producto.Unidad_medida_producto|default:'' }}{% endif %}"
                                                         data-numero="{{ lote.Numero_lote }}"
                                                         data-cajas="{{ lote.Cantidad_cajas|default_if_none:'' }}"
                                                         data-unidades="{{ lote.Unidades_por_caja|default_if_none:'' }}"
                                                         data-ingresada="{{ lote.Cantidad_ingresada }}"
                                                         data-actual="{{ lote.Cantidad_actual }}"
-                                                        data-ingreso="{{ lote.Fecha_ingreso|date:'Y-m-d' }}"
-                                                        data-vencimiento="{{ lote.Fecha_vencimiento|date:'Y-m-d' }}">
+                                                        data-ingreso="{{ lote.Fecha_ingreso|date:'d/m/Y' }}"
+                                                        data-vencimiento="{{ lote.Fecha_vencimiento|date:'Y-m-d' }}"
+                                                        data-fecha-remito="{{ remito.Fecha_remito|date:'Y-m-d' }}">
 
                                                         <td>
                                                             <span class="rm-codigo">
@@ -327,13 +382,24 @@
                                                         <td>
                                                             <div class="rm-acciones">
                                                                 {% if remito.Estado_remito == 'Confirmado' and perm.remitos_gestionar %}
-                                                                <button type="button"
-                                                                        class="rm-icon-btn rm-editar"
-                                                                        title="Editar lote"
-                                                                        aria-label="Editar lote"
-                                                                        onclick="abrirModalEditarLote('{{ lote.ID_Lote }}')">
-                                                                    <svg class="rm-icon" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
-                                                                </button>
+                                                                    {% if lote.Cantidad_actual > 0 %}
+                                                                        <button type="button"
+                                                                                class="rm-icon-btn rm-editar"
+                                                                                title="Editar lote"
+                                                                                aria-label="Editar lote"
+                                                                                onclick="abrirModalEditarLote('{{ lote.ID_Lote }}')">
+                                                                            <svg class="rm-icon" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
+                                                                        </button>
+                                                                    {% else %}
+                                                                        <!-- Lote agotado: queda como historial, no se edita -->
+                                                                        <button type="button"
+                                                                                class="rm-icon-btn"
+                                                                                title="Lote agotado: no se puede modificar"
+                                                                                aria-label="Lote agotado: no se puede modificar"
+                                                                                disabled>
+                                                                            <svg class="rm-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                                                        </button>
+                                                                    {% endif %}
                                                                 {% endif %}
                                                             </div>
                                                         </td>
@@ -660,7 +726,10 @@
 </div>
 
 
-<!-- MODAL EDITAR LOTE -->
+<!-- MODAL EDITAR LOTE
+     Solo se corrigen errores de carga. Producto, unidades totales,
+     cantidad actual y fecha de ingreso se muestran pero no se editan
+     (no tienen "name": no se envían al servidor). -->
 <div class="rm-modal" id="modalEditarLote" aria-hidden="true">
     <div class="rm-modal-box"
          role="dialog"
@@ -670,7 +739,7 @@
         <div class="rm-modal-head">
             <div>
                 <h2 id="tituloEditarLote">Editar lote</h2>
-                <p>Modifique los datos registrados del lote.</p>
+                <p>Corrija los datos que se cargaron mal.</p>
             </div>
 
             <button type="button"
@@ -679,7 +748,7 @@
                     aria-label="Cerrar">✕</button>
         </div>
 
-        <form method="POST" action="{% url 'gestion_remitos' %}">
+        <form method="POST" action="{% url 'gestion_remitos' %}" id="formEditarLote">
             {% csrf_token %}
             <input type="hidden" name="accion" value="editar_lote">
             <input type="hidden" name="ID_Lote" id="editar_lote_id">
@@ -688,17 +757,17 @@
                 <div class="rm-grid">
 
                     <div class="rm-grupo rm-full">
-                        <label for="editar_lote_producto">Producto</label>
-                        <select class="form-select" name="ID_Producto"
-                                id="editar_lote_producto"
-                                required>
-                            <option value="">Seleccione un producto</option>
-                            {% for producto in productos_alta %}
-                                <option value="{{ producto.ID_Producto }}">
-                                    {{ producto.Nombre_producto }}{% if producto.Cantidad_presentacion %} · {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}{% endif %}
-                                </option>
-                            {% endfor %}
-                        </select>
+                        <label for="editar_lote_producto">
+                            Producto
+                            <span class="rm-candado" title="No se puede modificar">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                Fijo
+                            </span>
+                        </label>
+                        <input class="form-control rm-solo-lectura" type="text"
+                               id="editar_lote_producto"
+                               readonly
+                               tabindex="-1">
                     </div>
 
                     <div class="rm-grupo">
@@ -711,7 +780,21 @@
                     </div>
 
                     <div class="rm-grupo">
-                        <label for="editar_lote_cajas">Cantidad de cajas</label>
+                        <label for="editar_lote_vencimiento">Fecha de vencimiento</label>
+                        <input class="form-control" type="date"
+                               name="Fecha_vencimiento"
+                               id="editar_lote_vencimiento"
+                               required>
+                    </div>
+
+                    <div class="rm-grupo">
+                        <label for="editar_lote_cajas">
+                            Cantidad de cajas
+                            <span class="rm-candado rm-candado-cantidades" hidden>
+                                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                Fijo
+                            </span>
+                        </label>
                         <input class="form-control" type="number"
                                name="Cantidad_cajas"
                                id="editar_lote_cajas"
@@ -721,7 +804,13 @@
                     </div>
 
                     <div class="rm-grupo">
-                        <label for="editar_lote_upc">Unidades por caja</label>
+                        <label for="editar_lote_upc">
+                            Unidades por caja
+                            <span class="rm-candado rm-candado-cantidades" hidden>
+                                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                Fijo
+                            </span>
+                        </label>
                         <input class="form-control" type="number"
                                name="Unidades_por_caja"
                                id="editar_lote_upc"
@@ -732,44 +821,46 @@
 
                     <div class="rm-grupo">
                         <label for="editar_lote_total">Unidades totales</label>
-                        <input class="form-control" type="text"
+                        <input class="form-control rm-solo-lectura" type="text"
                                id="editar_lote_total"
                                readonly
                                tabindex="-1">
                     </div>
 
                     <div class="rm-grupo">
-                        <label for="editar_lote_actual">Cantidad actual</label>
-                        <input class="form-control" type="number"
-                               name="Cantidad_actual"
+                        <label for="editar_lote_actual">
+                            Stock actual del lote
+                            <span class="rm-candado" title="Sale de los movimientos del lote">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                Automático
+                            </span>
+                        </label>
+                        <input class="form-control rm-solo-lectura" type="text"
                                id="editar_lote_actual"
-                               min="0"
-                               step="1"
-                               required>
+                               readonly
+                               tabindex="-1">
                     </div>
 
                     <div class="rm-grupo">
-                        <label for="editar_lote_ingreso">Fecha de ingreso</label>
-                        <input class="form-control" type="date"
-                               name="Fecha_ingreso"
+                        <label for="editar_lote_ingreso">
+                            Fecha de ingreso
+                            <span class="rm-candado" title="No se puede modificar">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                Fijo
+                            </span>
+                        </label>
+                        <input class="form-control rm-solo-lectura" type="text"
                                id="editar_lote_ingreso"
-                               required>
-                    </div>
-
-                    <div class="rm-grupo">
-                        <label for="editar_lote_vencimiento">Fecha de vencimiento</label>
-                        <input class="form-control" type="date"
-                               name="Fecha_vencimiento"
-                               id="editar_lote_vencimiento"
-                               required>
+                               readonly
+                               tabindex="-1">
                     </div>
 
                 </div>
 
-                <div class="rm-info">
-                    Las unidades totales se calculan como cajas por unidades por caja.
-                    Los cambios en el producto o las cantidades pueden estar
-                    restringidos si el lote tiene movimientos registrados.
+                <div class="rm-info" id="editar_lote_info">
+                    Se puede corregir el número de lote, el vencimiento y, si el lote
+                    todavía no tuvo salidas, las cajas y las unidades por caja.
+                    El stock actual se calcula con los movimientos.
                 </div>
             </div>
 
@@ -1138,11 +1229,28 @@
         document.getElementById('editar_numero').focus();
     };
 
-    /* EDITAR LOTE: UNIDADES TOTALES = CAJAS x UNIDADES POR CAJA */
+    /* ==========================================
+       EDITAR LOTE
+       - Producto, totales, stock actual e ingreso: solo lectura.
+       - Cajas y unidades: solo si el lote no tuvo salidas.
+       - Vencimiento: no antes de la fecha del remito.
+       El servidor (editar_lote en views.py) controla lo mismo.
+    ========================================== */
     const inputCajasEdicion = document.getElementById('editar_lote_cajas');
     const inputUpcEdicion = document.getElementById('editar_lote_upc');
     const inputTotalEdicion = document.getElementById('editar_lote_total');
     const inputActualEdicion = document.getElementById('editar_lote_actual');
+    const infoEdicion = document.getElementById('editar_lote_info');
+
+    const TEXTO_INFO_NORMAL =
+        'Se puede corregir el número de lote, el vencimiento y, si el lote ' +
+        'todavía no tuvo salidas, las cajas y las unidades por caja. ' +
+        'El stock actual se calcula con los movimientos.';
+
+    const TEXTO_INFO_SALIDAS =
+        'Este lote ya tuvo salidas: las cajas y las unidades por caja ' +
+        'no se pueden modificar. Solo se puede corregir el número de lote ' +
+        'y la fecha de vencimiento.';
 
     let loteIntacto = true;
 
@@ -1154,7 +1262,7 @@
             const total = cajas * unidades;
             inputTotalEdicion.value = total;
 
-            // Si el lote no tiene salidas, su stock acompaña al total.
+            // Lote sin salidas: su stock acompaña al total corregido.
             if (loteIntacto) {
                 inputActualEdicion.value = total;
             }
@@ -1165,6 +1273,22 @@
 
     inputCajasEdicion.addEventListener('input', actualizarTotalEdicion);
     inputUpcEdicion.addEventListener('input', actualizarTotalEdicion);
+
+    function bloquearCantidades(bloquear) {
+        [inputCajasEdicion, inputUpcEdicion].forEach(function (campo) {
+            // readonly (no disabled): el valor se sigue enviando.
+            campo.readOnly = bloquear;
+            campo.classList.toggle('rm-solo-lectura', bloquear);
+            campo.tabIndex = bloquear ? -1 : 0;
+        });
+
+        document.querySelectorAll('.rm-candado-cantidades').forEach(function (c) {
+            c.hidden = !bloquear;
+        });
+
+        infoEdicion.textContent = bloquear ? TEXTO_INFO_SALIDAS : TEXTO_INFO_NORMAL;
+        infoEdicion.classList.toggle('rm-info-aviso', bloquear);
+    }
 
     window.abrirModalEditarLote = function (id) {
         const fila = document.querySelector(
@@ -1180,6 +1304,12 @@
         const ingresada = parseInt(fila.dataset.ingresada, 10);
         const actual = parseInt(fila.dataset.actual, 10);
 
+        // Lotes agotados: no se editan (el botón ya no aparece).
+        if (actual <= 0) {
+            alert('No se puede modificar un lote agotado.');
+            return;
+        }
+
         // Lotes cargados antes de existir las cajas: se deducen si es posible.
         let cajas = fila.dataset.cajas;
 
@@ -1191,36 +1321,27 @@
 
         document.getElementById('editar_lote_id').value = id;
         document.getElementById('editar_lote_producto').value =
-            fila.dataset.producto;
+            fila.dataset.productoNombre || '';
         document.getElementById('editar_lote_numero').value =
             fila.dataset.numero;
         inputCajasEdicion.value = cajas || '';
         inputUpcEdicion.value = unidades || '';
         inputTotalEdicion.value = ingresada;
-        inputActualEdicion.value = fila.dataset.actual;
+        inputActualEdicion.value = actual;
         document.getElementById('editar_lote_ingreso').value =
-            fila.dataset.ingreso;
-        document.getElementById('editar_lote_vencimiento').value =
-            fila.dataset.vencimiento;
+            fila.dataset.ingreso || '';
 
-        const fechaIngreso = document.getElementById('editar_lote_ingreso');
         const fechaVencimiento = document.getElementById('editar_lote_vencimiento');
+        fechaVencimiento.value = fila.dataset.vencimiento;
+        fechaVencimiento.min = fila.dataset.fechaRemito || '';
 
-        fechaVencimiento.min = fechaIngreso.value;
-
-        fechaIngreso.onchange = function () {
-            fechaVencimiento.min = fechaIngreso.value;
-
-            if (fechaVencimiento.value < fechaIngreso.value) {
-                fechaVencimiento.value = fechaIngreso.value;
-            }
-        };
+        bloquearCantidades(!loteIntacto);
 
         const modal = document.getElementById('modalEditarLote');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
 
-        document.getElementById('editar_lote_producto').focus();
+        document.getElementById('editar_lote_numero').focus();
     };
 
     /* ANULAR REMITO */

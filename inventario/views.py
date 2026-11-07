@@ -895,9 +895,23 @@ def eliminar_proveedor(request, pk):
     return redirect('gestion_proveedores')
 
 
+
 # ============================================================
 # CAMBIAR ESTADO DEL PROVEEDOR
 # ============================================================
+
+def _resumen_proveedores():
+    """Totales que se actualizan en las tarjetas al dar de baja o activar."""
+
+    total = Proveedores.objects.count()
+    activos = Proveedores.objects.filter(estado_proveedor=True).count()
+
+    return {
+        'total': total,
+        'activos': activos,
+        'inactivos': total - activos,
+    }
+
 
 @require_POST
 def cambiar_estado_proveedor(request, pk):
@@ -1007,6 +1021,7 @@ def cambiar_estado_proveedor(request, pk):
                 'ok': True,
                 'mensaje': mensaje,
                 'activo': proveedor.estado_proveedor,
+                'resumen': _resumen_proveedores(),
             })
 
         messages.info(request, mensaje)
@@ -1063,6 +1078,7 @@ def cambiar_estado_proveedor(request, pk):
             'ok': True,
             'mensaje': mensaje,
             'activo': proveedor.estado_proveedor,
+            'resumen': _resumen_proveedores(),
         })
 
     messages.success(request, mensaje)
@@ -3740,6 +3756,7 @@ def gestion_alertas(request):
                 lote = Lotes.objects.filter(
                     ID_Lote=lote_id
                 ).first()
+                
 
             except (IndexError, ValueError):
                 lote = None
@@ -4622,6 +4639,7 @@ def gestion_remitos(request):
                 if Lotes.objects.filter(
                     ID_Producto=producto,
                     Numero_lote=numero_lote
+
                 ).exists():
                     messages.error(
                         request,
@@ -4796,60 +4814,44 @@ def gestion_remitos(request):
         # ====================================================
         # EDITAR DATOS DEL LOTE
         # ====================================================
+        # ====================================================
+        
         elif accion == 'editar_lote':
+
             lote_id = request.POST.get('ID_Lote', '').strip()
-            producto_id = request.POST.get('ID_Producto', '').strip()
+            
 
-            if not lote_id.isdigit() or not producto_id.isdigit():
-                messages.error(request, 'Complete todos los campos del lote.')
+            if not lote_id.isdigit():
+                messages.error(request, 'El lote seleccionado no es válido.')
                 return redirect('gestion_remitos')
 
-            datos_lote, error = _validar_lote(
-                request.POST.get('Numero_lote', ''),
-                request.POST.get('Cantidad_cajas', ''),
-                request.POST.get('Unidades_por_caja', ''),
-                request.POST.get('Fecha_vencimiento', ''),
-                hoy,
-                permitir_vencido=True
+            numero_lote, error = validar_codigo(
+                request.POST.get('Numero_lote', ''), 'Número de lote', 1, 50
             )
 
-            if error:
-                messages.error(request, error)
-                return redirect('gestion_remitos')
-
-            numero_lote = datos_lote['numero']
-            cajas = datos_lote['cajas']
-            unidades_caja = datos_lote['unidades_caja']
-            fecha_vencimiento = datos_lote['vencimiento']
-            cantidad_ingresada = datos_lote['cantidad']
-
-            cantidad_actual, error = validar_entero(
-                request.POST.get('Cantidad_actual', ''),
-                'Cantidad actual', 0, cantidad_ingresada
-            )
-
-            if error:
-                messages.error(request, error)
-                return redirect('gestion_remitos')
-
-            fecha_ingreso, error = validar_fecha(
-                request.POST.get('Fecha_ingreso', ''), 'Fecha de ingreso',
-                desde=hoy - timedelta(days=3650),
-                hasta=hoy,
-                msg_desde='La fecha de ingreso es demasiado antigua (máximo 10 años).',
-                msg_hasta='La fecha de ingreso no puede ser futura.'
-            )
-
-            if error:
-                messages.error(request, error)
-                return redirect('gestion_remitos')
-
-            if fecha_vencimiento < fecha_ingreso:
-                messages.error(
-                    request,
-                    'El vencimiento no puede ser anterior al ingreso.'
+            if not error:
+                cajas, error = validar_entero(
+                    request.POST.get('Cantidad_cajas', ''),
+                    'Cantidad de cajas', 1, 999999
                 )
+
+            if not error:
+                unidades_caja, error = validar_entero(
+                    request.POST.get('Unidades_por_caja', ''),
+                    'Unidades por caja', 1, 999999
+                )
+
+            if not error and cajas * unidades_caja > TOTAL_LOTE_MAX:
+                error = (
+                    'Un lote no puede superar las 10.000.000 unidades '
+                    '(cajas × unidades por caja).'
+                )
+
+            if error:
+                messages.error(request, error)
                 return redirect('gestion_remitos')
+
+            cantidad_ingresada = cajas * unidades_caja
 
             try:
                 with transaction.atomic():
@@ -4857,6 +4859,7 @@ def gestion_remitos(request):
                         'ID_Producto', 'ID_Remito'
                     ).get(ID_Lote=lote_id)
 
+                    # ---------- LOTES QUE NO SE PUEDEN EDITAR ----------
                     if lote.ID_Remito.Estado_remito == 'Anulado':
                         messages.error(
                             request,
@@ -4864,108 +4867,107 @@ def gestion_remitos(request):
                         )
                         return redirect('gestion_remitos')
 
-                    producto = Productos.objects.filter(
-                        ID_Producto=producto_id,
-                        Estado_producto='Activo'
-                    ).first()
-
-                    if not producto:
+                    if lote.Cantidad_actual <= 0:
                         messages.error(
                             request,
-                            'El producto seleccionado no existe o está inactivo.'
+                            'No se puede modificar un lote agotado: '
+                            'queda como registro histórico.'
                         )
                         return redirect('gestion_remitos')
 
-                    duplicado = Lotes.objects.filter(
-                        ID_Producto=producto,
-                        Numero_lote=numero_lote
-                    ).exclude(ID_Lote=lote.ID_Lote).exists()
+                    # ---------- VENCIMIENTO ----------
+                    fecha_vencimiento, error = validar_fecha(
+                        request.POST.get('Fecha_vencimiento', ''),
+                        'Fecha de vencimiento',
+                        desde=lote.ID_Remito.Fecha_remito,
+                        hasta=hoy + timedelta(days=5475),
+                        msg_desde=(
+                            'La fecha de vencimiento no puede ser anterior '
+                            'a la fecha del remito.'
+                        ),
+                        msg_hasta='La fecha de vencimiento no puede superar los 15 años.'
+                    )
 
-                    if duplicado:
+                    if error:
+                        messages.error(request, error)
+                        return redirect('gestion_remitos')
+
+                    # ---------- NÚMERO DE LOTE REPETIDO ----------
+                    if Lotes.objects.filter(
+                        ID_Producto=lote.ID_Producto,
+                        Numero_lote=numero_lote
+                    ).exclude(ID_Lote=lote.ID_Lote).exists():
                         messages.error(
                             request,
                             'Ya existe ese número de lote para el producto.'
                         )
                         return redirect('gestion_remitos')
 
-                    # Buscar el movimiento de entrada original.
+                    # ---------- CAJAS Y UNIDADES ----------
                     tipo_entrada = TiposMovimientos.objects.filter(
                         Nombre_tipo_movimiento__iexact='Entrada de lote'
                     ).first()
 
-                    if not tipo_entrada:
-                        messages.error(
-                            request,
-                            'No existe el tipo de movimiento "Entrada de lote".'
-                        )
-                        return redirect('gestion_remitos')
-
-                    entradas = MovimientosStock.objects.filter(
+                    entrada = MovimientosStock.objects.select_for_update().filter(
                         ID_Lote=lote,
                         ID_Tipo_movimiento=tipo_entrada
-                    )
+                    ).first() if tipo_entrada else None
 
-                    entrada = entradas.select_for_update().first()
-
-                    if not entrada:
-                        messages.error(
-                            request,
-                            'No se encontró el movimiento de entrada del lote.'
-                        )
-                        return redirect('gestion_remitos')
-
-                    # Verificar que no existan movimientos posteriores.
+                    # Salidas: cualquier movimiento que no sea la entrada,
+                    # o una cantidad actual distinta de la ingresada.
                     otros_movimientos = MovimientosStock.objects.filter(
                         ID_Lote=lote
                     ).exclude(
-                        ID_Movimiento_stock=entrada.ID_Movimiento_stock
+                        ID_Movimiento_stock=entrada.ID_Movimiento_stock if entrada else None
                     ).exists()
 
-                    cambio_producto = lote.ID_Producto_id != producto.pk
-                    if cambio_producto:
-                        messages.error(
-                            request,
-                            'No se puede cambiar el producto de un lote que ya tiene '
-                            'un movimiento de entrada registrado.'
-                        )
-                        return redirect('gestion_remitos')
-
-                    cambio_cantidades = (
-                        lote.Cantidad_ingresada != cantidad_ingresada
-                        or lote.Cantidad_actual != cantidad_actual
+                    tuvo_salidas = (
+                        otros_movimientos
+                        or lote.Cantidad_actual != lote.Cantidad_ingresada
                     )
 
-                    if otros_movimientos and (cambio_producto or cambio_cantidades):
+                    # Lotes viejos sin cajas guardadas: se compara el total.
+                    if lote.Cantidad_cajas is None or lote.Unidades_por_caja is None:
+                        cambio_cajas = cantidad_ingresada != lote.Cantidad_ingresada
+                    else:
+                        cambio_cajas = (
+                            cajas != lote.Cantidad_cajas
+                            or unidades_caja != lote.Unidades_por_caja
+                        )
+
+                    if cambio_cajas and tuvo_salidas:
                         messages.error(
                             request,
-                            'No se puede cambiar el producto o las cantidades '
-                            'porque el lote tiene otros movimientos registrados.'
+                            'No se pueden cambiar las cajas ni las unidades '
+                            'porque el lote ya tuvo salidas.'
                         )
                         return redirect('gestion_remitos')
 
-                    # La corrección de cantidades solo se permite
-                    # si el lote conserva únicamente su entrada original.
-                    if cambio_cantidades and (
-                        lote.Cantidad_actual != lote.Cantidad_ingresada
+                    cambio_total = cantidad_ingresada != lote.Cantidad_ingresada
+
+                    if (
+                        lote.Numero_lote == numero_lote
+                        and lote.Fecha_vencimiento == fecha_vencimiento
+                        and not cambio_cajas
                     ):
-                        messages.error(
+                        messages.info(
                             request,
-                            'No se pueden corregir las cantidades porque '
-                            'la cantidad actual ya es diferente de la ingresada.'
+                            'No se realizaron cambios en el lote.'
                         )
                         return redirect('gestion_remitos')
 
                     antes = snapshot(lote)
-                    if cambio_cantidades:
-                        cantidad_actual = cantidad_ingresada
-                    else:
-                        cantidad_actual = lote.Cantidad_actual
 
-                    # Actualizar el stock por la diferencia de entrada.
-                    if cambio_cantidades:
-                        diferencia = (
-                            cantidad_ingresada - lote.Cantidad_ingresada
-                        )
+                    # Si cambia el total, se corrige el stock y la entrada.
+                    if cambio_total:
+                        if not entrada:
+                            messages.error(
+                                request,
+                                'No se encontró el movimiento de entrada del lote.'
+                            )
+                            return redirect('gestion_remitos')
+
+                        diferencia = cantidad_ingresada - lote.Cantidad_ingresada
 
                         stock = Stock.objects.select_for_update().filter(
                             ID_Producto=lote.ID_Producto
@@ -4977,7 +4979,6 @@ def gestion_remitos(request):
                                 'No se encontró el stock del producto.'
                             )
                             return redirect('gestion_remitos')
-
 
                         if stock.Cantidad_stock + diferencia < 0:
                             messages.error(
@@ -4992,19 +4993,16 @@ def gestion_remitos(request):
                         # Si la corrección bajó el stock, puede quedar en el mínimo.
                         revisar_stock(stock, usuario)
 
-                        # Actualizar el movimiento de entrada existente.
                         entrada.Cantidad_movimiento_stock = cantidad_ingresada
-                        entrada.save(
-                            update_fields=['Cantidad_movimiento_stock']
-                        )
+                        entrada.save(update_fields=['Cantidad_movimiento_stock'])
 
-                    lote.ID_Producto = producto
+                        # El lote está intacto: su cantidad actual es el total.
+                        lote.Cantidad_actual = cantidad_ingresada
+
                     lote.Numero_lote = numero_lote
                     lote.Cantidad_cajas = cajas
                     lote.Unidades_por_caja = unidades_caja
                     lote.Cantidad_ingresada = cantidad_ingresada
-                    lote.Cantidad_actual = cantidad_actual
-                    lote.Fecha_ingreso = fecha_ingreso
                     lote.Fecha_vencimiento = fecha_vencimiento
                     lote.save()
 
@@ -5668,6 +5666,10 @@ def registrar_egreso(request):
     )
 
     lote_base = Lotes.objects.filter(ID_Lote=lote_id).first()
+
+    if not lote_base:
+        messages.error(request, 'El lote seleccionado no existe.')
+        return redirect('gestion_productos')
 
     if error:
         messages.error(request, error)

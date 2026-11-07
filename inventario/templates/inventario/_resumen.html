@@ -1,6 +1,8 @@
 {% comment %}
     Indicadores de resumen (mismo diseño que los de Productos).
     La vista manda 'resumen': lista armada con resumen.indicador().
+
+    data-resumen-valor identifica cada número para poder actualizarlo
 {% endcomment %}
 {% if resumen %}
 <div class="row g-3 mb-4 av-resumen">
@@ -11,7 +13,7 @@
                     <svg class="av-stat-svg" viewBox="0 0 24 24" aria-hidden="true">{{ s.icono }}</svg>
                 </span>
                 <div>
-                    <strong>{{ s.valor }}</strong>
+                    <strong data-resumen-valor="{{ s.etiqueta|slugify }}">{{ s.valor }}</strong>
                     <span>{{ s.etiqueta }}</span>
                 </div>
             </div>
