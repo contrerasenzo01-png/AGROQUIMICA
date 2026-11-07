@@ -27,7 +27,7 @@ from .models import Usuarios
 
 logger = logging.getLogger(__name__)
 
-LIMITE_PEDIDOS = 3
+LIMITE_PEDIDOS = 5
 VENTANA_SEGUNDOS = 60 * 60
 
 
