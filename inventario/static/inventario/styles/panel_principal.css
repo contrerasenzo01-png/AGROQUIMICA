@@ -358,3 +358,263 @@ html.modo-oscuro .pp-panel .alert-light {
     border-color: var(--d-border-2);
     color: var(--d-text-2);
 }
+
+
+/* ==========================================
+   5. PORTADA (encabezado con la foto de los productos)
+   La foto va a la derecha y se funde con el fondo de la
+   página: mask-image la vuelve transparente hacia la izquierda
+   y hacia abajo, así el degradé funciona con cualquier color
+   de fondo (modo claro y modo oscuro).
+   ========================================== */
+
+.pp-hero {
+    position: relative;
+    isolation: isolate;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    margin-top: -6px;
+    padding: 28px 0;
+}
+
+/* --- Foto --- */
+.pp-hero-foto {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 68%;
+    overflow: hidden;
+    border-radius: 0 18px 18px 0;
+    opacity: 0;
+    transition: opacity .9s ease;
+
+    -webkit-mask-image:
+        linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .35) 22%, #000 55%),
+        linear-gradient(to bottom, #000 62%, transparent 100%);
+    -webkit-mask-composite: source-in;
+            mask-image:
+        linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .35) 22%, #000 55%),
+        linear-gradient(to bottom, #000 62%, transparent 100%);
+            mask-composite: intersect;
+}
+
+.pp-hero-foto.lista {
+    opacity: 1;
+}
+
+.pp-hero-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 45% 40%;
+    transform: scale(1.04);
+    animation: pp-hero-zoom 24s ease-in-out infinite alternate;
+}
+
+/* Velo verde muy suave encima de la foto, del color de la marca */
+.pp-hero-foto::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, rgba(24, 90, 56, .28), rgba(24, 90, 56, 0) 55%, rgba(245, 196, 0, .08));
+    mix-blend-mode: multiply;
+}
+
+/* --- Brillos de fondo --- */
+.pp-hero-brillo {
+    position: absolute;
+    z-index: -2;
+    border-radius: 50%;
+    filter: blur(40px);
+    pointer-events: none;
+}
+
+.pp-hero-brillo-1 {
+    width: 320px;
+    height: 320px;
+    left: -80px;
+    top: -120px;
+    background: radial-gradient(circle, rgba(46, 157, 102, .22), transparent 70%);
+    animation: pp-hero-flotar 14s ease-in-out infinite alternate;
+}
+
+.pp-hero-brillo-2 {
+    width: 260px;
+    height: 260px;
+    left: 26%;
+    bottom: -140px;
+    background: radial-gradient(circle, rgba(245, 196, 0, .16), transparent 70%);
+    animation: pp-hero-flotar 18s ease-in-out infinite alternate-reverse;
+}
+
+/* --- Texto --- */
+.pp-hero-texto {
+    position: relative;
+    max-width: 520px;
+}
+
+.pp-hero-fecha {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #185a38;
+    background: rgba(255, 255, 255, .7);
+    border: 1px solid #d5e7dc;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.pp-hero-punto {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2e9d66;
+    box-shadow: 0 0 0 0 rgba(46, 157, 102, .6);
+    animation: pp-hero-pulso 2.2s infinite;
+}
+
+.pp-hero-titulo {
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(26px, 3vw, 38px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.5px;
+    margin-bottom: 8px;
+    color: var(--bs-emphasis-color);
+}
+
+.pp-hero-titulo span {
+    background: linear-gradient(90deg, #185a38, #2e9d66 55%, #c9a200);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+}
+
+.pp-hero-sub {
+    margin-bottom: 18px;
+    font-size: 14px;
+    color: var(--bs-secondary-color);
+}
+
+.pp-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: transform .2s, box-shadow .2s;
+}
+
+.pp-hero-btn .pp-svg {
+    width: 16px;
+    height: 16px;
+}
+
+.pp-hero-btn.btn-success {
+    box-shadow: 0 8px 18px -8px rgba(24, 90, 56, .7);
+}
+
+.pp-hero-btn:hover {
+    transform: translateY(-2px);
+}
+
+.pp-hero-btn.btn-outline-success {
+    background: rgba(255, 255, 255, .75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* --- Animaciones de la portada --- */
+@keyframes pp-hero-zoom {
+    from { transform: scale(1.04); }
+    to   { transform: scale(1.12) translateX(-1.5%); }
+}
+
+@keyframes pp-hero-flotar {
+    from { transform: translate(0, 0); }
+    to   { transform: translate(40px, 24px); }
+}
+
+@keyframes pp-hero-pulso {
+    0%   { box-shadow: 0 0 0 0 rgba(46, 157, 102, .55); }
+    70%  { box-shadow: 0 0 0 8px rgba(46, 157, 102, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 157, 102, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pp-hero-foto img,
+    .pp-hero-brillo,
+    .pp-hero-punto {
+        animation: none;
+    }
+
+    .pp-hero-foto {
+        transition: none;
+    }
+}
+
+/* --- Celulares y tablets: la foto arriba, el texto abajo --- */
+@media (max-width: 767.98px) {
+    .pp-hero {
+        flex-direction: column;
+        align-items: stretch;
+        min-height: 0;
+        padding: 0 0 8px;
+    }
+
+    .pp-hero-foto {
+        position: relative;
+        width: auto;
+        height: 190px;
+        margin: 0 -4px -56px;
+        border-radius: 16px;
+        -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+                mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+    }
+
+    .pp-hero-foto img {
+        object-position: 40% 45%;
+    }
+
+    .pp-hero-texto {
+        max-width: none;
+    }
+}
+
+/* --- Modo oscuro --- */
+html.modo-oscuro .pp-hero-foto img {
+    filter: brightness(.78) saturate(.95);
+}
+
+html.modo-oscuro .pp-hero-foto::after {
+    background: linear-gradient(110deg, rgba(10, 30, 20, .45), rgba(10, 30, 20, 0) 60%);
+}
+
+html.modo-oscuro .pp-hero-fecha {
+    color: var(--d-green-tx);
+    background: rgba(21, 31, 26, .7);
+    border-color: var(--d-border);
+}
+
+html.modo-oscuro .pp-hero-titulo span {
+    background: linear-gradient(90deg, #4ade80, #a3e635 55%, #f5c400);
+    -webkit-background-clip: text;
+            background-clip: text;
+}
+
+html.modo-oscuro .pp-hero-brillo-1 {
+    background: radial-gradient(circle, rgba(74, 222, 128, .14), transparent 70%);
+}
+
+html.modo-oscuro .pp-panel .pp-hero-btn.btn-outline-success {
+    background: rgba(21, 31, 26, .75) !important;
+}

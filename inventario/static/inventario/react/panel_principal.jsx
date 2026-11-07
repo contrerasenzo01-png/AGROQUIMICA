@@ -12,6 +12,13 @@ const DATOS = JSON.parse(
     document.getElementById('datos-panel').textContent
 );
 
+/* Foto de la portada (la ruta la pone el template con {% static %}) */
+const RAIZ = document.getElementById('panel-raiz');
+const FOTO_PORTADA = {
+    webp: RAIZ.dataset.fotoWebp || '',
+    jpg: RAIZ.dataset.fotoJpg || '',
+};
+
 
 /* ------------------------------------------------------------
    UTILIDADES
@@ -352,16 +359,64 @@ function opcionesStockBajo(items, oscuro, alHacerClic) {
 
 
 /* ------------------------------------------------------------
-   ENCABEZADO
+   ENCABEZADO CON PORTADA
+   La foto de los productos ocupa la derecha y se funde con el
+   fondo de la página con un degradé (máscara en el CSS), así
+   queda bien tanto en modo claro como en modo oscuro.
    ------------------------------------------------------------ */
 
-function Encabezado({ usuario }) {
+function Encabezado({ usuario, permisos, urls }) {
+    const [fotoLista, setFotoLista] = useState(false);
+    const hayFoto = Boolean(FOTO_PORTADA.webp || FOTO_PORTADA.jpg);
+
     return (
-        <header className="mb-4 pp-aparecer">
-            <h1 className="mb-1">Panel Principal</h1>
-            <p className="text-body-secondary small mb-0">
-                {saludoSegunHora()}, {usuario.nombre} · {fechaDeHoy()}
-            </p>
+        <header className="pp-hero mb-4">
+
+            {hayFoto && (
+                <picture className={'pp-hero-foto' + (fotoLista ? ' lista' : '')} aria-hidden="true">
+                    {FOTO_PORTADA.webp && <source srcSet={FOTO_PORTADA.webp} type="image/webp" />}
+                    <img
+                        src={FOTO_PORTADA.jpg || FOTO_PORTADA.webp}
+                        alt=""
+                        onLoad={() => setFotoLista(true)}
+                    />
+                </picture>
+            )}
+
+            {/* Brillos de color que se mueven lento detrás del texto */}
+            <span className="pp-hero-brillo pp-hero-brillo-1" aria-hidden="true"></span>
+            <span className="pp-hero-brillo pp-hero-brillo-2" aria-hidden="true"></span>
+
+            <div className="pp-hero-texto">
+                <span className="pp-hero-fecha pp-aparecer" style={{ '--pp-i': 0 }}>
+                    <span className="pp-hero-punto" aria-hidden="true"></span>
+                    {fechaDeHoy()}
+                </span>
+
+                <h1 className="pp-hero-titulo pp-aparecer" style={{ '--pp-i': 1 }}>
+                    {saludoSegunHora()}, <span>{usuario.nombre}</span>
+                </h1>
+
+                <p className="pp-hero-sub pp-aparecer" style={{ '--pp-i': 2 }}>
+                    Este es el resumen de hoy en Agroquímica del Valle.
+                    <span className={claseEtiqueta('success') + ' ms-2 align-middle'}>{usuario.perfil}</span>
+                </p>
+
+                {(permisos.productos || permisos.movimientos) && (
+                    <div className="d-flex flex-wrap gap-2 pp-aparecer" style={{ '--pp-i': 3 }}>
+                        {permisos.productos && (
+                            <a className="btn btn-success btn-sm pp-hero-btn" href={urls.productos}>
+                                <Icono nombre="productos" /> Ver productos
+                            </a>
+                        )}
+                        {permisos.movimientos && (
+                            <a className="btn btn-outline-success btn-sm pp-hero-btn" href={urls.movimientos}>
+                                Movimientos de stock →
+                            </a>
+                        )}
+                    </div>
+                )}
+            </div>
         </header>
     );
 }
@@ -775,7 +830,7 @@ function Panel() {
 
     return (
         <div className="container-fluid px-0">
-            <Encabezado usuario={usuario} />
+            <Encabezado usuario={usuario} permisos={permisos} urls={urls} />
 
             <Metricas metricas={DATOS.metricas} />
 

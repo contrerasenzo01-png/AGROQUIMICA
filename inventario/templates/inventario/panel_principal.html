@@ -15,7 +15,10 @@
     {{ datos_panel|json_script:"datos-panel" }}
 
     <!-- Acá React dibuja el panel (con clases de Bootstrap) -->
-    <div id="panel-raiz" class="pp-panel">
+    <!-- La foto de la portada se pasa a React con data-foto-* -->
+    <div id="panel-raiz" class="pp-panel"
+         data-foto-webp="{% static 'inventario/images/productos_estanteria.webp' %}"
+         data-foto-jpg="{% static 'inventario/images/productos_estanteria.jpg' %}">
         <p class="pp-cargando">Cargando panel…</p>
     </div>
 
