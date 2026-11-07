@@ -50,7 +50,7 @@ def baja_lote_vencido(request, id_lote):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para dar de baja lotes vencidos.'
+            'No tiene permiso para dar de baja lotes vencidos.'
         )
         return redirect('panel_principal')
 
@@ -127,7 +127,7 @@ def baja_lote_vencido(request, id_lote):
                 messages.error(
                     request,
                     'La cantidad del lote supera el stock del producto. '
-                    'Revisá el stock antes de dar de baja.'
+                    'Revise el stock antes de dar de baja.'
                 )
                 return redirect('registrar_ingreso_lote')
 

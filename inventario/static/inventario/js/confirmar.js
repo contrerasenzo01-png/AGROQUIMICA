@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var MENSAJE_DENEGADO = 'No tenés permiso para realizar esta acción.';
+    var MENSAJE_DENEGADO = 'No tiene permiso para realizar esta acción.';
 
     var confirmarNativo = window.confirm.bind(window);
     var yaConfirmado = false;

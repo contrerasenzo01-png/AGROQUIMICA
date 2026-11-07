@@ -4,12 +4,12 @@
 
 {% block formulario %}
 
-    <span class="form-eyebrow anim" style="--d: 1">Tu espacio de trabajo</span>
+    <span class="form-eyebrow anim" style="--d: 1">Su espacio de trabajo</span>
 
     <h2 class="anim" style="--d: 2">Bienvenido de nuevo</h2>
 
     <p class="description anim" style="--d: 3">
-        Ingresá tus credenciales para continuar.
+        Ingrese sus credenciales para continuar.
     </p>
 
     <form method="POST" action="{% url 'login' %}" id="loginForm" novalidate>
@@ -68,10 +68,10 @@
         </div>
 
         <!-- CONTRASEÑA -->
-        {% include 'inventario/_acceso_campo_clave.html' with id='password' etiqueta='Contraseña' placeholder='Ingresá tu contraseña' autocompletar='current-password' error_campo=errores.password d=5 %}
+        {% include 'inventario/_acceso_campo_clave.html' with id='password' etiqueta='Contraseña' placeholder='Ingrese su contraseña' autocompletar='current-password' error_campo=errores.password d=5 %}
 
         <div class="forgot-row anim" style="--d: 6">
-            <a href="{% url 'recuperar_contrasena' %}">¿Olvidaste tu contraseña?</a>
+            <a href="{% url 'recuperar_contrasena' %}">¿Olvidó su contraseña?</a>
         </div>
 
         <button type="submit" class="btn-submit anim" style="--d: 7">

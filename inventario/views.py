@@ -174,14 +174,14 @@ def login_view(request):
 
             elif not usuario.Estado_usuario:
                 error_message = (
-                    'Tu usuario se encuentra inactivo. '
-                    'Comunicate con el administrador.'
+                    'Su usuario se encuentra inactivo. '
+                    'Comuníquese con el administrador.'
                 )
 
             elif not usuario.ID_Perfil or not usuario.ID_Perfil.Estado_perfil:
                 error_message = (
-                    'Tu perfil no está habilitado. '
-                    'Comunicate con el administrador.'
+                    'Su perfil no está habilitado. '
+                    'Comuníquese con el administrador.'
                 )
 
             else:
@@ -611,7 +611,7 @@ def gestion_proveedores(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar proveedores.'
+            'No tiene permiso para consultar proveedores.'
         )
         return redirect('panel_principal')
 
@@ -636,7 +636,7 @@ def crear_proveedor(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para crear proveedores.'
+            'No tiene permiso para crear proveedores.'
         )
         return redirect('panel_principal')
 
@@ -677,7 +677,7 @@ def crear_proveedor(request):
         form.add_error(
             None,
             'No se pudo registrar el proveedor. '
-            'Verificá que el nombre no esté registrado.'
+            'Verifique que el nombre no esté registrado.'
         )
 
         return _render_proveedores(
@@ -710,7 +710,7 @@ def editar_proveedor(request, pk):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para editar proveedores.'
+            'No tiene permiso para editar proveedores.'
         )
         return redirect('panel_principal')
 
@@ -783,7 +783,7 @@ def editar_proveedor(request, pk):
         form.add_error(
             None,
             'No se pudo actualizar el proveedor. '
-            'Verificá que el nombre no esté registrado.'
+            'Verifique que el nombre no esté registrado.'
         )
 
         return _render_proveedores(
@@ -819,7 +819,7 @@ def eliminar_proveedor(request, pk):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para eliminar proveedores.'
+            'No tiene permiso para eliminar proveedores.'
         )
         return redirect('panel_principal')
 
@@ -838,7 +838,7 @@ def eliminar_proveedor(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el proveedor "{nombre}" '
-            'porque tiene remitos registrados. Podés darlo de baja.'
+            'porque tiene remitos registrados. Puede darlo de baja.'
         )
 
         return redirect('gestion_proveedores')
@@ -851,7 +851,7 @@ def eliminar_proveedor(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el proveedor "{nombre}" '
-            'porque tiene productos asociados. Podés darlo de baja.'
+            'porque tiene productos asociados. Puede darlo de baja.'
         )
 
         return redirect('gestion_proveedores')
@@ -880,7 +880,7 @@ def eliminar_proveedor(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el proveedor "{nombre}" '
-            'porque tiene registros asociados. Podés darlo de baja.'
+            'porque tiene registros asociados. Puede darlo de baja.'
         )
 
         return redirect('gestion_proveedores')
@@ -942,7 +942,7 @@ def cambiar_estado_proveedor(request, pk):
                 {
                     'ok': False,
                     'error': (
-                        'No tenés permiso para cambiar '
+                        'No tiene permiso para cambiar '
                         'el estado de proveedores.'
                     )
                 },
@@ -951,7 +951,7 @@ def cambiar_estado_proveedor(request, pk):
 
         messages.error(
             request,
-            'No tenés permiso para cambiar el estado de proveedores.'
+            'No tiene permiso para cambiar el estado de proveedores.'
         )
 
         return redirect('panel_principal')
@@ -1079,7 +1079,7 @@ def gestion_tipos_productos(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar tipos de productos.'
+            'No tiene permiso para consultar tipos de productos.'
         )
         return redirect('panel_principal')
 
@@ -1124,7 +1124,7 @@ def crear_tipo_producto(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para gestionar tipos de productos.'
+            'No tiene permiso para gestionar tipos de productos.'
         )
         return redirect('panel_principal')
 
@@ -1177,7 +1177,7 @@ def editar_tipo_producto(request, pk):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para gestionar tipos de productos.'
+            'No tiene permiso para gestionar tipos de productos.'
         )
         return redirect('panel_principal')
 
@@ -1255,7 +1255,7 @@ def eliminar_tipo_producto(request, pk):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para gestionar tipos de productos.'
+            'No tiene permiso para gestionar tipos de productos.'
         )
         return redirect('panel_principal')
 
@@ -1365,7 +1365,7 @@ def gestion_subtipos(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar subtipos.'
+            'No tiene permiso para consultar subtipos.'
         )
         return redirect('panel_principal')
 
@@ -1701,22 +1701,25 @@ def gestion_usuarios(request):
 # ============================================================
 
 def validar_contrasena(contrasena, usuario=''):
-    """Devuelve un mensaje de error, o None si la contraseña es válida."""
+    """Devuelve un mensaje de error, o None si la contraseña es válida.
 
-    if len(contrasena) < 8:
-        return 'La contraseña debe tener al menos 8 caracteres.'
-    if len(contrasena) > 64:
-        return 'La contraseña no puede superar los 64 caracteres.'
+    Primero se avisa de los dos casos puntuales (espacios y nombre de
+    usuario); cualquier otro requisito incumplido (largo, mayúscula,
+    minúscula o número) devuelve un mensaje general.
+    """
+
     if re.search(r'\s', contrasena):
-        return 'La contraseña no puede tener espacios.'
-    if not re.search(r'[A-Z]', contrasena):
-        return 'La contraseña debe tener al menos una mayúscula.'
-    if not re.search(r'[a-z]', contrasena):
-        return 'La contraseña debe tener al menos una minúscula.'
-    if not re.search(r'\d', contrasena):
-        return 'La contraseña debe tener al menos un número.'
+        return 'No se pueden usar espacios.'
     if usuario and usuario.lower() in contrasena.lower():
-        return 'La contraseña no puede contener el nombre de usuario.'
+        return 'No se puede usar el nombre de usuario.'
+    if (
+        len(contrasena) < 8
+        or len(contrasena) > 64
+        or not re.search(r'[A-Z]', contrasena)
+        or not re.search(r'[a-z]', contrasena)
+        or not re.search(r'\d', contrasena)
+    ):
+        return 'La contraseña no cumplió con los requerimientos solicitados.'
     return None
 
 
@@ -1730,7 +1733,7 @@ def _errores_nueva_contrasena(nueva, confirmar, usuario):
     errores = {}
 
     if not nueva:
-        errores['nueva_contrasena'] = 'Ingresá la nueva contraseña.'
+        errores['nueva_contrasena'] = 'Ingrese la nueva contraseña.'
     else:
         error = validar_contrasena(nueva, usuario.Usuario)
 
@@ -1738,11 +1741,11 @@ def _errores_nueva_contrasena(nueva, confirmar, usuario):
             errores['nueva_contrasena'] = error
         elif check_password(nueva, usuario.Contrasena):
             errores['nueva_contrasena'] = (
-                'La nueva contraseña debe ser distinta de la actual.'
+                'La contraseña no puede ser igual a la anterior.'
             )
 
     if not confirmar:
-        errores['confirmar_contrasena'] = 'Repetí la nueva contraseña.'
+        errores['confirmar_contrasena'] = 'Repita la nueva contraseña.'
     elif confirmar != nueva:
         errores['confirmar_contrasena'] = 'Las contraseñas no coinciden.'
 
@@ -2110,7 +2113,7 @@ def restablecer_contrasena(request, pk):
 
 
 def cambiar_contrasena(request):
-    """Pantalla "Debés cambiar tu contraseña" (después de una temporal).
+    """Pantalla "Debe cambiar su contraseña" (después de una temporal).
 
     Los errores se devuelven por campo para mostrarlos en rojo
     debajo de cada uno (errores.nueva_contrasena / confirmar_contrasena).
@@ -2528,7 +2531,7 @@ def gestion_permisos(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar los permisos del sistema.'
+            'No tiene permiso para consultar los permisos del sistema.'
         )
         return redirect('panel_principal')
 
@@ -2764,7 +2767,7 @@ def _leer_datos_producto(request, estado_por_defecto, unidad_actual=None):
     # --------------------------------------------------------
 
     if not unidad_medida:
-        return None, 'Seleccioná la unidad de medida.'
+        return None, 'Seleccione la unidad de medida.'
 
     if unidad_medida not in UNIDADES_VALIDAS and unidad_medida != unidad_actual:
         return None, 'La unidad de medida seleccionada no es válida.'
@@ -2787,7 +2790,7 @@ def _leer_datos_producto(request, estado_por_defecto, unidad_actual=None):
     )
 
     if not proveedores_producto:
-        return None, 'Seleccioná al menos un proveedor que suministre el producto.'
+        return None, 'Seleccione al menos un proveedor que suministre el producto.'
 
     if len(proveedores_producto) != len(ids_proveedores):
         return None, 'Alguno de los proveedores seleccionados no existe o está inactivo.'
@@ -2934,7 +2937,7 @@ def gestion_productos(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar productos.'
+            'No tiene permiso para consultar productos.'
         )
         return redirect('panel_principal')
 
@@ -3035,7 +3038,7 @@ def crear_producto(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para gestionar productos.'
+            'No tiene permiso para gestionar productos.'
         )
         return redirect('panel_principal')
 
@@ -3139,7 +3142,7 @@ def editar_producto(request, pk):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para gestionar productos.'
+            'No tiene permiso para gestionar productos.'
         )
         return redirect('panel_principal')
 
@@ -3289,7 +3292,7 @@ def eliminar_producto(request, pk):
         messages.error(
             request,
             f'No se puede eliminar el producto "{nombre}" porque tiene '
-            f'{stock.Cantidad_stock} unidades en stock. Podés cambiar su estado a Inactivo.'
+            f'{stock.Cantidad_stock} unidades en stock. Puede cambiar su estado a Inactivo.'
         )
         return redirect('gestion_productos')
 
@@ -3361,7 +3364,7 @@ def registrar_ingreso_lote(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar lotes.'
+            'No tiene permiso para consultar lotes.'
         )
         return redirect('panel_principal')
 
@@ -3419,7 +3422,7 @@ def baja_lote_vencido(request, id_lote):
     usuario = usuario_con_acceso(request, 'egresos', gestionar=True)
 
     if not usuario:
-        messages.error(request, "No tenés permisos para realizar esta operación.")
+        messages.error(request, "No tiene permisos para realizar esta operación.")
         return redirect('panel_principal')
 
     # La operación debe realizarse mediante POST
@@ -3557,7 +3560,7 @@ def gestion_movimientos_stock(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar movimientos de stock.'
+            'No tiene permiso para consultar movimientos de stock.'
         )
         return redirect('panel_principal')
 
@@ -3673,7 +3676,7 @@ def gestion_alertas(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar el historial de alertas.'
+            'No tiene permiso para consultar el historial de alertas.'
         )
         return redirect('panel_principal')
 
@@ -3826,7 +3829,7 @@ def atender_alerta(request, id_alerta):
     if not usuario:
         if es_ajax:
             return JsonResponse(
-                {'ok': False, 'error': 'No tenés permiso para atender alertas.'},
+                {'ok': False, 'error': 'No tiene permiso para atender alertas.'},
                 status=403
             )
         return redirect('panel_principal')
@@ -3876,7 +3879,7 @@ def notificaciones_alertas(request):
 
     if not usuario:
         return JsonResponse(
-            {'error': 'No tenés permiso para ver las alertas.'},
+            {'error': 'No tiene permiso para ver las alertas.'},
             status=403
         )
 
@@ -4175,7 +4178,7 @@ def comprobante_movimiento_pdf(request, id_movimiento):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para emitir comprobantes.'
+            'No tiene permiso para emitir comprobantes.'
         )
         return redirect('panel_principal')
 
@@ -4343,7 +4346,7 @@ def remito_pdf(request, id_remito):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar remitos.'
+            'No tiene permiso para consultar remitos.'
         )
         return redirect('panel_principal')
 
@@ -4488,7 +4491,7 @@ def gestion_remitos(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para esta operación sobre remitos.'
+            'No tiene permiso para esta operación sobre remitos.'
         )
         return redirect('panel_principal')
 
@@ -4510,7 +4513,7 @@ def gestion_remitos(request):
             unidades_lista = request.POST.getlist('lote_unidades_caja')
 
             if not proveedor_id.isdigit():
-                messages.error(request, 'Seleccioná un proveedor.')
+                messages.error(request, 'Seleccione un proveedor.')
                 return redirect('gestion_remitos')
 
             numero_remito, fecha_remito, error = _validar_numero_y_fecha_remito(
@@ -4530,7 +4533,7 @@ def gestion_remitos(request):
             ) or not productos_ids:
                 messages.error(
                     request,
-                    'Agregá al menos un lote y completá todos sus datos.'
+                    'Agregue al menos un lote y complete todos sus datos.'
                 )
                 return redirect('gestion_remitos')
 
@@ -4567,7 +4570,7 @@ def gestion_remitos(request):
                 if not producto_id.strip().isdigit():
                     messages.error(
                         request,
-                        'Seleccioná el producto de cada lote.'
+                        'Seleccione el producto de cada lote.'
                     )
                     return redirect('gestion_remitos')
 
@@ -4630,7 +4633,7 @@ def gestion_remitos(request):
                 if combinacion in combinaciones:
                     messages.error(
                         request,
-                        'No podés repetir el número de lote para el mismo producto.'
+                        'No puede repetir el número de lote para el mismo producto.'
                     )
                     return redirect('gestion_remitos')
 
@@ -4796,7 +4799,7 @@ def gestion_remitos(request):
             producto_id = request.POST.get('ID_Producto', '').strip()
 
             if not lote_id.isdigit() or not producto_id.isdigit():
-                messages.error(request, 'Completá todos los campos del lote.')
+                messages.error(request, 'Complete todos los campos del lote.')
                 return redirect('gestion_remitos')
 
             datos_lote, error = _validar_lote(
@@ -5052,7 +5055,7 @@ def gestion_remitos(request):
             if not puede_accion(usuario, 'anular_remitos'):
                 messages.error(
                     request,
-                    'No tenés permiso para anular remitos.'
+                    'No tiene permiso para anular remitos.'
                 )
                 return redirect('gestion_remitos')
 
@@ -5396,7 +5399,7 @@ def gestion_auditoria(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar la auditoría.'
+            'No tiene permiso para consultar la auditoría.'
         )
         return redirect('panel_principal')
 
@@ -5494,7 +5497,7 @@ def detalle_auditoria(request, id_log):
 
     if not usuario:
         return JsonResponse(
-            {'error': 'No tenés permiso para consultar la auditoría.'},
+            {'error': 'No tiene permiso para consultar la auditoría.'},
             status=403
         )
 
@@ -5635,14 +5638,14 @@ def registrar_egreso(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para registrar egresos de stock.'
+            'No tiene permiso para registrar egresos de stock.'
         )
         return redirect('panel_principal')
 
     lote_id = request.POST.get('lote', '').strip()
 
     if not lote_id.isdigit():
-        messages.error(request, 'Seleccioná un lote válido.')
+        messages.error(request, 'Seleccione un lote válido.')
         return redirect('gestion_productos')
 
     try:
@@ -5799,7 +5802,7 @@ def anular_egreso(request, id_movimiento):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para anular egresos de stock.'
+            'No tiene permiso para anular egresos de stock.'
         )
         return redirect('panel_principal')
 
@@ -5992,7 +5995,7 @@ def gestion_reportes(request):
     if not usuario:
         messages.error(
             request,
-            'No tenés permiso para consultar los reportes.'
+            'No tiene permiso para consultar los reportes.'
         )
         return redirect('panel_principal')
 
@@ -6011,7 +6014,7 @@ def datos_evolucion(request):
 
     if not usuario_con_acceso(request, 'reportes'):
         return JsonResponse(
-            {'error': 'No tenés permiso para consultar los reportes.'},
+            {'error': 'No tiene permiso para consultar los reportes.'},
             status=403
         )
 
@@ -6079,7 +6082,7 @@ def bloqueo_sesion(request):
         password = request.POST.get('password', '')
 
         if usuario_ingresado.lower() != usuario.Usuario.lower():
-            error = 'Ingresá con el mismo usuario de la sesión bloqueada.'
+            error = 'Ingrese con el mismo usuario de la sesión bloqueada.'
 
         elif not check_password(password, usuario.Contrasena):
             error = 'Usuario o contraseña incorrectos.'
@@ -6173,7 +6176,7 @@ def recuperar_contrasena(request):
 
     # El error del formato va debajo del campo (errores.email).
     if not email_ingresado:
-        error = 'Ingresá tu correo electrónico.'
+        error = 'Ingrese su correo electrónico.'
     else:
         email, error = validar_email(email_ingresado, '')
 
@@ -6184,7 +6187,7 @@ def recuperar_contrasena(request):
     if limite_superado(request, email):
         contexto['error'] = (
             'Hiciste demasiados pedidos. '
-            'Esperá un rato antes de volver a intentarlo.'
+            'Espere un rato antes de volver a intentarlo.'
         )
         return render(request, 'inventario/recuperar_contrasena.html', contexto)
 
@@ -6203,14 +6206,14 @@ def recuperar_contrasena(request):
 
     elif any(not u.Estado_usuario for u in usuarios):
         contexto['error'] = (
-            'Tu usuario fue dado de baja. '
-            'Comunicate con un administrador.'
+            'Su usuario fue dado de baja. '
+            'Comuníquese con un administrador.'
         )
 
     elif usuarios:
         contexto['error'] = (
-            'Tu usuario no está habilitado para ingresar. '
-            'Comunicate con un administrador.'
+            'Su usuario no está habilitado para ingresar. '
+            'Comuníquese con un administrador.'
         )
 
     else:
@@ -6264,7 +6267,7 @@ def recuperar_confirmar(request, uidb64, token):
 
         messages.success(
             request,
-            'Tu contraseña se cambió correctamente. Ya podés ingresar.'
+            'Su contraseña se cambió correctamente. Ya puede ingresar.'
         )
 
         return redirect('login')

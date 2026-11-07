@@ -99,7 +99,7 @@ def validar_nombre(texto, etiqueta='', minimo=2, maximo=50, obligatorio=True):
             return valor, _m(
                 etiqueta,
                 f'no se permite el carácter «{c}». '
-                "Usá letras, números y . , - / & ( ) % + '"
+                "Use letras, números y . , - / & ( ) % + '"
             )
 
     if not valor[0].isalnum():
@@ -112,7 +112,7 @@ def validar_nombre(texto, etiqueta='', minimo=2, maximo=50, obligatorio=True):
         return valor, _m(etiqueta, 'no puede tener símbolos seguidos.')
 
     if _corrida(valor, str.isalpha) >= 4:
-        return valor, _m(etiqueta, 'tiene letras repetidas. Revisalo.')
+        return valor, _m(etiqueta, 'tiene letras repetidas. Revíselo.')
 
     if not (valor[-1].isalnum() or valor[-1] in ').%'):
         return valor, _m(etiqueta, 'no puede terminar con ese símbolo.')
@@ -150,7 +150,7 @@ def validar_persona(texto, etiqueta='', minimo=2, maximo=50, obligatorio=True):
         return valor, _m(etiqueta, 'no puede tener símbolos seguidos.')
 
     if _corrida(valor, str.isalpha) >= 4:
-        return valor, _m(etiqueta, 'tiene letras repetidas. Revisalo.')
+        return valor, _m(etiqueta, 'tiene letras repetidas. Revíselo.')
 
     if not (valor[-1].isalpha() or valor[-1] == '.'):
         return valor, _m(etiqueta, 'no puede terminar con ese símbolo.')
@@ -183,7 +183,7 @@ def validar_texto(texto, etiqueta='', minimo=0, maximo=200, obligatorio=False):
         return valor, _m(etiqueta, 'repite demasiadas veces el mismo símbolo.')
 
     if _corrida(valor, str.isalpha) >= 5:
-        return valor, _m(etiqueta, 'tiene letras repetidas. Revisalo.')
+        return valor, _m(etiqueta, 'tiene letras repetidas. Revíselo.')
 
     return valor, None
 
@@ -400,7 +400,7 @@ def validar_usuario_login(texto):
     valor = str(texto if texto is not None else '')
 
     if not valor:
-        return '', 'Ingresá tu usuario.'
+        return '', 'Ingrese su usuario.'
 
     if re.search(r'\s', valor):
         return valor, 'El usuario no puede tener espacios.'
@@ -426,7 +426,7 @@ def validar_contrasena_login(texto):
     valor = str(texto if texto is not None else '')
 
     if not valor:
-        return '', 'Ingresá tu contraseña.'
+        return '', 'Ingrese su contraseña.'
 
     if re.search(r'\s', valor):
         return valor, 'La contraseña no puede tener espacios.'

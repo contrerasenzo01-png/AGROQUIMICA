@@ -178,7 +178,7 @@
             })
             .catch(function () {
                 botonAtender.disabled = false;
-                botonAtender.title = 'No se pudo marcar. Probá de nuevo.';
+                botonAtender.title = 'No se pudo marcar. Intente nuevamente.';
             });
     }
 

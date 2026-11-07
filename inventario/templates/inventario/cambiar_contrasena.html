@@ -12,12 +12,12 @@
         </svg>
     </div>
 
-    <span class="form-eyebrow anim" style="--d: 2">Hola, {{ usuario.Nombre_usuario }}</span>
+    <span class="form-eyebrow anim" style="--d: 2">Bienvenido/a, {{ usuario.Nombre_usuario }}</span>
 
-    <h2 class="anim" style="--d: 3">Debés cambiar tu contraseña</h2>
+    <h2 class="anim" style="--d: 3">Debe cambiar su contraseña</h2>
 
     <p class="description anim" style="--d: 4">
-        Por seguridad, elegí una contraseña nueva antes de ingresar al
+        Por seguridad, elija una contraseña nueva antes de ingresar al
         sistema. La que usaste recién era temporal.
     </p>
 
@@ -36,11 +36,11 @@
             </div>
         {% endif %}
 
-        {% include 'inventario/_acceso_campo_clave.html' with id='nueva_contrasena' etiqueta='Nueva contraseña' placeholder='Escribí la nueva contraseña' autocompletar='new-password' error_campo=errores.nueva_contrasena d=5 %}
+        {% include 'inventario/_acceso_campo_clave.html' with id='nueva_contrasena' etiqueta='Nueva contraseña' placeholder='Escriba la nueva contraseña' autocompletar='new-password' error_campo=errores.nueva_contrasena d=5 %}
 
         {% include 'inventario/_acceso_reglas_clave.html' with campo='nueva_contrasena' d=6 %}
 
-        {% include 'inventario/_acceso_campo_clave.html' with id='confirmar_contrasena' etiqueta='Repetir nueva contraseña' placeholder='Repetí la nueva contraseña' autocompletar='new-password' error_campo=errores.confirmar_contrasena d=7 %}
+        {% include 'inventario/_acceso_campo_clave.html' with id='confirmar_contrasena' etiqueta='Repetir nueva contraseña' placeholder='Repita la nueva contraseña' autocompletar='new-password' error_campo=errores.confirmar_contrasena d=7 %}
 
         <button type="submit" class="btn-submit anim" style="--d: 8">
             <span class="btn-text">Cambiar contraseña</span>

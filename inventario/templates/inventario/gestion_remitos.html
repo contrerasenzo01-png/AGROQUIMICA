@@ -35,7 +35,7 @@
         <div>
             <h1 class="rm-title">Gestión de remitos</h1>
             <p class="rm-subtitle">
-                Administrá los remitos recibidos de los proveedores y consultá sus lotes.
+                Administre los remitos recibidos de los proveedores y consulte sus lotes.
             </p>
         </div>
         {% if perm.remitos_gestionar %}
@@ -109,7 +109,7 @@
         <div class="rm-card-header">
             <div>
                 <h2>Remitos registrados</h2>
-                <p>Consultá la información de cada ingreso de mercadería.</p>
+                <p>Consulte la información de cada ingreso de mercadería.</p>
             </div>
         </div>
 
@@ -419,7 +419,7 @@
 
             <div class="rm-modal-body">
                 <p class="rm-modal-intro">
-                    Completá los datos del remito y sus lotes asociados.
+                    Complete los datos del remito y sus lotes asociados.
                     Cada lote genera su movimiento de ingreso y actualiza el stock.
                 </p>
 
@@ -452,7 +452,7 @@
                         <select class="form-select" name="ID_Proveedor"
                                 id="crear_proveedor"
                                 required>
-                            <option value="">Seleccioná un proveedor</option>
+                            <option value="">Seleccione un proveedor</option>
                             {% for proveedor in proveedores_alta %}
                                 <option value="{{ proveedor.ID_Proveedor }}">
                                     {{ proveedor.nombre_proveedor }}
@@ -466,7 +466,7 @@
 
                         {% if not proveedores_alta %}
                             <small class="rm-ayuda">
-                                Primero tenés que registrar un proveedor para poder asociarlo al remito.
+                                Primero debe registrar un proveedor para poder asociarlo al remito.
                             </small>
                         {% endif %}
                     </div>
@@ -507,7 +507,7 @@
                             <select class="form-select" name="lote_producto"
                                     id="lote_producto___N__"
                                     required>
-                                <option value="">Primero seleccioná un proveedor</option>
+                                <option value="">Primero seleccione un proveedor</option>
                                 {% for producto in productos_alta %}
                                     <option value="{{ producto.ID_Producto }}"
                                             data-proveedores="{% for pr in producto.proveedores.all %}{{ pr.ID_Proveedor }}{% if not forloop.last %},{% endif %}{% endfor %}">
@@ -615,7 +615,7 @@
         <div class="rm-modal-head">
             <div>
                 <h2 id="tituloEditarRemito">Modificar remito</h2>
-                <p>Actualizá el número o la fecha del documento.</p>
+                <p>Actualice el número o la fecha del documento.</p>
             </div>
 
             <button type="button"
@@ -683,7 +683,7 @@
         <div class="rm-modal-head">
             <div>
                 <h2 id="tituloEditarLote">Editar lote</h2>
-                <p>Modificá los datos registrados del lote.</p>
+                <p>Modifique los datos registrados del lote.</p>
             </div>
 
             <button type="button"
@@ -705,7 +705,7 @@
                         <select class="form-select" name="ID_Producto"
                                 id="editar_lote_producto"
                                 required>
-                            <option value="">Seleccioná un producto</option>
+                            <option value="">Seleccione un producto</option>
                             {% for producto in productos_alta %}
                                 <option value="{{ producto.ID_Producto }}">
                                     {{ producto.Nombre_producto }}{% if producto.Cantidad_presentacion %} · {{ producto.Cantidad_presentacion|floatformat:"-2" }} {{ producto.Unidad_medida_producto|default:"" }}{% endif %}
@@ -880,7 +880,7 @@
                               required></textarea>
 
                     <div class="rm-anular-pie-texto">
-                        <span id="anular_ayuda">Escribí al menos 10 caracteres.</span>
+                        <span id="anular_ayuda">Escriba al menos 10 caracteres.</span>
                         <span id="anular_contador">0 / 200</span>
                     </div>
                 </div>
@@ -997,7 +997,7 @@
             if (!opcion.value) {
                 opcion.textContent = proveedor
                     ? 'Seleccionar producto del proveedor'
-                    : 'Primero seleccioná un proveedor';
+                    : 'Primero seleccione un proveedor';
                 return;
             }
 
@@ -1113,7 +1113,7 @@
             evento.preventDefault();
             mostrarError(
                 'Hay números de lote repetidos para un mismo producto. ' +
-                'Verificá los productos y sus números de lote.'
+                'Verifique los productos y sus números de lote.'
             );
             return;
         }
@@ -1254,7 +1254,7 @@
 
         ayudaAnulacion.textContent = valido
             ? 'Justificación lista.'
-            : 'Escribí al menos 10 caracteres.';
+            : 'Escriba al menos 10 caracteres.';
     }
 
     motivoAnulacion.addEventListener('input', validarMotivo);

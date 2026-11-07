@@ -132,19 +132,19 @@ function SelectorFoto({ vista, inicial, error, onElegir, onQuitar }) {
                 onDrop={alSoltar}
             >
                 {vista ? (
-                    <img key={vista} src={vista} alt="Tu foto de perfil" className="pf-foto-img" />
+                    <img key={vista} src={vista} alt="Su foto de perfil" className="pf-foto-img" />
                 ) : (
                     <span className="pf-foto-inicial" aria-hidden="true">{inicial}</span>
                 )}
 
                 <span className="pf-foto-capa">
                     <Icono nombre="subir" />
-                    <span>{arrastrando ? 'Soltá la foto acá' : (vista ? 'Cambiar foto' : 'Agregar foto')}</span>
+                    <span>{arrastrando ? 'Suelte la foto aquí' : (vista ? 'Cambiar foto' : 'Agregar foto')}</span>
                 </span>
             </div>
 
             <p className="small text-body-secondary mt-3 mb-2">
-                Arrastrá una foto o tocá el círculo.<br />
+                Arrastre una foto o haga clic en el círculo.<br />
                 JPG, PNG o WEBP · hasta {DATOS.limites.foto_mb} MB
             </p>
 
@@ -213,13 +213,13 @@ function Permisos({ permisos, urlDetalle }) {
             <div className="card-body">
                 <p className="small text-body-secondary mb-3">
                     {permisos.es_admin
-                        ? 'Tu perfil tiene acceso a todas las funciones del sistema.'
-                        : `Tu perfil tiene ${permisos.total} de ${permisos.total_catalogo} permisos. Los define un administrador.`}
+                        ? 'Su perfil tiene acceso a todas las funciones del sistema.'
+                        : `Su perfil tiene ${permisos.total} de ${permisos.total_catalogo} permisos. Los define un administrador.`}
                 </p>
 
                 {permisos.modulos.length === 0 ? (
                     <div className="alert alert-light small text-center py-2 mb-0">
-                        Tu perfil todavía no tiene permisos asignados.
+                        Su perfil todavía no tiene permisos asignados.
                     </div>
                 ) : (
                     <div className="pf-modulos">
@@ -260,8 +260,6 @@ function reglasContrasena(clave, usuario) {
         { texto: 'Mínimo 8 caracteres', ok: clave.length >= 8 },
         { texto: 'Una mayúscula y una minúscula', ok: /[A-Z]/.test(clave) && /[a-z]/.test(clave) },
         { texto: 'Al menos un número', ok: /\d/.test(clave) },
-        { texto: 'Sin espacios', ok: clave.length > 0 && !/\s/.test(clave) },
-        { texto: 'Sin tu nombre de usuario', ok: clave.length > 0 && !(usuario && clave.toLowerCase().includes(usuario.toLowerCase())) },
     ];
 }
 
@@ -301,11 +299,13 @@ function CambiarContrasena({ usuario }) {
 
     const validar = () => {
         const nuevos = {};
-        if (!claves.actual) nuevos.actual = 'Ingresá tu contraseña actual.';
-        if (!claves.nueva) nuevos.nueva = 'Ingresá la nueva contraseña.';
-        else if (reglas.some(r => !r.ok)) nuevos.nueva = 'La nueva contraseña no cumple los requisitos.';
-        else if (claves.nueva === claves.actual) nuevos.nueva = 'La nueva contraseña debe ser distinta de la actual.';
-        if (!claves.confirmar) nuevos.confirmar = 'Repetí la nueva contraseña.';
+        if (!claves.actual) nuevos.actual = 'Ingrese su contraseña actual.';
+        if (!claves.nueva) nuevos.nueva = 'Ingrese la nueva contraseña.';
+        else if (/\s/.test(claves.nueva)) nuevos.nueva = 'No se pueden usar espacios.';
+        else if (usuario && claves.nueva.toLowerCase().includes(usuario.toLowerCase())) nuevos.nueva = 'No se puede usar el nombre de usuario.';
+        else if (reglas.some(r => !r.ok) || claves.nueva.length > 64) nuevos.nueva = 'La contraseña no cumplió con los requerimientos solicitados.';
+        else if (claves.nueva === claves.actual) nuevos.nueva = 'La contraseña no puede ser igual a la anterior.';
+        if (!claves.confirmar) nuevos.confirmar = 'Repita la nueva contraseña.';
         else if (claves.confirmar !== claves.nueva) nuevos.confirmar = 'Las contraseñas no coinciden.';
         return nuevos;
     };
@@ -343,7 +343,7 @@ function CambiarContrasena({ usuario }) {
                 setErrores((resultado && resultado.errores) || {});
                 setAviso({
                     tipo: 'danger',
-                    texto: (resultado && resultado.error) || 'No se pudo cambiar la contraseña. Probá de nuevo en un momento.',
+                    texto: (resultado && resultado.error) || 'No se pudo cambiar la contraseña. Intente nuevamente en un momento.',
                 });
                 return;
             }
@@ -351,7 +351,7 @@ function CambiarContrasena({ usuario }) {
             cerrar();
             setAviso({ tipo: 'success', texto: resultado.mensaje });
         } catch (e) {
-            setAviso({ tipo: 'danger', texto: 'No hay conexión con el servidor. Revisá tu internet y probá de nuevo.' });
+            setAviso({ tipo: 'danger', texto: 'No hay conexión con el servidor. Revise su conexión a internet y intente nuevamente.' });
         } finally {
             setEnviando(false);
         }
@@ -393,7 +393,7 @@ function CambiarContrasena({ usuario }) {
                 <div>
                     <div className="fw-semibold">Contraseña</div>
                     <div className="small text-body-secondary">
-                        Cambiala cada tanto para mantener tu cuenta segura.
+                        Cámbiela cada tanto para mantener su cuenta segura.
                     </div>
                 </div>
 
@@ -542,15 +542,15 @@ function Perfil() {
         const nuevos = {};
         const V = window.Validar;
 
-        if (!limpiar(form.nombre)) nuevos.nombre = 'Ingresá tu nombre.';
+        if (!limpiar(form.nombre)) nuevos.nombre = 'Ingrese su nombre.';
         else if (V && V.persona(form.nombre)) nuevos.nombre = V.persona(form.nombre);
 
-        if (!limpiar(form.apellido)) nuevos.apellido = 'Ingresá tu apellido.';
+        if (!limpiar(form.apellido)) nuevos.apellido = 'Ingrese su apellido.';
         else if (V && V.persona(form.apellido)) nuevos.apellido = V.persona(form.apellido);
 
-        if (!form.email.trim()) nuevos.email = 'Ingresá tu correo electrónico.';
+        if (!form.email.trim()) nuevos.email = 'Ingrese su correo electrónico.';
         else if (V && V.email(form.email)) nuevos.email = V.email(form.email);
-        else if (!REGEX_EMAIL.test(form.email.trim())) nuevos.email = 'Ingresá un correo electrónico válido.';
+        else if (!REGEX_EMAIL.test(form.email.trim())) nuevos.email = 'Ingrese un correo electrónico válido.';
 
         return nuevos;
     };
@@ -593,7 +593,7 @@ function Perfil() {
                 setErrores((resultado && resultado.errores) || {});
                 setAviso({
                     tipo: 'danger',
-                    texto: (resultado && resultado.error) || 'No se pudo guardar. Probá de nuevo en un momento.',
+                    texto: (resultado && resultado.error) || 'No se pudo guardar. Intente nuevamente en un momento.',
                 });
                 return;
             }
@@ -609,7 +609,7 @@ function Perfil() {
 
             actualizarMenuLateral(guardado);
         } catch (e) {
-            setAviso({ tipo: 'danger', texto: 'No hay conexión con el servidor. Revisá tu internet y probá de nuevo.' });
+            setAviso({ tipo: 'danger', texto: 'No hay conexión con el servidor. Revise su conexión a internet y intente nuevamente.' });
         } finally {
             setGuardando(false);
         }
@@ -623,7 +623,7 @@ function Perfil() {
             <header className="mb-4 pf-aparecer">
                 <h1 className="mb-1">Mi perfil</h1>
                 <p className="text-body-secondary small mb-0">
-                    Actualizá tu foto y tus datos personales.
+                    Actualice su foto y sus datos personales.
                 </p>
             </header>
 
@@ -697,7 +697,7 @@ function Perfil() {
                                             autocompletar="email"
                                         />
                                         <div className="form-text">
-                                            A este correo te llegan las alertas y el enlace para recuperar tu contraseña.
+                                            A este correo le llegan las alertas y el enlace para recuperar su contraseña.
                                         </div>
                                     </div>
                                 </div>
@@ -706,7 +706,7 @@ function Perfil() {
                             <div className="card-footer bg-transparent d-flex flex-wrap justify-content-end align-items-center gap-2 py-3">
                                 {hayCambios && !guardando && (
                                     <span className="small text-body-secondary me-auto pf-pendiente">
-                                        Tenés cambios sin guardar
+                                        Tiene cambios sin guardar
                                     </span>
                                 )}
 
@@ -739,7 +739,7 @@ function Perfil() {
                             <div className="card-header bg-transparent d-flex align-items-center gap-2 py-3">
                                 <span className="pf-icono-titulo"><Icono nombre="candadoCerrado" /></span>
                                 <div>
-                                    <h2 className="mb-0">Datos de tu cuenta</h2>
+                                    <h2 className="mb-0">Datos de su cuenta</h2>
                                     <div className="small text-body-secondary">
                                         Los administra un administrador del sistema.
                                     </div>

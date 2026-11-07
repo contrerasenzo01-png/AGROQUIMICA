@@ -207,7 +207,7 @@
             <h2>Ventas vs. ingresos de mercadería por mes</h2>
             <button type="button" class="rep-btn-pdf" data-pdf="evolucion">Descargar PDF</button>
         </div>
-        <p>Unidades vendidas y unidades ingresadas por remito en los últimos 12 meses. Permite ver las épocas fuertes y si se está comprando de más o de menos respecto de lo que se vende. Con los filtros podés ver un período puntual o un tipo, subtipo o proveedor en particular.</p>
+        <p>Unidades vendidas y unidades ingresadas por remito en los últimos 12 meses. Permite ver las épocas fuertes y si se está comprando de más o de menos respecto de lo que se vende. Con los filtros puede ver un período puntual o un tipo, subtipo o proveedor en particular.</p>
 
         <div class="rep-filtros">
             <label class="rep-filtro">Tipo de producto
@@ -240,7 +240,7 @@
             <h2>Productos con más unidades vencidas</h2>
             <button type="button" class="rep-btn-pdf" data-pdf="vencidos">Descargar PDF</button>
         </div>
-        <p>Los 10 productos con mayor cantidad de unidades que se vencieron sin venderse. Ayuda a ajustar las próximas compras. Si filtrás por tipo, subtipo o proveedor, se muestran los 10 primeros de esa selección.</p>
+        <p>Los 10 productos con mayor cantidad de unidades que se vencieron sin venderse. Ayuda a ajustar las próximas compras. Si filtra por tipo, subtipo o proveedor, se muestran los 10 primeros de esa selección.</p>
 
         <div class="rep-filtros">
             <label class="rep-filtro">Tipo de producto
@@ -771,7 +771,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const hasta = inpHasta.value || hoyISO();
 
         if (!desde) {
-            mostrarErrorEvolucion('Indicá la fecha "Desde".');
+            mostrarErrorEvolucion('Indique la fecha "Desde".');
             return;
         }
 
@@ -1084,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await generarPDF(configPDF[boton.dataset.pdf]());
             } catch (e) {
                 console.error(e);
-                alert('No se pudo generar el PDF. Probá de nuevo.');
+                alert('No se pudo generar el PDF. Intente nuevamente.');
             } finally {
                 boton.disabled = false;
                 boton.textContent = textoOriginal;

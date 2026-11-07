@@ -363,7 +363,7 @@
     <div class="pr-vacio" id="sinResultados" {% if productos %}hidden{% endif %}>
         <svg class="pr-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <h3>{% if productos %}No hay productos con esos filtros{% else %}Todavía no hay productos{% endif %}</h3>
-        <p>{% if productos %}Probá con otra búsqueda o cambiá los filtros.{% else %}Registrá el primero con el botón "Registrar producto".{% endif %}</p>
+        <p>{% if productos %}Intente con otra búsqueda o cambie los filtros.{% else %}Registre el primero con el botón "Registrar producto".{% endif %}</p>
     </div>
 
     <!-- PAGINACIÓN (la arma paginacion.js sobre los productos que coinciden) -->
@@ -416,8 +416,8 @@
                                             <span class="pr-picker-icono">
                                                 <svg class="pr-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
                                             </span>
-                                            <strong>Arrastrá una foto</strong>
-                                            <span>o tocá para elegirla</span>
+                                            <strong>Arrastre una foto</strong>
+                                            <span>o haga clic para elegirla</span>
                                             <small>JPG, PNG o WEBP · hasta 5 MB</small>
                                         </span>
                                     </label>
@@ -451,7 +451,7 @@
                                         <label class="form-label" for="crear_tipo">Tipo de producto</label>
                                         <select class="form-select" name="ID_Tipo_producto" id="crear_tipo"
                                                 onchange="actualizarSubtipos('crear_tipo', 'crear_subtipo')" required>
-                                            <option value="">Seleccioná un tipo</option>
+                                            <option value="">Seleccione un tipo</option>
                                             {% for tipo in tipos_productos %}
                                                 <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
                                             {% endfor %}
@@ -497,7 +497,7 @@
                                     <div class="col-sm-6">
                                         <label class="form-label" for="crear_unidad">Unidad de medida</label>
                                         <select class="form-select" id="crear_unidad" name="Unidad_medida_producto" required>
-                                            <option value="">Seleccioná una unidad</option>
+                                            <option value="">Seleccione una unidad</option>
                                             <option value="kg">Kilogramos (kg)</option>
                                             <option value="g">Gramos (g)</option>
                                             <option value="litros">Litros (L)</option>
@@ -516,10 +516,10 @@
                                                id="crear_prov_{{ prov.ID_Proveedor }}" value="{{ prov.ID_Proveedor }}" autocomplete="off">
                                         <label class="pr-proveedor-chip" for="crear_prov_{{ prov.ID_Proveedor }}">{{ prov.nombre_proveedor }}</label>
                                     {% empty %}
-                                        <span class="pr-ayuda">No hay proveedores activos. Registrá uno primero.</span>
+                                        <span class="pr-ayuda">No hay proveedores activos. Registre uno primero.</span>
                                     {% endfor %}
                                 </div>
-                                <p class="pr-ayuda">Podés elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.</p>
+                                <p class="pr-ayuda">Puede elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.</p>
                             </div>
 
                         </div>
@@ -582,8 +582,8 @@
                                             <span class="pr-picker-icono">
                                                 <svg class="pr-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
                                             </span>
-                                            <strong>Arrastrá una foto</strong>
-                                            <span>o tocá para elegirla</span>
+                                            <strong>Arrastre una foto</strong>
+                                            <span>o haga clic para elegirla</span>
                                             <small>JPG, PNG o WEBP · hasta 5 MB</small>
                                         </span>
                                     </label>
@@ -688,10 +688,10 @@
                                                id="edit_prov_{{ prov.ID_Proveedor }}" value="{{ prov.ID_Proveedor }}" autocomplete="off">
                                         <label class="pr-proveedor-chip" for="edit_prov_{{ prov.ID_Proveedor }}">{{ prov.nombre_proveedor }}</label>
                                     {% empty %}
-                                        <span class="pr-ayuda">No hay proveedores activos. Registrá uno primero.</span>
+                                        <span class="pr-ayuda">No hay proveedores activos. Registre uno primero.</span>
                                     {% endfor %}
                                 </div>
-                                <p class="pr-ayuda">Podés elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.</p>
+                                <p class="pr-ayuda">Puede elegir más de uno. Solo estos proveedores podrán ingresar el producto en un remito.</p>
                             </div>
 
                         </div>
@@ -1303,7 +1303,7 @@
         form.addEventListener('submit', function (e) {
             if (!form.querySelector('input[name="proveedores"]:checked')) {
                 e.preventDefault();
-                mostrarToast('Seleccioná al menos un proveedor que suministre el producto.', 'warning');
+                mostrarToast('Seleccione al menos un proveedor que suministre el producto.', 'warning');
                 return;
             }
 
@@ -1378,9 +1378,9 @@
                 aviso.className = 'pr-aviso pr-aviso-bloqueo';
                 document.getElementById('el_aviso_titulo').textContent = 'No se puede eliminar este producto.';
                 document.getElementById('el_aviso_texto').textContent = stock > 0
-                    ? 'Tiene ' + stock + ' unidades en stock. Para dejar de usarlo, cambiá su estado a Inactivo desde Editar.'
+                    ? 'Tiene ' + stock + ' unidades en stock. Para dejar de usarlo, cambie su estado a Inactivo desde Editar.'
                     : 'Tiene ' + lotes + (lotes === 1 ? ' lote asociado' : ' lotes asociados') +
-                      '. Para conservar la trazabilidad, cambiá su estado a Inactivo desde Editar.';
+                      '. Para conservar la trazabilidad, cambie su estado a Inactivo desde Editar.';
                 confirmar.disabled = true;
             } else {
                 aviso.className = 'pr-aviso';

@@ -23,7 +23,7 @@
 
         <p class="description anim" style="--d: 4">
             El enlace venció (dura 1 hora) o ya se usó para cambiar la contraseña.
-            Pedí uno nuevo para continuar.
+            Solicite uno nuevo para continuar.
         </p>
 
         <a href="{% url 'recuperar_contrasena' %}" class="btn-submit btn-link-submit anim" style="--d: 5">
@@ -45,11 +45,11 @@
 
         <span class="form-eyebrow anim" style="--d: 1">Recuperar acceso</span>
 
-        <h2 class="anim" style="--d: 2">Creá tu nueva contraseña</h2>
+        <h2 class="anim" style="--d: 2">Cree su nueva contraseña</h2>
 
         <p class="description anim" style="--d: 3">
             Usuario: <strong>{{ usuario_nombre }}</strong>.
-            Elegí una contraseña que no hayas usado antes.
+            Elija una contraseña que no haya usado antes.
         </p>
 
         <form method="POST" id="nuevaClaveForm" data-usuario="{{ usuario_nombre }}" novalidate>
@@ -67,11 +67,11 @@
                 </div>
             {% endif %}
 
-            {% include 'inventario/_acceso_campo_clave.html' with id='nueva_contrasena' etiqueta='Nueva contraseña' placeholder='Escribí la nueva contraseña' autocompletar='new-password' error_campo=errores.nueva_contrasena d=4 %}
+            {% include 'inventario/_acceso_campo_clave.html' with id='nueva_contrasena' etiqueta='Nueva contraseña' placeholder='Escriba la nueva contraseña' autocompletar='new-password' error_campo=errores.nueva_contrasena d=4 %}
 
             {% include 'inventario/_acceso_reglas_clave.html' with campo='nueva_contrasena' d=5 %}
 
-            {% include 'inventario/_acceso_campo_clave.html' with id='confirmar_contrasena' etiqueta='Repetir nueva contraseña' placeholder='Repetí la nueva contraseña' autocompletar='new-password' error_campo=errores.confirmar_contrasena d=6 %}
+            {% include 'inventario/_acceso_campo_clave.html' with id='confirmar_contrasena' etiqueta='Repetir nueva contraseña' placeholder='Repita la nueva contraseña' autocompletar='new-password' error_campo=errores.confirmar_contrasena d=6 %}
 
             <button type="submit" class="btn-submit anim" style="--d: 7">
                 <span class="btn-text">Guardar nueva contraseña</span>

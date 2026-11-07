@@ -213,8 +213,8 @@ def revisar_stock(stock, usuario=None):
                 else 'Producto en stock mínimo'
             ),
             introduccion=(
-                f'Hola {usuario.Nombre_usuario}: después del movimiento que '
-                f'registraste, el producto quedó en su stock mínimo o por debajo.'
+                f'Estimado/a {usuario.Nombre_usuario}: le informamos que, después del movimiento que '
+                f'usted registró, el producto quedó en su stock mínimo o por debajo.'
             ),
             filas=[
                 ('Producto', producto.Nombre_producto),
@@ -324,7 +324,7 @@ def revisar_vencimientos():
                 else f'{cantidad} lotes próximos a vencer'
             ),
             introduccion=(
-                f'Estos lotes vencen en los próximos '
+                f'Le informamos que los siguientes lotes vencen en los próximos '
                 f'{DIAS_AVISO_VENCIMIENTO} días y todavía tienen stock.'
             ),
             filas=[

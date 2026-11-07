@@ -126,11 +126,11 @@ def enviar_correo_recuperacion(usuario):
 
     texto = (
         f'Hola {usuario.Nombre_usuario}:\n\n'
-        f'Recibimos un pedido para restablecer la contraseña de tu usuario '
+        f'Hemos recibido una solicitud para restablecer la contraseña de su usuario '
         f'"{usuario.Usuario}".\n\n'
-        f'Entrá a este enlace para crear una nueva (vence en {minutos} minutos):\n'
+        f'Ingrese al siguiente enlace para crear una nueva (vence en {minutos} minutos):\n'
         f'{enlace}\n\n'
-        f'Si no lo pediste vos, ignorá este correo: tu contraseña no cambia.\n\n'
+        f'Si usted no realizó esta solicitud, puede ignorar este correo: su contraseña no será modificada.\n\n'
         f'Agroquímica del Valle · Sistema de Gestión de Stock'
     )
 
@@ -142,7 +142,7 @@ def enviar_correo_recuperacion(usuario):
     def tarea():
         try:
             correo = EmailMultiAlternatives(
-                subject='Restablecer tu contraseña · Agroquímica del Valle',
+                subject='Restablecer su contraseña · Agroquímica del Valle',
                 body=texto,
                 from_email=remitente,
                 to=[destino],

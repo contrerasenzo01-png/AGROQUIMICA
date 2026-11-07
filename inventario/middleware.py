@@ -114,7 +114,7 @@ class VolverAlModuloMiddleware:
         if almacen is not None and not getattr(almacen, '_queued_messages', []):
             messages.error(
                 request,
-                'No tenés permiso para realizar esta acción.'
+                'No tiene permiso para realizar esta acción.'
             )
 
         response['Location'] = referer

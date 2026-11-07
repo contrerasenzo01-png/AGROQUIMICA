@@ -126,8 +126,8 @@
         ov.innerHTML =
             '<div class="lck-caja" role="dialog" aria-modal="true">' +
                 '<h3>Sesión bloqueada por inactividad</h3>' +
-                '<p>Ingresá tu usuario y contraseña para continuar. ' +
-                'Lo que estabas haciendo sigue en pantalla.</p>' +
+                '<p>Ingrese su usuario y contraseña para continuar. ' +
+                'Lo que estaba haciendo sigue en pantalla.</p>' +
                 '<div class="lck-error" style="display:none"></div>' +
                 '<form autocomplete="on">' +
                     '<div class="lck-campo"><label>Usuario</label>' +
@@ -198,7 +198,7 @@
                 form.elements.password.value = '';
                 boton.disabled = false;
             }).catch(function () {
-                error.textContent = 'Sin conexión con el servidor. Reintentá.';
+                error.textContent = 'Sin conexión con el servidor. Reintente.';
                 error.style.display = 'block';
                 boton.disabled = false;
             });

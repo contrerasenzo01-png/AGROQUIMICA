@@ -24,7 +24,7 @@ window.Acceso = (function () {
     const reglas = {
 
         usuario: function (v) {
-            if (!v) return 'Ingresá tu usuario.';
+            if (!v) return 'Ingrese su usuario.';
             if (/\s/.test(v)) return 'El usuario no puede tener espacios.';
             if (/\d/.test(v)) return 'El usuario no puede contener números.';
             if (!/^[A-Za-z]+$/.test(v)) return 'El usuario solo puede tener letras, sin tildes, ñ ni símbolos.';
@@ -35,7 +35,7 @@ window.Acceso = (function () {
 
         // Contraseña al INGRESAR: solo formato, no se revelan las reglas.
         claveLogin: function (v) {
-            if (!v) return 'Ingresá tu contraseña.';
+            if (!v) return 'Ingrese su contraseña.';
             if (/\s/.test(v)) return 'La contraseña no puede tener espacios.';
             if (v.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
             if (v.length > 64) return 'La contraseña no puede superar los 64 caracteres.';
@@ -44,30 +44,30 @@ window.Acceso = (function () {
 
         email: function (v) {
             v = v.trim();
-            if (!v) return 'Ingresá tu correo electrónico.';
+            if (!v) return 'Ingrese su correo electrónico.';
             if (/\s/.test(v)) return 'El correo no puede tener espacios.';
             if (v.length > 100) return 'El correo no puede superar los 100 caracteres.';
             if ((v.match(/@/g) || []).length !== 1) return 'El correo debe tener un solo @. Ejemplo: nombre@empresa.com';
             if (v.indexOf('..') !== -1) return 'El correo no puede tener dos puntos seguidos.';
             if (!/^[A-Za-z0-9](?:[A-Za-z0-9._%+-]*[A-Za-z0-9])?@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/.test(v)) {
-                return 'Ingresá un correo válido. Ejemplo: nombre@empresa.com';
+                return 'Ingrese un correo válido. Ejemplo: nombre@empresa.com';
             }
             return '';
         },
 
-        // Contraseña NUEVA: todas las reglas de seguridad, en el mismo
-        // orden y con los mismos textos que validar_contrasena (views.py).
+        // Contraseña NUEVA: mismas reglas y textos que
+        // validar_contrasena (views.py). Los espacios y el nombre de
+        // usuario tienen su propio aviso; el resto de los requisitos
+        // (los de la lista) da un mensaje general.
         claveNueva: function (usuario) {
             return function (v) {
-                if (!v) return 'Ingresá la nueva contraseña.';
-                if (v.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
-                if (v.length > 64) return 'La contraseña no puede superar los 64 caracteres.';
-                if (/\s/.test(v)) return 'La contraseña no puede tener espacios.';
-                if (!/[A-Z]/.test(v)) return 'La contraseña debe tener al menos una mayúscula.';
-                if (!/[a-z]/.test(v)) return 'La contraseña debe tener al menos una minúscula.';
-                if (!/\d/.test(v)) return 'La contraseña debe tener al menos un número.';
+                if (!v) return 'Ingrese la nueva contraseña.';
+                if (/\s/.test(v)) return 'No se pueden usar espacios.';
                 if (usuario && v.toLowerCase().indexOf(usuario.toLowerCase()) !== -1) {
-                    return 'La contraseña no puede contener el nombre de usuario.';
+                    return 'No se puede usar el nombre de usuario.';
+                }
+                if (v.length < 8 || v.length > 64 || !/[A-Z]/.test(v) || !/[a-z]/.test(v) || !/\d/.test(v)) {
+                    return 'La contraseña no cumplió con los requerimientos solicitados.';
                 }
                 return '';
             };
@@ -77,7 +77,7 @@ window.Acceso = (function () {
         coincide: function (idOriginal) {
             return function (v) {
                 const original = document.getElementById(idOriginal);
-                if (!v) return 'Repetí la nueva contraseña.';
+                if (!v) return 'Repita la nueva contraseña.';
                 if (original && v !== original.value) return 'Las contraseñas no coinciden.';
                 return '';
             };
@@ -243,18 +243,11 @@ window.Acceso = (function () {
             const input = document.getElementById(lista.dataset.for);
             if (!input) return;
 
-            const form = input.form;
-            const usuario = (form && form.dataset.usuario) || '';
-
             const pruebas = {
                 largo: function (v) { return v.length >= 8 && v.length <= 64; },
                 mayus: function (v) { return /[A-Z]/.test(v); },
                 minus: function (v) { return /[a-z]/.test(v); },
                 numero: function (v) { return /\d/.test(v); },
-                espacios: function (v) { return v.length > 0 && !/\s/.test(v); },
-                usuario: function (v) {
-                    return v.length > 0 && !(usuario && v.toLowerCase().indexOf(usuario.toLowerCase()) !== -1);
-                },
             };
 
             function actualizar() {

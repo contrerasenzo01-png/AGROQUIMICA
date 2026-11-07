@@ -16,7 +16,7 @@
     <header class="mp-encabezado">
         <div>
             <h1 class="mp-titulo">Mis permisos</h1>
-            <p class="mp-subtitulo">Esto es lo que podés hacer en el sistema con tu perfil.</p>
+            <p class="mp-subtitulo">Esto es lo que puede hacer en el sistema con su perfil.</p>
         </div>
     </header>
 
@@ -102,7 +102,7 @@
     {% if es_admin %}
         <div class="alert mp-aviso d-flex align-items-center gap-2 mb-3" role="status">
             <svg class="mp-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-            Tu perfil tiene acceso total: podés usar todas las funciones del sistema.
+            Su perfil tiene acceso total: puede usar todas las funciones del sistema.
         </div>
     {% endif %}
 
@@ -158,8 +158,8 @@
         {% empty %}
             <div class="col-12">
                 <div class="mp-vacio">
-                    Tu perfil todavía no tiene permisos asignados.
-                    Pedile a un administrador que te los asigne.
+                    Su perfil todavía no tiene permisos asignados.
+                    Solicite a un administrador que se los asigne.
                 </div>
             </div>
         {% endfor %}

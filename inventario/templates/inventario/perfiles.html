@@ -663,7 +663,7 @@
             ? 'No se puede dar de baja: tiene ' + usuarios + ' usuario' +
               (usuarios === 1 ? ' activo asignado' : 's activos asignados') +
               '. Reasignalos a otro perfil antes de continuar.'
-            : 'Verificá que sea el perfil correcto antes de confirmar la baja.';
+            : 'Verifique que sea el perfil correcto antes de confirmar la baja.';
 
         document.getElementById('bajaForm').action = bloqueada ? '' : boton.dataset.url;
         document.getElementById('bajaConfirmar').disabled = bloqueada;

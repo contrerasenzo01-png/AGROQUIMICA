@@ -200,7 +200,7 @@ def guardar_mi_perfil(request):
     usuario = usuario_autenticado(request)
 
     if not usuario:
-        return _error_json('Tu sesión venció. Volvé a ingresar.', status=401)
+        return _error_json('Su sesión venció. Vuelva a ingresar.', status=401)
 
     nombre = _limpiar(request.POST.get('Nombre_usuario'))
     apellido = _limpiar(request.POST.get('Apellido_usuario'))
@@ -212,24 +212,24 @@ def guardar_mi_perfil(request):
     errores = {}
 
     if not nombre:
-        errores['nombre'] = 'Ingresá tu nombre.'
+        errores['nombre'] = 'Ingrese su nombre.'
     elif len(nombre) > 50:
         errores['nombre'] = 'El nombre no puede superar los 50 caracteres.'
 
     if not apellido:
-        errores['apellido'] = 'Ingresá tu apellido.'
+        errores['apellido'] = 'Ingrese su apellido.'
     elif len(apellido) > 50:
         errores['apellido'] = 'El apellido no puede superar los 50 caracteres.'
 
     if not email:
-        errores['email'] = 'Ingresá tu correo electrónico.'
+        errores['email'] = 'Ingrese su correo electrónico.'
     elif len(email) > 100:
         errores['email'] = 'El correo no puede superar los 100 caracteres.'
     else:
         try:
             validate_email(email)
         except ValidationError:
-            errores['email'] = 'Ingresá un correo electrónico válido.'
+            errores['email'] = 'Ingrese un correo electrónico válido.'
         else:
             if Usuarios.objects.filter(
                 Email_usuario__iexact=email
@@ -245,7 +245,7 @@ def guardar_mi_perfil(request):
             errores['foto'] = error_foto
 
     if errores:
-        return _error_json('Revisá los datos marcados.', errores=errores)
+        return _error_json('Revise los datos marcados.', errores=errores)
 
     # ---------------- GUARDAR ----------------
     try:
@@ -303,7 +303,7 @@ def guardar_mi_perfil(request):
 
     return JsonResponse({
         'ok': True,
-        'mensaje': 'Tu perfil se actualizó correctamente.',
+        'mensaje': 'Su perfil se actualizó correctamente.',
         'usuario': _datos_usuario(usuario),
     })
 
@@ -322,7 +322,7 @@ def cambiar_mi_contrasena(request):
     usuario = usuario_autenticado(request)
 
     if not usuario:
-        return _error_json('Tu sesión venció. Volvé a ingresar.', status=401)
+        return _error_json('Su sesión venció. Vuelva a ingresar.', status=401)
 
     actual = request.POST.get('actual', '')
     nueva = request.POST.get('nueva', '')
@@ -331,27 +331,27 @@ def cambiar_mi_contrasena(request):
     errores = {}
 
     if not actual:
-        errores['actual'] = 'Ingresá tu contraseña actual.'
+        errores['actual'] = 'Ingrese su contraseña actual.'
     elif not check_password(actual, usuario.Contrasena):
         errores['actual'] = 'La contraseña actual no es correcta.'
 
     if not nueva:
-        errores['nueva'] = 'Ingresá la nueva contraseña.'
+        errores['nueva'] = 'Ingrese la nueva contraseña.'
     else:
         error = validar_contrasena(nueva, usuario.Usuario)
 
         if error:
             errores['nueva'] = error
         elif actual and nueva == actual:
-            errores['nueva'] = 'La nueva contraseña debe ser distinta de la actual.'
+            errores['nueva'] = 'La contraseña no puede ser igual a la anterior.'
 
     if not confirmar:
-        errores['confirmar'] = 'Repetí la nueva contraseña.'
+        errores['confirmar'] = 'Repita la nueva contraseña.'
     elif nueva and confirmar != nueva:
         errores['confirmar'] = 'Las contraseñas no coinciden.'
 
     if errores:
-        return _error_json('Revisá los datos marcados.', errores=errores)
+        return _error_json('Revise los datos marcados.', errores=errores)
 
     try:
         with transaction.atomic():
@@ -377,5 +377,5 @@ def cambiar_mi_contrasena(request):
 
     return JsonResponse({
         'ok': True,
-        'mensaje': 'Tu contraseña se cambió correctamente.',
+        'mensaje': 'Su contraseña se cambió correctamente.',
     })

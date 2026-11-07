@@ -13,11 +13,11 @@
 
     <span class="form-eyebrow anim" style="--d: 2">Sesión bloqueada por inactividad</span>
 
-    <h2 class="anim" style="--d: 3">Hola de nuevo, {{ usuario.Nombre_usuario }}</h2>
+    <h2 class="anim" style="--d: 3">Bienvenido/a nuevamente, {{ usuario.Nombre_usuario }}</h2>
 
     <p class="description anim" style="--d: 4">
         Pasaron más de {{ minutos_inactividad|default:30 }} minutos sin actividad.
-        Ingresá tu contraseña para volver exactamente donde estabas.
+        Ingrese su contraseña para volver exactamente donde estaba.
     </p>
 
     <form method="POST" action="{% url 'bloqueo' %}" id="bloqueoForm" novalidate>
@@ -67,7 +67,7 @@
         </div>
 
         <!-- CONTRASEÑA -->
-        {% include 'inventario/_acceso_campo_clave.html' with id='password' etiqueta='Contraseña' placeholder='Ingresá tu contraseña' autocompletar='current-password' error_campo='' d=6 %}
+        {% include 'inventario/_acceso_campo_clave.html' with id='password' etiqueta='Contraseña' placeholder='Ingrese su contraseña' autocompletar='current-password' error_campo='' d=6 %}
 
         <button type="submit" class="btn-submit anim" style="--d: 7">
             <span class="btn-text">Continuar donde estaba</span>

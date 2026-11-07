@@ -111,11 +111,11 @@
         if (e) return e;
 
         const malo = Array.from(t).find(function (c) { return !(esAlnum(c) || SIMB_NOMBRE.includes(c)); });
-        if (malo) return 'No se permite el carácter «' + malo + '». Usá letras, números y . , - / & ( ) % + \'';
+        if (malo) return 'No se permite el carácter «' + malo + '». Use letras, números y . , - / & ( ) % + \'';
         if (!esAlnum(t[0])) return 'Tiene que empezar con una letra o un número.';
         if (!/\p{L}/u.test(t)) return 'Tiene que incluir al menos una letra.';
         if (/([^\p{L}\p{N}\s])\1/u.test(t) || /[^\p{L}\p{N}\s]{2,}/u.test(t)) return 'No puede tener símbolos seguidos.';
-        if (/(\p{L})\1{3,}/u.test(t)) return 'Tiene letras repetidas. Revisalo.';
+        if (/(\p{L})\1{3,}/u.test(t)) return 'Tiene letras repetidas. Revíselo.';
         if (!/[\p{L}\p{N})%.]$/u.test(t)) return 'No puede terminar con ese símbolo.';
         return '';
     }
@@ -132,7 +132,7 @@
         if (!esLetra(t[0])) return 'Tiene que empezar con una letra.';
         if ((t.match(/\p{L}/gu) || []).length < 2) return 'Tiene que tener al menos 2 letras.';
         if (/[^\p{L}\s]{2,}/u.test(t)) return 'No puede tener símbolos seguidos.';
-        if (/(\p{L})\1{3,}/u.test(t)) return 'Tiene letras repetidas. Revisalo.';
+        if (/(\p{L})\1{3,}/u.test(t)) return 'Tiene letras repetidas. Revíselo.';
         if (!/[\p{L}.]$/u.test(t)) return 'No puede terminar con ese símbolo.';
         return '';
     }
@@ -146,7 +146,7 @@
         if (malo) return 'No se permite el carácter «' + malo + '».';
         if ((t.match(/[\p{L}\p{N}]/gu) || []).length < 2) return 'Tiene que incluir letras o números.';
         if (/([^\p{L}\p{N}\s])\1{2,}/u.test(t)) return 'Repite demasiadas veces el mismo símbolo.';
-        if (/(\p{L})\1{4,}/u.test(t)) return 'Tiene letras repetidas. Revisalo.';
+        if (/(\p{L})\1{4,}/u.test(t)) return 'Tiene letras repetidas. Revíselo.';
         return '';
     }
 
@@ -165,7 +165,7 @@
 
     function vEntero(v, r, el) {
         const t = String(v).trim();
-        if (!/^\d{1,12}$/.test(t)) return 'Ingresá solo números enteros, sin signos, puntos ni comas.';
+        if (!/^\d{1,12}$/.test(t)) return 'Ingrese solo números enteros, sin signos, puntos ni comas.';
 
         const n = Number(t);
         const min = r.min !== undefined ? r.min : 0;
@@ -182,7 +182,7 @@
 
     function vDecimal(v, r) {
         const t = String(v).trim().replace(',', '.');
-        if (!/^\d{1,12}(\.\d+)?$/.test(t)) return 'Ingresá un número válido (solo dígitos y una coma o punto decimal).';
+        if (!/^\d{1,12}(\.\d+)?$/.test(t)) return 'Ingrese un número válido (solo dígitos y una coma o punto decimal).';
 
         const dec = r.dec !== undefined ? r.dec : 2;
         if ((t.split('.')[1] || '').length > dec) return 'Máximo ' + dec + ' decimales.';
@@ -231,7 +231,7 @@
         if (!partes[0]) return 'Falta lo que va antes del @.';
         if (partes[0].length > 64) return 'La parte anterior al @ es demasiado larga.';
         if (!partes[1] || !partes[1].includes('.')) return 'El dominio no es válido. Ejemplo: nombre@empresa.com';
-        if (!RE_EMAIL.test(t)) return 'Ingresá un correo válido. Ejemplo: nombre@empresa.com';
+        if (!RE_EMAIL.test(t)) return 'Ingrese un correo válido. Ejemplo: nombre@empresa.com';
         return '';
     }
 
@@ -267,7 +267,7 @@
 
     function vFecha(v, r) {
         const t = String(v).trim();
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return 'Ingresá una fecha válida.';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return 'Ingrese una fecha válida.';
 
         const p = t.split('-').map(Number);
         const f = new Date(p[0], p[1] - 1, p[2]);
@@ -401,10 +401,10 @@
         let msg = '';
 
         if (el.validity && el.validity.badInput) {
-            msg = 'Ingresá solo números.';
+            msg = 'Ingrese solo números.';
         } else if (vacio) {
             if (el.required || (regla && regla.req)) {
-                msg = el.tagName === 'SELECT' ? 'Seleccioná una opción.' : 'Completá este campo.';
+                msg = el.tagName === 'SELECT' ? 'Seleccione una opción.' : 'Complete este campo.';
             }
         } else if (regla && VALIDADORES[regla.tipo]) {
             msg = VALIDADORES[regla.tipo](valor, regla, el);
