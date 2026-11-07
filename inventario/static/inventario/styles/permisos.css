@@ -26,16 +26,42 @@ body {
    BUSCADOR
    ========================================== */
 
-.pm-buscador { max-width: 620px; }
-
-.pm-buscador .input-group-text {
-    background-color: #ffffff;
+/* Mismo buscador que Proveedores, Usuarios, etc. */
+.pm-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 0 14px;
+    background: #fff;
+    border: 1px solid #e3eae6;
+    border-radius: 10px;
     color: #8a9e93;
 }
 
-.pm-buscador .form-control:focus {
-    border-color: #6fb28b;
-    box-shadow: 0 0 0 3px rgba(24, 90, 56, .14);
+.pm-search:focus-within {
+    border-color: #86c5a1;
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .12);
+}
+
+.pm-search .pm-search-icono {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.pm-search input,
+.pm-search input:focus {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 13px 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1c2a23;
 }
 
 
@@ -159,12 +185,6 @@ html.modo-oscuro .perm-name { color: var(--d-title) !important; }
 html.modo-oscuro .perm-desc { color: var(--d-text-2) !important; }
 
 html.modo-oscuro .pm-check { stroke: var(--d-green); }
-
-html.modo-oscuro .pm-buscador .input-group-text {
-    background-color: var(--d-input);
-    border-color: var(--d-border-2);
-    color: var(--d-text-3);
-}
 
 html.modo-oscuro .pm-sin-perfil {
     background-color: var(--d-surface-3);

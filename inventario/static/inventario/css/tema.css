@@ -308,12 +308,14 @@ html.modo-oscuro input[type="radio"] { accent-color: var(--d-green); }
 
 /* Contenedores de búsqueda con ícono */
 html.modo-oscuro .pr-search, html.modo-oscuro .pv-search, html.modo-oscuro .ts-search,
-html.modo-oscuro .us-search, html.modo-oscuro .pf-search, html.modo-oscuro .lt-search {
+html.modo-oscuro .us-search, html.modo-oscuro .pf-search, html.modo-oscuro .lt-search,
+html.modo-oscuro .pm-search {
     background: var(--d-input) !important;
     border-color: var(--d-border-2) !important;
 }
 html.modo-oscuro .pr-search input, html.modo-oscuro .pv-search input, html.modo-oscuro .ts-search input,
-html.modo-oscuro .us-search input, html.modo-oscuro .pf-search input, html.modo-oscuro .lt-search input {
+html.modo-oscuro .us-search input, html.modo-oscuro .pf-search input, html.modo-oscuro .lt-search input,
+html.modo-oscuro .pm-search input {
     background: transparent !important;
 }
 

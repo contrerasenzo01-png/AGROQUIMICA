@@ -41,28 +41,20 @@
 
     <!-- ===================== BUSCADOR ===================== -->
 
-    <form method="GET" class="pm-buscador mb-4" role="search">
-        <div class="input-group">
-            <span class="input-group-text" aria-hidden="true">
-                <svg class="pm-svg" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="7"/>
-                    <path d="m21 21-4.3-4.3"/>
-                </svg>
-            </span>
+    <form method="GET" onsubmit="return false;" class="pm-search" role="search">
 
-            <input type="text"
-                   name="q"
-                   value="{{ busqueda }}"
-                   class="form-control"
-                   placeholder="Buscar por nombre o por lo que permite..."
-                   aria-label="Buscar permiso">
+        <svg class="pm-svg pm-search-icono" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m21 21-4.3-4.3"/>
+        </svg>
 
-            <button type="submit" class="btn btn-success">Buscar</button>
+        <input class="form-control" type="text"
+               id="buscarPermiso"
+               value="{{ busqueda|default:'' }}"
+               autocomplete="off"
+               aria-label="Buscar permiso"
+               placeholder="Buscar por módulo, nombre o por lo que permite...">
 
-            {% if busqueda %}
-                <a href="{% url 'gestion_permisos' %}" class="btn btn-outline-success">Limpiar</a>
-            {% endif %}
-        </div>
     </form>
 
 
@@ -71,7 +63,7 @@
     <div class="row g-4">
 
         {% for modulo in modulos %}
-            <div class="col-12 col-lg-6 col-xxl-4">
+            <div class="col-12 col-lg-6 col-xxl-4 pm-modulo">
                 <article class="card h-100 pm-card">
                     <div class="card-body d-flex flex-column">
 
@@ -140,6 +132,50 @@
 
     </div>
 
+    <div class="alert alert-light text-center border mt-4 mb-0" id="pmSinResultados" hidden>
+        No se encontraron permisos para la búsqueda realizada.
+    </div>
+
 </div>
 
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    /* Buscador: filtra mientras se escribe, igual que en las demás pantallas. */
+    (function () {
+        const campo = document.getElementById('buscarPermiso');
+        const vacio = document.getElementById('pmSinResultados');
+        if (!campo) return;
+
+        const normalizar = (s) => (s || '').toLowerCase()
+            .normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+        function filtrar() {
+            const q = normalizar(campo.value.trim());
+            let visibles = 0;
+
+            document.querySelectorAll('.pm-modulo').forEach(function (col) {
+                const modulo = normalizar(col.querySelector('.pm-titulo').textContent);
+                const coincideModulo = !q || modulo.includes(q);
+                let permisosVisibles = 0;
+
+                col.querySelectorAll('.pm-permiso').forEach(function (li) {
+                    const ok = coincideModulo || normalizar(li.textContent).includes(q);
+                    li.hidden = !ok;
+                    if (ok) permisosVisibles++;
+                });
+
+                col.hidden = permisosVisibles === 0;
+                if (!col.hidden) visibles++;
+            });
+
+            if (vacio) vacio.hidden = visibles > 0 || !document.querySelector('.pm-modulo');
+        }
+
+        campo.addEventListener('input', filtrar);
+        filtrar();
+    })();
+</script>
 {% endblock %}

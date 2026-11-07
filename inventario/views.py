@@ -6119,6 +6119,7 @@ def bloqueo_sesion(request):
 
     # Pantalla de bloqueo: queda registrado que le apareció el aviso.
     if request.method == 'GET':
+        request.session['bloqueada'] = True
         registrar_bloqueo_inactividad(request, usuario, siguiente)
 
     return render(

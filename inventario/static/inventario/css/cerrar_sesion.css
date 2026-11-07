@@ -1,0 +1,202 @@
+/* ============================================================
+   MODAL "¿CERRAR SESIÓN?"
+   Se abre al presionar "Cerrar sesión" en el menú lateral.
+   ============================================================ */
+
+.cs-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(8, 28, 18, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s ease, visibility .2s ease;
+}
+
+.cs-overlay.cs-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cs-caja {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    padding: 34px 28px 24px;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid #dcebd9;
+    border-radius: 20px;
+    box-shadow: 0 30px 70px rgba(6, 30, 18, 0.35);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    transform: translateY(14px) scale(.97);
+    transition: transform .25s cubic-bezier(.2, .8, .2, 1);
+}
+
+.cs-visible .cs-caja {
+    transform: translateY(0) scale(1);
+}
+
+/* Franja de color de la marca arriba */
+.cs-caja::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #185a38, #2e7d32 60%, #f5c400);
+}
+
+.cs-icono {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #185a38;
+    background: #eaf4e6;
+    box-shadow: 0 0 0 8px rgba(46, 125, 50, 0.08);
+}
+
+.cs-icono svg {
+    width: 28px;
+    height: 28px;
+}
+
+.cs-titulo {
+    margin: 0 0 8px;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #0b311e;
+}
+
+.cs-mensaje {
+    margin: 0 0 24px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #4a5a4a;
+}
+
+.cs-mensaje strong {
+    color: #1f2d1f;
+}
+
+.cs-acciones {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+}
+
+.cs-btn {
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+
+.cs-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.35);
+}
+
+.cs-btn:active {
+    transform: translateY(1px);
+}
+
+.cs-quedarse {
+    color: #33463a;
+    background: #ffffff;
+    border: 1px solid #c9d6c9;
+}
+
+.cs-quedarse:hover {
+    background: #eef3ee;
+}
+
+.cs-salir {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #ffffff;
+    background: #185a38;
+    border: 1px solid #185a38;
+}
+
+.cs-salir:hover {
+    background: #0f4529;
+}
+
+.cs-salir svg {
+    width: 17px;
+    height: 17px;
+}
+
+.cs-salir.cs-cargando {
+    opacity: .75;
+    cursor: default;
+}
+
+@media (min-width: 440px) {
+    .cs-acciones {
+        flex-direction: row;
+    }
+}
+
+/* ---------- Modo oscuro ---------- */
+
+[data-bs-theme="dark"] .cs-caja {
+    background: #151f1a;
+    border-color: #26372d;
+}
+
+[data-bs-theme="dark"] .cs-icono {
+    color: #7fd19b;
+    background: rgba(46, 125, 50, 0.18);
+    box-shadow: 0 0 0 8px rgba(46, 125, 50, 0.08);
+}
+
+[data-bs-theme="dark"] .cs-titulo { color: #e8f2ec; }
+[data-bs-theme="dark"] .cs-mensaje { color: #a9bcb0; }
+[data-bs-theme="dark"] .cs-mensaje strong { color: #e8f2ec; }
+
+[data-bs-theme="dark"] .cs-quedarse {
+    color: #d7e4dc;
+    background: transparent;
+    border-color: #35493d;
+}
+
+[data-bs-theme="dark"] .cs-quedarse:hover {
+    background: #1d2a23;
+}
+
+[data-bs-theme="dark"] .cs-salir {
+    background: #2e7d32;
+    border-color: #2e7d32;
+}
+
+[data-bs-theme="dark"] .cs-salir:hover {
+    background: #256528;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cs-overlay,
+    .cs-caja {
+        transition: none;
+    }
+}
