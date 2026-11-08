@@ -2977,6 +2977,10 @@ def gestion_productos(request):
     busqueda = request.GET.get('q', '').strip()
     tipo_id = request.GET.get('tipo', '').strip()
 
+    # Un valor que no es número (URL modificada a mano) se ignora.
+    if not tipo_id.isdigit():
+        tipo_id = ''
+
 
     productos = Productos.objects.select_related(
         'ID_Tipo_producto',
@@ -3599,6 +3603,10 @@ def gestion_movimientos_stock(request):
 
     busqueda = request.GET.get('q', '').strip()
     tipo_sel = request.GET.get('tipo', '').strip()
+
+    # Un valor que no es número (URL modificada a mano) se ignora.
+    if not tipo_sel.isdigit():
+        tipo_sel = ''
 
     tipos_visibles = [
         'Entrada de lote',
@@ -5068,7 +5076,11 @@ def gestion_remitos(request):
 
             if error:
                 messages.error(request, error)
-                return redirect('gestion_remitos') 
+                return redirect('gestion_remitos')
+
+            if not remito_id.isdigit():
+                messages.error(request, 'El remito seleccionado no es válido.')
+                return redirect('gestion_remitos')
 
             if not puede_accion(usuario, 'anular_remitos'):
                 messages.error(
@@ -5234,10 +5246,12 @@ def gestion_remitos(request):
             | Q(ID_Proveedor__nombre_proveedor__icontains=busqueda)
         )
 
-    if proveedor_filtro:
+    if proveedor_filtro.isdigit():
         remitos = remitos.filter(
             ID_Proveedor__ID_Proveedor=proveedor_filtro
         )
+    else:
+        proveedor_filtro = ''
 
     proveedores = Proveedores.objects.filter(
         estado_proveedor=True

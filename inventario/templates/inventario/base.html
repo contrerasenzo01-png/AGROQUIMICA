@@ -226,6 +226,11 @@
             <!-- CONTENIDO -->
             <main class="main-content bs-pantalla">
 
+                {# Mensajes del sistema. Las pantallas con su propio contenedor vacían este bloque. #}
+                {% block mensajes %}
+                    {% include 'inventario/_mensajes.html' %}
+                {% endblock %}
+
                 {% block contenido %}
                 {% endblock %}
 

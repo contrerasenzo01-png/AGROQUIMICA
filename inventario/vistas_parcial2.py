@@ -75,6 +75,14 @@ def _leer_filtros(request):
     if request.GET.get('hasta') and not _fecha(request.GET.get('hasta')):
         errores.append('La fecha "Hasta" no es válida.')
 
+    # Fechas fuera de un rango razonable (p. ej. año 0001 o 9999)
+    # desbordan al convertirlas a fecha y hora con zona horaria.
+    minimo, maximo = date(1900, 1, 1), date(2100, 12, 31)
+
+    if not (minimo <= desde <= maximo) or not (minimo <= hasta <= maximo):
+        errores.append('Las fechas deben estar entre los años 1900 y 2100.')
+        desde, hasta = date(hoy.year, 1, 1), hoy
+
     if desde > hasta:
         errores.append('La fecha "Desde" no puede ser posterior a "Hasta".')
         desde, hasta = date(hoy.year, 1, 1), hoy
@@ -105,7 +113,7 @@ def reportes_consolidados(request, clave=None):
     usuario = usuario_con_acceso(request, 'consolidados')
 
     if not usuario:
-        messages.error(request, 'No tenés permiso para consultar los reportes consolidados.')
+        messages.error(request, 'No tiene permiso para consultar los reportes consolidados.')
         return redirect('panel_principal')
 
     visibles = _reportes_visibles(usuario)
@@ -304,7 +312,7 @@ def configuracion_alertas(request):
     usuario = usuario_con_acceso(request, 'configuracion', gestionar=True)
 
     if not usuario:
-        messages.error(request, 'No tenés permiso para modificar la configuración de alertas.')
+        messages.error(request, 'No tiene permiso para modificar la configuración de alertas.')
         return redirect('panel_principal')
 
     asegurar_configuracion()

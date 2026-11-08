@@ -123,7 +123,7 @@
         actualizarContador(datos.no_leidas);
 
         if (!datos.notificaciones.length) {
-            mensajeVacio('No tenés notificaciones. ¡Todo al día!');
+            mensajeVacio('No tiene notificaciones. ¡Todo al día!');
             return;
         }
 
