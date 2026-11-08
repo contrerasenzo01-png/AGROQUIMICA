@@ -139,7 +139,7 @@ SQL_MOVIMIENTOS = """
     FROM    MOVIMIENTOS_STOCK m
     JOIN    TIPOS_MOVIMIENTOS tm ON tm.ID_Tipo_movimiento = m.ID_Tipo_movimiento
     JOIN    LOTES l              ON l.ID_Lote = m.ID_Lote
-    JOIN    REMITO r             ON r.ID_Remito = l.ID_Remito
+    JOIN    REMITOS r            ON r.ID_Remito = l.ID_Remito
     JOIN    PROVEEDORES pr       ON pr.ID_Proveedor = r.ID_Proveedor
     JOIN    PRODUCTOS p          ON p.ID_Producto = l.ID_Producto
     JOIN    TIPOS_PRODUCTOS tp   ON tp.ID_Tipo_producto = p.ID_Tipo_producto
@@ -158,7 +158,7 @@ SQL_COMPRAS = """
             tp.Nombre_tipo_producto   AS tipo_producto,
             pr.nombre_proveedor       AS proveedor
     FROM    LOTES l
-    JOIN    REMITO r             ON r.ID_Remito = l.ID_Remito
+    JOIN    REMITOS r            ON r.ID_Remito = l.ID_Remito
     JOIN    PROVEEDORES pr       ON pr.ID_Proveedor = r.ID_Proveedor
     JOIN    PRODUCTOS p          ON p.ID_Producto = l.ID_Producto
     JOIN    TIPOS_PRODUCTOS tp   ON tp.ID_Tipo_producto = p.ID_Tipo_producto
@@ -171,7 +171,7 @@ SQL_COMPRAS = """
 SQL_PRODUCTOS_PROVEEDOR = """
     SELECT  DISTINCT l.ID_Producto AS producto_id, pr.nombre_proveedor AS proveedor
     FROM    LOTES l
-    JOIN    REMITO r        ON r.ID_Remito = l.ID_Remito
+    JOIN    REMITOS r       ON r.ID_Remito = l.ID_Remito
     JOIN    PROVEEDORES pr  ON pr.ID_Proveedor = r.ID_Proveedor
     WHERE   r.Estado_remito = 'Confirmado'
 """
@@ -374,11 +374,35 @@ def g2_donut(serie, ax):
     if serie.empty:
         return sin_datos(ax)
 
-    _, textos, pct = ax.pie(
-        serie.to_numpy(), labels=serie.index, colors=COLORES[:len(serie)],
-        autopct='%1.1f%%', startangle=90, pctdistance=0.78,
+    # Con muchos productos: colores distintos para cada uno (escala de 20).
+    if len(serie) <= len(COLORES):
+        colores = COLORES[:len(serie)]
+    else:
+        colores = plt.cm.tab20(np.arange(len(serie)) % 20)
+
+    # Si hay porciones chicas (< 3 %), sus textos se superpondrían: los
+    # nombres pasan a una leyenda al costado y el % se muestra solo en
+    # las porciones grandes.
+    porcentajes = serie.to_numpy() * 100 / serie.sum()
+    MINIMO = 3
+    con_leyenda = bool((porcentajes < MINIMO).any())
+    etiquetas = None if con_leyenda else list(serie.index)
+
+    porciones, textos, pct = ax.pie(
+        serie.to_numpy(), labels=etiquetas, colors=colores,
+        autopct=lambda p: f'{p:.1f}%' if p >= MINIMO else '',
+        startangle=90, pctdistance=0.78,
         wedgeprops={'width': 0.42, 'edgecolor': 'white'},
     )
+
+    if con_leyenda:
+        ax.legend(
+            porciones,
+            [f'{n} ({p:.1f}%)'.replace('.', ',') for n, p in zip(serie.index, porcentajes)],
+            loc='center left', bbox_to_anchor=(1.02, 0.5),
+            fontsize=7, frameon=False,
+        )
+
     for t in pct:
         t.set_color('white')
         t.set_fontweight('bold')

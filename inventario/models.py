@@ -160,7 +160,7 @@ class Remitos(models.Model):
     )
 
     class Meta:
-        db_table = 'REMITO'
+        db_table = 'REMITOS'
         verbose_name = "Remito"
         verbose_name_plural = "Remitos"
         constraints = [
@@ -249,7 +249,6 @@ class PerfilesXPermisos(models.Model):
         db_table = 'PERFILES_X_PERMISOS'
         unique_together = (('ID_Perfil', 'ID_Permiso'),)
         verbose_name_plural = "Perfiles por Permisos"
-
 
 
 class Usuarios(models.Model):
@@ -670,8 +669,9 @@ class LogAuditoria(models.Model):
             if ant.get(campo) != act.get(campo)
         ]
 
+
 # ============================================================
-# CONFIGURACIÓN (umbrales de las reglas de alertas)
+# CONFIGURACIONES (umbrales de las reglas de alertas)
 # Los valores se editan desde la pantalla "Configuración de alertas";
 # las reglas los leen de esta tabla, no están fijos en el código.
 # ============================================================
@@ -684,9 +684,9 @@ class Configuracion(models.Model):
     Fecha_modificacion = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'CONFIGURACION'
+        db_table = 'CONFIGURACIONES'
         verbose_name = 'Configuración'
-        verbose_name_plural = 'Configuración'
+        verbose_name_plural = 'Configuraciones'
 
     def __str__(self):
         return f'{self.Clave} = {self.Valor}'
@@ -697,6 +697,8 @@ class Configuracion(models.Model):
 # Cada regla de alerta deja una notificación por perfil destinatario.
 # "Clave" identifica el evento que la disparó: con la restricción
 # única (Clave, Destino_perfil) un mismo evento no se notifica dos veces.
+# La notificación va dirigida al perfil (no a un usuario): cada usuario
+# ve las de su perfil, por eso no hay relación directa con USUARIOS.
 # ============================================================
 
 class Notificacion(models.Model):
@@ -715,19 +717,10 @@ class Notificacion(models.Model):
     Leida = models.BooleanField(default=False)
     Fecha_lectura = models.DateTimeField(null=True, blank=True)
 
-    ID_Usuario_lectura = models.ForeignKey(
-        Usuarios,
-        on_delete=models.SET_NULL,
-        db_column='ID_Usuario_lectura',
-        related_name='notificaciones_leidas',
-        null=True,
-        blank=True
-    )
-
     Clave = models.CharField(max_length=100)
 
     class Meta:
-        db_table = 'NOTIFICACION'
+        db_table = 'NOTIFICACIONES'
         verbose_name = 'Notificación'
         verbose_name_plural = 'Notificaciones'
         ordering = ['-Fecha']
@@ -740,3 +733,4 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f'{self.Tipo}: {self.Mensaje[:40]}'
+    

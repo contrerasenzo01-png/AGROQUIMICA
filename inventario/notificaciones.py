@@ -230,8 +230,7 @@ def marcar_leida(usuario, notificacion):
 
     notificacion.Leida = True
     notificacion.Fecha_lectura = timezone.now()
-    notificacion.ID_Usuario_lectura = usuario
-    notificacion.save(update_fields=['Leida', 'Fecha_lectura', 'ID_Usuario_lectura'])
+    notificacion.save(update_fields=['Leida', 'Fecha_lectura'])
     return True
 
 
@@ -239,5 +238,5 @@ def marcar_todas_leidas(usuario):
     return notificaciones_de(usuario).filter(Leida=False).update(
         Leida=True,
         Fecha_lectura=timezone.now(),
-        ID_Usuario_lectura=usuario,
     )
+

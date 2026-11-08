@@ -276,7 +276,7 @@ def bandeja_notificaciones(request):
     estado = request.GET.get('estado', '').strip()
     tipo = request.GET.get('tipo', '').strip()
 
-    consulta = notificaciones_de(usuario).select_related('ID_Usuario_lectura')
+    consulta = notificaciones_de(usuario)
 
     if estado == 'no_leidas':
         consulta = consulta.filter(Leida=False)

@@ -68,7 +68,6 @@
                         <th>Tipo</th>
                         <th>Mensaje</th>
                         <th>Estado</th>
-                        <th>Leída por</th>
                         <th class="al-centro">Fecha de lectura</th>
                         <th class="al-col-acciones">Acciones</th>
                     </tr>
@@ -96,11 +95,6 @@
                                     <span class="al-estado al-pendiente">No leída</span>
                                 {% endif %}
                             </td>
-                            <td class="al-muted">
-                                {% if n.ID_Usuario_lectura %}
-                                    {{ n.ID_Usuario_lectura.Apellido_usuario }} {{ n.ID_Usuario_lectura.Nombre_usuario }}
-                                {% else %}—{% endif %}
-                            </td>
                             <td class="al-centro">
                                 {% if n.Fecha_lectura %}{{ n.Fecha_lectura|date:"d/m/Y H:i" }}{% else %}<span class="al-muted">—</span>{% endif %}
                             </td>
@@ -122,7 +116,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="8" class="al-vacio">No hay notificaciones con los criterios seleccionados.</td>
+                            <td colspan="7" class="al-vacio">No hay notificaciones con los criterios seleccionados.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
