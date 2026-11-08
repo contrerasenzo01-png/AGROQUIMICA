@@ -22,6 +22,11 @@ Preguntas de negocio que responde (un gráfico de tipo distinto cada una):
   5. Dashboard ejecutivo (opcional)  (GridSpec)
      KPIs + los gráficos principales en una sola vista.
 
+Los criterios son los mismos que los de los reportes consolidados (M2):
+  - Compras: lotes ingresados (tabla LOTES) de remitos confirmados.
+  - Ventas y bajas: movimientos de stock no anulados.
+  - Proveedor: el del remito con el que ingresó cada lote.
+
 Uso (desde la carpeta del proyecto, con la base levantada):
 
     python analitica/analitica.py
@@ -33,7 +38,7 @@ Parámetros:
     --desde / --hasta   Rango de fechas (por defecto: últimos 12 meses).
     --agrupar           dia | semana | mes  (período de los gráficos 1 y 3).
     --tipo              Filtra por tipo de producto (nombre exacto).
-    --proveedor         Filtra por proveedor del producto (nombre exacto).
+    --proveedor         Filtra por proveedor del remito (nombre exacto).
     --top               Cantidad de productos del donut (el resto: "Otros").
     --salida            Carpeta donde se guardan los PNG.
 
@@ -67,7 +72,7 @@ ZONA = 'America/Argentina/Buenos_Aires'   # la misma de settings.TIME_ZONE
 
 TIPOS_VENTA = ('Egreso por venta', 'Salida por venta')
 TIPO_BAJA = 'Salida por vencimiento de producto'
-TIPO_ENTRADA = 'Entrada de lote'
+CATEGORIAS = ['Compras', 'Ventas', 'Bajas por vencimiento']
 
 # Paleta de la agroquímica
 VERDE, VERDE_OSC, VERDE_CLARO = '#3FA859', '#2C7A3F', '#A7E3A0'
@@ -91,13 +96,15 @@ def leer_parametros():
     p.add_argument('--hasta', type=date.fromisoformat, default=hoy)
     p.add_argument('--agrupar', choices=FRECUENCIAS, default='mes')
     p.add_argument('--tipo', default=None, help='Tipo de producto (nombre)')
-    p.add_argument('--proveedor', default=None, help='Proveedor (nombre)')
+    p.add_argument('--proveedor', default=None, help='Proveedor del remito (nombre)')
     p.add_argument('--top', type=int, default=5)
     p.add_argument('--salida', type=Path, default=RAIZ / 'analitica' / 'salida')
     args = p.parse_args()
 
     if args.desde > args.hasta:
         p.error('--desde no puede ser posterior a --hasta')
+    if args.top < 1:
+        p.error('--top debe ser 1 o más')
     return args
 
 
@@ -118,6 +125,7 @@ def conectar():
     )
 
 
+# Ventas, bajas y demás movimientos de stock (no anulados) del período.
 SQL_MOVIMIENTOS = """
     SELECT  m.ID_Movimiento_stock          AS id,
             m.Fecha_hora_movimiento        AS fecha_hora,
@@ -126,10 +134,13 @@ SQL_MOVIMIENTOS = """
             p.ID_Producto                  AS producto_id,
             p.Nombre_producto              AS producto,
             p.Precio                       AS precio,
-            tp.Nombre_tipo_producto        AS tipo_producto
+            tp.Nombre_tipo_producto        AS tipo_producto,
+            pr.nombre_proveedor            AS proveedor
     FROM    MOVIMIENTOS_STOCK m
     JOIN    TIPOS_MOVIMIENTOS tm ON tm.ID_Tipo_movimiento = m.ID_Tipo_movimiento
     JOIN    LOTES l              ON l.ID_Lote = m.ID_Lote
+    JOIN    REMITO r             ON r.ID_Remito = l.ID_Remito
+    JOIN    PROVEEDORES pr       ON pr.ID_Proveedor = r.ID_Proveedor
     JOIN    PRODUCTOS p          ON p.ID_Producto = l.ID_Producto
     JOIN    TIPOS_PRODUCTOS tp   ON tp.ID_Tipo_producto = p.ID_Tipo_producto
     WHERE   m.Anulado = 0
@@ -137,10 +148,32 @@ SQL_MOVIMIENTOS = """
       AND   m.Fecha_hora_movimiento <  %s
 """
 
-SQL_PROVEEDORES = """
-    SELECT  pp.productos_id AS producto_id, pr.nombre_proveedor AS proveedor
-    FROM    PRODUCTOS_X_PROVEEDORES pp
-    JOIN    PROVEEDORES pr ON pr.ID_Proveedor = pp.proveedores_id
+# Compras: lotes ingresados en el período por remitos confirmados
+# (mismo criterio que el reporte "Compras vs. ventas" de M2).
+SQL_COMPRAS = """
+    SELECT  l.ID_Lote                 AS id,
+            l.Fecha_ingreso           AS fecha,
+            l.Cantidad_ingresada      AS cantidad,
+            p.ID_Producto             AS producto_id,
+            tp.Nombre_tipo_producto   AS tipo_producto,
+            pr.nombre_proveedor       AS proveedor
+    FROM    LOTES l
+    JOIN    REMITO r             ON r.ID_Remito = l.ID_Remito
+    JOIN    PROVEEDORES pr       ON pr.ID_Proveedor = r.ID_Proveedor
+    JOIN    PRODUCTOS p          ON p.ID_Producto = l.ID_Producto
+    JOIN    TIPOS_PRODUCTOS tp   ON tp.ID_Tipo_producto = p.ID_Tipo_producto
+    WHERE   r.Estado_remito = 'Confirmado'
+      AND   l.Fecha_ingreso >= %s
+      AND   l.Fecha_ingreso <= %s
+"""
+
+# Qué productos entró cada proveedor (para filtrar el stock por proveedor).
+SQL_PRODUCTOS_PROVEEDOR = """
+    SELECT  DISTINCT l.ID_Producto AS producto_id, pr.nombre_proveedor AS proveedor
+    FROM    LOTES l
+    JOIN    REMITO r        ON r.ID_Remito = l.ID_Remito
+    JOIN    PROVEEDORES pr  ON pr.ID_Proveedor = r.ID_Proveedor
+    WHERE   r.Estado_remito = 'Confirmado'
 """
 
 SQL_STOCK = """
@@ -156,50 +189,65 @@ SQL_STOCK = """
 
 def leer_datos(conn, args):
     """Lee las tablas transaccionales y aplica los filtros de los parámetros."""
-    # Las fechas se guardan en UTC: el rango local se pasa a UTC.
+    # Las fechas y horas se guardan en UTC: el rango local se pasa a UTC.
     inicio = pd.Timestamp(args.desde, tz=ZONA).tz_convert('UTC').tz_localize(None)
     fin = pd.Timestamp(args.hasta + timedelta(days=1), tz=ZONA).tz_convert('UTC').tz_localize(None)
 
-    mov = pd.read_sql(SQL_MOVIMIENTOS, conn, params=[inicio.to_pydatetime(), fin.to_pydatetime()])
-    prov = pd.read_sql(SQL_PROVEEDORES, conn)
+    mov = pd.read_sql(SQL_MOVIMIENTOS, conn,
+                      params=[inicio.to_pydatetime(), fin.to_pydatetime()])
+    compras = pd.read_sql(SQL_COMPRAS, conn, params=[args.desde, args.hasta])
+    prov = pd.read_sql(SQL_PRODUCTOS_PROVEEDOR, conn)
     stock = pd.read_sql(SQL_STOCK, conn)
 
+    return preparar(mov, compras, prov, stock, args)
+
+
+def preparar(mov, compras, prov, stock, args):
+    """Tipos de datos, categorías de negocio y filtros (pandas)."""
     # UTC -> hora local de la Argentina
     mov['fecha_hora'] = (pd.to_datetime(mov['fecha_hora'])
                          .dt.tz_localize('UTC').dt.tz_convert(ZONA).dt.tz_localize(None))
+    # Fecha_ingreso es un DATE (sin hora): no se convierte de zona.
+    compras['fecha'] = pd.to_datetime(compras['fecha'])
+
     for df in (mov, stock):
         df['precio'] = df['precio'].astype(float)
+    for df in (mov, compras, stock):
+        if 'cantidad' in df:
+            df['cantidad'] = df['cantidad'].astype(float)
 
     # Categoría de negocio de cada movimiento
     mov['categoria'] = np.select(
         [mov['tipo_movimiento'].isin(TIPOS_VENTA),
-         mov['tipo_movimiento'] == TIPO_ENTRADA,
          mov['tipo_movimiento'] == TIPO_BAJA],
-        ['Ventas', 'Compras', 'Bajas por vencimiento'],
+        ['Ventas', 'Bajas por vencimiento'],
         default='Otros',
     )
 
-    # ---- Filtros (merge con la tabla de proveedores) ----
+    # ---- Filtros ----
     if args.tipo:
         mov = mov[mov['tipo_producto'] == args.tipo]
+        compras = compras[compras['tipo_producto'] == args.tipo]
         stock = stock[stock['tipo_producto'] == args.tipo]
     if args.proveedor:
+        mov = mov[mov['proveedor'] == args.proveedor]
+        compras = compras[compras['proveedor'] == args.proveedor]
         ids = prov.loc[prov['proveedor'] == args.proveedor, 'producto_id'].unique()
-        mov = mov[mov['producto_id'].isin(ids)]
         stock = stock[stock['producto_id'].isin(ids)]
 
-    return mov.reset_index(drop=True), stock.reset_index(drop=True)
+    return (mov.reset_index(drop=True), compras.reset_index(drop=True),
+            stock.reset_index(drop=True))
 
 
 # ============================================================
 # INDICADORES (numpy)
 # ============================================================
 
-def indicadores(mov, stock):
+def indicadores(mov, compras, stock):
     ventas = mov[mov['categoria'] == 'Ventas']
     cant = ventas['cantidad'].to_numpy(dtype=float)
-    facturacion = float(np.sum(cant * ventas['precio'].to_numpy()))
-    comprado = float(np.sum(mov.loc[mov['categoria'] == 'Compras', 'cantidad']))
+    facturacion = float(np.sum(cant * ventas['precio'].to_numpy(dtype=float)))
+    comprado = float(np.sum(compras['cantidad'].to_numpy(dtype=float)))
     vencido = float(np.sum(mov.loc[mov['categoria'] == 'Bajas por vencimiento', 'cantidad']))
 
     return {
@@ -212,7 +260,8 @@ def indicadores(mov, stock):
         'p90_egreso': float(np.percentile(cant, 90)) if cant.size else 0.0,
         'comprado': comprado,
         'pct_perdida': float(np.round(vencido * 100 / comprado, 1)) if comprado else 0.0,
-        'stock_valorizado': float(np.sum(stock['stock'].to_numpy() * stock['precio'].to_numpy())),
+        'stock_valorizado': float(np.sum(stock['stock'].to_numpy(dtype=float)
+                                         * stock['precio'].to_numpy(dtype=float))),
         'en_minimo': int(np.sum(stock['stock'].to_numpy() <= stock['minimo'].to_numpy())),
     }
 
@@ -231,13 +280,23 @@ def etiqueta_periodo(ts, agrupar):
     return ts.strftime('%d/%m')
 
 
-def serie_por_categoria(mov, args):
-    """pivot_table + resample: unidades por período y categoría."""
+def serie_por_categoria(mov, compras, args):
+    """concat + pivot_table + resample: unidades por período y categoría."""
     freq = FRECUENCIAS[args.agrupar]
-    datos = mov[mov['categoria'] != 'Otros']
+
+    datos = pd.concat([
+        mov.loc[mov['categoria'].isin(CATEGORIAS), ['fecha_hora', 'categoria', 'cantidad']],
+        compras.assign(fecha_hora=compras['fecha'], categoria='Compras')
+               [['fecha_hora', 'categoria', 'cantidad']],
+    ], ignore_index=True)
+
     tabla = datos.pivot_table(index='fecha_hora', columns='categoria',
                               values='cantidad', aggfunc='sum')
-    tabla = tabla.resample(freq).sum() if not tabla.empty else tabla
+    if not tabla.empty:
+        # label/closed='left': cada período queda con la fecha en que EMPIEZA
+        # (con semanas, el lunes de esa semana). Si no, la última semana
+        # quedaría con una fecha posterior a --hasta y se perdería.
+        tabla = tabla.resample(freq, label='left', closed='left').sum()
 
     # Todos los períodos del rango, aunque no tengan movimientos.
     inicio = pd.Timestamp(args.desde)
@@ -248,10 +307,10 @@ def serie_por_categoria(mov, args):
     periodos = pd.date_range(inicio, pd.Timestamp(args.hasta), freq=freq)
     tabla = tabla.reindex(periodos, fill_value=0)
 
-    for c in ('Compras', 'Ventas', 'Bajas por vencimiento'):
+    for c in CATEGORIAS:
         if c not in tabla:
             tabla[c] = 0
-    return tabla[['Compras', 'Ventas', 'Bajas por vencimiento']].fillna(0)
+    return tabla[CATEGORIAS].fillna(0)
 
 
 def facturacion_por_producto(mov, top):
@@ -435,40 +494,24 @@ def dashboard(tabla, serie, mat, kpi, args, carpeta):
 # PROGRAMA PRINCIPAL
 # ============================================================
 
-def main():
-    # La consola de Windows usa cp1252: se fuerza UTF-8 para los acentos y el ✓.
-    if hasattr(sys.stdout, 'reconfigure'):
-        sys.stdout.reconfigure(encoding='utf-8')
+def generar(mov, compras, stock, args):
+    """Indicadores, transformaciones y gráficos a partir de los datos leídos."""
+    print(f'Movimientos leídos: {len(mov)} · Lotes comprados: {len(compras)} · '
+          f'Productos con stock: {len(stock)}')
 
-    args = leer_parametros()
-    args.salida.mkdir(parents=True, exist_ok=True)
-
-    print(f'Analítica · {subtitulo(args)} · agrupado por {args.agrupar}')
-
-    try:
-        conn = conectar()
-    except MySQLdb.Error as e:
-        sys.exit(f'No se pudo conectar a la base de datos: {e}')
-
-    try:
-        mov, stock = leer_datos(conn, args)
-    finally:
-        conn.close()
-
-    print(f'Movimientos leídos: {len(mov)} · Productos con stock: {len(stock)}')
-
-    kpi = indicadores(mov, stock)
+    kpi = indicadores(mov, compras, stock)
     print('\nIndicadores (numpy):')
     print(f'  Unidades vendidas ........ {kpi["unidades_vendidas"]}')
     print(f'  Facturación estimada ..... {pesos(kpi["facturacion"])}')
     print(f'  Egresos registrados ...... {kpi["egresos"]}')
     print(f'  Egreso medio / mediana ... {kpi["media_egreso"]:.1f} / {kpi["mediana_egreso"]:.1f} u.')
     print(f'  Desvío estándar egreso ... {kpi["desvio_egreso"]:.1f} u. (P90: {kpi["p90_egreso"]:.1f})')
+    print(f'  Unidades compradas ....... {kpi["comprado"]:.0f}')
     print(f'  Pérdida por vencimiento .. {kpi["pct_perdida"]:.1f} % de lo comprado')
     print(f'  Stock valorizado ......... {pesos(kpi["stock_valorizado"])}')
     print(f'  Productos en stock mínimo  {kpi["en_minimo"]}')
 
-    tabla = serie_por_categoria(mov, args)
+    tabla = serie_por_categoria(mov, compras, args)
     serie = facturacion_por_producto(mov, args.top)
     mat = matriz_dia_hora(mov)
 
@@ -503,5 +546,29 @@ def main():
     print(f'  ✓ {args.salida / "resumen_por_periodo.csv"}')
 
 
+def main():
+    # La consola de Windows usa cp1252: se fuerza UTF-8 para los acentos y el ✓.
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+
+    args = leer_parametros()
+    args.salida.mkdir(parents=True, exist_ok=True)
+
+    print(f'Analítica · {subtitulo(args)} · agrupado por {args.agrupar}')
+
+    try:
+        conn = conectar()
+    except MySQLdb.Error as e:
+        sys.exit(f'No se pudo conectar a la base de datos: {e}')
+
+    try:
+        mov, compras, stock = leer_datos(conn, args)
+    finally:
+        conn.close()
+
+    generar(mov, compras, stock, args)
+
+
 if __name__ == '__main__':
     main()
+    

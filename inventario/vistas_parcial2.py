@@ -110,6 +110,11 @@ def reportes_consolidados(request, clave=None):
 
     visibles = _reportes_visibles(usuario)
 
+    # Sin reportes para el perfil: se evita el IndexError de visibles[0].
+    if not visibles:
+        messages.error(request, 'No hay reportes consolidados disponibles para tu perfil.')
+        return redirect('panel_principal')
+
     if clave is None:
         clave = visibles[0][0]
 

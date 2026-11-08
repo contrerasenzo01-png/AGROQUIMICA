@@ -19,6 +19,10 @@ Cada reporte cruza datos de dos o más procesos transaccionales:
      Solo lo ven los perfiles con el permiso "Ver reportes sensibles".
 
 Todos tienen filtros de rango de fechas, tipo de producto y proveedor.
+El filtro de proveedor es SIEMPRE el proveedor del remito con el que
+entró cada lote (no la lista de proveedores posibles del producto), así
+los tres reportes dan los mismos números para el mismo filtro.
+
 Las vistas los muestran en una grilla paginada con totales al pie y los
 exportan a PDF (pdf_consolidado.py).
 """
@@ -46,13 +50,21 @@ def _rango_aware(desde, hasta):
     return inicio, fin
 
 
-def _filtro_producto(prefijo, filtros):
-    """Q con los filtros de tipo y proveedor sobre el producto."""
+def _filtro_lote(prefijo_lote, filtros):
+    """Q con los filtros de tipo de producto y proveedor sobre un lote.
+
+    prefijo_lote: camino desde el modelo consultado hasta el lote
+      - ''           si se consulta Lotes
+      - 'ID_Lote__'  si se consulta MovimientosStock
+
+    Tipo: el del producto del lote.
+    Proveedor: el del remito con el que ingresó el lote.
+    """
     q = Q()
     if filtros.get('tipo'):
-        q &= Q(**{prefijo + 'ID_Tipo_producto_id': filtros['tipo']})
+        q &= Q(**{prefijo_lote + 'ID_Producto__ID_Tipo_producto_id': filtros['tipo']})
     if filtros.get('proveedor'):
-        q &= Q(**{prefijo + 'proveedores': filtros['proveedor']})
+        q &= Q(**{prefijo_lote + 'ID_Remito__ID_Proveedor_id': filtros['proveedor']})
     return q
 
 
@@ -73,7 +85,7 @@ def compras_ventas(filtros):
             Fecha_ingreso__gte=filtros['desde'],
             Fecha_ingreso__lte=filtros['hasta'],
         ).exclude(ID_Remito__Estado_remito='Anulado')
-        .filter(_filtro_producto('ID_Producto__', filtros))
+        .filter(_filtro_lote('', filtros))
         .values('ID_Producto').annotate(t=Sum('Cantidad_ingresada'))
         .values_list('ID_Producto', 't')
     )
@@ -86,7 +98,7 @@ def compras_ventas(filtros):
                 Anulado=False,
                 ID_Tipo_movimiento__Nombre_tipo_movimiento__in=tipos,
                 ID_Lote__isnull=False,
-            ).filter(_filtro_producto('ID_Lote__ID_Producto__', filtros))
+            ).filter(_filtro_lote('ID_Lote__', filtros))
             .values('ID_Lote__ID_Producto').annotate(t=Sum('Cantidad_movimiento_stock'))
             .values_list('ID_Lote__ID_Producto', 't')
         )
@@ -116,6 +128,7 @@ def compras_ventas(filtros):
             'stock': stock,
             'precio': precio,
             'facturacion': precio * vendido,
+            # Puede superar el 100 %: se venden también lotes de períodos anteriores.
             'pct_vendido': _pct(vendido, comprado),
         })
 
@@ -149,7 +162,9 @@ def rotacion_proveedores(filtros):
     if filtros.get('proveedor'):
         remitos = remitos.filter(ID_Proveedor_id=filtros['proveedor'])
 
-    lotes = Lotes.objects.filter(ID_Remito__in=remitos).select_related('ID_Remito')
+    lotes = Lotes.objects.filter(ID_Remito__in=remitos).select_related(
+        'ID_Remito__ID_Proveedor'
+    )
     if filtros.get('tipo'):
         lotes = lotes.filter(ID_Producto__ID_Tipo_producto_id=filtros['tipo'])
 
@@ -218,10 +233,10 @@ def perdidas_vencimiento(filtros):
         Anulado=False,
         ID_Tipo_movimiento__Nombre_tipo_movimiento=TIPO_BAJA,
         ID_Lote__isnull=False,
-    ).filter(_filtro_producto('ID_Lote__ID_Producto__', filtros)).select_related(
+    ).filter(_filtro_lote('ID_Lote__', filtros)).select_related(
         'ID_Lote__ID_Producto__ID_Tipo_producto',
         'ID_Lote__ID_Remito__ID_Proveedor',
-    ).distinct().order_by('-Fecha_hora_movimiento')
+    ).order_by('-Fecha_hora_movimiento')
 
     bajas = list(bajas)
 
@@ -318,7 +333,7 @@ REPORTES = {
         'titulo': 'Pérdidas por vencimiento',
         'descripcion': (
             'Cada baja por vencimiento del período con el proveedor y remito del lote, '
-            'lo que se había vendido de ese lote y la pérdida valorizada a precio de lista.'
+            'lo que se había vendido de ese lote y la pérdida estimada a precio de lista.'
         ),
         'procesos': 'Bajas por vencimiento · Remitos (proveedor) · Egresos por venta',
         'sensible': True,

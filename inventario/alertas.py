@@ -71,6 +71,13 @@ TIPOS_STOCK = (TIPO_STOCK, 'Stock bajo')
 # se muestran en la terminal en lugar de enviarse.
 # ------------------------------------------------------------
 
+# Hilos de envío en curso. El servidor no los necesita, pero el job
+# diario (manage.py revisar_alertas) termina enseguida y, si no los
+# espera, corta los correos antes de que salgan (ver esperar_correos).
+_hilos_correo = []
+_hilos_lock = threading.Lock()
+
+
 def _config_correo():
     return getattr(settings, 'CORREO_ALERTAS', {}) or {}
 
@@ -132,11 +139,32 @@ def _enviar_correo(asunto, texto, html, destinatarios):
         except Exception:
             logger.exception('No se pudo enviar el correo de alerta "%s".', asunto)
 
+    def lanzar():
+        hilo = threading.Thread(target=tarea, daemon=True)
+        with _hilos_lock:
+            # Se descartan los que ya terminaron, así la lista no crece.
+            _hilos_correo[:] = [h for h in _hilos_correo if h.is_alive()]
+            _hilos_correo.append(hilo)
+        hilo.start()
+
     # Recién cuando la operación se guardó en la base, y sin hacer
     # esperar al usuario mientras se conecta con Gmail.
-    transaction.on_commit(
-        lambda: threading.Thread(target=tarea, daemon=True).start()
-    )
+    transaction.on_commit(lanzar)
+
+
+def esperar_correos(segundos=30):
+    """Espera a que terminen los correos en curso.
+
+    La llama el job diario antes de terminar: los hilos son "daemon" y
+    se cortarían al cerrarse el proceso, sin llegar a enviar el correo.
+    """
+    with _hilos_lock:
+        hilos = list(_hilos_correo)
+
+    for hilo in hilos:
+        hilo.join(segundos)
+
+    return len(hilos)
 
 
 def _correo_alerta(asunto, titulo, introduccion, filas, color):
@@ -246,8 +274,22 @@ def revisar_stock(stock, usuario=None):
         perfiles_con_permiso('alertas'),
     )
 
-    # Correo al usuario que hizo el movimiento.
-    if usuario and usuario.Email_usuario:
+    # Correo: al usuario que hizo el movimiento. Si la alerta la detectó
+    # el job diario (sin usuario), a todos los que pueden ver alertas.
+    if usuario:
+        destinatarios = [usuario.Email_usuario] if usuario.Email_usuario else []
+        introduccion = (
+            f'Estimado/a {usuario.Nombre_usuario}: le informamos que, después del movimiento que '
+            f'usted registró, el producto quedó en su stock mínimo o por debajo.'
+        )
+    else:
+        destinatarios = destinatarios_alertas()
+        introduccion = (
+            'Le informamos que, en la revisión automática del sistema, el producto '
+            'quedó en su stock mínimo o por debajo.'
+        )
+
+    if destinatarios:
         sin_stock = stock.Cantidad_stock <= 0
 
         asunto, texto, html = _correo_alerta(
@@ -259,10 +301,7 @@ def revisar_stock(stock, usuario=None):
                 'Producto sin stock' if sin_stock
                 else 'Producto en stock mínimo'
             ),
-            introduccion=(
-                f'Estimado/a {usuario.Nombre_usuario}: le informamos que, después del movimiento que '
-                f'usted registró, el producto quedó en su stock mínimo o por debajo.'
-            ),
+            introduccion=introduccion,
             filas=[
                 ('Producto', producto.Nombre_producto),
                 ('Stock actual', f'{stock.Cantidad_stock} unidades'),
@@ -271,7 +310,7 @@ def revisar_stock(stock, usuario=None):
             color='#b91c1c',
         )
 
-        _enviar_correo(asunto, texto, html, [usuario.Email_usuario])
+        _enviar_correo(asunto, texto, html, destinatarios)
 
     return True
 
@@ -303,10 +342,14 @@ def revisar_vencimientos():
     limite = hoy + timedelta(days=dias_aviso)
     destinos = None   # perfiles destinatarios (se buscan una sola vez)
 
+    # Los lotes de remitos anulados no cuentan: su mercadería no está
+    # en el depósito aunque el lote conserve una cantidad.
     lotes = Lotes.objects.select_related('ID_Producto').filter(
         Fecha_vencimiento__isnull=False,
         Fecha_vencimiento__lte=limite,
         Cantidad_actual__gt=0,
+    ).exclude(
+        ID_Remito__Estado_remito='Anulado'
     ).order_by('Fecha_vencimiento')
 
     resultado = []
@@ -500,7 +543,10 @@ def revisar_egreso_inusual(movimiento):
 
 
 # ------------------------------------------------------------
-# BANDEJA DE NOTIFICACIONES (topbar)
+# BANDEJA DE ALERTAS (historial viejo, tabla HISTORIAL_ALERTAS)
+# La bandeja del header del Parcial 2 usa datos_bandeja() de
+# notificaciones.py (tabla NOTIFICACION). Esto queda para la pantalla
+# de historial de alertas, si todavía la usa.
 # ------------------------------------------------------------
 
 def _hace(fecha):
@@ -532,7 +578,7 @@ def mensaje_visible(mensaje):
 
 
 def listar_notificaciones(limite=15):
-    """Alertas pendientes para la bandeja del topbar."""
+    """Alertas pendientes del historial (tabla HISTORIAL_ALERTAS)."""
 
     pendientes = Alertas.objects.filter(Atendida=False)
 

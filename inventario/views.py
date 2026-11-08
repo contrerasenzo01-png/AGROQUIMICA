@@ -250,6 +250,21 @@ def movimientos_visibles(queryset, usuario):
         return queryset
     return queryset.filter(ID_Usuario=usuario)
 
+def alertas_visibles(usuario):
+    """El administrador ve todo el historial de alertas; el resto de los
+    usuarios ve las pendientes (cualquiera puede atenderlas) y las que
+    atendió él mismo."""
+    alertas = Alertas.objects.select_related(
+        'ID_Stock',
+        'ID_Stock__ID_Producto',
+        'ID_Usuario'
+    )
+
+    if usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN:
+        return alertas
+
+    return alertas.filter(Q(Atendida=False) | Q(ID_Usuario=usuario))
+
 
 # ============================================================
 # PANEL PRINCIPAL
@@ -3614,6 +3629,8 @@ def gestion_movimientos_stock(request):
     # Cada usuario ve solo sus movimientos; el administrador ve todos.
     movimientos = movimientos_visibles(movimientos, usuario)
 
+    
+
     # Resumen sobre todos los movimientos que puede ver (sin filtros).
     por_tipo = dict(
         movimientos.order_by()
@@ -3698,6 +3715,8 @@ def gestion_alertas(request):
         )
         return redirect('panel_principal')
 
+    es_admin = usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN
+
     tipo_alerta = request.GET.get('tipo', '').strip()
     producto_id = request.GET.get('producto', '').strip()
     usuario_id = request.GET.get('usuario', '').strip()
@@ -3706,61 +3725,56 @@ def gestion_alertas(request):
 
     generar_alertas_vencimiento()
 
-    alertas_bd = Alertas.objects.select_related(
-        'ID_Stock',
-        'ID_Stock__ID_Producto',
-        'ID_Usuario'
-    ).all()
+    # Base: solo las alertas que este usuario puede ver.
+    # Las tarjetas de arriba se cuentan sobre esta misma base.
+    visibles = alertas_visibles(usuario)
+    alertas_bd = visibles
 
     if tipo_alerta == TIPO_STOCK:
-        alertas_bd = alertas_bd.filter(
-            Tipo_alerta__in=TIPOS_STOCK
-        )
+        alertas_bd = alertas_bd.filter(Tipo_alerta__in=TIPOS_STOCK)
     elif tipo_alerta:
-        alertas_bd = alertas_bd.filter(
-            Tipo_alerta=tipo_alerta
-        )
+        alertas_bd = alertas_bd.filter(Tipo_alerta=tipo_alerta)
 
-    if producto_id:
-        alertas_bd = alertas_bd.filter(
-            ID_Stock__ID_Producto_id=producto_id
-        )
+    if producto_id.isdigit():
+        alertas_bd = alertas_bd.filter(ID_Stock__ID_Producto_id=producto_id)
 
-    if usuario_id:
-        alertas_bd = alertas_bd.filter(
-            ID_Usuario_id=usuario_id
-        )
+    if usuario_id.isdigit():
+        alertas_bd = alertas_bd.filter(ID_Usuario_id=usuario_id)
 
-    if fecha_desde:
-        alertas_bd = alertas_bd.filter(
-            Fecha_hora_historial_alerta__date__gte=fecha_desde
-        )
+    # Fechas inválidas en la URL se ignoran (antes daban error 500).
+    desde = _fecha_iso(fecha_desde)
+    hasta = _fecha_iso(fecha_hasta)
 
-    if fecha_hasta:
-        alertas_bd = alertas_bd.filter(
-            Fecha_hora_historial_alerta__date__lte=fecha_hasta
-        )
+    if desde:
+        alertas_bd = alertas_bd.filter(Fecha_hora_historial_alerta__date__gte=desde)
+    if hasta:
+        alertas_bd = alertas_bd.filter(Fecha_hora_historial_alerta__date__lte=hasta)
+
+    alertas_bd = list(alertas_bd.order_by('-Fecha_hora_historial_alerta'))
+
+    # Lotes de las alertas de vencimiento: una sola consulta para todos
+    # (antes se hacía una consulta por cada alerta).
+    def _lote_id(mensaje):
+        try:
+            return int(mensaje.rsplit('[LOTE_ID:', 1)[1].split(']', 1)[0])
+        except (IndexError, ValueError):
+            return None
+
+    ids_lotes = {
+        _lote_id(a.Mensaje) for a in alertas_bd
+        if a.Tipo_alerta == 'Vencimiento'
+    } - {None}
+
+    lotes = Lotes.objects.in_bulk(ids_lotes)
 
     alertas = []
 
     for alerta in alertas_bd:
-        producto = alerta.ID_Stock.ID_Producto
         lote = None
         mensaje = alerta.Mensaje
 
         if alerta.Tipo_alerta == 'Vencimiento':
-            try:
-                marcador = mensaje.rsplit('[LOTE_ID:', 1)[1]
-                lote_id = int(marcador.split(']', 1)[0])
-
-                lote = Lotes.objects.filter(
-                    ID_Lote=lote_id
-                ).first()
-                
-
-            except (IndexError, ValueError):
-                lote = None
-
+            lote = lotes.get(_lote_id(mensaje))
             # Quita el identificador técnico del mensaje visible.
             mensaje = mensaje_visible(mensaje)
 
@@ -3770,7 +3784,7 @@ def gestion_alertas(request):
                 TIPO_STOCK if alerta.Tipo_alerta in TIPOS_STOCK
                 else alerta.Tipo_alerta
             ),
-            'producto': producto,
+            'producto': alerta.ID_Stock.ID_Producto,
             'lote': lote,
             'mensaje': mensaje,
             'fecha': alerta.Fecha_hora_historial_alerta,
@@ -3781,23 +3795,22 @@ def gestion_alertas(request):
             'fecha_atencion': alerta.Fecha_hora_atencion,
         })
 
-    alertas.sort(
-        key=clave_fecha_alerta,
-        reverse=True
-    )
-
     productos = Productos.objects.filter(
         Estado_producto='Activo'
     ).order_by('Nombre_producto')
 
-    usuarios = Usuarios.objects.filter(
-        Estado_usuario=True
-    ).order_by(
-        'Apellido_usuario',
-        'Nombre_usuario'
-    )
+    # Filtro "Atendida por": el administrador elige entre todos;
+    # el resto solo puede elegirse a sí mismo.
+    if es_admin:
+        usuarios = Usuarios.objects.filter(
+            Estado_usuario=True
+        ).order_by('Apellido_usuario', 'Nombre_usuario')
+    else:
+        usuarios = Usuarios.objects.filter(ID_Usuario=usuario.ID_Usuario)
 
     pagina = paginar(request, alertas)
+
+    pendientes = visibles.filter(Atendida=False)
 
     return render(
         request,
@@ -3813,17 +3826,22 @@ def gestion_alertas(request):
             'productos': productos,
             'usuarios': usuarios,
             'usuario': usuario,
+            'es_admin': es_admin,
             'resumen': [
-                indicador(Alertas.objects.filter(Atendida=False).count(), 'Sin atender', 'rojo', 'alerta'),
+                indicador(pendientes.count(), 'Sin atender', 'rojo', 'alerta'),
                 indicador(
-                    Alertas.objects.filter(Atendida=False, Tipo_alerta__in=TIPOS_STOCK).count(),
+                    pendientes.filter(Tipo_alerta__in=TIPOS_STOCK).count(),
                     'Stock mínimo sin atender', 'ambar', 'bajada'
                 ),
                 indicador(
-                    Alertas.objects.filter(Atendida=False, Tipo_alerta='Vencimiento').count(),
+                    pendientes.filter(Tipo_alerta='Vencimiento').count(),
                     'Vencimientos sin atender', 'azul', 'reloj'
                 ),
-                indicador(Alertas.objects.filter(Atendida=True).count(), 'Atendidas', 'verde', 'check'),
+                indicador(
+                    visibles.filter(Atendida=True).count(),
+                    'Atendidas' if es_admin else 'Atendidas por mí',
+                    'verde', 'check'
+                ),
             ],
         }
     )

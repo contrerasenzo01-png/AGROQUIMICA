@@ -16,12 +16,15 @@ Programador de tareas de Windows:
 
 No genera duplicados: si una alerta o notificación ya existe para el
 mismo evento, no se vuelve a crear (ver notificaciones.py).
+
+Antes de terminar espera a que salgan los correos: se envían en hilos
+de fondo y, si el proceso se cerrara enseguida, se cortarían sin enviarse.
 """
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from inventario.alertas import revisar_stock, revisar_vencimientos
+from inventario.alertas import esperar_correos, revisar_stock, revisar_vencimientos
 from inventario.models import Notificacion, Stock
 from inventario.notificaciones import asegurar_configuracion
 
@@ -42,10 +45,15 @@ class Command(BaseCommand):
             ):
                 en_minimo += int(revisar_stock(stock))
 
+        # Al salir del atomic se lanzan los correos: hay que esperarlos.
+        correos = esperar_correos()
+
         nuevas = Notificacion.objects.count() - antes
 
         self.stdout.write(self.style.SUCCESS(
             f'Revisión terminada: {len(lotes)} lote(s) por vencer o vencidos, '
             f'{en_minimo} producto(s) en stock mínimo, '
-            f'{nuevas} notificación(es) nueva(s).'
+            f'{nuevas} notificación(es) nueva(s), '
+            f'{correos} correo(s) procesado(s).'
         ))
+        
