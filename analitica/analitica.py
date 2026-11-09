@@ -125,7 +125,9 @@ def conectar():
     )
 
 
-# Ventas, bajas y demás movimientos de stock (no anulados) del período.
+# Movimientos de stock no anulados del período (ventas, bajas y otros).
+# Los %s son las fechas desde/hasta, que se pasan aparte con params.
+
 SQL_MOVIMIENTOS = """
     SELECT  m.ID_Movimiento_stock          AS id,
             m.Fecha_hora_movimiento        AS fecha_hora,
