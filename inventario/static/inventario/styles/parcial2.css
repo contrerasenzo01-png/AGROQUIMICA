@@ -68,6 +68,16 @@
 .p2-reglas li { margin-bottom: 4px; }
 
 /* ---------- Grilla ---------- */
+
+/* Datos centrados bajo su encabezado, para que se lea de qué columna es cada valor */
+.p2-tabla th,
+.p2-tabla td,
+.p2-tabla .p2-num {
+    text-align: center !important;
+    vertical-align: middle;
+}
+
+.p2-tabla th { white-space: nowrap; }
 .p2-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .p2-tabla tfoot .p2-totales td {

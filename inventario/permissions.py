@@ -85,10 +85,10 @@ CATALOGO = {
         'consultar': ('Consultar reportes',
                       'Ver los gráficos y reportes del sistema.'),
     },
+    # Sin permiso propio: cada reporte consolidado tiene el suyo (ver
+    # REPORTES_CONSOLIDADOS). La pantalla se ve si el perfil tiene al menos uno.
     'consolidados': {
-        'titulo': 'Reportes',
-        'consultar': ('Consultar reportes consolidados',
-                      'Ver y exportar a PDF los reportes que cruzan compras, ventas y vencimientos.'),
+        'titulo': 'Reportes consolidados',
     },
     'configuracion': {
         'titulo': 'Alertas',
@@ -123,9 +123,23 @@ ACCIONES = {
     'anular_egresos': ('Anular egresos de stock',
                        'Anular un egreso por venta registrado por error y devolver las unidades al stock.',
                        'Movimientos de stock'),
-    'reportes_sensibles': ('Ver reportes sensibles',
-                           'Ver el reporte consolidado de pérdidas por vencimiento valorizadas en pesos.',
-                           'Reportes'),
+    # Un permiso por reporte consolidado: cada perfil ve solo los que tenga.
+    'rep_compras_ventas': ('Ver reporte: compras vs. ventas por producto',
+                           'Ver y exportar a PDF el reporte consolidado de compras, ventas y bajas por producto.',
+                           'Reportes consolidados'),
+    'rep_proveedores': ('Ver reporte: rotación de compras por proveedor',
+                        'Ver y exportar a PDF el reporte consolidado de rotación y pérdida por proveedor.',
+                        'Reportes consolidados'),
+    'rep_perdidas': ('Ver reporte: pérdidas por vencimiento (sensible)',
+                     'Ver y exportar a PDF las pérdidas por vencimiento valorizadas en pesos. Reporte sensible.',
+                     'Reportes consolidados'),
+}
+
+# Reporte consolidado (clave en consolidados.REPORTES) -> acción que lo habilita
+REPORTES_CONSOLIDADOS = {
+    'compras-ventas': 'rep_compras_ventas',
+    'proveedores': 'rep_proveedores',
+    'perdidas': 'rep_perdidas',
 }
 
 # Derivado del catálogo: modulo -> (nombre_consultar, nombre_gestionar)
@@ -191,6 +205,13 @@ def puede(usuario, modulo, gestionar=False, asignados=None):
 
     if asignados is None:
         asignados = permisos_asignados(usuario)
+
+    # Reportes consolidados: alcanza con tener permiso para alguno de ellos.
+    if modulo == 'consolidados':
+        return any(
+            ACCIONES[accion][0].lower() in asignados
+            for accion in REPORTES_CONSOLIDADOS.values()
+        )
 
     consultar, gestion = MODULOS[modulo]
 

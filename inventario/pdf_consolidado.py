@@ -64,6 +64,8 @@ E_CELDA_C = _estilo('celda_c', alignment=TA_CENTER)
 E_CAB = _estilo('cab', fontName='Helvetica-Bold', fontSize=7.5, leading=9,
                 textColor=colors.white, alignment=TA_CENTER)
 E_TOTAL = _estilo('total', fontName='Helvetica-Bold', textColor=VERDE_OSCURO)
+E_TOTAL_C = _estilo('total_c', fontName='Helvetica-Bold', textColor=VERDE_OSCURO,
+                    alignment=TA_CENTER)
 E_TOTAL_D = _estilo('total_d', fontName='Helvetica-Bold', textColor=VERDE_OSCURO,
                     alignment=TA_RIGHT)
 E_TITULO = _estilo('titulo', fontName='Helvetica-Bold', fontSize=14, leading=17,
@@ -82,15 +84,8 @@ DERECHA = ('entero', 'moneda', 'pct')
 
 
 def _celda(texto, formato, total=False):
-    if total:
-        estilo = E_TOTAL_D if formato in DERECHA else E_TOTAL
-    elif formato in DERECHA:
-        estilo = E_CELDA_D
-    elif formato == 'fecha':
-        estilo = E_CELDA_C
-    else:
-        estilo = E_CELDA
-    return Paragraph(escape(texto), estilo)
+    # Todo centrado bajo su encabezado, igual que la grilla en pantalla.
+    return Paragraph(escape(texto), E_TOTAL_C if total else E_CELDA_C)
 
 
 def _caja(etiqueta, valor, ancho):

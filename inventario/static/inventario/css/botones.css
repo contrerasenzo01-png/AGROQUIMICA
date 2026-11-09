@@ -309,8 +309,10 @@ body .main-content :is(
     .rm-toast-x, .pr-toast-x, .pv-toast-x, .ts-toast-x, .us-toast-x, .pf-toast-x,
     .lt-message-cerrar
 ) {
-    font-size: 0;
-    line-height: 0;
+    /* !important: sidebar.css fija 13px !important a todos los botones,
+       y eso mostraba el "✕" de texto además del ícono (doble X). */
+    font-size: 0 !important;
+    line-height: 0 !important;
 }
 
 body .main-content :is(.rm-modal-x, .lt-modal-x, .aud-modal-cerrar)::before {

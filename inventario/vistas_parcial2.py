@@ -28,7 +28,7 @@ from .notificaciones import (
 )
 from .paginacion import paginar
 from .pdf_consolidado import generar_pdf_consolidado
-from .permissions import puede_accion, usuario_con_acceso
+from .permissions import REPORTES_CONSOLIDADOS, puede_accion, usuario_con_acceso
 
 
 def _usuario():
@@ -53,12 +53,16 @@ def _entero(texto):
 # M2 · REPORTES CONSOLIDADOS
 # ============================================================
 
+def _puede_ver_reporte(usuario, clave):
+    """Cada reporte consolidado tiene su propio permiso (ver permissions.py)."""
+    return puede_accion(usuario, REPORTES_CONSOLIDADOS[clave])
+
+
 def _reportes_visibles(usuario):
-    """Los reportes que el perfil puede ver (el sensible requiere permiso)."""
-    ver_sensibles = puede_accion(usuario, 'reportes_sensibles')
+    """Los reportes que el perfil tiene permitidos."""
     return [
         (clave, r) for clave, r in REPORTES.items()
-        if not r['sensible'] or ver_sensibles
+        if _puede_ver_reporte(usuario, clave)
     ]
 
 
@@ -131,13 +135,13 @@ def reportes_consolidados(request, clave=None):
 
     reporte = REPORTES[clave]
 
-    # Reporte sensible: solo con el permiso "Ver reportes sensibles".
-    if reporte['sensible'] and not puede_accion(usuario, 'reportes_sensibles'):
-        messages.error(
-            request,
-            f'El reporte "{reporte["titulo"]}" es sensible: '
-            'tu perfil no tiene permiso para verlo.'
-        )
+    # Cada reporte requiere su permiso; el sensible incluido.
+    if not _puede_ver_reporte(usuario, clave):
+        if reporte['sensible']:
+            texto = f'El reporte "{reporte["titulo"]}" es sensible: su perfil no tiene permiso para verlo.'
+        else:
+            texto = f'Su perfil no tiene permiso para ver el reporte "{reporte["titulo"]}".'
+        messages.error(request, texto)
         return redirect('reportes_consolidados')
 
     filtros, texto_filtros, errores = _leer_filtros(request)

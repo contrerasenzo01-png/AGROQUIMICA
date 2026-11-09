@@ -266,7 +266,9 @@ function reglasContrasena(clave, usuario) {
 function CambiarContrasena({ usuario }) {
     const [abierto, setAbierto] = useState(false);
     const [claves, setClaves] = useState(CONTRASENA_VACIA);
-    const [ver, setVer] = useState(false);
+    // Cada campo tiene su propio ojo: se ve solo la contraseña que se elija
+    const [ver, setVer] = useState({});
+    const alternarVer = (nombre) => setVer(v => ({ ...v, [nombre]: !v[nombre] }));
     const [errores, setErrores] = useState({});
     const [enviando, setEnviando] = useState(false);
     const [aviso, setAviso] = useState(null);   // { tipo, texto }
@@ -294,7 +296,7 @@ function CambiarContrasena({ usuario }) {
         setAbierto(false);
         setClaves(CONTRASENA_VACIA);
         setErrores({});
-        setVer(false);
+        setVer({});
     };
 
     const validar = () => {
@@ -371,11 +373,12 @@ function CambiarContrasena({ usuario }) {
     const campo = (id, nombre, etiqueta, autocompletar, ref) => (
         <div className="col-12 col-md-4">
             <label className="form-label" htmlFor={id}>{etiqueta}</label>
+            <div className="ojo-envoltorio">
             <input
                 id={id}
                 ref={ref}
-                type={ver ? 'text' : 'password'}
-                className={'form-control' + (errores[nombre] ? ' is-invalid' : '')}
+                type={ver[nombre] ? 'text' : 'password'}
+                className={'form-control ojo-campo' + (errores[nombre] ? ' is-invalid' : '')}
                 value={claves[nombre]}
                 maxLength={64}
                 autoComplete={autocompletar}
@@ -383,7 +386,27 @@ function CambiarContrasena({ usuario }) {
                 onKeyDown={alTeclear}
                 aria-invalid={errores[nombre] ? 'true' : 'false'}
             />
-            {errores[nombre] && <div className="invalid-feedback">{errores[nombre]}</div>}
+            <button
+                type="button"
+                className={'ojo-boton' + (ver[nombre] ? ' visible' : '')}
+                aria-label={ver[nombre] ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-pressed={ver[nombre] ? 'true' : 'false'}
+                title={ver[nombre] ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                onClick={() => alternarVer(nombre)}
+            >
+                <svg className="ojo-abierto" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg className="ojo-cerrado" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+            </button>
+            </div>
+            {errores[nombre] && <div className="invalid-feedback d-block">{errores[nombre]}</div>}
         </div>
     );
 
@@ -417,19 +440,6 @@ function CambiarContrasena({ usuario }) {
                         {campo('pf-clave-actual', 'actual', 'Contraseña actual', 'current-password', primerCampo)}
                         {campo('pf-clave-nueva', 'nueva', 'Nueva contraseña', 'new-password')}
                         {campo('pf-clave-confirmar', 'confirmar', 'Repetir nueva contraseña', 'new-password')}
-                    </div>
-
-                    <div className="form-check mt-3">
-                        <input
-                            className="form-check-input"
-                            type="checkbox"
-                            id="pf-clave-ver"
-                            checked={ver}
-                            onChange={e => setVer(e.target.checked)}
-                        />
-                        <label className="form-check-label small" htmlFor="pf-clave-ver">
-                            Mostrar contraseñas
-                        </label>
                     </div>
 
                     <ul className="pf-reglas mt-3 mb-0">

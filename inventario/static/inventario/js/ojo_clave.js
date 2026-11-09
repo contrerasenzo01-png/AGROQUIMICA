@@ -6,7 +6,7 @@
 
    No toca:
    - los campos de las pantallas de acceso (ya traen su ojo: .has-toggle)
-   - Mi perfil (tiene su casilla "Mostrar contraseñas")
+   - Mi perfil (React dibuja su propio ojo en cada campo)
    - los campos marcados con data-sin-ojo
    ============================================================ */
 (function () {
