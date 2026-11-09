@@ -186,7 +186,7 @@
                     <select class="form-select" name="ID_Tipo_producto" id="tipo_producto" required>
                         <option value="">Seleccionar tipo</option>
                         {% for tipo in tipos_productos %}
-                            <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
+                            <option value="{{ tipo.ID_Tipo_producto }}"{% if not tipo.Estado_tipo_producto %} data-inactivo="1"{% endif %}>{{ tipo.Nombre_tipo_producto }}{% if not tipo.Estado_tipo_producto %} (inactivo){% endif %}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -312,12 +312,24 @@
     /* =====================================================
        CREAR / EDITAR
     ===================================================== */
+
+    // Tipos inactivos: ocultos al registrar; al editar solo se
+    // muestra el que el subtipo ya tenía asignado.
+    function mostrarTiposInactivos(tipoActual) {
+        document.querySelectorAll('#tipo_producto option[data-inactivo]').forEach(function (opcion) {
+            const propio = String(opcion.value) === String(tipoActual);
+            opcion.hidden = !propio;
+            opcion.disabled = !propio;
+        });
+    }
+
     function abrirModalCrear() {
 
         document.getElementById('tituloModal').textContent = 'Registrar subtipo';
 
         formSubtipo.action = "{% url 'crear_subtipo' %}";
 
+        mostrarTiposInactivos('');
         document.getElementById('tipo_producto').value = '';
         document.getElementById('nombre_subtipo').value = '';
         document.getElementById('descripcion_subtipo').value = '';
@@ -333,6 +345,7 @@
 
         formSubtipo.action = "{% url 'editar_subtipo' 0 %}".replace('/0/', '/' + id + '/');
 
+        mostrarTiposInactivos(tipo);
         document.getElementById('tipo_producto').value = tipo;
         document.getElementById('nombre_subtipo').value = nombre;
         document.getElementById('descripcion_subtipo').value = descripcion;

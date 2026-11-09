@@ -1196,3 +1196,4 @@ html.modo-oscuro .pr-ficha-chips span { background: var(--d-green-bg); color: va
 }
 
 .pr-contador { margin-top: 12px; }
+.pr-proveedor-chip[hidden] { display: none; }

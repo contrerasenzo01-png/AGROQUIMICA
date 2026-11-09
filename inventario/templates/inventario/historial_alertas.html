@@ -86,7 +86,7 @@
                                 selected
                             {% endif %}>
 
-                            {{ producto.Nombre_producto }}
+                            {{ producto.Nombre_producto }}{% if producto.Estado_producto != 'Activo' %} (Inactivo){% endif %}
 
                         </option>
 
@@ -118,7 +118,7 @@
                             {% endif %}>
 
                             {{ usuario_item.Apellido_usuario }},
-                            {{ usuario_item.Nombre_usuario }}
+                            {{ usuario_item.Nombre_usuario }}{% if not usuario_item.Estado_usuario %} (Inactivo){% endif %}
 
                         </option>
 

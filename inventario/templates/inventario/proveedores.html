@@ -194,7 +194,7 @@
                                         </form>
 
 
-                                        <!-- ELIMINAR -->
+                                        <!-- ELIMINAR (solo si no tiene productos ni remitos) -->
                                         {% if p.eliminable %}
 
                                             <button type="button"
@@ -212,6 +212,21 @@
                                                 <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
 
                                             </button>
+
+                                        {% else %}
+
+                                            <!-- El span muestra el motivo: los botones deshabilitados no reciben el hover. -->
+                                            <span title="{{ p.motivo_no_eliminable }}" style="display:inline-flex; cursor:not-allowed;">
+                                                <button type="button"
+                                                        class="pv-accion pv-accion-icono pv-baja"
+                                                        aria-label="{{ p.motivo_no_eliminable }}"
+                                                        style="pointer-events:none;"
+                                                        disabled>
+
+                                                    <svg class="pv-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+
+                                                </button>
+                                            </span>
 
                                         {% endif %}
 
@@ -275,7 +290,7 @@
 
         <div class="pv-modal-head">
 
-            <h2 id="tituloConfirmarBaja">Confirmar baja</h2>
+            <h2 id="tituloConfirmarBaja">Confirmar estado inactivo</h2>
 
             <button type="button"
                     class="pv-modal-x"
@@ -355,7 +370,7 @@
             <button type="button"
                     class="pv-btn pv-btn-peligro"
                     id="btnConfirmarBajaEjecutar">
-                Confirmar baja
+                Confirmar
             </button>
 
         </div>

@@ -556,9 +556,16 @@ def _render_proveedores(
 
     # Un proveedor solo puede eliminarse si nunca se utilizó.
     for proveedor in proveedores:
-        proveedor.eliminable = (
-            proveedor.pk not in con_remitos
-            and proveedor.pk not in con_productos
+        vinculos = []
+        if proveedor.pk in con_remitos:
+            vinculos.append('remitos registrados')
+        if proveedor.pk in con_productos:
+            vinculos.append('productos asociados')
+
+        proveedor.eliminable = not vinculos
+        proveedor.motivo_no_eliminable = (
+            'No se puede eliminar: tiene ' + ' y '.join(vinculos)
+            if vinculos else ''
         )
 
     # --------------------------------------------------------
@@ -1433,6 +1440,8 @@ def gestion_subtipos(request):
             subtipo.ID_Subtipo, 0
         )
 
+    # Todos los tipos: al registrar solo se ofrecen los activos y al
+    # editar se conserva el tipo inactivo que el subtipo ya tenía.
     tipos_productos = TiposProductos.objects.order_by(
         'Nombre_tipo_producto'
     )
@@ -1574,7 +1583,11 @@ def editar_subtipo(request, pk):
 
     tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=tipo_id)
 
-    if not tipo.Estado_tipo_producto:
+    # Se permite conservar el tipo inactivo que el subtipo ya tenía.
+    if (
+        not tipo.Estado_tipo_producto
+        and tipo.pk != subtipo.ID_Tipo_producto_id
+    ):
         messages.error(
             request,
             'No se pueden asociar subtipos a un tipo de producto inactivo.'
@@ -2688,8 +2701,15 @@ def mis_permisos(request):
 UNIDADES_VALIDAS = ('kg', 'g', 'litros')
 
 
-def _leer_datos_producto(request, estado_por_defecto, unidad_actual=None):
-    """Lee y valida los datos del producto y su subtipo."""
+def _leer_datos_producto(request, estado_por_defecto, unidad_actual=None,
+                         producto_actual=None):
+    """Lee y valida los datos del producto y su subtipo.
+
+    Al editar (producto_actual), se permite conservar el tipo y los
+    proveedores que el producto ya tenía aunque hoy estén inactivos:
+    lo inactivo no se asigna de nuevo, pero tampoco se borra del
+    registro histórico.
+    """
 
     tipo_id = request.POST.get('ID_Tipo_producto', '').strip()
     subtipo_id = request.POST.get('ID_Subtipo', '').strip()
@@ -2707,7 +2727,12 @@ def _leer_datos_producto(request, estado_por_defecto, unidad_actual=None):
 
     tipo = get_object_or_404(TiposProductos, ID_Tipo_producto=tipo_id)
 
-    if not tipo.Estado_tipo_producto:
+    conserva_tipo = (
+        producto_actual is not None
+        and tipo.pk == producto_actual.ID_Tipo_producto_id
+    )
+
+    if not tipo.Estado_tipo_producto and not conserva_tipo:
         return None, 'No se pueden registrar productos con un tipo inactivo.'
 
     # --------------------------------------------------------
@@ -2815,11 +2840,19 @@ def _leer_datos_producto(request, estado_por_defecto, unidad_actual=None):
         if i.strip().isdigit()
     }
 
+    # Activos, o inactivos que el producto ya tenía asignados.
+    permitidos = Q(estado_proveedor=True)
+
+    if producto_actual is not None:
+        permitidos |= Q(
+            ID_Proveedor__in=producto_actual.proveedores.values('ID_Proveedor')
+        )
+
     proveedores_producto = list(
         Proveedores.objects.filter(
-            ID_Proveedor__in=ids_proveedores,
-            estado_proveedor=True
-        )
+            permitidos,
+            ID_Proveedor__in=ids_proveedores
+        ).distinct()
     )
 
     if not proveedores_producto:
@@ -3028,10 +3061,19 @@ def gestion_productos(request):
 
     # TIPOS Y SUBTIPOS PARA LOS FORMULARIOS
 
+    # Todos los tipos (incluidos los inactivos) para el filtro de
+    # búsqueda: así se siguen consultando los registros históricos.
     tipos_productos = TiposProductos.objects.order_by(
         'Nombre_tipo_producto'
     )
 
+    # Solo tipos activos para los modales de registrar/editar:
+    # un tipo inactivo no puede asignarse a productos.
+    tipos_activos = tipos_productos.filter(Estado_tipo_producto=True)
+
+    # Todos los subtipos: el modal de edición necesita los del tipo
+    # actual del producto aunque ese tipo esté inactivo. El modal de
+    # registrar solo muestra los del tipo elegido (siempre activo).
     subtipos = Subtipos.objects.select_related(
         'ID_Tipo_producto'
     ).order_by(
@@ -3048,6 +3090,7 @@ def gestion_productos(request):
         {
             'productos': productos,
             'tipos_productos': tipos_productos,
+            'tipos_activos': tipos_activos,
             'subtipos': subtipos,
             'busqueda': busqueda,
             'usuario': usuario,
@@ -3058,6 +3101,11 @@ def gestion_productos(request):
             'proveedores_activos': Proveedores.objects.filter(
                 estado_proveedor=True
             ).order_by('nombre_proveedor'),
+            # Edición: todos, los inactivos solo se muestran si el
+            # producto ya los tenía asignados.
+            'proveedores_todos': Proveedores.objects.order_by(
+                'nombre_proveedor'
+            ),
             'puede_egresar': puede_egresar,
             'datos_egreso': _datos_egreso() if puede_egresar else [],
         }
@@ -3197,7 +3245,8 @@ def editar_producto(request, pk):
 
     datos, error = _leer_datos_producto(
         request,
-        producto.Estado_producto
+        producto.Estado_producto,
+        producto_actual=producto
     )
 
     if error:
@@ -3803,16 +3852,18 @@ def gestion_alertas(request):
             'fecha_atencion': alerta.Fecha_hora_atencion,
         })
 
-    productos = Productos.objects.filter(
-        Estado_producto='Activo'
-    ).order_by('Nombre_producto')
+    # Filtro de búsqueda: todos los productos, incluidos los inactivos,
+    # porque sus alertas siguen formando parte del historial.
+    productos = Productos.objects.order_by('Nombre_producto')
 
     # Filtro "Atendida por": el administrador elige entre todos;
     # el resto solo puede elegirse a sí mismo.
+    # Se incluyen los usuarios inactivos porque las alertas que
+    # atendieron siguen formando parte del historial.
     if es_admin:
-        usuarios = Usuarios.objects.filter(
-            Estado_usuario=True
-        ).order_by('Apellido_usuario', 'Nombre_usuario')
+        usuarios = Usuarios.objects.order_by(
+            'Apellido_usuario', 'Nombre_usuario'
+        )
     else:
         usuarios = Usuarios.objects.filter(ID_Usuario=usuario.ID_Usuario)
 
@@ -5253,7 +5304,14 @@ def gestion_remitos(request):
     else:
         proveedor_filtro = ''
 
+    # Filtro de búsqueda: todos los proveedores con remitos, incluidos
+    # los inactivos, para consultar sus registros históricos.
     proveedores = Proveedores.objects.filter(
+        remitos__isnull=False
+    ).distinct().order_by('nombre_proveedor')
+
+    # Modal de alta: solo proveedores activos.
+    proveedores_alta = Proveedores.objects.filter(
         estado_proveedor=True
     ).order_by('nombre_proveedor')
 
@@ -5273,7 +5331,7 @@ def gestion_remitos(request):
             'remitos': pagina,
             'pagina': pagina,
             'proveedores': proveedores,
-            'proveedores_alta': proveedores,
+            'proveedores_alta': proveedores_alta,
             'productos_alta': productos_alta,
             'total_remitos': Remitos.objects.count(),
             'total_proveedores': Remitos.objects.values(

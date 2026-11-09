@@ -473,7 +473,7 @@
                                         <select class="form-select" name="ID_Tipo_producto" id="crear_tipo"
                                                 onchange="actualizarSubtipos('crear_tipo', 'crear_subtipo')" required>
                                             <option value="">Seleccione un tipo</option>
-                                            {% for tipo in tipos_productos %}
+                                            {% for tipo in tipos_activos %}
                                                 <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
                                             {% endfor %}
                                         </select>
@@ -647,7 +647,7 @@
                                         <select class="form-select" id="edit_tipo" name="ID_Tipo_producto"
                                                 onchange="actualizarSubtipos('edit_tipo', 'edit_subtipo')" required>
                                             {% for tipo in tipos_productos %}
-                                                <option value="{{ tipo.ID_Tipo_producto }}">{{ tipo.Nombre_tipo_producto }}</option>
+                                                <option value="{{ tipo.ID_Tipo_producto }}"{% if not tipo.Estado_tipo_producto %} data-inactivo="1"{% endif %}>{{ tipo.Nombre_tipo_producto }}{% if not tipo.Estado_tipo_producto %} (inactivo){% endif %}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -704,10 +704,10 @@
                             <div class="col-12">
                                 <label class="form-label">Proveedores que lo suministran</label>
                                 <div class="pr-proveedores" id="edit_proveedores">
-                                    {% for prov in proveedores_activos %}
+                                    {% for prov in proveedores_todos %}
                                         <input type="checkbox" class="btn-check" name="proveedores"
-                                               id="edit_prov_{{ prov.ID_Proveedor }}" value="{{ prov.ID_Proveedor }}" autocomplete="off">
-                                        <label class="pr-proveedor-chip" for="edit_prov_{{ prov.ID_Proveedor }}">{{ prov.nombre_proveedor }}</label>
+                                               id="edit_prov_{{ prov.ID_Proveedor }}" value="{{ prov.ID_Proveedor }}" autocomplete="off"{% if not prov.estado_proveedor %} data-inactivo="1"{% endif %}>
+                                        <label class="pr-proveedor-chip" for="edit_prov_{{ prov.ID_Proveedor }}">{{ prov.nombre_proveedor }}{% if not prov.estado_proveedor %} (inactivo){% endif %}</label>
                                     {% empty %}
                                         <span class="pr-ayuda">No hay proveedores activos. Registre uno primero.</span>
                                     {% endfor %}
@@ -1319,6 +1319,12 @@
 
             document.getElementById('edit_nombre').value = d.nombre;
             document.getElementById('edit_descripcion').value = d.descripcion;
+            // Tipos inactivos: solo se muestra el que el producto ya tenía.
+            document.querySelectorAll('#edit_tipo option[data-inactivo]').forEach(function (opcion) {
+                const propio = opcion.value === d.tipo;
+                opcion.hidden = !propio;
+                opcion.disabled = !propio;
+            });
             document.getElementById('edit_tipo').value = d.tipo;
             document.getElementById('edit_precio').value = d.precio;
             document.getElementById('edit_cantidad').value = d.cantidad;
@@ -1334,6 +1340,14 @@
             const ids = (d.proveedores || '').split(',').filter(Boolean);
             document.querySelectorAll('#edit_proveedores input').forEach(function (casilla) {
                 casilla.checked = ids.includes(casilla.value);
+
+                // Proveedor inactivo: solo figura si el producto ya lo tenía.
+                if (casilla.dataset.inactivo) {
+                    const visible = casilla.checked;
+                    casilla.hidden = !visible;
+                    casilla.disabled = !visible;
+                    casilla.nextElementSibling.hidden = !visible;
+                }
             });
 
             actualizarSubtipos('edit_tipo', 'edit_subtipo');
