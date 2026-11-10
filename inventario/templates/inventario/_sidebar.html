@@ -147,11 +147,15 @@
     <!-- MENÚ SEGÚN PERMISOS -->
     {% menu_lateral usuario as menu %}
 
+    <!-- Pantalla actual: sale de la URL, así se marca aunque la vista
+         no envíe "activo". -->
+    {% with actual=request.resolver_match.url_name %}
     <nav class="sidebar-nav">
 
         <div class="nav-item">
             <a href="{% url 'panel_principal' %}"
-               class="nav-link {% if activo == 'panel' %}active{% endif %}">
+               class="nav-link {% if activo == 'panel' or actual == 'panel_principal' %}active{% endif %}"
+               {% if activo == 'panel' or actual == 'panel_principal' %}aria-current="page"{% endif %}>
                 <svg class="nav-icon"><use href="#i-panel"></use></svg>
                 <span>Panel Principal</span>
             </a>
@@ -165,7 +169,8 @@
             {% for item in seccion.items %}
                 <div class="nav-item">
                     <a href="{% url item.url %}"
-                       class="nav-link {% if activo == item.modulo or activo == item.url %}active{% endif %}">
+                       class="nav-link {% if activo == item.modulo or activo == item.url or actual == item.url %}active{% endif %}"
+                       {% if activo == item.modulo or activo == item.url or actual == item.url %}aria-current="page"{% endif %}>
                         <svg class="nav-icon"><use href="#{{ item.icono }}"></use></svg>
                         <span>{{ item.texto }}</span>
                     </a>
@@ -174,6 +179,7 @@
         {% endfor %}
 
     </nav>
+    {% endwith %}
 
 
     <!-- ==========================================

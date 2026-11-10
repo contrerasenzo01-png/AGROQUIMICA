@@ -106,13 +106,59 @@
     box-shadow: 0 10px 22px rgba(24, 90, 56, .32);
 }
 
-.pr-btn-egreso {
-    background: #fff;
-    border-color: #f3c6c6;
-    color: var(--pr-rojo);
+/* Registrar egreso: rojo, con el mismo estilo que "Registrar producto"
+   (degradé + sombra) y la flecha que se adelanta al pasar el mouse. */
+body .main-content .pr-btn.pr-btn-egreso {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #b91c1c, #ef4444);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(185, 28, 28, .25);
 }
 
-.pr-btn-egreso:hover { background: #fdf0f0; border-color: #eba9a9; color: var(--pr-rojo); }
+body .main-content .pr-btn.pr-btn-egreso:hover,
+body .main-content .pr-btn.pr-btn-egreso:focus-visible {
+    background: linear-gradient(135deg, #991b1b, #dc2626);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(185, 28, 28, .32);
+}
+
+body .main-content .pr-btn.pr-btn-egreso:focus-visible {
+    outline: 2px solid #fca5a5;
+    outline-offset: 2px;
+}
+
+/* Brillo que cruza el botón al pasar el mouse */
+body .main-content .pr-btn.pr-btn-egreso::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent);
+    transform: skewX(-20deg);
+    pointer-events: none;
+}
+
+body .main-content .pr-btn.pr-btn-egreso:hover::after {
+    left: 120%;
+    transition: left .6s ease;
+}
+
+body .main-content .pr-btn.pr-btn-egreso svg {
+    transition: transform .2s ease;
+}
+
+body .main-content .pr-btn.pr-btn-egreso:hover svg {
+    transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body .main-content .pr-btn.pr-btn-egreso::after { display: none; }
+    body .main-content .pr-btn.pr-btn-egreso svg { transition: none; }
+}
 
 .pr-btn-claro {
     background: #fff;
@@ -1138,7 +1184,21 @@ html.modo-oscuro .pr-btn-claro,
 html.modo-oscuro .pr-proveedor-chip,
 html.modo-oscuro .pr-toast { background: var(--d-surface-2); color: var(--d-text); }
 
-html.modo-oscuro .pr-btn-egreso { background: var(--d-surface-2); border-color: var(--d-red-bd, #5c2222); color: var(--d-red-tx); }
+/* !important: tema.css pone gris (con !important) todo ".btn" en
+   modo oscuro; sin esto el botón de egreso perdía el rojo. */
+html.modo-oscuro body .main-content .pr-btn.pr-btn-egreso {
+    background: linear-gradient(135deg, #991b1b, #dc2626) !important;
+    border: 1px solid transparent !important;
+    color: #fff !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .35);
+}
+
+html.modo-oscuro body .main-content .pr-btn.pr-btn-egreso:hover,
+html.modo-oscuro body .main-content .pr-btn.pr-btn-egreso:focus-visible {
+    background: linear-gradient(135deg, #b91c1c, #ef4444) !important;
+    color: #fff !important;
+    box-shadow: 0 10px 22px rgba(239, 68, 68, .25);
+}
 
 html.modo-oscuro .pr-btn-lotes { background: var(--d-green-bg); border-color: var(--d-green-bd); color: var(--d-green-tx); }
 html.modo-oscuro .pr-stock-barra { background: var(--d-surface-3); }

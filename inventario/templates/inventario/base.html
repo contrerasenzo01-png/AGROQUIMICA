@@ -44,8 +44,8 @@
     {% block css_librerias %}
     {% endblock %}
 
-    <link rel="stylesheet" href="{% static 'inventario/css/sidebar.css' %}?v=2">
-    <link rel="stylesheet" href="{% static 'inventario/css/topbar.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'inventario/css/sidebar.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'inventario/css/topbar.css' %}?v=3">
     <link rel="stylesheet" href="{% static 'inventario/css/confirmar.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/css/cerrar_sesion.css' %}">
     <link rel="stylesheet" href="{% static 'inventario/css/bootstrap_ajustes.css' %}?v=2">
@@ -142,12 +142,14 @@
                 <div class="topbar-right">
 
                     <div class="topbar-date">
+                        <span class="topbar-date-ico" aria-hidden="true">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
                             <line x1="8" y1="2" x2="8" y2="6"></line>
                             <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
+                        </span>
                         <span>{{ topbar_fecha }}</span>
                     </div>
 
@@ -255,6 +257,8 @@
 
     <!-- BOOTSTRAP (modales, menús desplegables, tooltips) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Conserva lo escrito en un modal si se cierra sin querer (clic fuera / Escape) -->
+    <script src="{% static 'inventario/js/borrador_modal.js' %}"></script>
 
     <!-- REACT: solo se carga en las pantallas que lo usan.
          Esas pantallas incluyen 'inventario/_react.html' en este bloque. -->
@@ -303,7 +307,7 @@
         });
 
     </script>
-    <script src="{% static 'inventario/js/validaciones.js' %}?v=2"></script>
+    <script src="{% static 'inventario/js/validaciones.js' %}?v=3"></script>
     <!-- Ojo para mostrar u ocultar contraseñas -->
     <script src="{% static 'inventario/js/ojo_clave.js' %}"></script>
 </body>

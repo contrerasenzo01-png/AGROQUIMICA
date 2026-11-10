@@ -224,6 +224,29 @@ def datos_bandeja(usuario, limite=15):
     }
 
 
+def _auditar_atencion(usuario, notificacion):
+    """Deja en auditoría que el usuario atendió (marcó como leída) la
+    notificación, por ejemplo desde la campanita del header."""
+    from .auditoria import registrar_auditoria   # import diferido
+
+    lectura = timezone.localtime(notificacion.Fecha_lectura)
+
+    registrar_auditoria(
+        usuario,
+        'Notificaciones',
+        notificacion,
+        'ATENCION_NOTIFICACION',
+        {'Estado': 'Sin leer'},
+        {
+            'Nombre': notificacion.Tipo,
+            'Tipo': notificacion.Tipo,
+            'Mensaje': notificacion.Mensaje,
+            'Estado': 'Leída',
+            'Fecha_lectura': lectura.strftime('%d/%m/%Y %H:%M'),
+        },
+    )
+
+
 def marcar_leida(usuario, notificacion):
     if notificacion.Leida:
         return False
@@ -231,12 +254,20 @@ def marcar_leida(usuario, notificacion):
     notificacion.Leida = True
     notificacion.Fecha_lectura = timezone.now()
     notificacion.save(update_fields=['Leida', 'Fecha_lectura'])
+    _auditar_atencion(usuario, notificacion)
     return True
 
 
 def marcar_todas_leidas(usuario):
-    return notificaciones_de(usuario).filter(Leida=False).update(
-        Leida=True,
-        Fecha_lectura=timezone.now(),
-    )
+    """Marca todas como leídas y deja un registro de auditoría por cada una."""
+    ahora = timezone.now()
+    pendientes = list(notificaciones_de(usuario).filter(Leida=False))
 
+    with transaction.atomic():
+        for notificacion in pendientes:
+            notificacion.Leida = True
+            notificacion.Fecha_lectura = ahora
+            notificacion.save(update_fields=['Leida', 'Fecha_lectura'])
+            _auditar_atencion(usuario, notificacion)
+
+    return len(pendientes)

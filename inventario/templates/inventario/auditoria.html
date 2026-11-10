@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}?v=13">
+    <link rel="stylesheet" href="{% static 'inventario/styles/auditoria.css' %}?v=14">
     <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
@@ -60,6 +60,7 @@
                     <option value="ASIGNACION_PERFIL" {% if accion == 'ASIGNACION_PERFIL' %}selected{% endif %}>Asignación de perfil</option>
                     <option value="ASIGNACION_PERMISOS" {% if accion == 'ASIGNACION_PERMISOS' %}selected{% endif %}>Asignación de permisos</option>
                     <option value="ATENCION_ALERTA" {% if accion == 'ATENCION_ALERTA' %}selected{% endif %}>Atención de alerta</option>
+                    <option value="ATENCION_NOTIFICACION" {% if accion == 'ATENCION_NOTIFICACION' %}selected{% endif %}>Atención de notificación</option>
                     <option value="BAJA" {% if accion == 'BAJA' %}selected{% endif %}>Baja</option>
                     <option value="ACTIVACION" {% if accion == 'ACTIVACION' %}selected{% endif %}>Activación</option>
                     <option value="RESET_CONTRASENA" {% if accion == 'RESET_CONTRASENA' %}selected{% endif %}>Restablecimiento de contraseña</option>
@@ -199,7 +200,7 @@
                                 <span class="al-badge aud-egr">Egreso de stock</span>
 
                             {% elif log.Accion == 'EGRESO_VENCIMIENTO' %}
-                                <span class="al-badge aud-eli">Egreso por vencimiento</span>
+                                <span class="al-badge aud-egr-ven">Egreso por vencimiento</span>
 
                             {% elif log.Accion == 'INGRESO_LOTE' %}
                                 <span class="al-badge aud-ing">Ingreso de lote</span>
@@ -215,6 +216,9 @@
 
                             {% elif log.Accion == 'ATENCION_ALERTA' %}
                                 <span class="al-badge aud-ate">Atención de alerta</span>
+
+                            {% elif log.Accion == 'ATENCION_NOTIFICACION' %}
+                                <span class="al-badge aud-not">Atención de notificación</span>
 
                             {% elif log.Accion == 'BAJA' %}
                                 <span class="al-badge aud-baj">Baja</span>
@@ -310,13 +314,6 @@
                 <!-- Aquí se cargarán los datos del registro -->
             </div>
 
-            <div class="aud-modal-footer">
-                <button type="button"
-                        class="al-btn al-btn-claro"
-                        onclick="cerrarDetalleAuditoria()">
-                    Cerrar
-                </button>
-            </div>
 
         </div>
 
@@ -328,5 +325,5 @@
 
 {% block extra_js %}
     <script src="{% static 'inventario/js/paginacion.js' %}"></script>
-    <script src="{% static 'inventario/js/auditoria.js' %}?v=3"></script>
+    <script src="{% static 'inventario/js/auditoria.js' %}?v=4"></script>
 {% endblock %}

@@ -301,6 +301,30 @@
 
 .topbar-date svg { color: var(--tb-acento); }
 
+/* Ícono de calendario con un pulso suave (el que tenía el puntito
+   de la fecha en el panel principal) */
+.topbar-date-ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin-left: -5px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(46, 157, 102, .55);
+    animation: tb-fecha-pulso 2.2s infinite;
+}
+
+@keyframes tb-fecha-pulso {
+    0%   { box-shadow: 0 0 0 0 rgba(46, 157, 102, .55); }
+    70%  { box-shadow: 0 0 0 7px rgba(46, 157, 102, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 157, 102, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .topbar-date-ico { animation: none; }
+}
+
 .topbar-date:hover {
     border-color: #cfe3d7;
     background-color: #eef6f1;
@@ -400,6 +424,14 @@ html.modo-oscuro .topbar-date {
 }
 
 html.modo-oscuro .topbar-date svg { color: var(--d-green); }
+
+html.modo-oscuro .topbar-date-ico { animation-name: tb-fecha-pulso-oscuro; }
+
+@keyframes tb-fecha-pulso-oscuro {
+    0%   { box-shadow: 0 0 0 0 rgba(74, 222, 128, .45); }
+    70%  { box-shadow: 0 0 0 7px rgba(74, 222, 128, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
 
 html.modo-oscuro .topbar-date:hover {
     background-color: var(--d-surface-3);

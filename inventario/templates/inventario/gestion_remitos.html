@@ -126,8 +126,7 @@
 
         <select name="proveedor"
                 id="filtroProveedor"
-                class="form-select rm-select"
-                onchange="this.form.submit()">
+                class="form-select rm-select">
             <option value="">Todos los proveedores</option>
 
             {% for proveedor in proveedores %}
@@ -142,8 +141,7 @@
 
         <select name="estado"
                 id="filtroEstado"
-                class="form-select rm-select"
-                onchange="this.form.submit()">
+                class="form-select rm-select">
             <option value="">Todos los estados</option>
             <option value="Confirmado" {% if estado_filtro == 'Confirmado' %}selected{% endif %}>Confirmado</option>
             <option value="Anulado" {% if estado_filtro == 'Anulado' %}selected{% endif %}>Anulado</option>
@@ -989,10 +987,43 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ numeros_remito|json_script:"numerosRemito" }}
 <script src="{% static 'inventario/js/paginacion.js' %}"></script>
 <script>
 (function () {
     'use strict';
+
+    /* NÚMERO DE REMITO REPETIDO
+       Se avisa debajo del campo mientras se escribe (no recién al
+       guardar). validaciones.js muestra el mensaje y frena el envío. */
+    const NUMEROS_REMITO = JSON.parse(
+        document.getElementById('numerosRemito').textContent || '[]'
+    );
+
+    function controlRepetido(campoNumero, campoId) {
+        const input = document.getElementById(campoNumero);
+        if (!input) return;
+
+        input.vExtra = function (valor) {
+            const buscado = valor.trim().toLowerCase();
+            const propio = campoId
+                ? document.getElementById(campoId).value
+                : '';
+
+            const existente = NUMEROS_REMITO.find(function (r) {
+                return r.numero.toLowerCase() === buscado &&
+                       String(r.id) !== String(propio);
+            });
+
+            return existente
+                ? 'Este número de remito ya está registrado (proveedor ' +
+                  existente.proveedor + ').'
+                : '';
+        };
+    }
+
+    controlRepetido('crear_numero', null);
+    controlRepetido('editar_numero', 'editar_id_remito');
 
     /* BÚSQUEDA Y FILTROS: los aplica el servidor (formulario GET),
        así encuentran en todas las páginas, no solo en la visible. */
@@ -1207,11 +1238,18 @@
     window.abrirModalCrear = function () {
         const modal = document.getElementById('modalCrearRemito');
 
-        formCrear.reset();
-        listaLotes.innerHTML = '';
-        ocultarError();
+        // Si se cerró sin querer (clic fuera / Escape), se conserva todo
+        // lo cargado, incluidos los lotes agregados (borrador_modal.js).
+        const conservar = window.BorradorModal &&
+                          BorradorModal.pendiente('modalCrearRemito');
+
+        if (!conservar) {
+            formCrear.reset();
+            listaLotes.innerHTML = '';
+            ocultarError();
+            window.agregarLote(false);
+        }
         btnGuardar.disabled = false;
-        window.agregarLote(false);
 
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');

@@ -118,10 +118,38 @@ html, body { margin: 0; padding: 0; }
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.nav-link:hover,
-.nav-link.active:hover { background-color: rgba(255, 255, 255, 0.10); color: #ffffff; }
+.nav-link:hover { background-color: rgba(255, 255, 255, 0.10); color: #ffffff; }
 
-.nav-link.active { background-color: transparent; color: #ffffff; }
+/* Pantalla actual: fondo verde más claro, barra amarilla a la
+   izquierda e ícono resaltado, para saber siempre dónde se está. */
+.nav-link { position: relative; }
+
+.sidebar .nav-link.active,
+.sidebar .nav-link.active:focus,
+.sidebar .nav-link.active:hover {
+    background-color: rgba(46, 157, 102, 0.28);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.sidebar .nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0;   /* dentro del ítem: .sidebar-nav recorta lo que sobresale */
+    top: 8px;
+    bottom: 8px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background-color: #f5c400;
+}
+
+.sidebar .nav-link.active .nav-icon { color: #f5c400; }
+
+html.modo-oscuro .sidebar .nav-link.active,
+html.modo-oscuro .sidebar .nav-link.active:hover {
+    background-color: rgba(74, 222, 128, 0.14);
+}
 
 .nav-icon {
     width: 20px;

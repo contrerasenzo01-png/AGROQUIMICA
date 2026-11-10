@@ -369,17 +369,11 @@
     background: rgba(0, 0, 0, 0.06);
 }
 
-/* Solo una X: se ocultan los íconos que agregan otros estilos */
-.aud-modal-cerrar::before,
+/* Una sola X: botones.css oculta el "×" de texto (font-size: 0) y
+   dibuja el ícono con ::before. Acá solo se evita un segundo ícono. */
 .aud-modal-cerrar::after,
 .aud-modal-cerrar svg {
     display: none !important;
-}
-
-.aud-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 24px;
 }
 
 
@@ -797,3 +791,27 @@ html.modo-oscuro .aud-det-vacio {
 
 html.modo-oscuro .aud-modal-cerrar { color: var(--d-text-2); }
 html.modo-oscuro .aud-modal-cerrar:hover { background: var(--d-hover); }
+
+
+/* Atención de alerta / atención de notificación */
+.al-badge.aud-ate {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.al-badge.aud-not {
+    color: #0369a1;
+    background: #e0f2fe;
+}
+
+html.modo-oscuro .al-badge.aud-ate {
+    background: #172554 !important;
+    color: #93c5fd !important;
+    border-color: #1e3a8a !important;
+}
+
+html.modo-oscuro .al-badge.aud-not {
+    background: #0c2a3d !important;
+    color: #7dd3fc !important;
+    border-color: #164e63 !important;
+}

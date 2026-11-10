@@ -410,6 +410,12 @@
             msg = VALIDADORES[regla.tipo](valor, regla, el);
         }
 
+        // Control extra propio de una pantalla (ej. número de remito
+        // repetido): el.vExtra = function (valor) { return 'mensaje' | ''; }
+        if (!msg && !vacio && typeof el.vExtra === 'function') {
+            msg = el.vExtra(valor, el) || '';
+        }
+
         if (msg) { mostrarError(el, msg, false); return false; }
 
         ocultarError(el);

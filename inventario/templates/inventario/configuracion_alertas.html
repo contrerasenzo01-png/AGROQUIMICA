@@ -64,7 +64,7 @@
                 {% endfor %}
             </div>
             <p class="cf-ejemplo">
-                Con mínimo 100, avisa al llegar a <span data-ej="stock_ejemplo"></span> unidades o menos.
+                Con mínimo 10, avisa al llegar a <span data-ej="stock_ejemplo"></span> unidades o menos.
             </p>
         </section>
 
@@ -149,7 +149,10 @@
                 var clave = el.getAttribute('data-ej');
                 if (clave === 'stock_ejemplo') {
                     var margen = parseInt(valor('margen_stock_minimo'), 10) || 0;
-                    el.textContent = 100 + margen;
+                    // Igual que el servidor (umbral_stock en alertas.py):
+                    // mínimo + margen redondeado hacia arriba.
+                    var minimo = 10;
+                    el.textContent = minimo + Math.ceil(minimo * margen / 100);
                 } else {
                     el.textContent = valor(clave) || '…';
                 }

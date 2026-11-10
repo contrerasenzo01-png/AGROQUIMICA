@@ -4546,6 +4546,26 @@ def _validar_numero_y_fecha_remito(numero_texto, fecha_texto, hoy):
     return numero, fecha, None
 
 
+def _remito_duplicado(numero, excluir_id=None):
+    """Mensaje de error si ya hay un remito con ese número (sin importar
+    mayúsculas ni el proveedor); None si el número está libre."""
+    existentes = Remitos.objects.filter(Numero_remito__iexact=numero)
+
+    if excluir_id:
+        existentes = existentes.exclude(ID_Remito=excluir_id)
+
+    existente = existentes.select_related('ID_Proveedor').first()
+
+    if not existente:
+        return None
+
+    return (
+        f'Ya existe un remito con el número "{existente.Numero_remito}" '
+        f'(proveedor {existente.ID_Proveedor.nombre_proveedor}). '
+        'Verifique el número ingresado.'
+    )
+
+
 def _validar_lote(numero_texto, cajas_texto, unidades_texto,
                   vencimiento_texto, hoy, permitir_vencido=False):
     """Valida los datos de un lote. Devuelve (datos, error)."""
@@ -4630,6 +4650,9 @@ def gestion_remitos(request):
                 request.POST.get('Fecha_remito', ''),
                 hoy
             )
+
+            if not error:
+                error = _remito_duplicado(numero_remito)
 
             if error:
                 messages.error(request, error)
@@ -4857,6 +4880,9 @@ def gestion_remitos(request):
             if not remito_id.isdigit():
                 error = error or 'El remito seleccionado no es válido.'
 
+            if not error:
+                error = _remito_duplicado(numero_remito, excluir_id=remito_id)
+
             if error:
                 messages.error(request, error)
                 return redirect('gestion_remitos')
@@ -4894,7 +4920,7 @@ def gestion_remitos(request):
             except IntegrityError:
                 messages.error(
                     request,
-                    'Ya existe otro remito con ese número para el proveedor.'
+                    'Ya existe otro remito con ese número.'
                 )
 
             return redirect('gestion_remitos')
@@ -5366,6 +5392,15 @@ def gestion_remitos(request):
             'puede_anular': puede_accion(usuario, 'anular_remitos'),
             'puede_gestionar': puede(usuario, 'remitos', gestionar=True),
             'hoy': hoy,
+            # Para avisar en el modal, mientras se escribe, si el número
+            # de remito ya existe (el servidor lo vuelve a controlar).
+            'numeros_remito': [
+                {'id': r['ID_Remito'], 'numero': r['Numero_remito'],
+                 'proveedor': r['ID_Proveedor__nombre_proveedor']}
+                for r in Remitos.objects.values(
+                    'ID_Remito', 'Numero_remito', 'ID_Proveedor__nombre_proveedor'
+                )
+            ] if puede(usuario, 'remitos', gestionar=True) else [],
         }
     )
 
@@ -5619,6 +5654,7 @@ def detalle_auditoria(request, id_log):
     ACCIONES_DATOS = (
         'CREACION', 'EGRESO_STOCK', 'EGRESO_VENCIMIENTO', 'INGRESO_LOTE',
         'DESCARGA_PDF', 'ENVIO_RECUPERACION', 'BLOQUEO_INACTIVIDAD',
+        'ATENCION_NOTIFICACION',
     )
 
     if log.Accion in ACCIONES_DATOS:

@@ -456,31 +456,6 @@ html.modo-oscuro .pp-panel .alert-light {
     max-width: 520px;
 }
 
-.pp-hero-fecha {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    padding: 5px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #185a38;
-    background: rgba(255, 255, 255, .7);
-    border: 1px solid #d5e7dc;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-}
-
-.pp-hero-punto {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #2e9d66;
-    box-shadow: 0 0 0 0 rgba(46, 157, 102, .6);
-    animation: pp-hero-pulso 2.2s infinite;
-}
-
 .pp-hero-titulo {
     font-family: 'Poppins', sans-serif;
     font-size: clamp(26px, 3vw, 38px);
@@ -544,16 +519,9 @@ html.modo-oscuro .pp-panel .alert-light {
     to   { transform: translate(40px, 24px); }
 }
 
-@keyframes pp-hero-pulso {
-    0%   { box-shadow: 0 0 0 0 rgba(46, 157, 102, .55); }
-    70%  { box-shadow: 0 0 0 8px rgba(46, 157, 102, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(46, 157, 102, 0); }
-}
-
 @media (prefers-reduced-motion: reduce) {
     .pp-hero-foto img,
-    .pp-hero-brillo,
-    .pp-hero-punto {
+    .pp-hero-brillo {
         animation: none;
     }
 
@@ -597,12 +565,6 @@ html.modo-oscuro .pp-hero-foto img {
 
 html.modo-oscuro .pp-hero-foto::after {
     background: linear-gradient(110deg, rgba(10, 30, 20, .45), rgba(10, 30, 20, 0) 60%);
-}
-
-html.modo-oscuro .pp-hero-fecha {
-    color: var(--d-green-tx);
-    background: rgba(21, 31, 26, .7);
-    border-color: var(--d-border);
 }
 
 html.modo-oscuro .pp-hero-titulo span {

@@ -36,17 +36,6 @@ function saludoSegunHora() {
     return 'Buenas noches';
 }
 
-function fechaDeHoy() {
-    const texto = new Date().toLocaleDateString('es-AR', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-
-    return texto.charAt(0).toUpperCase() + texto.slice(1);
-}
-
 function textoDias(dias) {
     if (dias < 0) return 'Vencido';
     if (dias === 0) return 'Vence hoy';
@@ -382,11 +371,6 @@ function Encabezado({ usuario, permisos, urls }) {
             <span className="pp-hero-brillo pp-hero-brillo-2" aria-hidden="true"></span>
 
             <div className="pp-hero-texto">
-                <span className="pp-hero-fecha pp-aparecer" style={{ '--pp-i': 0 }}>
-                    <span className="pp-hero-punto" aria-hidden="true"></span>
-                    {fechaDeHoy()}
-                </span>
-
                 <h1 className="pp-hero-titulo pp-aparecer" style={{ '--pp-i': 1 }}>
                     {saludoSegunHora()}, <span>{usuario.nombre}</span>
                 </h1>
