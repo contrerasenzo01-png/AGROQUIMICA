@@ -503,10 +503,14 @@ def revisar_egreso_inusual(movimiento):
 
     media = sum(previos) / len(previos)
     desvio = (sum((x - media) ** 2 for x in previos) / len(previos)) ** 0.5
+    # Piso para el desvío: si los egresos previos son todos iguales (σ = 0)
+    # o casi, cualquier diferencia mínima sería "inusual". Con el piso, el
+    # límite queda al menos en media + k·max(10% de la media, 1 unidad).
+    desvio = max(desvio, media * 0.1, 1)
     limite = media + k * desvio
     cantidad = movimiento.Cantidad_movimiento_stock
 
-    if desvio == 0 or cantidad <= limite:
+    if cantidad <= limite:
         return False
 
     mensaje = (
