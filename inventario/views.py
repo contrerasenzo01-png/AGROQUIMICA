@@ -39,7 +39,7 @@ from .reportes import (
 from .pdf_remito import generar_pdf_remito
 from .paginacion import paginar
 from .alertas import (
-    TIPO_STOCK, TIPOS_STOCK,
+    TIPO_STOCK, TIPOS_STOCK, TIPOS_VENTA,
     listar_notificaciones, mensaje_visible, revisar_stock,
     revisar_egreso_inusual,
     revisar_vencimientos as generar_alertas_vencimiento,
@@ -310,7 +310,7 @@ def _datos_panel(usuario):
     metricas = []
     stock_bajo = []
     por_vencer = []
-    grafico = []
+    grafico = {'mas': [], 'menos': [], 'sin_ventas': 0}
     movimientos = []
 
     # ---------------- PRODUCTOS Y STOCK ----------------
@@ -355,23 +355,36 @@ def _datos_panel(usuario):
             'url': reverse('gestion_productos'),
         })
 
-        # Productos activos agrupados por subtipo (o por tipo si no tiene).
-        conteo = {}
-
-        for producto in Productos.objects.filter(
-            Estado_producto='Activo'
-        ).select_related('ID_Tipo_producto', 'ID_Subtipo'):
-            if producto.ID_Subtipo:
-                nombre = producto.ID_Subtipo.Nombre_subtipo
-            else:
-                nombre = producto.ID_Tipo_producto.Nombre_tipo_producto
-
-            conteo[nombre] = conteo.get(nombre, 0) + 1
-
-        grafico = sorted(
-            [{'nombre': n, 'cantidad': c} for n, c in conteo.items()],
-            key=lambda d: (-d['cantidad'], d['nombre'])
+        # Unidades vendidas por producto activo (todo el historial).
+        # Venta = egreso por venta no anulado, igual que en los
+        # reportes consolidados.
+        vendidos = (
+            MovimientosStock.objects.filter(
+                Anulado=False,
+                ID_Tipo_movimiento__Nombre_tipo_movimiento__in=TIPOS_VENTA,
+                ID_Lote__isnull=False,
+                ID_Lote__ID_Producto__Estado_producto='Activo',
+            )
+            .values('ID_Lote__ID_Producto', 'ID_Lote__ID_Producto__Nombre_producto')
+            .annotate(cantidad=Sum('Cantidad_movimiento_stock'))
         )
+
+        ventas = [
+            {
+                'nombre': v['ID_Lote__ID_Producto__Nombre_producto'],
+                'cantidad': v['cantidad'],
+            }
+            for v in vendidos
+            if v['cantidad'] and v['cantidad'] > 0
+        ]
+
+        productos_activos = Productos.objects.filter(Estado_producto='Activo').count()
+
+        grafico = {
+            'mas': sorted(ventas, key=lambda d: (-d['cantidad'], d['nombre']))[:5],
+            'menos': sorted(ventas, key=lambda d: (d['cantidad'], d['nombre']))[:5],
+            'sin_ventas': max(productos_activos - len(ventas), 0),
+        }
 
     # ---------------- LOTES POR VENCER ----------------
     if ver_productos or ver_lotes:

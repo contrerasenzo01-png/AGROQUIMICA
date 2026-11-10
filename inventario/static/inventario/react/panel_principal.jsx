@@ -223,71 +223,65 @@ const FUENTE_GRAFICO = 'Inter, sans-serif';
 
 
 /* ------------------------------------------------------------
-   OPCIONES: BARRAS DE PRODUCTOS POR SUBTIPO
-   Barras horizontales ordenadas de mayor a menor. El alto se
-   adapta a la cantidad de subtipos, así sigue siendo legible
-   aunque haya muchos.
+   OPCIONES: TORTA DE PRODUCTOS MÁS / MENOS VENDIDOS
+   Cada pestaña tiene su propia paleta de colores vivos.
    ------------------------------------------------------------ */
 
-function opcionesBarrasSubtipo(datos, oscuro) {
-    const c = coloresGrafico(oscuro);
+const PALETAS_VENTAS = {
+    mas: ['#6366f1', '#06b6d4', '#22c55e', '#f59e0b', '#ec4899'],
+    menos: ['#f43f5e', '#8b5cf6', '#14b8a6', '#f97316', '#3b82f6'],
+};
 
-    const ordenados = [...datos].sort((a, b) => b.cantidad - a.cantidad);
-    const maximo = ordenados.length ? ordenados[0].cantidad : 0;
+function opcionesTortaVentas(datos, oscuro, paleta) {
+    const c = coloresGrafico(oscuro);
 
     return {
         chart: {
-            type: 'bar',
-            height: Math.max(180, 60 + ordenados.length * 34),
+            type: 'pie',
+            height: 320,
             background: 'transparent',
             fontFamily: FUENTE_GRAFICO,
             foreColor: c.texto2,
             toolbar: { show: false },
             animations: animacionesGrafico(900),
+            dropShadow: { enabled: true, top: 2, left: 0, blur: 6, opacity: oscuro ? 0.35 : 0.12 },
         },
-        series: [{ name: 'Productos', data: ordenados.map(d => d.cantidad) }],
-        colors: [c.paleta[0]],
+        series: datos.map(d => d.cantidad),
+        labels: datos.map(d => d.nombre),
+        colors: paleta,
+        fill: {
+            type: 'gradient',
+            gradient: { shade: 'light', type: 'diagonal1', shadeIntensity: 0.25, opacityFrom: 1, opacityTo: 0.9 },
+        },
+        stroke: { width: 3, colors: [c.fondoTarjeta] },
         plotOptions: {
-            bar: {
-                horizontal: true,
-                borderRadius: 4,
-                barHeight: '68%',
-                dataLabels: { position: 'top' },
-            },
+            pie: { expandOnClick: true, dataLabels: { offset: -12 } },
         },
         dataLabels: {
             enabled: true,
-            textAnchor: 'start',
-            offsetX: 6,
-            style: { fontSize: '12px', fontWeight: 600, colors: [c.texto] },
-            background: { enabled: false },
-            formatter: v => formatearNumero(v),
+            style: { fontSize: '12px', fontWeight: 700, colors: ['#ffffff'] },
+            dropShadow: { enabled: true, blur: 2, opacity: 0.4 },
+            formatter: v => Math.round(v) + '%',
         },
-        stroke: { show: false },
-        xaxis: {
-            categories: ordenados.map(d => d.nombre),
-            max: Math.ceil(maximo * 1.15) || undefined,
-            labels: { formatter: v => formatearNumero(Math.round(v)) },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
+        legend: {
+            position: 'bottom',
+            fontSize: '12px',
+            fontWeight: 600,
+            labels: { colors: c.texto },
+            markers: { size: 7, offsetX: -3 },
+            itemMargin: { horizontal: 8, vertical: 4 },
         },
-        yaxis: {
-            labels: { maxWidth: 160, style: { fontWeight: 600 } },
-        },
-        grid: {
-            borderColor: c.borde,
-            strokeDashArray: 3,
-            xaxis: { lines: { show: true } },
-            yaxis: { lines: { show: false } },
-        },
-        legend: { show: false },
         states: {
-            hover: { filter: { type: 'lighten', value: 0.08 } },
+            hover: { filter: { type: 'lighten', value: 0.06 } },
         },
         tooltip: {
             theme: oscuro ? 'dark' : 'light',
-            y: { formatter: v => v + (v === 1 ? ' producto' : ' productos') },
+            y: { formatter: v => formatearNumero(v) + (v === 1 ? ' unidad vendida' : ' unidades vendidas') },
         },
+        responsive: [{
+            breakpoint: 576,
+            options: { chart: { height: 300 } },
+        }],
     };
 }
 
@@ -499,33 +493,55 @@ function Vacio({ texto, ok }) {
 
 
 /* ------------------------------------------------------------
-   GRÁFICO: PRODUCTOS POR SUBTIPO (barras)
+   GRÁFICO: TOP 5 PRODUCTOS MÁS / MENOS VENDIDOS (torta)
+   Dos pestañas con el mismo estilo que "Requieren atención".
    ------------------------------------------------------------ */
 
-function GraficoProductos({ datos, url }) {
+function TortaVentas({ datos, paleta }) {
     const oscuro = useTemaOscuro();
-    const total = datos.reduce((suma, d) => suma + d.cantidad, 0);
+    const opciones = useMemo(() => opcionesTortaVentas(datos, oscuro, paleta), [datos, oscuro, paleta]);
 
-    const opciones = useMemo(() => opcionesBarrasSubtipo(datos, oscuro), [datos, oscuro]);
+    return <ApexGrafico opciones={opciones} />;
+}
+
+function GraficoVentas({ datos, url }) {
+    const [pestana, setPestana] = useState('mas');
+    const lista = pestana === 'mas' ? datos.mas : datos.menos;
+    const total = lista.reduce((suma, d) => suma + d.cantidad, 0);
 
     return (
         <div className="card h-100">
-            <CabeceraTarjeta titulo="Productos activos por subtipo">
+            <CabeceraTarjeta titulo="Productos por ventas">
                 <EnlaceVerTodo url={url} texto="Ver productos" />
             </CabeceraTarjeta>
 
-            <div className="card-body d-flex flex-column justify-content-center">
-                {datos.length === 0 ? (
-                    <Vacio texto="Todavía no hay productos activos." />
-                ) : (
-                    <>
-                        <ApexGrafico opciones={opciones} />
+            <div className="card-body d-flex flex-column">
+                <div className="btn-group btn-group-sm w-100 mb-3" role="tablist">
+                    <BotonSegmento activo={pestana === 'mas'} onClick={() => setPestana('mas')}>
+                        Top 5 más vendidos
+                    </BotonSegmento>
+                    <BotonSegmento activo={pestana === 'menos'} onClick={() => setPestana('menos')}>
+                        Top 5 menos vendidos
+                    </BotonSegmento>
+                </div>
 
-                        <p className="small text-body-secondary text-center mt-2 mb-0">
-                            {total} producto{total === 1 ? '' : 's'} activo{total === 1 ? '' : 's'} en total
-                        </p>
-                    </>
-                )}
+                <div className="flex-grow-1 d-flex flex-column justify-content-center">
+                    {lista.length === 0 ? (
+                        <Vacio texto="Todavía no hay ventas registradas." />
+                    ) : (
+                        <>
+                            {/* key: al cambiar de pestaña se vuelve a crear el gráfico con su animación */}
+                            <TortaVentas key={pestana} datos={lista} paleta={PALETAS_VENTAS[pestana]} />
+
+                            <p className="small text-body-secondary text-center mt-2 mb-0">
+                                {formatearNumero(total)} unidades vendidas entre estos {lista.length} productos
+                                {pestana === 'menos' && datos.sin_ventas > 0 && (
+                                    <> · {datos.sin_ventas} producto{datos.sin_ventas === 1 ? '' : 's'} activo{datos.sin_ventas === 1 ? '' : 's'} sin ventas</>
+                                )}
+                            </p>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -841,7 +857,7 @@ function Panel() {
                             className={'pp-aparecer col-12' + (muestraAtencion ? ' col-xl-6' : '')}
                             style={{ '--pp-i': 4 }}
                         >
-                            <GraficoProductos datos={DATOS.grafico} url={urls.productos} />
+                            <GraficoVentas datos={DATOS.grafico} url={urls.productos} />
                         </div>
                     )}
 
