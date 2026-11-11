@@ -18,8 +18,14 @@ MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
 
 AZUL = '#1565c0'
 
+# Los plazos se nombran con palabras (son categorías, no intervalos
+# numéricos). Cada etiqueta es una lista de renglones para el eje X.
 ETIQUETAS_TRAMOS = [
-    'Vencidos', '0-30 días', '31-60 días', '61-90 días', '+90 días'
+    ['Ya vencidos'],
+    ['Vencen en menos', 'de 1 mes'],
+    ['Vencen en', '1 a 2 meses'],
+    ['Vencen en', '2 a 3 meses'],
+    ['Vencen en más', 'de 3 meses'],
 ]
 COLORES_TRAMOS = [ROJO, NARANJA, AMARILLO, VERDE, AZUL]
 

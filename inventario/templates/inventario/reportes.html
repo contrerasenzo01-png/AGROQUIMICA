@@ -86,6 +86,61 @@
             color: #6b7c73;
         }
 
+        /* Indicadores (resumen numérico arriba de cada gráfico) */
+        .rep-indicadores {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0 4px;
+        }
+        .rep-indicadores:empty { display: none; }
+        .rep-ind {
+            background: #f6fbf4;
+            border: 1px solid #d6e6d4;
+            border-radius: 10px;
+            padding: 8px 14px;
+            min-width: 150px;
+        }
+        .rep-ind-etiqueta {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #6b7c73;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+        }
+        .rep-ind-valor {
+            display: block;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1f2d26;
+            margin-top: 2px;
+        }
+        .rep-ind-mal .rep-ind-valor { color: #c62828; }
+        .rep-ind-ok .rep-ind-valor { color: #2e7d32; }
+        .rep-aviso {
+            background: #fff8e1;
+            border: 1px solid #f5d77a;
+            color: #6d5200;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            margin: 8px 0 0;
+        }
+
+        /* Paginación del gráfico de stock */
+        .rep-paginacion {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #4a5a52;
+        }
+        .rep-paginacion[hidden] { display: none; }
+        .rep-paginacion .rep-btn:disabled { opacity: .45; cursor: default; }
+
         /* Leyenda del gráfico de stock (los colores cambian con el tema) */
         .rep-sw-ok  { background: #2e7d32; }
         .rep-sw-mal { background: #c62828; }
@@ -133,6 +188,21 @@
             color: #f87171;
         }
 
+        html.modo-oscuro .rep-ind {
+            background: #16211b;
+            border-color: #324539;
+        }
+        html.modo-oscuro .rep-ind-etiqueta { color: #a4b6ab; }
+        html.modo-oscuro .rep-ind-valor { color: #eef6f1; }
+        html.modo-oscuro .rep-ind-mal .rep-ind-valor { color: #f87171; }
+        html.modo-oscuro .rep-ind-ok .rep-ind-valor { color: #6ee7a1; }
+        html.modo-oscuro .rep-aviso {
+            background: #2b2510;
+            border-color: #6b5a1f;
+            color: #f5d77a;
+        }
+        html.modo-oscuro .rep-paginacion { color: #a4b6ab; }
+
         html.modo-oscuro .rep-tip { color: #e3ece6; }
         html.modo-oscuro .rep-tip strong { color: #eef6f1; }
         html.modo-oscuro .rep-tip-ok  { color: #6ee7a1; }
@@ -152,10 +222,12 @@
     <!-- 1. STOCK ACTUAL VS MÍNIMO -->
     <section class="rep-card">
         <div class="rep-cab">
-            <h2>Stock actual vs. stock mínimo por producto</h2>
+            <h2>¿Qué productos hay que reponer? Stock actual vs. stock mínimo</h2>
             <button type="button" class="rep-btn-pdf av-ico-pdf" data-pdf="stock">Descargar PDF</button>
         </div>
-        <p>Cada barra muestra el stock actual del producto y la marca negra indica su mínimo. En rojo están los productos que llegaron al mínimo o están por debajo: son los que conviene reponer primero.</p>
+        <p>Cada barra es la cantidad de unidades que hay hoy en stock de un producto. La línea vertical negra sobre cada barra es el stock mínimo de ese producto, es decir, la cantidad a partir de la cual hay que volver a comprar. Si la barra es roja (no supera la línea negra), el producto está en el mínimo o por debajo y hay que pedirlo al proveedor; si es verde, todavía alcanza. Los productos están ordenados del más urgente al menos urgente, así la decisión de qué comprar primero se toma mirando las primeras barras.</p>
+
+        <div class="rep-indicadores" id="stock-indicadores"></div>
 
         <div class="rep-filtros">
             <label class="rep-filtro">Tipo de producto
@@ -172,10 +244,15 @@
         <div class="rep-leyenda">
             <span><i class="rep-sw-ok"></i>Stock suficiente</span>
             <span><i class="rep-sw-mal"></i>En el mínimo o por debajo</span>
-            <span><i class="rep-marca"></i>Stock mínimo</span>
+            <span><i class="rep-marca"></i>Línea negra: stock mínimo (punto de reposición)</span>
         </div>
         <div id="stock-sin-stock" class="rep-sin-stock" hidden></div>
         <div id="grafico-stock" class="rep-chart"></div>
+        <div class="rep-paginacion" id="stock-paginacion" hidden>
+            <button type="button" class="rep-btn rep-btn-sec" id="stock-anterior">&larr; Anterior</button>
+            <span id="stock-pagina-texto"></span>
+            <button type="button" class="rep-btn rep-btn-sec" id="stock-siguiente">Siguiente &rarr;</button>
+        </div>
     </section>
 
     <!-- 2. UNIDADES POR VENCER -->
@@ -184,7 +261,9 @@
             <h2>Unidades por vencer según el plazo</h2>
             <button type="button" class="rep-btn-pdf av-ico-pdf" data-pdf="tramos">Descargar PDF</button>
         </div>
-        <p>Cantidad de unidades en stock agrupadas por el tiempo que falta para su vencimiento (incluye las que vencen en más de 90 días). Sirve para decidir qué vender primero y qué sacar de la venta.</p>
+        <p>Cantidad de unidades en stock agrupadas en categorías según cuánto falta para que venzan: ya vencidos, vencen en menos de 1 mes, entre 1 y 2 meses, entre 2 y 3 meses y en más de 3 meses. Las unidades ya vencidas hay que sacarlas de la venta; las que vencen en menos de 1 mes conviene venderlas primero (o promocionarlas); las de más de 3 meses no requieren acción por ahora.</p>
+
+        <div class="rep-indicadores" id="tramos-indicadores"></div>
 
         <div class="rep-filtros">
             <label class="rep-filtro">Tipo de producto
@@ -231,6 +310,9 @@
         <p class="rep-error" id="evol-error" hidden></p>
         <p class="rep-nota" id="evol-nota" hidden></p>
 
+        <div class="rep-indicadores" id="evol-indicadores"></div>
+        <p class="rep-aviso" id="evol-aviso" hidden></p>
+
         <div id="grafico-evolucion" class="rep-chart"></div>
     </section>
 
@@ -240,9 +322,14 @@
             <h2>Productos con más unidades vencidas</h2>
             <button type="button" class="rep-btn-pdf av-ico-pdf" data-pdf="vencidos">Descargar PDF</button>
         </div>
-        <p>Los 10 productos con mayor cantidad de unidades que se vencieron sin venderse. Ayuda a ajustar las próximas compras. Si filtra por tipo, subtipo o proveedor, se muestran los 10 primeros de esa selección.</p>
+        <p>Los 10 productos con mayor cantidad de unidades que se vencieron sin venderse. Ayuda a ajustar las próximas compras. Si filtra por tipo, subtipo o proveedor, se muestran los 10 primeros de esa selección. Con el buscador puede ver cuántas unidades vencidas tiene un producto en particular.</p>
 
         <div class="rep-filtros">
+            <label class="rep-filtro">Buscar producto
+                <input class="form-control" type="search" id="venc-buscar" list="venc-lista-productos"
+                       placeholder="Nombre del producto" autocomplete="off">
+                <datalist id="venc-lista-productos"></datalist>
+            </label>
             <label class="rep-filtro">Tipo de producto
                 <select class="form-select" id="venc-tipo"><option value="">Todos los tipos</option></select>
             </label>
@@ -254,6 +341,7 @@
             </label>
         </div>
 
+        <div class="rep-indicadores" id="venc-indicadores"></div>
         <div id="grafico-vencidos" class="rep-chart"></div>
     </section>
 
@@ -368,6 +456,38 @@ document.addEventListener('DOMContentLoaded', function () {
         attributeFilter: ['class'],
     });
 
+    const numero = n => Number(n).toLocaleString('es-AR');
+
+    // Dibuja las cajitas de indicadores: [{etiqueta, valor, clase}]
+    function mostrarIndicadores(id, items) {
+        const cont = document.getElementById(id);
+        cont.innerHTML = '';
+
+        items.forEach(function (it) {
+            const caja = document.createElement('div');
+            caja.className = 'rep-ind' + (it.clase ? ' rep-ind-' + it.clase : '');
+
+            const et = document.createElement('span');
+            et.className = 'rep-ind-etiqueta';
+            et.textContent = it.etiqueta;
+
+            const val = document.createElement('span');
+            val.className = 'rep-ind-valor';
+            val.textContent = it.valor;
+
+            caja.append(et, val);
+            cont.appendChild(caja);
+        });
+    }
+
+    // Texto de los indicadores de una tarjeta (para el PDF)
+    function textoIndicadores(tarjeta) {
+        return Array.from(tarjeta.querySelectorAll('.rep-ind')).map(function (c) {
+            return c.querySelector('.rep-ind-etiqueta').textContent + ': ' +
+                c.querySelector('.rep-ind-valor').textContent;
+        }).join('   ·   ');
+    }
+
     function fechaLegible(iso) {
         const [a, m, d] = iso.split('-');
         return d + '/' + m + '/' + a;
@@ -453,18 +573,141 @@ document.addEventListener('DOMContentLoaded', function () {
     // ------------------------------------------------------
     // 1. STOCK ACTUAL VS MÍNIMO
     // ------------------------------------------------------
-    const filtroStock = iniciarFiltroTipo('stock', renderStock);
+    // Productos por página (en pantalla y en cada hoja del PDF)
+    const POR_PAGINA_STOCK = 15;
+
+    const filtroStock = iniciarFiltroTipo('stock', function () {
+        paginaStock = 0;
+        renderStock();
+    });
     let sinStockActual = [];
+    let listaStock = [];
+    let paginaStock = 0;
+
+    const totalPaginasStock = () =>
+        Math.max(1, Math.ceil(listaStock.length / POR_PAGINA_STOCK));
+
+    const tramoStock = pagina =>
+        listaStock.slice(pagina * POR_PAGINA_STOCK, (pagina + 1) * POR_PAGINA_STOCK);
+
+    // Opciones del gráfico para una página de productos
+    // `alto` (opcional) es el alto real del dibujo, por ejemplo en el PDF.
+    function opcionesStock(lista, osc, alto) {
+        const P = paleta(osc);
+        const maxStock = Math.max(...lista.map(p => Math.max(p.stock, p.minimo)));
+        const altoGrafico = alto || Math.max(260, lista.length * 40 + 70);
+
+        // La línea del mínimo tiene que quedar dentro de la fila de su barra
+        // (si no, se mete en las barras de arriba y de abajo).
+        // ApexCharts dibuja la línea con el DOBLE de `strokeHeight`, centrada
+        // en la barra: con la mitad del alto de la barra, mide lo mismo que ella.
+        const altoFila = (altoGrafico - 80) / Math.max(1, lista.length);
+        const altoBarra = altoFila * 0.6;
+        const altoLinea = Math.max(2, Math.min(14, Math.floor(altoBarra * 0.55)));
+
+        return {
+            chart: {
+                ...baseChart(P),
+                type: 'bar',
+                height: altoGrafico,
+            },
+            theme: modoTema(osc),
+            series: [{
+                name: 'Stock actual',
+                data: lista.map(p => ({
+                    x: p.nombre,
+                    y: p.stock,
+                    fillColor: p.stock <= p.minimo ? P.rojo : P.verde,
+                    goals: [{
+                        name: 'Stock mínimo',
+                        value: p.minimo,
+                        strokeHeight: altoLinea,
+                        strokeWidth: 3,
+                        strokeColor: P.marca,
+                        strokeLineCap: 'round',
+                    }],
+                })),
+            }],
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    barHeight: '60%',
+                    borderRadius: 4,
+                    dataLabels: { position: 'top' },
+                },
+            },
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            grid: rejilla(P),
+            xaxis: {
+                min: 0,
+                max: Math.ceil(maxStock * 1.2) + 5,
+                title: { text: 'Unidades en stock', style: { color: P.gris } },
+                labels: { style: { colors: P.gris } },
+            },
+            yaxis: {
+                labels: { maxWidth: 280, style: { colors: P.texto, fontSize: '12.5px' } },
+            },
+            tooltip: {
+                theme: osc ? 'dark' : 'light',
+                custom: function ({ dataPointIndex }) {
+                    const p = lista[dataPointIndex];
+                    const critico = p.stock <= p.minimo;
+                    const falta = p.minimo - p.stock;
+                    return `
+                        <div class="rep-tip">
+                            <strong>${p.nombre}</strong>
+                            <div>Stock actual: <b>${p.stock}</b></div>
+                            <div>Stock mínimo: <b>${p.minimo}</b></div>
+                            <div class="${critico ? 'rep-tip-mal' : 'rep-tip-ok'}">
+                                ${critico
+                                    ? 'Conviene reponer' + (falta > 0 ? ` (faltan ${falta} para el mínimo)` : '')
+                                    : 'Stock suficiente'}
+                            </div>
+                        </div>`;
+                },
+            },
+        };
+    }
+
+    document.getElementById('stock-anterior').addEventListener('click', function () {
+        if (paginaStock > 0) { paginaStock--; renderStock(); }
+    });
+    document.getElementById('stock-siguiente').addEventListener('click', function () {
+        if (paginaStock < totalPaginasStock() - 1) { paginaStock++; renderStock(); }
+    });
 
     function renderStock() {
-        const lista = filtroStock.filtrar(D.stock);
+        listaStock = filtroStock.filtrar(D.stock);
+        paginaStock = Math.min(paginaStock, totalPaginasStock() - 1);
+        const lista = tramoStock(paginaStock);
 
-        const maxStock = lista.length
-            ? Math.max(...lista.map(p => Math.max(p.stock, p.minimo)))
-            : 0;
+        // Indicadores
+        const aReponer = listaStock.filter(p => p.stock <= p.minimo).length;
+        mostrarIndicadores('stock-indicadores', listaStock.length ? [
+            { etiqueta: 'Productos analizados', valor: numero(listaStock.length) },
+            { etiqueta: 'A reponer (rojos)', valor: numero(aReponer), clase: aReponer ? 'mal' : 'ok' },
+            { etiqueta: 'Con stock suficiente', valor: numero(listaStock.length - aReponer), clase: 'ok' },
+            {
+                etiqueta: 'Necesitan reposición',
+                valor: Math.round(aReponer * 100 / listaStock.length) + '%',
+                clase: aReponer ? 'mal' : 'ok',
+            },
+        ] : []);
+
+        // Paginación
+        const pag = document.getElementById('stock-paginacion');
+        const total = totalPaginasStock();
+        pag.hidden = listaStock.length <= POR_PAGINA_STOCK;
+        document.getElementById('stock-anterior').disabled = paginaStock === 0;
+        document.getElementById('stock-siguiente').disabled = paginaStock >= total - 1;
+        document.getElementById('stock-pagina-texto').textContent =
+            'Página ' + (paginaStock + 1) + ' de ' + total +
+            ' (productos ' + (paginaStock * POR_PAGINA_STOCK + 1) + ' a ' +
+            (paginaStock * POR_PAGINA_STOCK + lista.length) + ' de ' + listaStock.length + ')';
 
         // Productos sin stock: se listan fuera del gráfico
-        sinStockActual = lista.filter(p => p.stock === 0);
+        sinStockActual = listaStock.filter(p => p.stock === 0);
         const contSinStock = document.getElementById('stock-sin-stock');
         contSinStock.innerHTML = '';
 
@@ -491,70 +734,7 @@ document.addEventListener('DOMContentLoaded', function () {
             filtroStock.activo()
                 ? 'No hay productos activos con stock registrado para ese filtro.'
                 : 'No hay productos activos con stock registrado.',
-            function (osc) {
-                const P = paleta(osc);
-
-                return {
-                    chart: {
-                        ...baseChart(P),
-                        type: 'bar',
-                        height: Math.max(260, lista.length * 46 + 70),
-                    },
-                    theme: modoTema(osc),
-                    series: [{
-                        name: 'Stock actual',
-                        data: lista.map(p => ({
-                            x: p.nombre,
-                            y: p.stock,
-                            fillColor: p.stock <= p.minimo ? P.rojo : P.verde,
-                            goals: [{
-                                name: 'Stock mínimo',
-                                value: p.minimo,
-                                strokeHeight: 16,
-                                strokeWidth: 3,
-                                strokeColor: P.marca,
-                                strokeLineCap: 'round',
-                            }],
-                        })),
-                    }],
-                    plotOptions: {
-                        bar: {
-                            horizontal: true,
-                            barHeight: '60%',
-                            borderRadius: 4,
-                            dataLabels: { position: 'top' },
-                        },
-                    },
-                    dataLabels: { enabled: false },
-                    legend: { show: false },
-                    grid: rejilla(P),
-                    xaxis: {
-                        min: 0,
-                        max: Math.ceil(maxStock * 1.2) + 5,
-                        title: { text: 'Unidades', style: { color: P.gris } },
-                        labels: { style: { colors: P.gris } },
-                    },
-                    yaxis: {
-                        labels: { maxWidth: 280, style: { colors: P.texto, fontSize: '12.5px' } },
-                    },
-                    tooltip: {
-                        theme: osc ? 'dark' : 'light',
-                        custom: function ({ dataPointIndex }) {
-                            const p = lista[dataPointIndex];
-                            const critico = p.stock <= p.minimo;
-                            return `
-                                <div class="rep-tip">
-                                    <strong>${p.nombre}</strong>
-                                    <div>Stock actual: <b>${p.stock}</b></div>
-                                    <div>Stock mínimo: <b>${p.minimo}</b></div>
-                                    <div class="${critico ? 'rep-tip-mal' : 'rep-tip-ok'}">
-                                        ${critico ? 'Conviene reponer' : 'Stock suficiente'}
-                                    </div>
-                                </div>`;
-                        },
-                    },
-                };
-            }
+            osc => opcionesStock(lista, osc)
         );
     }
 
@@ -571,6 +751,19 @@ document.addEventListener('DOMContentLoaded', function () {
         filtroTramos.filtrar(D.tramos.productos).forEach(function (p) {
             p.valores.forEach((v, i) => { valores[i] += v; });
         });
+
+        const nombreTramo = i => D.tramos.etiquetas[i].join(' ');
+        const totalTramos = valores.reduce((a, b) => a + b, 0);
+
+        mostrarIndicadores('tramos-indicadores', totalTramos ? [
+            { etiqueta: 'Unidades con vencimiento', valor: numero(totalTramos) },
+            { etiqueta: 'Ya vencidas (sacar de la venta)', valor: numero(valores[0]), clase: valores[0] ? 'mal' : 'ok' },
+            { etiqueta: 'Vencen en menos de 1 mes (vender primero)', valor: numero(valores[1]), clase: valores[1] ? 'mal' : 'ok' },
+            {
+                etiqueta: 'Vencidas o por vencer en 1 mes',
+                valor: Math.round((valores[0] + valores[1]) * 100 / totalTramos) + '%',
+            },
+        ] : []);
 
     dibujar(
         'grafico-tramos',
@@ -611,7 +804,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 tooltip: {
                     theme: osc ? 'dark' : 'light',
-                    y: { formatter: v => v + ' unidades' },
+                    x: { formatter: (v, o) => nombreTramo(o.dataPointIndex) },
+                    y: { formatter: v => v + ' unidades', title: { formatter: () => '' } },
                 },
             };
         }
@@ -654,6 +848,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderEvolucion(datos, filtrado) {
         const porDia = datos.agrupacion === 'día';
+        const periodo = porDia ? 'día' : 'mes';
+
+        // Indicadores del período mostrado
+        const totalVentas = datos.ventas.reduce((a, b) => a + b, 0);
+        const totalIngresos = datos.ingresos.reduce((a, b) => a + b, 0);
+        const conDatos = datos.meses.filter((_, i) => datos.ventas[i] > 0 || datos.ingresos[i] > 0).length;
+        const maxVenta = Math.max(0, ...datos.ventas);
+        const iMax = datos.ventas.indexOf(maxVenta);
+        const diferencia = totalIngresos - totalVentas;
+
+        mostrarIndicadores('evol-indicadores', conDatos ? [
+            { etiqueta: 'Unidades vendidas', valor: numero(totalVentas) },
+            { etiqueta: 'Unidades ingresadas', valor: numero(totalIngresos) },
+            {
+                etiqueta: diferencia >= 0 ? 'Ingresó más de lo vendido' : 'Se vendió más de lo ingresado',
+                valor: numero(Math.abs(diferencia)) + ' u.',
+            },
+            {
+                etiqueta: (porDia ? 'Día' : 'Mes') + ' con más ventas',
+                valor: maxVenta > 0 ? datos.meses[iMax] + ' (' + numero(maxVenta) + ' u.)' : '—',
+            },
+        ] : []);
+
+        // Con pocos períodos con movimientos el gráfico todavía no permite sacar conclusiones
+        const aviso = document.getElementById('evol-aviso');
+        if (conDatos > 0 && conDatos < 3) {
+            aviso.textContent = 'Todavía hay pocos datos: solo ' + conDatos +
+                (conDatos === 1 ? ' ' + periodo + ' tiene' : (porDia ? ' días tienen' : ' meses tienen')) +
+                ' ventas o ingresos registrados. A medida que se carguen más movimientos ' +
+                'el gráfico va a mostrar mejor las épocas fuertes y la tendencia.';
+            aviso.hidden = false;
+        } else {
+            aviso.hidden = true;
+        }
 
         dibujar(
             'grafico-evolucion',
@@ -808,18 +1036,69 @@ document.addEventListener('DOMContentLoaded', function () {
     // 4. PRODUCTOS CON MÁS UNIDADES VENCIDAS (top 10)
     // ------------------------------------------------------
     const filtroVencidos = iniciarFiltroTipo('venc', renderVencidos);
+    const inpBuscarVenc = document.getElementById('venc-buscar');
+
+    // Sin mayúsculas ni tildes, para comparar nombres
+    const normalizar = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+    // Sugerencias del buscador: todos los productos (con o sin vencidas)
+    const nombresProductos = Array.from(new Set(
+        D.stock.map(p => p.nombre).concat(D.vencidos.map(p => p.nombre))
+    )).sort((a, b) => a.localeCompare(b, 'es'));
+
+    const listaSugerencias = document.getElementById('venc-lista-productos');
+    nombresProductos.forEach(n => listaSugerencias.appendChild(new Option(n)));
+
+    inpBuscarVenc.addEventListener('input', renderVencidos);
 
     function renderVencidos() {
-        const lista = filtroVencidos
-            .filtrar(D.vencidos)
-            .slice()
-            .sort((a, b) => b.unidades - a.unidades)
-            .slice(0, 10);
+        const busqueda = normalizar(inpBuscarVenc.value);
+        let lista = filtroVencidos.filtrar(D.vencidos);
+
+        if (busqueda) {
+            lista = lista.filter(p => normalizar(p.nombre).includes(busqueda));
+        }
+
+        lista = lista.slice().sort((a, b) => b.unidades - a.unidades).slice(0, 10);
+
+        // Resultado de la búsqueda
+        if (busqueda) {
+            const exacto = D.vencidos.find(p => normalizar(p.nombre) === busqueda);
+            const existe = nombresProductos.find(n => normalizar(n) === busqueda);
+
+            if (exacto) {
+                mostrarIndicadores('venc-indicadores', [
+                    { etiqueta: exacto.nombre, valor: numero(exacto.unidades) + ' unidades vencidas', clase: 'mal' },
+                ]);
+            } else if (existe) {
+                mostrarIndicadores('venc-indicadores', [
+                    { etiqueta: existe, valor: 'Sin unidades vencidas', clase: 'ok' },
+                ]);
+            } else {
+                const coincidencias = filtroVencidos.filtrar(D.vencidos)
+                    .filter(p => normalizar(p.nombre).includes(busqueda));
+                mostrarIndicadores('venc-indicadores', [
+                    {
+                        etiqueta: 'Productos encontrados con vencidas',
+                        valor: numero(coincidencias.length),
+                    },
+                    {
+                        etiqueta: 'Unidades vencidas (en total)',
+                        valor: numero(coincidencias.reduce((a, p) => a + p.unidades, 0)),
+                        clase: coincidencias.length ? 'mal' : '',
+                    },
+                ]);
+            }
+        } else {
+            mostrarIndicadores('venc-indicadores', []);
+        }
 
         dibujar(
             'grafico-vencidos',
             lista.length > 0,
-            filtroVencidos.activo()
+            busqueda
+                ? 'Ningún producto que coincida con la búsqueda tiene unidades vencidas.'
+                : filtroVencidos.activo()
                 ? 'No hay productos vencidos con unidades en stock para ese filtro.'
                 : 'No hay productos vencidos con unidades en stock.',
             function (osc) {
@@ -932,12 +1211,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Dibuja el gráfico (en modo claro) en un contenedor oculto, con las
     // proporciones justas para ocupar la hoja, y devuelve la imagen.
-    async function imagenParaPDF(chartId, ancho, alto) {
-        const construir = constructores[chartId];
-
+    async function imagenParaPDF(construir, ancho, alto) {
         if (!construir) return null;
 
-        const opciones = construir(false);
+        // Se pasa el alto para que el gráfico ajuste sus medidas a la hoja
+        const opciones = construir(false, alto);
 
         const cont = document.createElement('div');
         cont.style.cssText =
@@ -1068,21 +1346,11 @@ document.addEventListener('DOMContentLoaded', function () {
         doc.text(lineas, x + 4, y + 10.2);
     }
 
-    async function generarPDF(cfg) {
-        const jsPDF = window.jspdf.jsPDF;
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-        const W = doc.internal.pageSize.getWidth();
-        const H = doc.internal.pageSize.getHeight();
-        const margen = 14;
-        const ancho = W - 2 * margen;
-        const altoBanda = 30;
+    // Dibuja una hoja del reporte. `pagina` = { construir, detalle }.
+    async function dibujarHojaPDF(doc, cfg, pagina, numero, total, ctx) {
+        const { W, H, margen, ancho, altoBanda, fecha, hora, logo } = ctx;
 
-        const ahora = new Date();
-        const fecha = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const hora = String(ahora.getHours()).padStart(2, '0') + ':' +
-            String(ahora.getMinutes()).padStart(2, '0') + ' hs';
-
-        dibujarEncabezadoPDF(doc, W, margen, altoBanda, fecha, await cargarLogoPDF());
+        dibujarEncabezadoPDF(doc, W, margen, altoBanda, fecha, logo);
 
         // Título del gráfico y descripción
         let y = altoBanda + 10;
@@ -1091,13 +1359,34 @@ document.addEventListener('DOMContentLoaded', function () {
         doc.setFontSize(14);
         doc.text(cfg.titulo, margen, y);
 
+        if (pagina.detalle) {
+            const anchoTitulo = doc.getTextWidth(cfg.titulo);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...PDF_COL.suave);
+            doc.text('  —  ' + pagina.detalle, margen + anchoTitulo, y);
+        }
+
         y += 5.5;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
         doc.setTextColor(...PDF_COL.suave);
         const lineasDesc = doc.splitTextToSize(cfg.descripcion || '', ancho);
         doc.text(lineasDesc, margen, y);
-        y += 3.8 * lineasDesc.length + 2.5;
+        y += 3.8 * lineasDesc.length + 1;
+
+        // Indicadores (resumen numérico)
+        if (cfg.indicadores) {
+            y += 1.5;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(...PDF_COL.verde);
+            const lineasInd = doc.splitTextToSize(cfg.indicadores, ancho);
+            doc.text(lineasInd, margen, y);
+            y += 3.8 * lineasInd.length;
+        }
+
+        y += 1.5;
 
         // Cajas: filtros aplicados / emitido por / fecha y hora
         const sep = 4;
@@ -1169,8 +1458,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const yGrafico = y + 9 + pad;
 
         const ANCHO_PX = 1200;
-        const altoPx = Math.round(ANCHO_PX * maxH / maxW);
-        const imgURI = await imagenParaPDF(cfg.chartId, ANCHO_PX, altoPx);
+        let altoPx = Math.round(ANCHO_PX * maxH / maxW);
+        const hojaIncompleta = pagina.filas && pagina.filas < POR_PAGINA_STOCK;
+
+        if (hojaIncompleta) {
+            altoPx = Math.round(80 + (altoPx - 80) * pagina.filas / POR_PAGINA_STOCK);
+        }
+
+        const imgURI = await imagenParaPDF(pagina.construir, ANCHO_PX, altoPx);
 
         if (imgURI) {
             const recortada = await recortarBordes(imgURI);
@@ -1179,7 +1474,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const w = img.width * escala;
             const h = img.height * escala;
 
-            doc.addImage(recortada, 'PNG', margen + pad + (maxW - w) / 2, yGrafico + (maxH - h) / 2, w, h);
+            // Hoja incompleta: el gráfico queda arriba, no centrado
+            const yImg = hojaIncompleta ? yGrafico : yGrafico + (maxH - h) / 2;
+            doc.addImage(recortada, 'PNG', margen + pad + (maxW - w) / 2, yImg, w, h);
         } else {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(11);
@@ -1197,8 +1494,35 @@ document.addEventListener('DOMContentLoaded', function () {
         doc.setTextColor(...PDF_COL.suave);
         doc.text('Reporte generado por el Sistema de Gestión de Stock · Agroquímica del Valle.',
             margen, pieY + 4.5);
-        doc.text('Emitido el ' + fecha + ' ' + hora + '  ·  Página 1', W - margen, pieY + 4.5,
-            { align: 'right' });
+        doc.text('Emitido el ' + fecha + ' ' + hora + '  ·  Página ' + numero + ' de ' + total,
+            W - margen, pieY + 4.5, { align: 'right' });
+    }
+
+    async function generarPDF(cfg) {
+        const jsPDF = window.jspdf.jsPDF;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const W = doc.internal.pageSize.getWidth();
+
+        const ahora = new Date();
+        const ctx = {
+            W: W,
+            H: doc.internal.pageSize.getHeight(),
+            margen: 14,
+            ancho: W - 28,
+            altoBanda: 30,
+            fecha: ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            hora: String(ahora.getHours()).padStart(2, '0') + ':' +
+                String(ahora.getMinutes()).padStart(2, '0') + ' hs',
+            logo: await cargarLogoPDF(),
+        };
+
+        // Por defecto una sola hoja con el gráfico tal como está en pantalla
+        const paginas = cfg.paginas || [{ construir: constructores[cfg.chartId] }];
+
+        for (let i = 0; i < paginas.length; i++) {
+            if (i > 0) doc.addPage();
+            await dibujarHojaPDF(doc, cfg, paginas[i], i + 1, paginas.length, ctx);
+        }
 
         const sello = ahora.getFullYear() +
             String(ahora.getMonth() + 1).padStart(2, '0') +
@@ -1207,16 +1531,41 @@ document.addEventListener('DOMContentLoaded', function () {
         doc.save('reporte_' + cfg.archivo + '_' + sello + '.pdf');
     }
 
+    // Gráfico 1: una hoja por cada página de productos
+    function paginasStockPDF() {
+        if (listaStock.length === 0) return null;
+
+        const total = totalPaginasStock();
+        const paginas = [];
+
+        for (let i = 0; i < total; i++) {
+            const lista = tramoStock(i);
+            const desde = i * POR_PAGINA_STOCK + 1;
+            paginas.push({
+                construir: (osc, alto) => opcionesStock(lista, osc, alto),
+                // La última hoja puede tener menos productos: se dibuja más baja
+                // para que las barras tengan el mismo grosor que en las demás.
+                filas: total > 1 ? lista.length : null,
+                detalle: total > 1
+                    ? 'productos ' + desde + ' a ' + (desde + lista.length - 1) + ' de ' + listaStock.length
+                    : '',
+            });
+        }
+
+        return paginas;
+    }
+
     const configPDF = {
         stock: () => ({
             chartId: 'grafico-stock',
+            paginas: paginasStockPDF(),
             titulo: 'Stock actual vs. stock mínimo por producto',
             filtros: filtroStock.texto(),
             archivo: 'stock_vs_minimo',
             leyenda: [
                 { color: [46, 125, 50], texto: 'Stock suficiente' },
                 { color: [198, 40, 40], texto: 'En el mínimo o por debajo' },
-                { color: [15, 27, 20], texto: 'Stock mínimo', marca: true },
+                { color: [15, 27, 20], texto: 'Línea negra: stock mínimo', marca: true },
             ],
         }),
         tramos: () => ({
@@ -1236,7 +1585,10 @@ document.addEventListener('DOMContentLoaded', function () {
         vencidos: () => ({
             chartId: 'grafico-vencidos',
             titulo: 'Productos con más unidades vencidas (top 10)',
-            filtros: filtroVencidos.texto(),
+            filtros: [
+                inpBuscarVenc.value.trim() ? 'Búsqueda: "' + inpBuscarVenc.value.trim() + '"' : '',
+                filtroVencidos.texto(),
+            ].filter(Boolean).join('  |  '),
             archivo: 'productos_vencidos',
         }),
     };
@@ -1249,8 +1601,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             try {
                 const cfg = configPDF[boton.dataset.pdf]();
-                const parrafo = boton.closest('.rep-card').querySelector(':scope > p');
+                const tarjeta = boton.closest('.rep-card');
+                const parrafo = tarjeta.querySelector(':scope > p');
                 cfg.descripcion = parrafo ? parrafo.textContent.trim() : '';
+                cfg.indicadores = textoIndicadores(tarjeta);
                 await generarPDF(cfg);
             } catch (e) {
                 console.error(e);
