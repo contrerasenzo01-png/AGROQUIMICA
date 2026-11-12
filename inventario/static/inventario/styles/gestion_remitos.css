@@ -1824,3 +1824,30 @@
     background: var(--rm-verde-claro);
     border-color: #c8e0ce !important;
 }
+
+/* ============================================================
+   FILTROS EN UNA SOLA FILA
+============================================================ */
+
+.rm-filtros .rm-search {
+    flex: 1 1 200px !important;
+    min-width: 200px !important;
+}
+
+.rm-filtros .rm-select {
+    flex: 0 1 175px !important;
+    min-width: 150px !important;
+    width: auto !important;
+}
+
+/* Campos de fecha */
+.rm-filtros .rm-fecha {
+    flex: 0 0 145px !important;
+    width: 145px !important;
+    min-width: 145px !important;
+}
+
+/* Los botones conservan su tamaño */
+.rm-filtros .rm-btn {
+    flex: 0 0 auto !important;
+}

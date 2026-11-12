@@ -1,6 +1,9 @@
+import email
+import hashlib
 import re
 import time as time_module
 import unicodedata
+from urllib import request
 import uuid
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
@@ -5330,6 +5333,25 @@ def gestion_remitos(request):
     else:
         estado_filtro = ''
 
+    # Filtro por rango de fechas del remito
+    texto_desde = request.GET.get('desde', '').strip()
+    texto_hasta = request.GET.get('hasta', '').strip()
+    fecha_desde = _fecha_iso(texto_desde) if texto_desde else None
+    fecha_hasta = _fecha_iso(texto_hasta) if texto_hasta else None
+
+    if texto_desde and not fecha_desde:
+        messages.error(request, 'La fecha "Desde" no es válida.')
+    if texto_hasta and not fecha_hasta:
+        messages.error(request, 'La fecha "Hasta" no es válida.')
+
+    if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
+        messages.error(request, 'La fecha "Desde" no puede ser posterior a "Hasta".')
+    else:
+        if fecha_desde:
+            remitos = remitos.filter(Fecha_remito__gte=fecha_desde)
+        if fecha_hasta:
+            remitos = remitos.filter(Fecha_remito__lte=fecha_hasta)
+
     if busqueda:
         remitos = remitos.filter(
             Q(Numero_remito__icontains=busqueda)
@@ -5389,6 +5411,8 @@ def gestion_remitos(request):
             'busqueda': busqueda,
             'proveedor_filtro': proveedor_filtro,
             'estado_filtro': estado_filtro,
+            'fecha_desde': texto_desde,
+            'fecha_hasta': texto_hasta,
             'puede_anular': puede_accion(usuario, 'anular_remitos'),
             'puede_gestionar': puede(usuario, 'remitos', gestionar=True),
             'hoy': hoy,
@@ -6050,7 +6074,7 @@ def anular_egreso(request, id_movimiento):
             stock.Cantidad_stock += cantidad
             stock.save(update_fields=['Cantidad_stock'])
 
-            # 4) Movimiento de anulación (suma) enlazado al egreso original.
+            # 4) Movimiento de anulación (suma). Sus observaciones indican qué egreso anuló.
             tipo_anulacion, _ = TiposMovimientos.objects.get_or_create(
                 Nombre_tipo_movimiento=TIPO_ANULACION_EGRESO
             )
@@ -6059,8 +6083,9 @@ def anular_egreso(request, id_movimiento):
                 ID_Usuario=usuario,
                 ID_Tipo_movimiento=tipo_anulacion,
                 ID_Lote=lote,
+
                 Cantidad_movimiento_stock=cantidad,
-                ID_Movimiento_origen=movimiento,
+                
                 Observaciones=(
                     f'Anulación del egreso N.º '
                     f'{movimiento.ID_Movimiento_stock}: {motivo}'
@@ -6106,12 +6131,6 @@ def anular_egreso(request, id_movimiento):
         messages.error(request, 'El movimiento seleccionado no existe.')
         return redirect('gestion_movimientos_stock')
 
-    except IntegrityError:
-        messages.error(
-            request,
-            'Este egreso ya fue anulado por otro usuario.'
-        )
-        return redirect('gestion_movimientos_stock')
 
     except DatabaseError:
         messages.error(
@@ -6309,19 +6328,89 @@ def sesion_ping(request):
 
     return JsonResponse({'ok': True})
 
+
+# Permite 3 solicitudes y bloquea durante 15 minutos.
+
+def limite_superado(request, email):
+
+    ahora = time_module.time()
+
+    # Identifica el correo sin guardar su dirección directamente en la sesión.
+    email_hash = hashlib.sha256(
+        email.strip().lower().encode()
+    ).hexdigest()
+
+    clave = f'recuperacion_{email_hash}'
+
+    datos = request.session.get(clave, {})
+
+    # Comprobar si todavía está vigente el bloqueo.
+    bloqueada_hasta = datos.get('bloqueada_hasta', 0)
+
+    if ahora < bloqueada_hasta:
+        return True
+
+    # Si el bloqueo venció, comenzar nuevamente.
+    if bloqueada_hasta:
+        datos = {'intentos': []}
+
+    # Conservar solamente los intentos realizados en los últimos 15 minutos.
+    intentos = [
+        t for t in datos.get('intentos', [])
+        if ahora - t < 15 * 60
+    ]
+
+    # Registrar el intento actual.
+    intentos.append(ahora)
+
+    datos = {'intentos': intentos}
+
+    # Al llegar al tercer intento, bloquear las siguientes solicitudes.
+    if len(intentos) >= 3:
+        datos['bloqueada_hasta'] = ahora + (15 * 60)
+
+    request.session[clave] = datos
+    request.session.modified = True
+
+    return False
+
+
+# Devuelve los segundos que faltan para terminar el bloqueo.
+
+def tiempo_bloqueo_restante(request, email):
+    
+    email_hash = hashlib.sha256(
+        email.strip().lower().encode()
+    ).hexdigest()
+
+    clave = f'recuperacion_{email_hash}'
+    datos = request.session.get(clave, {})
+
+    bloqueada_hasta = datos.get('bloqueada_hasta', 0)
+
+    return max(0, int(bloqueada_hasta - time_module.time()))
+
+
 # ============================================================
 # RECUPERAR CONTRASEÑA (desde el login, sin sesión)
 # ============================================================
 
+
 def recuperar_contrasena(request):
 
     if request.method != 'POST':
-        return render(request, 'inventario/recuperar_contrasena.html')
+        return render(
+            request,
+            'inventario/recuperar_contrasena.html'
+        )
 
     email_ingresado = request.POST.get('email', '').strip()
     contexto = {'email': email_ingresado}
 
-    # El error del formato va debajo del campo (errores.email).
+    # --------------------------------------------------------
+    # VALIDAR CORREO
+    # --------------------------------------------------------
+
     if not email_ingresado:
         error = 'Ingrese su correo electrónico.'
     else:
@@ -6329,14 +6418,35 @@ def recuperar_contrasena(request):
 
     if error:
         contexto['errores'] = {'email': error}
-        return render(request, 'inventario/recuperar_contrasena.html', contexto)
+        return render(
+            request,
+            'inventario/recuperar_contrasena.html',
+            contexto
+        )
+
+    # --------------------------------------------------------
+    # CONTROLAR LÍMITE DE SOLICITUDES
+    # --------------------------------------------------------
 
     if limite_superado(request, email):
         contexto['error'] = (
-            'Hiciste demasiados pedidos. '
-            'Espere un rato antes de volver a intentarlo.'
+            'Hiciste demasiados intentos. '
+            'Espere 15 minutos antes de volver a intentarlo.'
         )
-        return render(request, 'inventario/recuperar_contrasena.html', contexto)
+
+        contexto['bloqueo_segundos'] = tiempo_bloqueo_restante(
+            request, email
+        )
+
+        return render(
+            request,
+            'inventario/recuperar_contrasena.html',
+            contexto
+        )
+
+    # --------------------------------------------------------
+    # BUSCAR USUARIOS CON ESE CORREO
+    # --------------------------------------------------------
 
     usuarios = list(
         Usuarios.objects.select_related('ID_Perfil').filter(
@@ -6344,30 +6454,59 @@ def recuperar_contrasena(request):
         )
     )
 
-    habilitados = [u for u in usuarios if usuario_habilitado(u)]
+    habilitados = [
+        u for u in usuarios
+        if usuario_habilitado(u)
+    ]
+
+    # --------------------------------------------------------
+    # SI EXISTEN USUARIOS HABILITADOS, ENVIAR EL ENLACE
+    # --------------------------------------------------------
 
     if habilitados:
+
         for u in habilitados:
             enviar_correo_recuperacion(u)
+
         contexto['enviado'] = True
 
+    # --------------------------------------------------------
+    # SI EL USUARIO ESTÁ DADO DE BAJA
+    # --------------------------------------------------------
+
     elif any(not u.Estado_usuario for u in usuarios):
+
         contexto['error'] = (
             'Su usuario fue dado de baja. '
             'Comuníquese con un administrador.'
         )
 
+    # --------------------------------------------------------
+    # SI EL USUARIO NO ESTÁ HABILITADO
+    # --------------------------------------------------------
+
     elif usuarios:
+
         contexto['error'] = (
             'Su usuario no está habilitado para ingresar. '
             'Comuníquese con un administrador.'
         )
 
-    else:
-        # Correo inexistente: misma respuesta que si se hubiera enviado.
-        contexto['enviado'] = True
+    # --------------------------------------------------------
+    # SI EL CORREO NO ESTÁ REGISTRADO
+    # --------------------------------------------------------
 
-    return render(request, 'inventario/recuperar_contrasena.html', contexto)
+    else:
+
+        contexto['errores'] = {
+            'email': 'El correo electrónico no está registrado.'
+        }
+
+    return render(
+        request,
+        'inventario/recuperar_contrasena.html',
+        contexto
+    )
 
 
 def recuperar_confirmar(request, uidb64, token):

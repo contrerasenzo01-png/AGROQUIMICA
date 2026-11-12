@@ -1,3 +1,5 @@
+{# Extiende la plantilla base y carga los archivos estáticos. #}
+
 {% extends 'inventario/base.html' %}
 {# Esta pantalla muestra sus propios mensajes. #}
 {% block mensajes %}{% endblock %}
@@ -14,58 +16,7 @@
       href="{% static 'inventario/styles/movimientos_stock.css' %}">
 <link rel="stylesheet"
       href="{% static 'inventario/css/paginacion.css' %}">
-<style>
-    .tag-venta {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 6px;
-        background: #fee2e2;
-        color: #b91c1c;
-    }
 
-    .tag-anulacion-egreso {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 6px;
-        background: #dcfce7;
-        color: #15803d;
-    }
-
-    .tag-anulado {
-        display: inline-block;
-        margin-left: 6px;
-        padding: 2px 8px;
-        border-radius: 6px;
-        background: #e5e7eb;
-        color: #374151;
-        font-size: .75em;
-        font-weight: 600;
-    }
-
-    tr.mov-anulado td { opacity: .7; }
-    tr.mov-anulado .mov-cantidad { text-decoration: line-through; }
-
-    .mov-anulacion-detalle {
-        display: block;
-        margin-top: 4px;
-        font-size: .85em;
-        opacity: .85;
-    }
-
-    /* Modo oscuro (variables de tema.css) */
-    html.modo-oscuro .tag-venta {
-        background: var(--d-red-bg);
-        color: var(--d-red-tx);
-    }
-    html.modo-oscuro .tag-anulacion-egreso {
-        background: var(--d-green-bg);
-        color: var(--d-green-tx);
-    }
-    html.modo-oscuro .tag-anulado {
-        background: var(--d-surface-3);
-        color: var(--d-text-3);
-    }
-</style>
 {% endblock %}
 
 {% block contenido %}

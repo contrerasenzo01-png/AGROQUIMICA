@@ -90,7 +90,7 @@
                         name="email"
                         class="form-control{% if errores.email %} is-invalid{% endif %}"
                         value="{{ email|default:'' }}"
-                        placeholder="nombre@empresa.com"
+                        placeholder="Ingrese su correo electrónico"
                         autocomplete="email"
                         autocapitalize="none"
                         spellcheck="false"
@@ -105,9 +105,24 @@
 
             </div>
 
-            <button type="submit" class="btn-submit anim" style="--d: 5">
-                <span class="btn-text">Enviar enlace</span>
+                <button
+                    type="submit"
+                    id="btnEnviar"
+                    class="btn-submit anim"
+                    style="--d: 5"
+                    {% if bloqueo_segundos %}disabled{% endif %}
+                    data-bloqueo-segundos="{{ bloqueo_segundos|default:0 }}"
+                >
+                <span class="btn-text" id="textoBoton">
+                    {% if bloqueo_segundos %}
+                        Espere antes de volver a intentarlo
+                    {% else %}
+                        Enviar enlace
+                    {% endif %}
+                </span>
+
                 <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+
                 <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="m22 2-7 20-4-9-9-4Z"></path>
                     <path d="M22 2 11 13"></path>
@@ -127,8 +142,44 @@
 
 {% block scripts %}
     <script>
-        Acceso.formulario(document.getElementById('recuperarForm'), {
-            email: Acceso.reglas.email,
-        });
+        const formulario = document.getElementById('recuperarForm');
+
+        if (formulario) {
+            Acceso.formulario(formulario, {
+                email: Acceso.reglas.email,
+            });
+        }
+
+        const boton = document.getElementById('btnEnviar');
+
+        if (boton) {
+            let segundos = Number(boton.dataset.bloqueoSegundos || 0);
+
+            if (segundos > 0) {
+                const texto = document.getElementById('textoBoton');
+
+                boton.disabled = true;
+
+                function actualizarCuenta() {
+                    if (segundos <= 0) {
+                        boton.disabled = false;
+                        texto.textContent = 'Enviar enlace';
+                        return;
+                    }
+
+                    const minutos = Math.floor(segundos / 60);
+                    const resto = segundos % 60;
+
+                    texto.textContent =
+                        `Espere ${minutos}:${String(resto).padStart(2, '0')} minutos`;
+
+                    segundos--;
+
+                    setTimeout(actualizarCuenta, 1000);
+                }
+
+                actualizarCuenta();
+            }
+        }
     </script>
 {% endblock %}

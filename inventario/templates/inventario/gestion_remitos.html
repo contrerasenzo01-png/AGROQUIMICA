@@ -1,12 +1,34 @@
 {% extends 'inventario/base.html' %}
-{# Esta pantalla muestra sus propios mensajes. #}
+{% comment %}
+    ============================================================
+    GESTIÓN DE REMITOS · Agroquímica del Valle
+    Pantalla del proceso principal: ingreso de mercadería por remito.
+
+    Qué se puede hacer desde acá:
+      - Consultar los remitos con filtros (búsqueda, proveedor,
+        estado y rango de fechas).
+      - Ver los lotes de cada remito.
+      - Descargar el remito en PDF.
+      - Registrar un remito con sus lotes.
+      - Modificar el número o la fecha del remito.
+      - Corregir los datos de un lote.
+      - Anular un remito (solo con el permiso "Anular remitos").
+
+    Los datos llegan desde la vista gestion_remitos (views.py).
+    Los estilos están en static/inventario/styles/gestion_remitos.css.
+    ============================================================
+{% endcomment %}
+
+{# Esta pantalla muestra sus propios mensajes (toasts), por eso se vacía el bloque de base.html. #}
 {% block mensajes %}{% endblock %}
 {% load static %}
 {% load l10n %}
 
+{# Título de la pestaña del navegador. #}
 {% block title %}Remitos - Agroquímica del Valle{% endblock %}
 
 {% block extra_css %}
+{# Estilos propios de la pantalla y de la paginación. #}
 <link rel="stylesheet" href="{% static 'inventario/styles/gestion_remitos.css' %}">
 <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 <style>
@@ -19,6 +41,7 @@
         box-shadow: none;
     }
 
+    /* Candado chico al lado de la etiqueta de un campo fijo */
     .rm-candado {
         display: inline-flex;
         align-items: center;
@@ -39,17 +62,26 @@
         stroke-linejoin: round;
     }
 
+    /* Aviso amarillo del modal "Editar lote" cuando el lote ya tuvo salidas */
     .rm-info-aviso {
         background: #fff8e6;
         border-color: #f3dfa6;
         color: #7a5a00;
     }
 
+    /* Botón de acción deshabilitado (lote agotado) */
     .rm-icon-btn[disabled] {
         opacity: .45;
         cursor: not-allowed;
     }
 
+    /* Campos de fecha del filtro: un poco más angostos que los select */
+    .rm-fecha {
+        min-width: 150px !important;
+        flex: 0 1 170px;
+    }
+
+    /* Modo oscuro */
     html.modo-oscuro .rm-solo-lectura,
     html.modo-oscuro .rm-solo-lectura:focus {
         background-color: var(--d-surface-2, #1a2620);
@@ -66,7 +98,11 @@
 
 {% block contenido %}
 
-<!-- MENSAJES -->
+<!-- ============================================================
+     MENSAJES (toasts)
+     Muestra los mensajes que manda la vista: éxito, aviso o error.
+     Se cierran solos a los 4 segundos o con la X.
+     ============================================================ -->
 <div class="rm-toasts" id="toastContainer">
     {% if messages %}
         {% for message in messages %}
@@ -85,7 +121,11 @@
 
 <div class="rm-page">
 
-    <!-- ENCABEZADO -->
+    <!-- ============================================================
+         ENCABEZADO
+         Título de la pantalla y botón "Registrar remito".
+         El botón solo aparece si el perfil tiene "Gestionar remitos".
+         ============================================================ -->
     <header class="rm-header">
         <div>
             <h1 class="rm-title">Gestión de remitos</h1>
@@ -105,11 +145,20 @@
         {% endif %}
     </header>
 
-    <!-- RESUMEN -->
+    <!-- ============================================================
+         RESUMEN
+         Tarjetas con los totales: remitos, proveedores, lotes y anulados.
+         ============================================================ -->
     {% include 'inventario/_resumen.html' %}
 
-    <!-- BÚSQUEDA Y FILTROS -->
+    <!-- ============================================================
+         BÚSQUEDA Y FILTROS
+         Formulario GET: los filtros los aplica el servidor, así buscan
+         en todas las páginas y no solo en la que se está viendo.
+         ============================================================ -->
     <form method="GET" class="rm-filtros" id="formFiltros">
+
+        {# Búsqueda por número de remito o nombre del proveedor. #}
         <div class="rm-search">
             <svg class="rm-icon" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7"/>
@@ -124,6 +173,7 @@
                    autocomplete="off">
         </div>
 
+        {# Filtro por proveedor (dato relacionado). #}
         <select name="proveedor"
                 id="filtroProveedor"
                 class="form-select rm-select">
@@ -139,6 +189,7 @@
             {% endfor %}
         </select>
 
+        {# Filtro por estado del remito. #}
         <select name="estado"
                 id="filtroEstado"
                 class="form-select rm-select">
@@ -147,17 +198,42 @@
             <option value="Anulado" {% if estado_filtro == 'Anulado' %}selected{% endif %}>Anulado</option>
         </select>
 
+        {# Filtro por rango de fechas del remito (Desde / Hasta). #}
+        {# No se permiten fechas futuras: max = hoy. #}
+        <input type="date"
+               name="desde"
+               id="filtroDesde"
+               class="form-control rm-select rm-fecha"
+               value="{{ fecha_desde }}"
+               max="{{ hoy|date:'Y-m-d' }}"
+               title="Fecha desde"
+               aria-label="Fecha desde">
+
+        <input type="date"
+               name="hasta"
+               id="filtroHasta"
+               class="form-control rm-select rm-fecha"
+               value="{{ fecha_hasta }}"
+               max="{{ hoy|date:'Y-m-d' }}"
+               title="Fecha hasta"
+               aria-label="Fecha hasta">
+
         <button type="submit" class="rm-btn rm-btn-secondary av-btn-buscar">
             Buscar
         </button>
 
+        {# Limpiar: vuelve a la pantalla sin ningún filtro. #}
         <a href="{% url 'gestion_remitos' %}"
            class="rm-btn rm-btn-light">
             Limpiar
         </a>
     </form>
 
-    <!-- TABLA DE REMITOS -->
+    <!-- ============================================================
+         TABLA DE REMITOS
+         Una fila por remito. Debajo de cada una hay una fila oculta
+         con el detalle de sus lotes (se abre con el botón del ojo).
+         ============================================================ -->
     <section class="rm-card">
         <div class="rm-card-header">
             <div>
@@ -182,6 +258,7 @@
 
                 <tbody id="listaRemitos" data-pg-animar>
                     {% for remito in remitos %}
+                        {# Fila del remito. Si está anulado se ve más clara (clase rm-anulado). #}
                         <tr class="rm-fila-remito{% if remito.Estado_remito == 'Anulado' %} rm-anulado{% endif %}"
                             data-search="{{ remito.Numero_remito|lower }} {{ remito.ID_Proveedor.nombre_proveedor|lower }}"
                             data-proveedor="{{ remito.ID_Proveedor.ID_Proveedor }}"
@@ -201,6 +278,7 @@
 
                             <td>{{ remito.Fecha_remito|date:"d/m/Y" }}</td>
 
+                            {# Cantidad de lotes del remito. #}
                             <td>
                                 <span class="rm-badge">
                                     {{ remito.lotes.count }}
@@ -208,6 +286,7 @@
                                 </span>
                             </td>
 
+                            {# Suma de las unidades ingresadas (la calcula la vista). #}
                             <td>{{ remito.total_unidades }}</td>
 
                             <td>
@@ -218,8 +297,10 @@
                                 {% endif %}
                             </td>
 
+                            <!-- ACCIONES DEL REMITO -->
                             <td>
                                 <div class="rm-acciones">
+                                    {# Ver / ocultar los lotes del remito. #}
                                     <button type="button"
                                             class="rm-icon-btn rm-ver"
                                             title="Ver lotes del remito"
@@ -231,7 +312,7 @@
                                         </svg>
                                     </button>
 
-                                    <!-- DESCARGAR PDF DEL REMITO -->
+                                    {# Descargar el comprobante del remito en PDF. #}
                                     <a href="{% url 'remito_pdf' remito.ID_Remito %}"
                                        class="rm-icon-btn rm-descargar"
                                        title="Descargar remito en PDF"
@@ -239,7 +320,9 @@
                                         <svg class="rm-icon" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
                                     </a>
 
+                                    {# Editar y anular solo se ofrecen en remitos confirmados. #}
                                     {% if remito.Estado_remito == 'Confirmado' %}
+                                        {# Editar: requiere "Gestionar remitos". #}
                                         {% if perm.remitos_gestionar %}
                                         <button type="button"
                                                 class="rm-icon-btn rm-editar"
@@ -253,6 +336,8 @@
                                             <svg class="rm-icon" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                         </button>
                                         {% endif %}
+
+                                        {# Anular: requiere el permiso propio "Anular remitos" (acción restringida). #}
                                         {% if puede_anular %}
                                         <button type="button"
                                                 class="rm-icon-btn rm-anular"
@@ -274,7 +359,7 @@
                             </td>
                         </tr>
 
-                        <!-- DETALLE DE LOTES -->
+                        <!-- DETALLE DE LOTES (oculto hasta tocar el ojo) -->
                         <tr id="detalle-{{ remito.ID_Remito }}"
                             class="rm-fila-detalle"
                             style="display: none;">
@@ -289,6 +374,7 @@
                                         </h3>
                                     </div>
 
+                                    {# Si el remito está anulado: cuándo, quién y por qué. #}
                                     {% if remito.Estado_remito == 'Anulado' %}
                                         <div class="rm-banner-anulado">
                                             <strong>Remito anulado</strong>
@@ -320,6 +406,7 @@
 
                                             <tbody>
                                                 {% for lote in remito.lotes.all %}
+                                                    {# Los atributos data-* guardan los datos del lote para el modal "Editar lote". #}
                                                     <tr
                                                         data-lote-id="{{ lote.ID_Lote }}"
                                                         data-producto="{{ lote.ID_Producto_id }}"
@@ -367,6 +454,7 @@
                                                             {{ lote.Cantidad_actual|default_if_none:0 }}
                                                         </td>
 
+                                                        {# Estado del lote: Anulado, Vencido, Agotado o Activo (models.py, estado_actual). #}
                                                         <td>
                                                             {% if remito.Estado_remito == "Anulado" %}
                                                                 <span class="rm-estado rm-vencido">Anulado</span>
@@ -379,6 +467,7 @@
                                                             {% endif %}
                                                         </td>
 
+                                                        {# Acción del lote: editar (solo remitos confirmados y con permiso). #}
                                                         <td>
                                                             <div class="rm-acciones">
                                                                 {% if remito.Estado_remito == 'Confirmado' and perm.remitos_gestionar %}
@@ -418,6 +507,7 @@
                             </td>
                         </tr>
                     {% empty %}
+                        {# Sin resultados: no hay remitos o los filtros no encontraron ninguno. #}
                         <tr>
                             <td colspan="7" class="rm-vacio">
                                 No se encontraron remitos registrados.
@@ -431,7 +521,7 @@
         <!-- PAGINACIÓN (en el servidor: conserva la búsqueda y los filtros) -->
         {% include 'inventario/_paginacion.html' %}
 
-        <!-- PIE DE TABLA -->
+        <!-- PIE DE TABLA: cantidad de remitos encontrados -->
         <div class="rm-pie">
             <span id="contadorRemitos">
                 {{ pagina.paginator.count }}
@@ -443,7 +533,12 @@
     </section>
 </div>
 
-<!-- MODAL REGISTRAR REMITO CON SUS LOTES -->
+<!-- ============================================================
+     MODAL: REGISTRAR REMITO CON SUS LOTES
+     Cabecera (número, fecha y proveedor) + uno o más lotes.
+     Al guardar, la vista crea el remito, los lotes, suma el stock
+     y registra un movimiento de ingreso por lote (todo junto).
+     ============================================================ -->
 <div class="rm-modal"
      id="modalCrearRemito"
      aria-hidden="true">
@@ -468,6 +563,7 @@
               id="formCrearRemito"
               novalidate>
             {% csrf_token %}
+            {# La vista usa "accion" para saber qué operación hacer. #}
             <input type="hidden" name="accion" value="crear_remito">
 
             <div class="rm-modal-body">
@@ -476,8 +572,10 @@
                     Cada lote genera su movimiento de ingreso y actualiza el stock.
                 </p>
 
+                {# Mensaje de error de validación (lotes repetidos, etc.). #}
                 <div class="rm-error" id="errorCrearRemito" hidden></div>
 
+                <!-- CABECERA DEL REMITO -->
                 <div class="rm-grid">
                     <div class="rm-grupo">
                         <label for="crear_numero">Número de remito</label>
@@ -490,6 +588,7 @@
                                required>
                     </div>
 
+                    {# La fecha del remito no puede ser futura. #}
                     <div class="rm-grupo">
                         <label for="crear_fecha">Fecha del remito</label>
                         <input class="form-control" type="date"
@@ -500,6 +599,7 @@
                                required>
                     </div>
 
+                    {# Solo se ofrecen proveedores activos. #}
                     <div class="rm-grupo rm-full">
                         <label for="crear_proveedor">Proveedor</label>
                         <select class="form-select" name="ID_Proveedor"
@@ -525,7 +625,7 @@
                     </div>
                 </div>
 
-                <!-- LOTES ASOCIADOS -->
+                <!-- LOTES ASOCIADOS (detalle del remito) -->
                 <div class="rm-lotes-cab">
                     <div>
                         <h3>Lotes asociados al remito</h3>
@@ -541,8 +641,10 @@
                     </button>
                 </div>
 
+                {# Acá se agregan las tarjetas de los lotes con JavaScript. #}
                 <div id="listaLotes"></div>
 
+                {# Plantilla de una tarjeta de lote. __N__ se reemplaza por un número para que los id no se repitan. #}
                 <template id="plantillaLote">
                     <div class="rm-lote">
                         <div class="rm-lote-top">
@@ -555,6 +657,7 @@
                             </button>
                         </div>
 
+                        {# Productos activos. data-proveedores guarda quién los suministra, para filtrarlos según el proveedor elegido. #}
                         <div class="rm-grupo rm-full">
                             <label for="lote_producto___N__">Producto</label>
                             <select class="form-select" name="lote_producto"
@@ -581,6 +684,7 @@
                                        required>
                             </div>
 
+                            {# No se aceptan lotes ya vencidos: min = hoy. #}
                             <div class="rm-grupo">
                                 <label for="lote_venc___N__">Fecha de vencimiento</label>
                                 <input class="form-control" type="date"
@@ -612,6 +716,7 @@
                                        required>
                             </div>
 
+                            {# Calculado automáticamente: cajas × unidades por caja (no se envía). #}
                             <div class="rm-grupo">
                                 <label for="lote_total___N__">Unidades totales</label>
                                 <input type="text"
@@ -623,6 +728,7 @@
                                 <small class="rm-ayuda rm-lote-calculo"></small>
                             </div>
 
+                            {# Fecha de ingreso automática: el día de hoy (no se envía). #}
                             <div class="rm-grupo">
                                 <label for="lote_ingreso___N__">Fecha de ingreso</label>
                                 <input class="form-control" type="text"
@@ -656,7 +762,10 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR REMITO -->
+<!-- ============================================================
+     MODAL: EDITAR REMITO
+     Solo cambia el número o la fecha del remito, no sus lotes.
+     ============================================================ -->
 <div class="rm-modal"
      id="modalEditarRemito"
      aria-hidden="true">
@@ -680,6 +789,7 @@
         <form method="POST" action="{% url 'gestion_remitos' %}">
             {% csrf_token %}
             <input type="hidden" name="accion" value="editar_remito">
+            {# ID del remito que se edita (lo completa abrirModalEditar). #}
             <input type="hidden" name="ID_Remito" id="editar_id_remito">
 
             <div class="rm-modal-body">
@@ -726,10 +836,12 @@
 </div>
 
 
-<!-- MODAL EDITAR LOTE
+<!-- ============================================================
+     MODAL: EDITAR LOTE
      Solo se corrigen errores de carga. Producto, unidades totales,
      cantidad actual y fecha de ingreso se muestran pero no se editan
-     (no tienen "name": no se envían al servidor). -->
+     (no tienen "name": no se envían al servidor).
+     ============================================================ -->
 <div class="rm-modal" id="modalEditarLote" aria-hidden="true">
     <div class="rm-modal-box"
          role="dialog"
@@ -756,6 +868,7 @@
             <div class="rm-modal-body">
                 <div class="rm-grid">
 
+                    {# Producto: fijo. #}
                     <div class="rm-grupo rm-full">
                         <label for="editar_lote_producto">
                             Producto
@@ -770,6 +883,7 @@
                                tabindex="-1">
                     </div>
 
+                    {# Número de lote: se puede corregir. #}
                     <div class="rm-grupo">
                         <label for="editar_lote_numero">Número de lote</label>
                         <input class="form-control" type="text"
@@ -779,6 +893,7 @@
                                required>
                     </div>
 
+                    {# Vencimiento: se puede corregir (no antes de la fecha del remito). #}
                     <div class="rm-grupo">
                         <label for="editar_lote_vencimiento">Fecha de vencimiento</label>
                         <input class="form-control" type="date"
@@ -787,6 +902,7 @@
                                required>
                     </div>
 
+                    {# Cajas: editable solo si el lote no tuvo salidas (si no, aparece el candado). #}
                     <div class="rm-grupo">
                         <label for="editar_lote_cajas">
                             Cantidad de cajas
@@ -803,6 +919,7 @@
                                required>
                     </div>
 
+                    {# Unidades por caja: misma regla que las cajas. #}
                     <div class="rm-grupo">
                         <label for="editar_lote_upc">
                             Unidades por caja
@@ -819,6 +936,7 @@
                                required>
                     </div>
 
+                    {# Total: se recalcula al cambiar cajas o unidades. #}
                     <div class="rm-grupo">
                         <label for="editar_lote_total">Unidades totales</label>
                         <input class="form-control rm-solo-lectura" type="text"
@@ -827,6 +945,7 @@
                                tabindex="-1">
                     </div>
 
+                    {# Stock actual del lote: sale de los movimientos, no se edita. #}
                     <div class="rm-grupo">
                         <label for="editar_lote_actual">
                             Stock actual del lote
@@ -841,6 +960,7 @@
                                tabindex="-1">
                     </div>
 
+                    {# Fecha de ingreso: fija. #}
                     <div class="rm-grupo">
                         <label for="editar_lote_ingreso">
                             Fecha de ingreso
@@ -857,6 +977,7 @@
 
                 </div>
 
+                {# Texto de ayuda: cambia si el lote ya tuvo salidas. #}
                 <div class="rm-info" id="editar_lote_info">
                     Se puede corregir el número de lote, el vencimiento y, si el lote
                     todavía no tuvo salidas, las cajas y las unidades por caja.
@@ -880,7 +1001,12 @@
 </div>
 
 
-<!-- MODAL ANULAR REMITO -->
+<!-- ============================================================
+     MODAL: ANULAR REMITO
+     El remito no se borra: pasa a "Anulado" con su fecha, motivo y
+     usuario, y se descuenta del stock lo que había ingresado.
+     La justificación es obligatoria (mínimo 10 caracteres).
+     ============================================================ -->
 <div class="rm-modal" id="modalAnularRemito" aria-hidden="true">
     <div class="rm-modal-box"
          role="dialog"
@@ -908,6 +1034,7 @@
 
             <div class="rm-modal-body">
 
+                {# Aviso rojo. #}
                 <div class="rm-anular-aviso">
                     <svg viewBox="0 0 24 24">
                         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
@@ -923,6 +1050,7 @@
                     </div>
                 </div>
 
+                {# Resumen del remito que se va a anular (lo completa abrirModalAnular). #}
                 <div class="rm-anular-resumen">
                     <div>
                         <small>Remito</small>
@@ -942,12 +1070,14 @@
                     </div>
                 </div>
 
+                {# Qué pasa al anular. #}
                 <ul class="rm-anular-lista">
                     <li>Se descuentan del stock las unidades de todos sus lotes.</li>
                     <li>Los lotes del remito quedan en cero.</li>
                     <li>No se puede anular si algún lote ya tuvo salidas.</li>
                 </ul>
 
+                {# Justificación obligatoria. #}
                 <div class="rm-grupo rm-full">
                     <label for="anular_motivo">Justificación de la anulación</label>
                     <textarea class="form-control" name="Motivo_anulacion"
@@ -972,6 +1102,7 @@
                     Cancelar
                 </button>
 
+                {# Deshabilitado hasta que la justificación tenga 10 caracteres. #}
                 <button type="submit"
                         class="rm-btn rm-btn-anular"
                         id="btnConfirmarAnulacion"
@@ -987,19 +1118,25 @@
 {% endblock %}
 
 {% block extra_js %}
+{# Lista de números de remito existentes, para avisar si se repite mientras se escribe. #}
 {{ numeros_remito|json_script:"numerosRemito" }}
 <script src="{% static 'inventario/js/paginacion.js' %}"></script>
 <script>
 (function () {
     'use strict';
 
-    /* NÚMERO DE REMITO REPETIDO
+    /* ==========================================
+       NÚMERO DE REMITO REPETIDO
        Se avisa debajo del campo mientras se escribe (no recién al
-       guardar). validaciones.js muestra el mensaje y frena el envío. */
+       guardar). validaciones.js muestra el mensaje y frena el envío.
+       El servidor lo vuelve a controlar al guardar.
+    ========================================== */
     const NUMEROS_REMITO = JSON.parse(
         document.getElementById('numerosRemito').textContent || '[]'
     );
 
+    // campoNumero: input del número; campoId: input oculto con el ID
+    // del remito que se edita (para no compararlo consigo mismo).
     function controlRepetido(campoNumero, campoId) {
         const input = document.getElementById(campoNumero);
         if (!input) return;
@@ -1028,7 +1165,9 @@
     /* BÚSQUEDA Y FILTROS: los aplica el servidor (formulario GET),
        así encuentran en todas las páginas, no solo en la visible. */
 
-    /* MOSTRAR Y OCULTAR LOTES */
+    /* ==========================================
+       MOSTRAR Y OCULTAR LOS LOTES DE UN REMITO
+    ========================================== */
     window.alternarDetalle = function (id) {
         const fila = document.getElementById('detalle-' + id);
         if (!fila) return;
@@ -1037,7 +1176,9 @@
             fila.style.display === 'none' ? 'table-row' : 'none';
     };
 
-    /* REGISTRAR REMITO CON SUS LOTES */
+    /* ==========================================
+       REGISTRAR REMITO CON SUS LOTES
+    ========================================== */
     const formCrear = document.getElementById('formCrearRemito');
     const listaLotes = document.getElementById('listaLotes');
     const plantillaLote = document.getElementById('plantillaLote');
@@ -1045,8 +1186,10 @@
     const btnGuardar = document.getElementById('btnGuardarRemito');
     const selectProveedor = document.getElementById('crear_proveedor');
 
+    // Contador para que cada lote nuevo tenga id distintos.
     let contadorLotes = 0;
 
+    // Muestra un error arriba del formulario.
     function mostrarError(texto) {
         errorCrear.textContent = texto;
         errorCrear.hidden = false;
@@ -1061,6 +1204,8 @@
         errorCrear.textContent = '';
     }
 
+    // Vuelve a numerar "Lote 1, Lote 2..." y oculta "Quitar"
+    // cuando queda un solo lote (el remito necesita al menos uno).
     function renumerarLotes() {
         const tarjetas = listaLotes.querySelectorAll('.rm-lote');
 
@@ -1098,13 +1243,16 @@
         }
     }
 
-    /* SOLO PRODUCTOS SUMINISTRADOS POR EL PROVEEDOR ELEGIDO */
+    /* SOLO PRODUCTOS SUMINISTRADOS POR EL PROVEEDOR ELEGIDO
+       Oculta los productos que no tienen a ese proveedor.
+       Devuelve true si tuvo que borrar un producto ya elegido. */
     function filtrarProductosLote(tarjeta) {
         const select = tarjeta.querySelector('[name="lote_producto"]');
         const proveedor = selectProveedor.value;
         let reiniciado = false;
 
         Array.from(select.options).forEach(function (opcion) {
+            // Opción vacía: cambia el texto de ayuda.
             if (!opcion.value) {
                 opcion.textContent = proveedor
                     ? 'Seleccionar producto del proveedor'
@@ -1119,6 +1267,7 @@
             opcion.disabled = !permitido;
         });
 
+        // Si el producto elegido ya no corresponde, se vacía.
         const elegida = select.selectedOptions[0];
 
         if (elegida && elegida.value && elegida.disabled) {
@@ -1131,6 +1280,7 @@
         return reiniciado;
     }
 
+    // Al cambiar el proveedor, se vuelven a filtrar todos los lotes.
     selectProveedor.addEventListener('change', function () {
         let hubo = false;
 
@@ -1146,6 +1296,7 @@
         }
     });
 
+    // Recalcula el total cada vez que se escribe en un lote.
     ['input', 'change'].forEach(function (tipo) {
         listaLotes.addEventListener(tipo, function (evento) {
             const tarjeta = evento.target.closest('.rm-lote');
@@ -1155,6 +1306,7 @@
         });
     });
 
+    // Agrega una tarjeta de lote copiando la plantilla.
     window.agregarLote = function (enfocar) {
         contadorLotes++;
 
@@ -1177,6 +1329,7 @@
         }
     };
 
+    // Quita una tarjeta de lote (siempre queda al menos una).
     window.quitarLote = function (boton) {
         const tarjeta = boton.closest('.rm-lote');
 
@@ -1190,7 +1343,9 @@
         }
     };
 
-    /* VALIDAR LOTES ANTES DE ENVIAR */
+    /* VALIDAR LOTES ANTES DE ENVIAR
+       - Campos obligatorios completos.
+       - El mismo número de lote no se repite para un mismo producto. */
     formCrear.addEventListener('submit', function (evento) {
         ocultarError();
 
@@ -1204,6 +1359,7 @@
             listaLotes.querySelectorAll('.rm-lote')
         );
 
+        // "producto|número de lote" de cada tarjeta.
         const combinaciones = tarjetas.map(function (tarjeta) {
             const producto = tarjeta.querySelector(
                 '[name="lote_producto"]'
@@ -1229,12 +1385,15 @@
             return;
         }
 
+        // Evita el doble envío si se hace doble clic.
         btnGuardar.disabled = true;
     });
 
     formCrear.addEventListener('input', ocultarError);
 
-    /* ABRIR MODALES */
+    /* ==========================================
+       ABRIR MODALES
+    ========================================== */
     window.abrirModalCrear = function () {
         const modal = document.getElementById('modalCrearRemito');
 
@@ -1257,6 +1416,7 @@
         document.getElementById('crear_numero').focus();
     };
 
+    // Completa el modal de edición con los datos del remito elegido.
     window.abrirModalEditar = function (id, numero, fecha) {
         document.getElementById('editar_id_remito').value = id;
         document.getElementById('editar_numero').value = numero;
@@ -1292,8 +1452,10 @@
         'no se pueden modificar. Solo se puede corregir el número de lote ' +
         'y la fecha de vencimiento.';
 
+    // true si el lote todavía tiene todas las unidades que ingresaron.
     let loteIntacto = true;
 
+    // Recalcula el total al cambiar cajas o unidades por caja.
     function actualizarTotalEdicion() {
         const cajas = parseInt(inputCajasEdicion.value, 10);
         const unidades = parseInt(inputUpcEdicion.value, 10);
@@ -1314,6 +1476,7 @@
     inputCajasEdicion.addEventListener('input', actualizarTotalEdicion);
     inputUpcEdicion.addEventListener('input', actualizarTotalEdicion);
 
+    // Bloquea o habilita cajas y unidades, y cambia el texto de ayuda.
     function bloquearCantidades(bloquear) {
         [inputCajasEdicion, inputUpcEdicion].forEach(function (campo) {
             // readonly (no disabled): el valor se sigue enviando.
@@ -1330,6 +1493,7 @@
         infoEdicion.classList.toggle('rm-info-aviso', bloquear);
     }
 
+    // Abre el modal con los datos guardados en la fila del lote (data-*).
     window.abrirModalEditarLote = function (id) {
         const fila = document.querySelector(
             'tr[data-lote-id="' + id + '"]'
@@ -1371,6 +1535,7 @@
         document.getElementById('editar_lote_ingreso').value =
             fila.dataset.ingreso || '';
 
+        // El vencimiento no puede ser anterior a la fecha del remito.
         const fechaVencimiento = document.getElementById('editar_lote_vencimiento');
         fechaVencimiento.value = fila.dataset.vencimiento;
         fechaVencimiento.min = fila.dataset.fechaRemito || '';
@@ -1384,13 +1549,16 @@
         document.getElementById('editar_lote_numero').focus();
     };
 
-    /* ANULAR REMITO */
+    /* ==========================================
+       ANULAR REMITO
+    ========================================== */
     const motivoAnulacion = document.getElementById('anular_motivo');
     const contadorAnulacion = document.getElementById('anular_contador');
     const ayudaAnulacion = document.getElementById('anular_ayuda');
     const btnAnular = document.getElementById('btnConfirmarAnulacion');
     const formAnular = document.getElementById('formAnularRemito');
 
+    // Habilita el botón solo con una justificación de 10 caracteres o más.
     function validarMotivo() {
         const largo = motivoAnulacion.value.trim().length;
 
@@ -1407,10 +1575,12 @@
 
     motivoAnulacion.addEventListener('input', validarMotivo);
 
+    // Evita el doble envío.
     formAnular.addEventListener('submit', function () {
         btnAnular.disabled = true;
     });
 
+    // Completa el resumen del remito que se va a anular.
     window.abrirModalAnular = function (
         id, numero, proveedor, lotes, unidades
     ) {
@@ -1430,7 +1600,10 @@
         motivoAnulacion.focus();
     };
 
-    /* CERRAR MODALES */
+    /* ==========================================
+       CERRAR MODALES
+       Con la X, con Cancelar, haciendo clic fuera o con Escape.
+    ========================================== */
     window.cerrarModal = function (idModal) {
         const modal = document.getElementById(idModal);
         if (!modal) return;
@@ -1439,6 +1612,7 @@
         modal.setAttribute('aria-hidden', 'true');
     };
 
+    // Clic en el fondo oscuro (fuera de la caja del modal).
     [
         'modalCrearRemito',
         'modalEditarRemito',
@@ -1454,6 +1628,7 @@
         });
     });
 
+    // Tecla Escape.
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             cerrarModal('modalCrearRemito');
@@ -1463,7 +1638,26 @@
         }
     });
 
-    /* CIERRE DE MENSAJES */
+    /* ==========================================
+       FILTRO DE FECHAS
+       Si se elige "Desde", "Hasta" no puede ser anterior (y al revés).
+       El servidor también lo controla.
+    ========================================== */
+    const filtroDesde = document.getElementById('filtroDesde');
+    const filtroHasta = document.getElementById('filtroHasta');
+
+    function ajustarLimitesFechas() {
+        filtroHasta.min = filtroDesde.value || '';
+        filtroDesde.max = filtroHasta.value || filtroHasta.getAttribute('max') || '';
+    }
+
+    filtroDesde.addEventListener('change', ajustarLimitesFechas);
+    filtroHasta.addEventListener('change', ajustarLimitesFechas);
+    ajustarLimitesFechas();
+
+    /* ==========================================
+       CIERRE AUTOMÁTICO DE MENSAJES (4 segundos)
+    ========================================== */
     document.querySelectorAll('.rm-toast').forEach(function (toast) {
         window.setTimeout(function () {
             if (toast.parentElement) toast.remove();
