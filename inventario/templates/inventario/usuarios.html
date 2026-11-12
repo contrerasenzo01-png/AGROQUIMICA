@@ -90,7 +90,8 @@
                 <thead>
                     <tr>
                         <th>Usuario</th>
-                        <th>Nombre y apellido</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
                         <th>DNI</th>
                         <th>Email</th>
                         <th>Perfil</th>
@@ -126,7 +127,8 @@
                                 </div>
                             </td>
 
-                            <td>{{ usuario.Nombre_usuario }} {{ usuario.Apellido_usuario }}</td>
+                            <td>{{ usuario.Nombre_usuario }}</td>
+                            <td>{{ usuario.Apellido_usuario }}</td>
 
                             <td class="us-muted">{{ usuario.DNI }}</td>
 
@@ -485,7 +487,7 @@
                            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^\s]{8,}"
                            title="Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número, sin espacios."
                            required>
-                    <span class="us-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número. No puede contener el nombre de usuario.</span>
+                           
                 </div>
 
                 <div class="us-grupo us-full">
