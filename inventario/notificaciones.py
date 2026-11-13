@@ -39,12 +39,6 @@ PARAMETROS = {
         'Días de aviso de vencimiento',
         'Se avisa cuando a un lote con stock le faltan estos días o menos para vencer.',
     ),
-    'margen_stock_minimo': (
-        0, 0, 100,
-        'Margen sobre el stock mínimo (%)',
-        'Se avisa cuando el stock llega al mínimo más este porcentaje. '
-        'Con 0 se avisa recién al llegar al mínimo.',
-    ),
     'egreso_inusual_desvios': (
         3, 1, 10,
         'Egreso inusual: desvíos estándar',
@@ -57,10 +51,10 @@ PARAMETROS = {
         'Cantidad mínima de egresos anteriores del producto para poder '
         'calcular la media y el desvío.',
     ),
-    'minutos_revision_vencimientos': (
-        10, 1, 1440,
-        'Revisión automática de vencimientos (minutos)',
-        'Cada cuántos minutos se revisan los vencimientos mientras alguien '
+    'dias_revision_vencimientos': (
+        1, 1, 30,
+        'Revisión automática de vencimientos (días)',
+        'Cada cuántos días se revisan los vencimientos mientras alguien '
         'usa el sistema (además del job diario).',
     ),
     'correo_alertas_activo': (

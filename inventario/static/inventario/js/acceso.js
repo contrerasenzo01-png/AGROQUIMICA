@@ -174,13 +174,22 @@ window.Acceso = (function () {
             }
         });
 
-        // Al volver con "atrás", el botón tiene que estar activo.
+        // Al volver con "atrás", el botón tiene que estar activo
+        // (salvo que esté en espera, ej. los 15 minutos de recuperación).
         window.addEventListener('pageshow', function () {
             if (boton) {
-                boton.disabled = false;
                 boton.classList.remove('cargando');
+                if (boton.dataset.bloqueado !== '1') boton.disabled = false;
             }
         });
+
+        // Si está en espera, no se envía ni con Enter.
+        form.addEventListener('submit', function (e) {
+            if (boton && boton.dataset.bloqueado === '1') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        }, true);
 
         // Foco inicial: el primer campo con error o el primero vacío.
         const conError = form.querySelector('.is-invalid');

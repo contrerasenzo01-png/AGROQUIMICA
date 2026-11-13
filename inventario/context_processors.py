@@ -116,7 +116,7 @@ def _fecha_de_hoy():
 # Todos los usuarios la ven: muestra las notificaciones dirigidas a su
 # perfil (tabla NOTIFICACION) y el número de no leídas.
 # Antes de contar, se revisan los vencimientos (cada
-# "minutos_revision_vencimientos"), así el número siempre está al día.
+# "dias_revision_vencimientos"), así el número siempre está al día.
 # ------------------------------------------------------------
 
 def _datos_alertas(usuario):

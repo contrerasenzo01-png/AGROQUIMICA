@@ -287,6 +287,64 @@ body {
     color: var(--ambar);
 }
 
+/* Egreso por venta: azul */
+.tag-venta {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* Anulación de egreso: violeta */
+.tag-anulacion-egreso {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+/* Anulación de remito: rojo */
+.tag-anulacion-remito {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* Cualquier otro tipo: gris */
+.tag-otro {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Marca "Anulado" junto al tipo: contorno rojo */
+.tag.tag-anulado {
+    display: block;
+    width: fit-content;
+    margin-top: 5px;
+    background: transparent;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 4px 8px;
+}
+
+/* ---------- Modo oscuro ---------- */
+html.modo-oscuro .tag-venta {
+    background: var(--d-blue-bg, #11273f) !important;
+    color: var(--d-blue-tx, #7db8f5) !important;
+}
+html.modo-oscuro .tag-anulacion-egreso {
+    background: var(--d-vio-bg, #271a40) !important;
+    color: var(--d-vio-tx, #c4a7f5) !important;
+}
+html.modo-oscuro .tag-anulacion-remito {
+    background: var(--d-red-bg, #381616) !important;
+    color: var(--d-red-tx, #f87171) !important;
+}
+html.modo-oscuro .tag-otro {
+    background: rgba(148, 163, 184, .14) !important;
+    color: #cbd5e1 !important;
+}
+html.modo-oscuro .tag.tag-anulado {
+    background: transparent !important;
+    color: var(--d-red-tx, #f87171) !important;
+    border-color: rgba(248, 113, 113, .45) !important;
+}
+
 /* ============================================================
    COMPROBANTE PDF
    ============================================================ */

@@ -36,35 +36,13 @@
                 {% for p in parametros %}
                     {% if p.clave == 'dias_aviso_vencimiento' %}
                         {% include 'inventario/_campo_config.html' with etiqueta='Avisar con anticipación de' ayuda='Días antes del vencimiento.' unidad='días' %}
-                    {% elif p.clave == 'minutos_revision_vencimientos' %}
-                        {% include 'inventario/_campo_config.html' with etiqueta='Revisar vencimientos cada' ayuda='Mientras el sistema está en uso.' unidad='minutos' %}
+                    {% elif p.clave == 'dias_revision_vencimientos' %}
+                        {% include 'inventario/_campo_config.html' with etiqueta='Revisar vencimientos cada' ayuda='Mientras el sistema está en uso.' unidad='días' %}
                     {% endif %}
                 {% endfor %}
             </div>
             <p class="cf-ejemplo">
                 Avisa cuando a un lote le quedan <span data-ej="dias_aviso_vencimiento"></span> días o menos.
-            </p>
-        </section>
-
-        {# ---------- Stock mínimo ---------- #}
-        <section class="cf-regla cf-regla-stock">
-            <header class="cf-regla-head">
-                <span class="cf-chip cf-chip-stock">Stock mínimo</span>
-                <h2 class="cf-regla-titulo">Stock bajo</h2>
-                <ul class="cf-datos">
-                    <li><span>Avisa a:</span> quien hizo el movimiento</li>
-                    <li><span>Se revisa:</span> al bajar el stock y a diario</li>
-                </ul>
-            </header>
-            <div class="cf-campos">
-                {% for p in parametros %}
-                    {% if p.clave == 'margen_stock_minimo' %}
-                        {% include 'inventario/_campo_config.html' with etiqueta='Margen sobre el stock mínimo' ayuda='Con 0 avisa recién al llegar al mínimo.' unidad='%' %}
-                    {% endif %}
-                {% endfor %}
-            </div>
-            <p class="cf-ejemplo">
-                Con mínimo 10, avisa al llegar a <span data-ej="stock_ejemplo"></span> unidades o menos.
             </p>
         </section>
 
@@ -147,15 +125,7 @@
         function actualizar() {
             document.querySelectorAll('[data-ej]').forEach(function (el) {
                 var clave = el.getAttribute('data-ej');
-                if (clave === 'stock_ejemplo') {
-                    var margen = parseInt(valor('margen_stock_minimo'), 10) || 0;
-                    // Igual que el servidor (umbral_stock en alertas.py):
-                    // mínimo + margen redondeado hacia arriba.
-                    var minimo = 10;
-                    el.textContent = minimo + Math.ceil(minimo * margen / 100);
-                } else {
-                    el.textContent = valor(clave) || '…';
-                }
+                el.textContent = valor(clave) || '…';
             });
         }
         document.querySelectorAll('.cf-form input').forEach(function (i) {

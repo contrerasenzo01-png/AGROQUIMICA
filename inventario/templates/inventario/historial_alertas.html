@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/styles/alertas.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
 {% endblock %}
 
@@ -27,180 +27,74 @@
 
     {% include 'inventario/_resumen.html' %}
 
-    <!-- CRITERIOS DE BÚSQUEDA -->
+    <!-- BÚSQUEDA Y FILTROS (mismo diseño que Remitos) -->
     <form method="GET"
           action="{% url 'historial_alertas' %}"
-          class="al-filtros">
+          class="ha-filtros">
 
-        <div class="al-filtros-grid">
-
-            <!-- TIPO DE ALERTA -->
-            <div class="al-campo">
-
-                <label for="tipo">
-                    Tipo de alerta
-                </label>
-
-                <select class="form-select" id="tipo" name="tipo">
-
-                    <option value="">
-                        Todos los tipos
-                    </option>
-
-                    <option value="Vencimiento"
-                        {% if tipo_alerta == 'Vencimiento' %}
-                            selected
-                        {% endif %}>
-                        Vencimiento
-                    </option>
-
-                    <option value="Stock mínimo"
-                        {% if tipo_alerta == 'Stock mínimo' %}
-                            selected
-                        {% endif %}>
-                        Stock mínimo
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <!-- PRODUCTO -->
-            <div class="al-campo">
-
-                <label for="producto">
-                    Producto
-                </label>
-
-                <select class="form-select" id="producto" name="producto">
-
-                    <option value="">
-                        Todos los productos
-                    </option>
-
-                    {% for producto in productos %}
-
-                        <option value="{{ producto.ID_Producto }}"
-                            {% if producto_id|stringformat:"s" == producto.ID_Producto|stringformat:"s" %}
-                                selected
-                            {% endif %}>
-
-                            {{ producto.Nombre_producto }}{% if producto.Estado_producto != 'Activo' %} (Inactivo){% endif %}
-
-                        </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </div>
-
-
-            <!-- USUARIO QUE ATENDIÓ -->
-            <div class="al-campo">
-
-                <label for="usuario">
-                    Atendida por
-                </label>
-
-                <select class="form-select" id="usuario" name="usuario">
-
-                    <option value="">
-                        Todos los usuarios
-                    </option>
-
-                    {% for usuario_item in usuarios %}
-
-                        <option value="{{ usuario_item.ID_Usuario }}"
-                            {% if usuario_id|stringformat:"s" == usuario_item.ID_Usuario|stringformat:"s" %}
-                                selected
-                            {% endif %}>
-
-                            {{ usuario_item.Apellido_usuario }},
-                            {{ usuario_item.Nombre_usuario }}{% if not usuario_item.Estado_usuario %} (Inactivo){% endif %}
-
-                        </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </div>
-
-
-            <!-- FECHA DESDE -->
-            <div class="al-campo">
-
-                <label for="fecha_desde">
-                    Desde
-                </label>
-
-                <input class="form-control"
-                    type="date"
-                    id="fecha_desde"
-                    name="fecha_desde"
-                    value="{{ fecha_desde }}"
-                >
-
-            </div>
-
-
-            <!-- FECHA HASTA -->
-            <div class="al-campo">
-
-                <label for="fecha_hasta">
-                    Hasta
-                </label>
-
-                <input class="form-control"
-                    type="date"
-                    id="fecha_hasta"
-                    name="fecha_hasta"
-                    value="{{ fecha_hasta }}"
-                >
-
-            </div>
-
+        {# Búsqueda libre: producto, lote, mensaje o usuario. #}
+        <div class="ha-search">
+            <svg class="al-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="form-control" type="text"
+                   name="q"
+                   id="q"
+                   value="{{ busqueda|default:'' }}"
+                   placeholder="Buscar por producto, lote, mensaje o usuario..."
+                   autocomplete="off">
         </div>
 
+        <select class="form-select ha-select" id="tipo" name="tipo" aria-label="Tipo de alerta">
+            <option value="">Todos los tipos</option>
+            <option value="Vencimiento" {% if tipo_alerta == 'Vencimiento' %}selected{% endif %}>Vencimiento</option>
+            <option value="Stock mínimo" {% if tipo_alerta == 'Stock mínimo' %}selected{% endif %}>Stock mínimo</option>
+        </select>
 
-        <!-- ACCIONES -->
-        <div class="al-filtros-acc">
+        <select class="form-select ha-select" id="producto" name="producto" aria-label="Producto">
+            <option value="">Todos los productos</option>
+            {% for producto in productos %}
+                <option value="{{ producto.ID_Producto }}"
+                    {% if producto_id|stringformat:"s" == producto.ID_Producto|stringformat:"s" %}selected{% endif %}>
+                    {{ producto.Nombre_producto }}{% if producto.Estado_producto != 'Activo' %} (Inactivo){% endif %}
+                </option>
+            {% endfor %}
+        </select>
 
-            <button
-                type="submit"
-                class="al-btn al-btn-primary"
-            >
+        <select class="form-select ha-select" id="usuario" name="usuario" aria-label="Atendida por">
+            <option value="">Atendida por: todos</option>
+            {% for usuario_item in usuarios %}
+                <option value="{{ usuario_item.ID_Usuario }}"
+                    {% if usuario_id|stringformat:"s" == usuario_item.ID_Usuario|stringformat:"s" %}selected{% endif %}>
+                    {{ usuario_item.Apellido_usuario }}, {{ usuario_item.Nombre_usuario }}{% if not usuario_item.Estado_usuario %} (Inactivo){% endif %}
+                </option>
+            {% endfor %}
+        </select>
 
-                <svg
-                    class="al-icon"
-                    viewBox="0 0 24 24"
-                >
-                    <circle
-                        cx="11"
-                        cy="11"
-                        r="7"
-                    />
+        <input type="date"
+               class="form-control ha-select ha-fecha"
+               id="fecha_desde"
+               name="fecha_desde"
+               value="{{ fecha_desde }}"
+               title="Fecha desde"
+               aria-label="Fecha desde">
 
-                    <path
-                        d="m21 21-4.3-4.3"
-                    />
-                </svg>
+        <input type="date"
+               class="form-control ha-select ha-fecha"
+               id="fecha_hasta"
+               name="fecha_hasta"
+               value="{{ fecha_hasta }}"
+               title="Fecha hasta"
+               aria-label="Fecha hasta">
 
-                Consultar
+        <button type="submit" class="al-btn av-btn-buscar">
+            Buscar
+        </button>
 
-            </button>
-
-
-            <a
-                href="{% url 'historial_alertas' %}"
-                class="al-btn al-btn-claro"
-            >
-                Limpiar
-            </a>
-
-        </div>
+        <a href="{% url 'historial_alertas' %}" class="al-btn al-btn-claro">
+            Limpiar
+        </a>
 
     </form>
 

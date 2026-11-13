@@ -320,3 +320,95 @@
     .al-filtros-grid { grid-template-columns: 1fr; }
     .al-filtros-acc  { flex-direction: column-reverse; }
 }
+
+/* ============================================================
+   BÚSQUEDA Y FILTROS DEL HISTORIAL (mismo diseño que Remitos)
+   Una sola fila: buscador, selects, fechas, Buscar y Limpiar.
+============================================================ */
+.ha-filtros {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.ha-search {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 220px;
+}
+
+.ha-search > .al-icon {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.ha-search input,
+.ha-select {
+    height: 46px;
+    background-color: #fff;
+    color: var(--al-texto);
+    border: 1px solid #e1e9e4;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ha-search input {
+    width: 100%;
+    padding: 0 12px 0 40px;
+}
+
+.ha-search input::placeholder { color: #9aa6a0; }
+
+.ha-select {
+    flex: 0 1 175px;
+    min-width: 150px;
+    width: auto;
+    padding: 0 30px 0 12px;
+    cursor: pointer;
+}
+
+.ha-fecha {
+    flex: 0 0 145px;
+    width: 145px;
+    min-width: 145px;
+    padding: 0 10px;
+}
+
+.ha-search input:focus,
+.ha-select:focus {
+    border-color: var(--al-verde);
+    box-shadow: 0 0 0 3px rgba(24, 90, 56, .09);
+}
+
+.ha-filtros .al-btn { flex: 0 0 auto; height: 46px; }
+
+html.modo-oscuro .ha-search input,
+html.modo-oscuro .ha-select {
+    background-color: var(--d-surface, #1b2621);
+    border-color: var(--al-borde-campo);
+}
+
+@media (max-width: 992px) {
+    .ha-search { flex-basis: 100%; }
+    .ha-select { flex: 1 1 175px; }
+}
+
+@media (max-width: 576px) {
+    .ha-filtros { flex-direction: column; align-items: stretch; }
+    .ha-search, .ha-select, .ha-fecha, .ha-filtros .al-btn {
+        width: 100%;
+        min-width: 0;
+        flex-basis: auto;
+    }
+}

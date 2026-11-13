@@ -1257,3 +1257,16 @@ html.modo-oscuro .pr-ficha-chips span { background: var(--d-green-bg); color: va
 
 .pr-contador { margin-top: 12px; }
 .pr-proveedor-chip[hidden] { display: none; }
+
+
+/* Precio, cantidad y stock mínimo: sin las flechitas de subir/bajar
+   del navegador (suben de a centavos y no sirven). */
+.pr-sin-flechas::-webkit-outer-spin-button,
+.pr-sin-flechas::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.pr-sin-flechas {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}

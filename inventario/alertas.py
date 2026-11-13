@@ -13,7 +13,7 @@ desde cualquier pantalla:
   - VENCIMIENTO: cuando a un lote con stock le faltan
     "dias_aviso_vencimiento" días o menos para vencer (o ya venció).
     Se revisa sola mientras alguien usa el sistema (cada
-    "minutos_revision_vencimientos") y con el job diario
+    "dias_revision_vencimientos") y con el job diario
     `python manage.py revisar_alertas`.
     El correo les llega a todos los usuarios que pueden ver alertas.
 
@@ -219,16 +219,14 @@ def correos_administradores():
 # ------------------------------------------------------------
 
 def umbral_stock(stock):
-    """Stock a partir del cual se avisa: el mínimo más el margen configurado."""
-    margen = config('margen_stock_minimo')
-    return stock.Stock_minimo + (stock.Stock_minimo * margen + 99) // 100
+    """Stock a partir del cual se avisa: el stock mínimo del producto."""
+    return stock.Stock_minimo
 
 
 def revisar_stock(stock, usuario=None):
     """Genera la alerta si el stock quedó en el umbral o por debajo.
 
-    El umbral es el stock mínimo del producto más el margen de la
-    configuración (con margen 0, el stock mínimo).
+    El umbral es el stock mínimo propio del producto.
     Devuelve True si el producto está en o bajo el umbral (haya
     creado una alerta nueva o ya hubiera una pendiente).
     """
@@ -456,13 +454,13 @@ def revisar_vencimientos():
 
 def revisar_vencimientos_si_corresponde():
     """Revisa los vencimientos como mucho una vez cada
-    "minutos_revision_vencimientos" (tabla CONFIGURACION).
+    "dias_revision_vencimientos" (tabla CONFIGURACION).
 
     La llama context_processors.py en cada página, así el número
     de notificaciones del header siempre está al día.
     """
 
-    segundos = config('minutos_revision_vencimientos') * 60
+    segundos = config('dias_revision_vencimientos') * 86400
 
     if cache.add('alertas:revision_vencimientos', True, segundos):
         try:

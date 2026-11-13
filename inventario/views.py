@@ -3790,6 +3790,7 @@ def gestion_alertas(request):
 
     es_admin = usuario.ID_Perfil.Nombre_perfil in PERFILES_ADMIN
 
+    busqueda = request.GET.get('q', '').strip()
     tipo_alerta = request.GET.get('tipo', '').strip()
     producto_id = request.GET.get('producto', '').strip()
     usuario_id = request.GET.get('usuario', '').strip()
@@ -3822,6 +3823,25 @@ def gestion_alertas(request):
         alertas_bd = alertas_bd.filter(Fecha_hora_historial_alerta__date__gte=desde)
     if hasta:
         alertas_bd = alertas_bd.filter(Fecha_hora_historial_alerta__date__lte=hasta)
+
+    # Búsqueda libre: producto, mensaje, tipo, número de lote o
+    # nombre/apellido de quien la atendió.
+    if busqueda:
+        lotes_buscados = Lotes.objects.filter(
+            Numero_lote__icontains=busqueda
+        ).values_list('ID_Lote', flat=True)
+
+        filtro = (
+            Q(ID_Stock__ID_Producto__Nombre_producto__icontains=busqueda)
+            | Q(Mensaje__icontains=busqueda)
+            | Q(Tipo_alerta__icontains=busqueda)
+            | Q(ID_Usuario__Nombre_usuario__icontains=busqueda)
+            | Q(ID_Usuario__Apellido_usuario__icontains=busqueda)
+        )
+        for id_lote in lotes_buscados[:200]:
+            filtro |= Q(Mensaje__contains=f'[LOTE_ID:{id_lote}]')
+
+        alertas_bd = alertas_bd.filter(filtro)
 
     alertas_bd = list(alertas_bd.order_by('-Fecha_hora_historial_alerta'))
 
@@ -3893,6 +3913,7 @@ def gestion_alertas(request):
         {
             'alertas': pagina,
             'pagina': pagina,
+            'busqueda': busqueda,
             'tipo_alerta': tipo_alerta,
             'producto_id': producto_id,
             'usuario_id': usuario_id,

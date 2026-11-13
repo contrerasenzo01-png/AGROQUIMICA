@@ -630,6 +630,31 @@ body {
     display: inline-block;
 }
 
+/* Bloqueado (ej. 15 minutos de espera en "Recuperar acceso"):
+   gris, sin efectos y sin poder apretarse. Vuelve al verde solo
+   cuando el botón se habilita de nuevo. */
+.btn-submit:disabled:not(.cargando) {
+    cursor: not-allowed;
+    color: #f1f5f4;
+    background: #9aa5a0;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-submit:disabled:not(.cargando)::after {
+    display: none;
+}
+
+.btn-submit:disabled:not(.cargando) .arrow {
+    transform: none;
+    opacity: .7;
+}
+
+html.modo-oscuro .btn-submit:disabled:not(.cargando) {
+    color: #9ca3af;
+    background: #3b4440;
+}
+
 
 /* ==========================================================
    PIE

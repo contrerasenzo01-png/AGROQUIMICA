@@ -159,9 +159,11 @@
                 const texto = document.getElementById('textoBoton');
 
                 boton.disabled = true;
+                boton.dataset.bloqueado = '1';
 
                 function actualizarCuenta() {
                     if (segundos <= 0) {
+                        delete boton.dataset.bloqueado;
                         boton.disabled = false;
                         texto.textContent = 'Enviar enlace';
                         return;

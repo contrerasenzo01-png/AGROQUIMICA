@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'inventario/styles/productos.css' %}?v=4">
     <link rel="stylesheet" href="{% static 'inventario/css/paginacion.css' %}">
     <style>
         /* Etiqueta gris para productos que todavía no tuvieron ingresos */
@@ -495,7 +495,7 @@
                                         <label class="form-label" for="crear_precio">Precio por presentación</label>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="crear_precio" name="Precio"
+                                            <input type="number" class="form-control pr-sin-flechas" id="crear_precio" name="Precio"
                                                    step="0.01" min="0.01" required>
                                         </div>
                                     </div>
@@ -503,7 +503,7 @@
                                     <div class="col-sm-6">
                                         <label class="form-label" for="crear_minimo">Stock mínimo</label>
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="crear_minimo" name="Stock_minimo"
+                                            <input type="number" class="form-control pr-sin-flechas" id="crear_minimo" name="Stock_minimo"
                                                    step="1" min="0" value="10" required>
                                             <span class="input-group-text">un.</span>
                                         </div>
@@ -511,7 +511,7 @@
 
                                     <div class="col-sm-6">
                                         <label class="form-label" for="crear_cantidad">Cantidad de presentación</label>
-                                        <input type="number" class="form-control" id="crear_cantidad" name="Cantidad_presentacion"
+                                        <input type="number" class="form-control pr-sin-flechas" id="crear_cantidad" name="Cantidad_presentacion"
                                                step="0.01" min="0.01" value="1" required>
                                     </div>
 
@@ -668,7 +668,7 @@
                                         <label class="form-label" for="edit_precio">Precio por presentación</label>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="edit_precio" name="Precio"
+                                            <input type="number" class="form-control pr-sin-flechas" id="edit_precio" name="Precio"
                                                    step="0.01" min="0.01" required>
                                         </div>
                                     </div>
@@ -676,7 +676,7 @@
                                     <div class="col-sm-6">
                                         <label class="form-label" for="edit_stock_minimo">Stock mínimo</label>
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="edit_stock_minimo" name="Stock_minimo"
+                                            <input type="number" class="form-control pr-sin-flechas" id="edit_stock_minimo" name="Stock_minimo"
                                                    step="1" min="0">
                                             <span class="input-group-text">un.</span>
                                         </div>
@@ -684,7 +684,7 @@
 
                                     <div class="col-sm-6">
                                         <label class="form-label" for="edit_cantidad">Cantidad de presentación</label>
-                                        <input type="number" class="form-control" id="edit_cantidad" name="Cantidad_presentacion"
+                                        <input type="number" class="form-control pr-sin-flechas" id="edit_cantidad" name="Cantidad_presentacion"
                                                step="0.01" min="0.01" required>
                                     </div>
 
@@ -1601,6 +1601,15 @@
     }
 
 })();
+</script>
+
+<script>
+    // Que la rueda del mouse no cambie precio, cantidad ni stock mínimo.
+    document.querySelectorAll('.pr-sin-flechas').forEach(function (campo) {
+        campo.addEventListener('wheel', function (e) {
+            if (document.activeElement === campo) { e.preventDefault(); }
+        }, { passive: false });
+    });
 </script>
 
 {% endblock extra_js %}
